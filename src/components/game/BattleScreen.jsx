@@ -36,7 +36,8 @@ export default function BattleScreen() {
       run.maxHp,
       run.deck,
       0,
-      run.extraDraw
+      run.extraDraw,
+      run.hero?.id
     );
     if (run.shieldActive) state.shieldActive = true;
     if (run.buffAttack > 0) state.buffAttack = run.buffAttack;
@@ -276,6 +277,9 @@ export default function BattleScreen() {
             {hero.icon}
           </div>
           <div>
+            {hero.passive && (
+              <p className="text-amber-300/50 text-[10px] font-bold uppercase tracking-wide mb-1">⚡ {hero.passive.name}</p>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-2xl">❤️</span>
               <div className="w-32 h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">

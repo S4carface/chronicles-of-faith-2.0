@@ -54,9 +54,14 @@ export default function HeroSelect() {
               ) : (
                 <>
                   <p className="text-amber-100/60 text-xs mb-3">{h.description}</p>
-                  <div className="text-xs text-emerald-300/70 bg-emerald-900/20 rounded-lg p-2">
+                  <div className="text-xs text-emerald-300/70 bg-emerald-900/20 rounded-lg p-2 mb-2">
                     ⚡ {h.ability}
                   </div>
+                  {h.passive && (
+                    <div className="text-xs text-sky-300/70 bg-sky-900/20 rounded-lg p-2">
+                      🌟 Passive: {h.passive.description}
+                    </div>
+                  )}
                   <div className="flex items-center justify-center gap-3 mt-2 text-xs">
                     <span className="text-amber-100/40">❤️ {h.maxHp} HP</span>
                     <span className="text-amber-100/40">🃏 {h.starterDeck.length} cards</span>

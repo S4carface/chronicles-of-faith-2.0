@@ -6,6 +6,12 @@ export const HEROES = [
     icon: "👨",
     description: "Created in God's image, Adam walks with courage and balance. A sturdy all-round hero.",
     ability: "First Born — Start with 35 HP.",
+    passive: {
+      name: "First Born Fury",
+      description: "Attack cards deal +1 bonus damage.",
+      type: "attack_boost",
+      value: 1,
+    },
     maxHp: 35,
     starterDeck: [
       "sling_stone", "sling_stone", "faith_shield", "faith_shield",
@@ -21,6 +27,12 @@ export const HEROES = [
     icon: "🧓",
     description: "Righteous among his generation, Noah stands firm with unshakeable faith and a righteous strike.",
     ability: "Covenant Shield — Once per battle, negate ALL incoming damage for one turn.",
+    passive: {
+      name: "Covenant Protection",
+      description: "Defense cards grant +2 additional Block.",
+      type: "block_boost",
+      value: 2,
+    },
     maxHp: 40,
     starterDeck: [
       "sling_stone", "sling_stone", "faith_shield", "faith_shield",

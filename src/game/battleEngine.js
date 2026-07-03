@@ -4,7 +4,7 @@ function pickEnemyAttack(enemy) {
   return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
 }
 
-export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBlock = 0, extraDraw = 0) {
+export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBlock = 0, extraDraw = 0, heroId = null) {
   const shuffled = shuffle([...deck]);
   const intent = pickEnemyAttack(enemy);
   return {
@@ -30,6 +30,7 @@ export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBl
     dots: 0,
     skipDraw: 0,
     thorns: 0,
+    heroId,
   };
 }
 
@@ -85,16 +86,19 @@ export function playCard(state, handIndex, card) {
 
   switch (card.type) {
     case "attack": {
-      let dmg = card.value + buffAttack;
+      const passiveBonus = state.heroId === "adam" ? 1 : 0;
+      let dmg = card.value + buffAttack + passiveBonus;
       if (state.enemyAttackMultiplier > 1) dmg = Math.floor(dmg * 2);
       enemyHp = Math.max(0, enemyHp - dmg);
-      log.push(`You played ${card.name} — ${dmg} damage!`);
+      log.push(`You played ${card.name} — ${dmg} damage!${passiveBonus ? " (+1 First Born Fury)" : ""}`);
       if (buffAttack > 0) { buffAttack = 0; }
       break;
     }
     case "defense": {
-      playerBlock += card.value;
-      log.push(`You played ${card.name} — ${card.value} block!`);
+      const blockBonus = state.heroId === "noah" ? 2 : 0;
+      const totalBlock = card.value + blockBonus;
+      playerBlock += totalBlock;
+      log.push(`You played ${card.name} — ${totalBlock} block!${blockBonus ? " (+2 Covenant Protection)" : ""}`);
       // Lion's Den: counter attack
       if (card.id === "lions_den") {
         thorns = 4;

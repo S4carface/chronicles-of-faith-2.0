@@ -5,6 +5,8 @@ import { getCardById } from "@/data/cards";
 import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd } from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
+import CardPreviewPanel from "@/components/game/CardPreviewPanel";
+import CardDetailModal from "@/components/game/CardDetailModal";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
 import * as Sound from "@/game/soundManager";
 
@@ -27,6 +29,7 @@ export default function BattleScreen() {
   const [playerFlash, setPlayerFlash] = useState(false);
   const [showPause, setShowPause] = useState(false);
   const [showLog, setShowLog] = useState(false);
+  const [longPressCard, setLongPressCard] = useState(null);
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
 
   useEffect(() => {
@@ -102,6 +105,12 @@ export default function BattleScreen() {
       handleBattleEnd(end, newState);
     }
     setSelectedCard(null);
+  };
+
+  const handleSelectCard = (idx) => {
+    if (animating || battleState.turn !== "player" || battleEnd) return;
+    Sound.sfx.click();
+    setSelectedCard(prev => prev === idx ? null : idx);
   };
 
   const handleEndTurn = () => {
@@ -343,29 +352,47 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Hand — bottom, horizontal scroll, safe area */}
-      <div className="flex-1 flex items-end overflow-hidden px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] gap-2 min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        {battleState.hand.length === 0 && (
-          <p className="text-amber-100/40 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
-        )}
-        <div className="flex gap-2 overflow-x-auto flex-nowrap snap-x pb-1">
-          {battleState.hand.map((cardId, idx) => {
-            const card = getCardById(cardId);
-            if (!card) return null;
-            const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= card.cost;
-            const blocked = battleState.blockScripture && card.type === "scripture";
-            return (
-              <Card
-                key={idx}
-                card={card}
-                inHand
-                small
-                playable={playable && !blocked && !isEnemyTurn}
-                selected={selectedCard === idx}
-                onClick={() => handlePlayCard(idx)}
-              />
-            );
-          })}
+      {/* Bottom: preview panel + hand */}
+      <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
+        {(() => {
+          const selCard = selectedCard !== null ? getCardById(battleState.hand[selectedCard]) : null;
+          if (!selCard) return null;
+          const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost;
+          const blocked = battleState.blockScripture && selCard.type === "scripture";
+          return (
+            <CardPreviewPanel
+              card={selCard}
+              playable={playable && !isEnemyTurn}
+              blocked={blocked}
+              onPlay={() => handlePlayCard(selectedCard)}
+              onCancel={() => { Sound.sfx.click(); setSelectedCard(null); }}
+            />
+          );
+        })()}
+        <div className="flex-1 flex items-end overflow-hidden px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] min-h-0">
+          {battleState.hand.length === 0 && (
+            <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
+          )}
+          <div className="flex gap-2 overflow-x-auto flex-nowrap snap-x pb-1 w-full">
+            {battleState.hand.map((cardId, idx) => {
+              const card = getCardById(cardId);
+              if (!card) return null;
+              const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= card.cost;
+              const blocked = battleState.blockScripture && card.type === "scripture";
+              return (
+                <Card
+                  key={idx}
+                  card={card}
+                  inHand
+                  small
+                  playable={playable && !blocked && !isEnemyTurn}
+                  selected={selectedCard === idx}
+                  onClick={() => handleSelectCard(idx)}
+                  onLongPress={() => setLongPressCard(card)}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -398,6 +425,15 @@ export default function BattleScreen() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Long-press card detail */}
+      {longPressCard && (
+        <CardDetailModal
+          card={longPressCard}
+          owned={false}
+          onClose={() => setLongPressCard(null)}
+        />
       )}
 
       {/* Tutorial overlay */}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { cn } from "@/utils";
 
 const RARITY_STYLES = {
@@ -64,15 +64,38 @@ export function getCardEffectText(card) {
   }
 }
 
-export default function Card({ card, onClick, playable, selected, small, inHand }) {
+export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand }) {
+  const pressTimer = useRef(null);
+  const longPressed = useRef(false);
   if (!card) return null;
   const style = RARITY_STYLES[card.rarity] || RARITY_STYLES.common;
+
+  const startPress = () => {
+    longPressed.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      if (onLongPress) onLongPress();
+    }, 500);
+  };
+  const cancelPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+  const handleClick = () => {
+    if (longPressed.current) { longPressed.current = false; return; }
+    if (onClick) onClick();
+  };
   const typeInfo = TYPE_LABELS[card.type] || TYPE_LABELS.attack;
   const effectText = getCardEffectText(card);
 
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
+      onTouchStart={startPress}
+      onTouchEnd={cancelPress}
+      onTouchCancel={cancelPress}
+      onMouseDown={startPress}
+      onMouseUp={cancelPress}
+      onMouseLeave={cancelPress}
       className={cn(
         "relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all duration-300 select-none",
         style.border,
@@ -80,7 +103,7 @@ export default function Card({ card, onClick, playable, selected, small, inHand 
         style.bg,
         "bg-gradient-to-b",
         playable && "hover:scale-105 hover:-translate-y-2 active:scale-95",
-        selected && "ring-2 ring-yellow-300 -translate-y-3",
+        selected && "ring-2 ring-amber-300 -translate-y-6 scale-105 shadow-xl shadow-amber-400/50 z-10",
         !playable && onClick && "opacity-60",
         small ? "w-24 h-36" : "w-36 h-52",
         inHand && "flex-shrink-0"

@@ -104,10 +104,10 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         style.glow,
         style.bg,
         "bg-gradient-to-b",
-        playable && "hover:scale-105 hover:-translate-y-2 active:scale-95",
-        selected && "ring-2 ring-amber-300 -translate-y-6 scale-105 shadow-xl shadow-amber-400/50 z-10",
+        playable && "hover:scale-105 active:scale-95",
+        selected && "ring-2 ring-amber-300 scale-105 shadow-xl shadow-amber-400/50 z-10",
         !playable && onClick && "opacity-60",
-        small ? "w-24 h-36" : "w-36 h-52",
+        small ? "w-[5.5rem] h-40" : "w-36 h-52",
         inHand && "flex-shrink-0"
       )}
     >
@@ -121,17 +121,17 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         {card.rarity}
       </div>
 
-      {/* Card icon */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-10" : "h-14")}>
+      {/* Card artwork */}
+      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-16" : "h-14")}>
         {artUrl ? (
-          <img src={artUrl} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-10 h-10" : "w-14 h-14")} />
+          <img src={artUrl} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-16 h-16" : "w-14 h-14")} />
         ) : (
-          <span className={cn("animate-icon-float", small ? "text-2xl" : "text-4xl")}>{card.icon}</span>
+          <span className={cn("animate-icon-float", small ? "text-3xl" : "text-4xl")}>{card.icon}</span>
         )}
       </div>
 
       {/* Card name */}
-      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[8px]" : "text-xs", style.label)}>
+      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[9px]" : "text-xs", style.label)}>
         {card.name}
       </div>
 

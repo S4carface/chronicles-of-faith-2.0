@@ -363,23 +363,8 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Bottom: preview panel + hand */}
+      {/* Bottom: hand */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        {(() => {
-          const selCard = selectedCard !== null ? getCardById(battleState.hand[selectedCard]) : null;
-          if (!selCard) return null;
-          const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost;
-          const blocked = battleState.blockScripture && selCard.type === "scripture";
-          return (
-            <CardPreviewPanel
-              card={selCard}
-              playable={playable && !isEnemyTurn}
-              blocked={blocked}
-              onPlay={() => handlePlayCard(selectedCard)}
-              onCancel={() => { Sound.sfx.click(); setSelectedCard(null); }}
-            />
-          );
-        })()}
         <div className="flex-1 flex items-end overflow-hidden px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] min-h-0">
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
@@ -406,6 +391,23 @@ export default function BattleScreen() {
           </div>
         </div>
       </div>
+
+      {/* Selected card preview — fixed overlay above hand */}
+      {selectedCard !== null && battleState.hand[selectedCard] && (() => {
+        const selCard = getCardById(battleState.hand[selectedCard]);
+        if (!selCard) return null;
+        const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost;
+        const blocked = battleState.blockScripture && selCard.type === "scripture";
+        return (
+          <CardPreviewPanel
+            card={selCard}
+            playable={playable && !isEnemyTurn}
+            blocked={blocked}
+            onPlay={() => handlePlayCard(selectedCard)}
+            onCancel={() => { Sound.sfx.click(); setSelectedCard(null); }}
+          />
+        );
+      })()}
 
       {/* Battle end overlay — wait for click */}
       {battleEnd && (

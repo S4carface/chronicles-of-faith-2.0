@@ -33,36 +33,43 @@ export const ROOM_LABELS = {
 export const ROOM_INFO = {
   [ROOM_TYPES.BATTLE]: {
     title: "Battle",
+    subtitle: "Fight an enemy. Earn gold and rewards.",
     description: "Fight an enemy. Risk losing HP. Earn gold, score, and possible rewards.",
     tip: "Good when you want more rewards and can survive the fight.",
   },
   [ROOM_TYPES.TREASURE]: {
     title: "Treasure",
+    subtitle: "Gain gold or discover a card.",
     description: "Low risk. Gain a new card, gold, or relic.",
     tip: "Good when you need to strengthen your deck.",
   },
   [ROOM_TYPES.DIVINE]: {
     title: "Divine Intervention",
+    subtitle: "Receive healing, blessing, or help.",
     description: "No combat. Choose a blessing such as healing, protection, reduced card costs, or extra faith.",
     tip: "Good when you are injured or need support before a battle.",
   },
   [ROOM_TYPES.BOSS]: {
     title: "Final Trial",
+    subtitle: "Major battle. Higher risk, higher reward.",
     description: "Required major challenge. Strong enemy. Completing it advances or finishes the chapter.",
     tip: "Prepare yourself — this battle is unavoidable.",
   },
   [ROOM_TYPES.STORY]: {
     title: "Story Choice",
+    subtitle: "Make a Bible-based decision with consequences.",
     description: "A biblical narrative unfolds. Make a choice that shapes your journey.",
     tip: "Each choice carries both risk and reward.",
   },
   [ROOM_TYPES.REST]: {
     title: "Campfire",
+    subtitle: "Rest and recover HP or gain strength.",
     description: "A moment of peace. Restore HP or gain strength for the road ahead.",
     tip: "Good when you need to recover or prepare.",
   },
   [ROOM_TYPES.MYSTERY]: {
     title: "Mystery",
+    subtitle: "Unknown room — surprises await.",
     description: "The path ahead is unknown. What awaits is hidden until you enter.",
     tip: "High risk, high reward — or perhaps something unexpected.",
   },

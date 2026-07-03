@@ -4,12 +4,14 @@ import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
+import RoomTooltip from "@/components/game/RoomTooltip";
 import * as Sound from "@/game/soundManager";
 
 export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp }) {
   const [previewNode, setPreviewNode] = useState(null);
   const availableNodes = currentNode ? currentNode.connections : [map[0][0].id];
   const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
+  const isEasy = !fogOfWar;
 
   useEffect(() => {
     Sound.playMusic("map");
@@ -49,7 +51,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
         <div>
           <h2 className="text-lg font-serif text-amber-200">Path of Genesis</h2>
           <p className="text-amber-100/60 text-xs">
-            {fogOfWar ? "The path ahead is hidden" : "All rooms visible"}
+            {fogOfWar ? "The path ahead is hidden — tap the info icon for room details" : "All rooms visible"}
           </p>
         </div>
         <button
@@ -135,12 +137,24 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                         {/* Label */}
                         <span
                           className={cn(
-                            "text-[9px] mt-1.5 text-center leading-tight h-6 flex items-start justify-center",
+                            "text-[9px] mt-1.5 text-center leading-tight flex items-start justify-center",
                             isAvailable && !isCleared ? "text-amber-200/80 font-medium" : "text-amber-100/50"
                           )}
                         >
                           {ROOM_LABELS[node.type]}
                         </span>
+                        {/* Easy mode: subtitle always visible. Normal/Hard: info icon tooltip. */}
+                        {!isCleared && (
+                          isEasy ? (
+                            <span className="text-[8px] text-amber-100/40 text-center leading-tight mt-0.5 px-0.5 min-h-[1.5rem]">
+                              {ROOM_INFO[node.type]?.subtitle}
+                            </span>
+                          ) : isAvailable ? (
+                            <div className="flex justify-center mt-0.5">
+                              <RoomTooltip nodeType={node.type} />
+                            </div>
+                          ) : null
+                        )}
                       </button>
                     );
                   })}

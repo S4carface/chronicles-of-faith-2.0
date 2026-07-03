@@ -434,6 +434,7 @@ export default function BattleScreen() {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>
+      <div className="flex flex-col h-full w-full lg:max-w-[1400px] lg:mx-auto">
       {/* Top row: pause */}
       <div className="flex items-center justify-end px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
         <button
@@ -799,6 +800,7 @@ export default function BattleScreen() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

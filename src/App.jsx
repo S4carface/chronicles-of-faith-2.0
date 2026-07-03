@@ -9,6 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import { GameProvider } from "@/game/GameContext";
 import AchievementBanner from "@/components/game/AchievementBanner";
+import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
 import Collection from "./pages/Collection";
@@ -24,11 +25,7 @@ const AuthenticatedApp = () => {
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Handle authentication errors

@@ -29,7 +29,7 @@ const INTENT_TYPE_MAP = {
 };
 
 export default function BattleScreen() {
-  const { run, updateRun, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
+  const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
   const navigate = useNavigate();
   const enemy = ENEMIES[run.pendingEnemyId];
   const [battleState, setBattleState] = useState(null);
@@ -54,6 +54,10 @@ export default function BattleScreen() {
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
+    if (run.currentBattleState) {
+      setBattleState(run.currentBattleState);
+      return;
+    }
     const state = createBattleState(
       enemy,
       run.playerHp,
@@ -68,6 +72,12 @@ export default function BattleScreen() {
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
     setBattleState(state);
   }, []);
+
+  useEffect(() => {
+    if (battleState) {
+      saveBattleState(battleState);
+    }
+  }, [battleState]);
 
   const handleTutorialComplete = () => {
     setShowTutorial(false);

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Swords, Check } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { DAILY_THEMES } from "@/data/genesisRooms";
+import { MENU_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 function getTodayTheme() {
@@ -36,7 +38,12 @@ export default function DailyChallenge() {
       </div>
 
       <div className="text-center max-w-md">
-        <div className="text-7xl mb-4">{theme.icon}</div>
+        <div className="mb-4 flex justify-center">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full blur-xl" style={{ background: "rgba(201,168,76,0.2)" }} />
+            <img src={MENU_ART.daily} alt="Daily Challenge" className="relative w-20 h-20 object-cover rounded-full border-2 border-amber-400/40 animate-icon-float" />
+          </div>
+        </div>
         <p className="text-amber-300/60 text-sm uppercase tracking-widest mb-2">Today's Challenge</p>
         <h1 className="text-3xl font-serif text-amber-200 mb-4">{theme.theme}</h1>
 
@@ -53,7 +60,12 @@ export default function DailyChallenge() {
             </div>
             <div className="w-px h-8 bg-amber-500/20" />
             <div>
-              <p className="text-2xl font-bold text-amber-200">{completedToday ? "✓" : "—"}</p>
+              <div className="flex justify-center mb-0.5">
+                {completedToday
+                  ? <Check className="w-6 h-6 text-emerald-400" />
+                  : <span className="text-amber-200 text-xl font-bold">—</span>
+                }
+              </div>
               <p className="text-amber-100/60 text-xs">Today's Status</p>
             </div>
           </div>
@@ -61,7 +73,10 @@ export default function DailyChallenge() {
 
         {completedToday ? (
           <div className="text-center">
-            <p className="text-emerald-300 mb-4">✓ You've completed today's challenge!</p>
+            <div className="flex justify-center mb-3">
+              <Check className="w-8 h-8 text-emerald-400" />
+            </div>
+            <p className="text-emerald-300 mb-4">You've completed today's challenge!</p>
             <p className="text-amber-100/60 text-xs mb-6">Come back tomorrow for a new adventure.</p>
             <button
               onClick={() => { Sound.sfx.click(); navigate("/leaderboard"); }}
@@ -74,9 +89,10 @@ export default function DailyChallenge() {
           <button
             onClick={handleStart}
             disabled={loading}
-            className="px-10 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl hover:bg-amber-600/40 transition disabled:opacity-50 animate-pulse"
+            className="inline-flex items-center gap-2 px-10 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl hover:bg-amber-600/40 transition disabled:opacity-50"
           >
-            {loading ? "Starting..." : "⚔️ Begin Daily Run"}
+            <Swords className="w-5 h-5" />
+            {loading ? "Starting..." : "Begin Daily Run"}
           </button>
         )}
 

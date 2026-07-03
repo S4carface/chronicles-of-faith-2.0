@@ -11,6 +11,19 @@ import * as Sound from "@/game/soundManager";
 const GameContext = createContext(null);
 
 const STORAGE_KEY = "chronicles_of_faith_v1";
+const RUN_STORAGE_KEY = "chronicles_of_faith_run_v1";
+
+function loadRun() {
+  try {
+    const raw = localStorage.getItem(RUN_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.phase === "victory" || parsed.phase === "defeat") return null;
+      return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
 
 function loadProfile() {
   try {
@@ -34,12 +47,20 @@ function loadProfile() {
 
 export function GameProvider({ children }) {
   const [profile, setProfile] = useState(loadProfile);
-  const [run, setRun] = useState(null);
+  const [run, setRun] = useState(loadRun);
   const [achievementQueue, setAchievementQueue] = useState([]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   }, [profile]);
+
+  useEffect(() => {
+    if (run) {
+      try { localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(run)); } catch (e) {}
+    } else {
+      localStorage.removeItem(RUN_STORAGE_KEY);
+    }
+  }, [run]);
 
   useEffect(() => {
     Sound.setMusicEnabled(profile.settings.music);
@@ -185,6 +206,7 @@ export function GameProvider({ children }) {
         const enemy = ENEMIES[node.enemyId];
         updates.pendingEnemyId = node.enemyId;
         updates.phase = "battle";
+        updates.currentBattleState = null;
       }
 
       return { ...prev, ...updates };
@@ -281,6 +303,10 @@ export function GameProvider({ children }) {
     setRun(prev => prev ? { ...prev, ...updates } : prev);
   }, []);
 
+  const saveBattleState = useCallback((battleState) => {
+    setRun(prev => prev ? { ...prev, currentBattleState: battleState } : prev);
+  }, []);
+
   const endRun = useCallback(() => {
     setRun(null);
     Sound.playMusic("menu");
@@ -295,6 +321,7 @@ export function GameProvider({ children }) {
     completeRoom,
     setPhase,
     updateRun,
+    saveBattleState,
     endRun,
     unlockAchievement,
     addCardsToCollection,

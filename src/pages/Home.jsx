@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Swords } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
@@ -7,17 +7,34 @@ import { HOME_ART, MENU_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
-  const { profile, Sound: Snd } = useGame();
+  const { profile, run, endRun, Sound: Snd } = useGame();
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     Snd.playMusic("menu");
   }, []);
 
+  const handleBeginRun = () => {
+    Sound.sfx.click();
+    if (run) {
+      setShowConfirm(true);
+    } else {
+      navigate("/play");
+    }
+  };
+
+  const handleConfirmNew = () => {
+    endRun();
+    setShowConfirm(false);
+    navigate("/play");
+  };
+
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
   const menuItems = [
     { label: "My Collection", art: MENU_ART.collection, path: "/collection", desc: "Cards gathered", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
-    { label: "Shop", art: MENU_ART.shop, path: "/shop", desc: "Card packs & relics", status: `${profile.gold || 0} gold` },
+    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs and relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
     { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Today's special run", status: "New today" },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Top scores", status: null },
@@ -59,10 +76,30 @@ export default function Home() {
         <DifficultySelect />
       </div>
 
+      {/* Resume prompt */}
+      {run && (
+        <div className="relative w-full max-w-md mb-4 p-4 rounded-xl border-2 border-emerald-400/40 bg-emerald-900/20 animate-fade-in">
+          <p className="text-emerald-200 font-serif text-sm text-center mb-3">Continue your Genesis run?</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { Sound.sfx.click(); navigate("/play"); }}
+              className="flex-1 px-4 py-2 rounded-lg border-2 border-emerald-400/50 bg-emerald-600/20 text-emerald-100 font-bold text-sm hover:bg-emerald-600/40 transition"
+            >
+              Continue
+            </button>
+            <button
+              onClick={() => { Sound.sfx.click(); setShowConfirm(true); }}
+              className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-100/80 text-sm hover:bg-amber-800/30 transition"
+            >
+              Start New Run
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Play button — primary CTA */}
-      <Link
-        to="/play"
-        onClick={() => Sound.sfx.click()}
+      <button
+        onClick={handleBeginRun}
         className="relative w-full max-w-md mb-6 px-8 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
         style={{ background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)" }}
       >
@@ -70,7 +107,31 @@ export default function Home() {
           <Swords className="w-5 h-5" />
           Begin Genesis Run
         </span>
-      </Link>
+      </button>
+
+      {/* Confirmation dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
+          <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Abandon Current Run?</h2>
+            <p className="text-amber-100/60 text-sm text-center mb-6">Starting a new run will abandon your current journey. Continue?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-slate-800/40 text-amber-100/70 text-sm hover:bg-slate-800/60 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmNew}
+                className="flex-1 px-4 py-2 rounded-lg border-2 border-red-400/50 bg-red-900/30 text-red-100 text-sm font-bold hover:bg-red-800/40 transition"
+              >
+                Start New
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Secondary menu — compact premium rows */}
       <div className="relative w-full max-w-md grid grid-cols-1 gap-1.5">

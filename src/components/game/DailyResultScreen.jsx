@@ -6,6 +6,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore, getDailyRank } from "@/game/scoreManager";
 import * as Sound from "@/game/soundManager";
 import { recordDailyCompleted, syncStatsToCloud } from "@/game/playerStats";
+import { sanitizePlayerName, validatePlayerName } from "@/game/nameValidator";
 
 function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
   if (result !== "victory") return 0;
@@ -58,7 +59,7 @@ export default function DailyResultScreen() {
     syncStatsToCloud();
 
     const playerName = profile.playerName;
-    if (!playerName) {
+    if (!validatePlayerName(playerName).valid) {
       setShowNamePrompt(true);
       return;
     }
@@ -69,6 +70,11 @@ export default function DailyResultScreen() {
 
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
+    if (!name) {
+      // "Continue Without Leaderboard" — skip submission
+      submitted.current = true;
+      return;
+    }
     submitted.current = true;
     const todayStr = new Date().toISOString().slice(0, 10);
     submitLeaderboard(name, calculatedScore.current, result, run.dailyTriviaCorrect, todayStr, run.hero?.id || "adam");
@@ -260,6 +266,7 @@ export default function DailyResultScreen() {
         <PlayerNamePrompt
           onSave={handleNameSaved}
           forceName
+          endOfRun
         />
       )}
     </div>

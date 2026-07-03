@@ -6,6 +6,7 @@ import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
+import { validatePlayerName } from "@/game/nameValidator";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
@@ -56,8 +57,8 @@ export default function VictoryScreen() {
     recordRunWon(finalScore, run.gold || 0);
     syncStatsToCloud();
 
-    // Auto-submit score — prompt for name if missing
-    if (profile.playerName) {
+    // Auto-submit score — prompt for name if missing/invalid
+    if (validatePlayerName(profile.playerName).valid) {
       submitScoreToCloud(profile.playerName, finalScore);
     } else {
       setShowNamePrompt(true);
@@ -94,7 +95,10 @@ export default function VictoryScreen() {
 
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
-    submitScoreToCloud(name, score);
+    if (name) {
+      submitScoreToCloud(name, score);
+    }
+    // If name is null, "Continue Without Leaderboard" — don't submit
   };
 
   const handleReturnToMenu = () => {
@@ -172,6 +176,7 @@ export default function VictoryScreen() {
           <PlayerNamePrompt
             onSave={handleNameSaved}
             forceName
+            endOfRun
           />
         )}
 

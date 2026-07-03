@@ -6,6 +6,7 @@ import { getDailyChallenge } from "@/data/dailyChallenge";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import { validateDeck } from "@/game/deckRules";
+import { validatePlayerName } from "@/game/nameValidator";
 import DailyReflection from "@/components/game/DailyReflection";
 import * as Sound from "@/game/soundManager";
 
@@ -33,7 +34,7 @@ export default function DailyChallenge() {
 
   const handleStart = () => {
     Sound.sfx.click();
-    if (!profile.playerName) {
+    if (!validatePlayerName(profile.playerName).valid) {
       setShowNamePrompt(true);
       return;
     }

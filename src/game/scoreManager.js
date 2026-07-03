@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { sanitizePlayerName } from "@/game/nameValidator";
 
 const PLAYER_ID_KEY = "cof_player_id";
 
@@ -43,8 +44,10 @@ export function deduplicateByPlayer(scores) {
  */
 export async function submitBestScore(scoreData) {
   const playerId = getPlayerId();
+  // Never submit invalid names to the leaderboard — sanitize first
+  const safeName = sanitizePlayerName(scoreData.playerName);
   const payload = {
-    playerName: scoreData.playerName,
+    playerName: safeName,
     playerId,
     score: scoreData.score,
     mode: scoreData.mode || "story",

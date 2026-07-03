@@ -8,6 +8,7 @@ import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
+import { sanitizePlayerName, validatePlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
@@ -30,14 +31,14 @@ export default function Home() {
     if (run && getSavedRoute() === "/play") {
       setShowResume(true);
     }
-    if (!profile.playerName) {
+    if (!validatePlayerName(profile.playerName).valid) {
       setShowNamePrompt(true);
     }
   }, []);
 
   const handleBeginRun = () => {
     Sound.sfx.click();
-    if (!profile.playerName) {
+    if (!validatePlayerName(profile.playerName).valid) {
       setPendingAction("run");
       setShowNamePrompt(true);
       return;
@@ -140,7 +141,7 @@ export default function Home() {
         onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
         className="flex items-center gap-1.5 text-amber-100/60 hover:text-amber-200 transition text-sm mb-3"
       >
-        <span>Playing as: {profile.playerName || "— set name —"}</span>
+        <span>Playing as: {sanitizePlayerName(profile.playerName) || "— set name —"}</span>
         <Pencil className="w-3 h-3" />
       </button>
 

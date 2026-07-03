@@ -10,6 +10,7 @@ import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 import { recordRunStarted } from "@/game/playerStats";
+import { sanitizePlayerName } from "@/game/nameValidator";
 
 const GameContext = createContext(null);
 
@@ -36,6 +37,8 @@ function loadProfile() {
       }
       // Keep collectedCards in sync (unique card IDs)
       parsed.collectedCards = Object.keys(parsed.cardCollection);
+      // Sanitize any stored player name (old invalid names become "Anonymous Warrior")
+      parsed.playerName = sanitizePlayerName(parsed.playerName);
       return parsed;
     }
   } catch (e) {}
@@ -53,6 +56,7 @@ function loadProfile() {
     difficulty: "normal",
     gold: 0,
     tutorialSeen: false,
+    playerName: "Anonymous Warrior",
   };
 }
 

@@ -4,6 +4,7 @@ import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff } from "lucide-r
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
 import { fetchLeaderboard } from "@/game/scoreManager";
+import { sanitizePlayerName } from "@/game/nameValidator";
 import * as Sound from "@/game/soundManager";
 
 const RANK_STYLES = [
@@ -135,7 +136,7 @@ export default function Leaderboard() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-serif text-amber-100 truncate">{entry.playerName}</div>
+                    <div className="font-serif text-amber-100 truncate">{sanitizePlayerName(entry.playerName)}</div>
                     <div className="text-amber-100/60 text-xs flex items-center gap-1.5 flex-wrap">
                       <span className="text-amber-300/70">{entry.hero}</span>
                       <span className="text-amber-100/30">·</span>

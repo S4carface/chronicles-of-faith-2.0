@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play } from "lucide-react";
+import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd } = useGame();
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -262,14 +264,21 @@ export default function Settings() {
                 <p className="text-amber-100/40 text-[10px]">Shown on the leaderboard</p>
               </div>
             </div>
-            <input
-              type="text"
-              value={profile.playerName || ""}
-              onChange={(e) => saveProfile({ playerName: e.target.value })}
-              placeholder="Enter your name"
-              maxLength={20}
-              className="w-full px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={profile.playerName || "Anonymous Warrior"}
+                readOnly
+                placeholder="Enter your name"
+                className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
+              />
+              <button
+                onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edit
+              </button>
+            </div>
           </div>
         </div>
 
@@ -304,6 +313,13 @@ export default function Settings() {
           </p>
         </div>
       </div>
+
+      {showNamePrompt && (
+        <PlayerNamePrompt
+          onSave={() => setShowNamePrompt(false)}
+          onCancel={() => setShowNamePrompt(false)}
+        />
+      )}
     </div>
   );
 }

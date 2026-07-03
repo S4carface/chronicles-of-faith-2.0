@@ -7,6 +7,7 @@ import {
 import { useGame } from "@/game/GameContext";
 import { CARD_MAP, getCardById } from "@/data/cards";
 import { getStats, syncStatsToCloud } from "@/game/playerStats";
+import { sanitizePlayerName } from "@/game/nameValidator";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -72,7 +73,8 @@ export default function MyJourney() {
     : 0;
 
   const genesisCompleted = stats.runsWon > 0 ? 1 : 0;
-  const hasName = !!(profile.playerName && profile.playerName !== "Anonymous Warrior");
+  const safeName = sanitizePlayerName(profile.playerName);
+  const hasName = !!(safeName && safeName !== "Anonymous Warrior");
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
@@ -102,7 +104,7 @@ export default function MyJourney() {
           <div className="flex items-center justify-between p-4 rounded-xl border-2 border-amber-400/20" style={{ background: "linear-gradient(135deg, rgba(30,40,68,0.5) 0%, rgba(15,26,48,0.5) 100%)" }}>
             <div className="min-w-0">
               <p className="text-amber-100/40 text-[10px] uppercase tracking-wide">Player</p>
-              <p className="font-serif text-amber-200 text-lg lg:text-xl truncate">{profile.playerName}</p>
+              <p className="font-serif text-amber-200 text-lg lg:text-xl truncate">{safeName}</p>
             </div>
             <button
               onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}

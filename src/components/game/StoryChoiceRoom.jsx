@@ -3,6 +3,7 @@ import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import { pick } from "@/game/mapGenerator";
+import { STORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function StoryChoiceRoom() {
@@ -64,7 +65,13 @@ export default function StoryChoiceRoom() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A1A2E 0%, #0A0A15 100%)" }}>
       <div className="text-center mb-8 max-w-2xl">
-        <div className="text-6xl mb-4">{story.icon}</div>
+        <div className="mb-4 flex justify-center">
+          {STORY_ART[story.id] ? (
+            <img src={STORY_ART[story.id]} alt={story.id} className="w-24 h-24 object-cover rounded-xl border-2 border-amber-400/30" />
+          ) : (
+            <span className="text-6xl">{story.icon}</span>
+          )}
+        </div>
         <p className="text-amber-100/50 text-sm italic mb-4">{story.narration}</p>
         <h2 className="text-2xl md:text-3xl font-serif text-amber-100 leading-relaxed">{story.prompt}</h2>
       </div>

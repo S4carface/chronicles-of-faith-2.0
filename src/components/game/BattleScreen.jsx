@@ -8,6 +8,7 @@ import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
+import { ENEMY_ART, HERO_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function BattleScreen() {
@@ -212,6 +213,8 @@ export default function BattleScreen() {
 
   const intent = battleState.enemyIntent;
   const isEnemyTurn = battleState.turn === "enemy" || animating;
+  const enemyArt = ENEMY_ART[enemy.id];
+  const heroArt = HERO_ART[hero.id];
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>
@@ -251,13 +254,17 @@ export default function BattleScreen() {
 
         <div className="relative flex flex-col items-center">
           <div
-            className={`text-5xl mb-1 transition-transform duration-300 ${
+            className={`mb-1 transition-transform duration-300 ${
               battleEnd === "victory" ? "animate-bounce" : ""
             } ${battleEnd === "defeat" ? "opacity-30" : ""} ${
               enemyAttackAnim ? "animate-enemy-lunge" : ""
             } ${enemyShake ? "animate-shake" : ""} ${enemyFlash ? "animate-damage-flash" : ""}`}
           >
-            {enemy.icon}
+            {enemyArt ? (
+              <img src={enemyArt} alt={enemy.name} className="w-24 h-24 object-cover rounded-lg border-2 border-red-900/50" />
+            ) : (
+              <span className="text-5xl">{enemy.icon}</span>
+            )}
           </div>
           {/* Enemy HP bar */}
           <div className="w-36 h-3 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
@@ -299,9 +306,13 @@ export default function BattleScreen() {
       <div className="flex-shrink-0 px-3 py-1.5 border-t border-amber-500/10 flex items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`text-2xl transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
+            className={`transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
           >
-            {hero.icon}
+            {heroArt ? (
+              <img src={heroArt} alt={hero.name} className="w-8 h-8 object-cover rounded-full border border-amber-500/30" />
+            ) : (
+              <span className="text-2xl">{hero.icon}</span>
+            )}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">

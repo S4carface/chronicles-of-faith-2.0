@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { cn } from "@/utils";
+import { CARD_ART } from "@/data/art";
 
 const RARITY_STYLES = {
   common: {
@@ -65,6 +66,7 @@ export function getCardEffectText(card) {
 }
 
 export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand }) {
+  const artUrl = CARD_ART[card.id];
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
   if (!card) return null;
@@ -120,8 +122,12 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       </div>
 
       {/* Card icon */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1 animate-icon-float", small ? "text-2xl" : "text-4xl")}>
-        {card.icon}
+      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-10" : "h-14")}>
+        {artUrl ? (
+          <img src={artUrl} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-10 h-10" : "w-14 h-14")} />
+        ) : (
+          <span className={cn("animate-icon-float", small ? "text-2xl" : "text-4xl")}>{card.icon}</span>
+        )}
       </div>
 
       {/* Card name */}

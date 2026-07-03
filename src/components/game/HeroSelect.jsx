@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/game/GameContext";
 import { HEROES } from "@/data/heroes";
 import { getCardById } from "@/data/cards";
+import { HERO_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function HeroSelect() {
@@ -97,7 +98,13 @@ export default function HeroSelect() {
               }`}
               style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.85) 0%, rgba(15,26,48,0.85) 100%)" }}
             >
-              <div className="text-7xl mb-3">{unlocked ? hero.icon : "🔒"}</div>
+              <div className="mb-3 flex justify-center">
+                {unlocked && HERO_ART[hero.id] ? (
+                  <img src={HERO_ART[hero.id]} alt={hero.name} className="w-28 h-28 object-cover rounded-xl border-2 border-amber-400/40" />
+                ) : (
+                  <span className="text-7xl">{unlocked ? hero.icon : "🔒"}</span>
+                )}
+              </div>
               <h3 className="text-2xl font-serif text-amber-100">{hero.name}</h3>
               <p className="text-amber-300/60 text-xs mb-4">{hero.title}</p>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
+import { BLESSING_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function DivineIntervention() {
@@ -89,7 +90,13 @@ export default function DivineIntervention() {
             }`}
             style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}
           >
-            <div className="text-4xl mb-3">{blessing.icon}</div>
+            <div className="mb-3 flex justify-center">
+              {BLESSING_ART[blessing.id] ? (
+                <img src={BLESSING_ART[blessing.id]} alt={blessing.name} className="w-16 h-16 object-cover rounded-lg border border-amber-400/30" />
+              ) : (
+                <span className="text-4xl">{blessing.icon}</span>
+              )}
+            </div>
             <h3 className="font-serif text-amber-100 text-lg mb-2">{blessing.name}</h3>
             <p className="text-amber-100/60 text-xs">{blessing.description}</p>
           </button>

@@ -1,5 +1,6 @@
 import React from "react";
 import { getCardEffectText } from "@/components/game/Card";
+import { CARD_ART } from "@/data/art";
 
 const RARITY_INFO = {
   common: { label: "Common", color: "text-sky-200", dropRate: "70%", border: "border-sky-400/60" },
@@ -11,6 +12,7 @@ export default function CardDetailModal({ card, owned, onClose, onSelect, select
   if (!card) return null;
   const rarity = RARITY_INFO[card.rarity] || RARITY_INFO.common;
   const effectText = getCardEffectText(card);
+  const artUrl = CARD_ART[card.id];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={onClose}>
@@ -31,7 +33,11 @@ export default function CardDetailModal({ card, owned, onClose, onSelect, select
         <div className="flex justify-center mb-4">
           <div className={`w-32 h-48 rounded-lg border-2 ${rarity.border} bg-gradient-to-b from-slate-800 to-slate-900 p-3 flex flex-col items-center justify-between`}>
             <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
-            <div className="text-5xl">{card.icon}</div>
+            {artUrl ? (
+              <img src={artUrl} alt={card.name} className="w-20 h-20 object-cover rounded-lg" />
+            ) : (
+              <div className="text-5xl">{card.icon}</div>
+            )}
             <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
             <div className="text-[8px] text-amber-300/40 italic text-center">{card.verse}</div>
           </div>

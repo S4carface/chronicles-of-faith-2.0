@@ -6,7 +6,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore, getDailyRank } from "@/game/scoreManager";
 import * as Sound from "@/game/soundManager";
 import { recordDailyCompleted, syncStatsToCloud } from "@/game/playerStats";
-import { sanitizePlayerName, validatePlayerName } from "@/game/nameValidator";
+import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 
 function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
   if (result !== "victory") return 0;
@@ -59,7 +59,7 @@ export default function DailyResultScreen() {
     syncStatsToCloud();
 
     const playerName = profile.playerName;
-    if (!validatePlayerName(playerName).valid) {
+    if (needsPlayerName(playerName)) {
       setShowNamePrompt(true);
       return;
     }
@@ -110,7 +110,7 @@ export default function DailyResultScreen() {
     setSubmitError(false);
     const todayStr = new Date().toISOString().slice(0, 10);
     submitLeaderboard(
-      profile.playerName || "Anonymous Warrior",
+      profile.playerName || "Anonymous Pilgrim",
       calculatedScore.current,
       result,
       run.dailyTriviaCorrect,
@@ -132,7 +132,7 @@ export default function DailyResultScreen() {
   const isVictory = result.result === "victory";
   const triviaCorrect = run.dailyTriviaCorrect;
   const goldEarned = isVictory && streakUpdated ? (dailyConfig?.reward?.gold || 0) : 0;
-  const playerNameDisplay = profile.playerName || "Anonymous Warrior";
+  const playerNameDisplay = profile.playerName || "Anonymous Pilgrim";
 
   const handleReturn = () => {
     Sound.sfx.click();

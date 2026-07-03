@@ -37,7 +37,7 @@ function loadProfile() {
       }
       // Keep collectedCards in sync (unique card IDs)
       parsed.collectedCards = Object.keys(parsed.cardCollection);
-      // Sanitize any stored player name (old invalid names become "Anonymous Warrior")
+      // Sanitize any stored player name (old invalid names become "Anonymous Pilgrim")
       parsed.playerName = sanitizePlayerName(parsed.playerName);
       return parsed;
     }
@@ -51,12 +51,11 @@ function loadProfile() {
     settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal" },
     dailyStreak: 0,
     lastDailyDate: null,
-    playerName: "",
+    playerName: "Anonymous Pilgrim",
     battlesUnscathed: 0,
     difficulty: "normal",
     gold: 0,
     tutorialSeen: false,
-    playerName: "Anonymous Warrior",
   };
 }
 

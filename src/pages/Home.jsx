@@ -9,7 +9,7 @@ import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
-import { sanitizePlayerName, validatePlayerName } from "@/game/nameValidator";
+import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
@@ -32,14 +32,14 @@ export default function Home() {
     if (run && getSavedRoute() === "/play") {
       setShowResume(true);
     }
-    if (!validatePlayerName(profile.playerName).valid) {
+    if (needsPlayerName(profile.playerName)) {
       setShowNamePrompt(true);
     }
   }, []);
 
   const handleBeginRun = () => {
     Sound.sfx.click();
-    if (!validatePlayerName(profile.playerName).valid) {
+    if (needsPlayerName(profile.playerName)) {
       setPendingAction("run");
       setShowNamePrompt(true);
       return;
@@ -281,7 +281,7 @@ export default function Home() {
       {showResume && (
         <ResumeModal
           onResume={() => { setShowResume(false); navigate("/play"); }}
-          onAbandon={() => { setShowResume(false); endRun(); if (!profile.playerName) setShowNamePrompt(true); }}
+          onAbandon={() => { setShowResume(false); endRun(); if (needsPlayerName(profile.playerName)) setShowNamePrompt(true); }}
         />
       )}
     </div>

@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 import { HOME_ART } from "@/data/art";
-import { validatePlayerName, generateSafeName } from "@/game/nameValidator";
+import { validatePlayerName, generateSafeName, needsPlayerName } from "@/game/nameValidator";
 
 export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun }) {
   const { profile, saveProfile } = useGame();
-  const [name, setName] = useState(profile.playerName && profile.playerName !== "Anonymous Warrior" ? profile.playerName : "");
+  const [name, setName] = useState(needsPlayerName(profile.playerName) ? "" : profile.playerName);
   const [error, setError] = useState("");
 
   const handleSave = () => {
@@ -42,8 +42,8 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
         <h2 className="text-xl font-serif text-amber-200 text-center mb-2">Choose Your Player Name</h2>
         <p className="text-amber-100/50 text-sm text-center mb-6">
           {endOfRun
-            ? "Pick a respectful display name so your score can appear on the leaderboard."
-            : "This name will appear on the leaderboard."}
+            ? "Choose a family-friendly name to appear on the leaderboard."
+            : "Choose a family-friendly name for the leaderboard. 3–18 characters."}
         </p>
         <input
           type="text"

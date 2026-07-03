@@ -268,7 +268,7 @@ export default function Settings() {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={profile.playerName || "Anonymous Warrior"}
+                value={profile.playerName || "Anonymous Pilgrim"}
                 readOnly
                 placeholder="Enter your name"
                 className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"

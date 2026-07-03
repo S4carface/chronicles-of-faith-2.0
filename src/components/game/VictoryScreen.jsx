@@ -6,7 +6,7 @@ import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
-import { validatePlayerName } from "@/game/nameValidator";
+import { needsPlayerName } from "@/game/nameValidator";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
@@ -58,7 +58,7 @@ export default function VictoryScreen() {
     syncStatsToCloud();
 
     // Auto-submit score — prompt for name if missing/invalid
-    if (validatePlayerName(profile.playerName).valid) {
+    if (!needsPlayerName(profile.playerName)) {
       submitScoreToCloud(profile.playerName, finalScore);
     } else {
       setShowNamePrompt(true);
@@ -70,7 +70,7 @@ export default function VictoryScreen() {
     setSubmitting(true);
     setSubmitError(false);
     const result = await submitBestScore({
-      playerName: name || "Anonymous Warrior",
+      playerName: name || "Anonymous Pilgrim",
       score: scoreToSubmit,
       mode: "story",
       hero: run.hero?.name || "Adam",

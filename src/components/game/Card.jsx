@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { cn } from "@/utils";
-import { CARD_ART } from "@/data/art";
+import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 
 const RARITY_STYLES = {
   common: {
@@ -107,7 +107,7 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         playable && "hover:scale-105 active:scale-95",
         selected && "ring-2 ring-amber-300 scale-105 shadow-xl shadow-amber-400/50 z-10",
         !playable && onClick && "opacity-60",
-        small ? "w-[5.5rem] h-40" : "w-36 h-52",
+        small ? "w-20 h-36" : "w-36 h-52",
         inHand && "flex-shrink-0"
       )}
     >
@@ -122,12 +122,8 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       </div>
 
       {/* Card artwork */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-16" : "h-14")}>
-        {artUrl ? (
-          <img src={artUrl} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-16 h-16" : "w-14 h-14")} />
-        ) : (
-          <span className={cn("animate-icon-float", small ? "text-3xl" : "text-4xl")}>{card.icon}</span>
-        )}
+      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-14" : "h-14")}>
+        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-14 h-14" : "w-14 h-14")} />
       </div>
 
       {/* Card name */}

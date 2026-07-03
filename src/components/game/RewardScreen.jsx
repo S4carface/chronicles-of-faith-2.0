@@ -3,7 +3,7 @@ import { useGame } from "@/game/GameContext";
 import { getCardById, CARDS } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { pickN } from "@/game/mapGenerator";
-import { CARD_ART } from "@/data/art";
+import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -118,11 +118,7 @@ function RewardCardMini({ card }) {
   return (
     <div className={`w-36 h-52 rounded-lg border-2 ${rarityBorder} ${rarityGlow} overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between transition-all`}>
       <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
-      {CARD_ART[card.id] ? (
-        <img src={CARD_ART[card.id]} alt={card.name} className="w-14 h-14 object-cover rounded-lg animate-fade-in" />
-      ) : (
-        <div className="text-4xl animate-fade-in">{card.icon}</div>
-      )}
+      <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-14 h-14 object-cover rounded-lg animate-fade-in" />
       <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
       <div className="text-[9px] text-amber-300/50 uppercase font-bold">{card.rarity}</div>
       <div className="text-[8px] text-amber-300/40 italic text-center">{card.verse}</div>

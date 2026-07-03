@@ -5,6 +5,7 @@ import { pick } from "@/game/mapGenerator";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
+import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function TreasureRoom() {
@@ -34,7 +35,9 @@ export default function TreasureRoom() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
       <div className="text-center mb-8">
-        <div className="text-6xl mb-4 animate-bounce">💎</div>
+        <div className="mb-4 flex justify-center animate-bounce">
+          <img src={ROOM_ART.treasure || PLACEHOLDER_ART} alt="Treasure" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/30" />
+        </div>
         <h2 className="text-3xl font-serif text-amber-200">A Gift from Above</h2>
         <p className="text-amber-100/50 text-sm mt-2 max-w-md">
           You have found a Biblical artifact. It has been added to your collection and deck.
@@ -53,7 +56,8 @@ export default function TreasureRoom() {
       {showDetail && (
         <CardDetailModal
           card={card}
-          owned={false}
+          owned={claimed}
+          justCollected={claimed}
           onClose={() => setShowDetail(false)}
         />
       )}

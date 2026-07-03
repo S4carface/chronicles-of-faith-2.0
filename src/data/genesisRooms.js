@@ -30,6 +30,44 @@ export const ROOM_LABELS = {
   [ROOM_TYPES.REST]: "Campfire",
 };
 
+export const ROOM_INFO = {
+  [ROOM_TYPES.BATTLE]: {
+    title: "Battle",
+    description: "Fight an enemy. Risk losing HP. Earn gold, score, and possible rewards.",
+    tip: "Good when you want more rewards and can survive the fight.",
+  },
+  [ROOM_TYPES.TREASURE]: {
+    title: "Treasure",
+    description: "Low risk. Gain a new card, gold, or relic.",
+    tip: "Good when you need to strengthen your deck.",
+  },
+  [ROOM_TYPES.DIVINE]: {
+    title: "Divine Intervention",
+    description: "No combat. Choose a blessing such as healing, protection, reduced card costs, or extra faith.",
+    tip: "Good when you are injured or need support before a battle.",
+  },
+  [ROOM_TYPES.BOSS]: {
+    title: "Final Trial",
+    description: "Required major challenge. Strong enemy. Completing it advances or finishes the chapter.",
+    tip: "Prepare yourself — this battle is unavoidable.",
+  },
+  [ROOM_TYPES.STORY]: {
+    title: "Story Choice",
+    description: "A biblical narrative unfolds. Make a choice that shapes your journey.",
+    tip: "Each choice carries both risk and reward.",
+  },
+  [ROOM_TYPES.REST]: {
+    title: "Campfire",
+    description: "A moment of peace. Restore HP or gain strength for the road ahead.",
+    tip: "Good when you need to recover or prepare.",
+  },
+  [ROOM_TYPES.MYSTERY]: {
+    title: "Mystery",
+    description: "The path ahead is unknown. What awaits is hidden until you enter.",
+    tip: "High risk, high reward — or perhaps something unexpected.",
+  },
+};
+
 // Story choice scenarios for Genesis
 export const STORY_CHOICES = [
   {

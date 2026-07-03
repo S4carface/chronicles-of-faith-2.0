@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
-import { BLESSING_ART } from "@/data/art";
+import { BLESSING_ART, ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function DivineIntervention() {
@@ -68,7 +68,9 @@ export default function DivineIntervention() {
       ))}
 
       <div className="relative text-center mb-8">
-        <div className="text-7xl mb-4">✨</div>
+        <div className="mb-4 flex justify-center">
+          <img src={ROOM_ART.divine || PLACEHOLDER_ART} alt="Divine" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/30" />
+        </div>
         <h2 className="text-4xl font-serif text-yellow-200">Divine Intervention</h2>
         <p className="text-amber-100/60 text-sm mt-3 max-w-md">
           The Lord speaks to you in this moment. Choose your blessing wisely.
@@ -91,11 +93,7 @@ export default function DivineIntervention() {
             style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}
           >
             <div className="mb-3 flex justify-center">
-              {BLESSING_ART[blessing.id] ? (
-                <img src={BLESSING_ART[blessing.id]} alt={blessing.name} className="w-16 h-16 object-cover rounded-lg border border-amber-400/30" />
-              ) : (
-                <span className="text-4xl">{blessing.icon}</span>
-              )}
+              <img src={BLESSING_ART[blessing.id] || PLACEHOLDER_ART} alt={blessing.name} className="w-16 h-16 object-cover rounded-lg border border-amber-400/30" />
             </div>
             <h3 className="font-serif text-amber-100 text-lg mb-2">{blessing.name}</h3>
             <p className="text-amber-100/60 text-xs">{blessing.description}</p>

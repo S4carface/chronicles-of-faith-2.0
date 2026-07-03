@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Heart, Hand } from "lucide-react";
 import { useGame } from "@/game/GameContext";
+import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function RestRoom() {
@@ -35,7 +37,9 @@ export default function RestRoom() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.1) 0%, rgba(8,12,24,0.98) 60%)" }}>
       <div className="text-center mb-8">
-        <div className="text-7xl mb-4">🔥</div>
+        <div className="mb-4 flex justify-center">
+          <img src={ROOM_ART.rest || PLACEHOLDER_ART} alt="Rest" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/30" />
+        </div>
         <h2 className="text-3xl font-serif text-amber-200">A Moment of Rest</h2>
         <p className="text-amber-100/50 text-sm mt-2 max-w-md">
           You find a quiet place by a warm fire. Take a moment to restore your spirit.
@@ -53,7 +57,7 @@ export default function RestRoom() {
           }`}
           style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}
         >
-          <div className="text-4xl mb-3">❤️</div>
+          <Heart className="w-8 h-8 text-emerald-300 mb-3 mx-auto" />
           <h3 className="font-serif text-amber-100 text-lg">Rest & Heal</h3>
           <p className="text-amber-100/50 text-xs mt-1">Restore 30% of your max HP</p>
         </button>
@@ -68,7 +72,7 @@ export default function RestRoom() {
           }`}
           style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}
         >
-          <div className="text-4xl mb-3">🙏</div>
+          <Hand className="w-8 h-8 text-amber-300 mb-3 mx-auto" />
           <h3 className="font-serif text-amber-100 text-lg">Pray for Strength</h3>
           <p className="text-amber-100/50 text-xs mt-1">+5 attack power for your next battle</p>
         </button>

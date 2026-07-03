@@ -45,6 +45,8 @@ export default function Play() {
         onSelectNode={selectNode}
         onExit={() => { endRun(); navigate("/"); }}
         fogOfWar={run.fogOfWar}
+        playerHp={run.playerHp}
+        maxHp={run.maxHp}
       />
     );
   }

@@ -1,13 +1,41 @@
-import React from "react";
-import { ROOM_ICONS, ROOM_LABELS } from "@/data/genesisRooms";
+import React, { useState } from "react";
+import { ROOM_LABELS, ROOM_INFO } from "@/data/genesisRooms";
+import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
+import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
 
-export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar }) {
-  const availableNodes = currentNode
-    ? currentNode.connections
-    : [map[0][0].id];
+export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp }) {
+  const [previewNode, setPreviewNode] = useState(null);
+  const availableNodes = currentNode ? currentNode.connections : [map[0][0].id];
   const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
+
+  const hpRatio = playerHp && maxHp ? playerHp / maxHp : 1;
+  const isLowHp = hpRatio < 0.4;
+  const isHighHp = hpRatio > 0.7;
+
+  const getRecommendation = (nodeType) => {
+    if ((nodeType === "divine" || nodeType === "treasure" || nodeType === "rest") && isLowHp) {
+      return "Recommended";
+    }
+    if (nodeType === "battle" && isHighHp) {
+      return "High Reward";
+    }
+    return null;
+  };
+
+  const handleNodeClick = (node) => {
+    if (availableNodes.includes(node.id) && !node.cleared) {
+      setPreviewNode(node);
+    }
+  };
+
+  const handleEnterRoom = () => {
+    if (previewNode) {
+      onSelectNode(previewNode.id);
+      setPreviewNode(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0F1A30 100%)" }}>
@@ -48,6 +76,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                     const isCleared = node.cleared;
                     const isBoss = node.type === "boss";
                     const isVisible = visibleSet.has(node.id);
+                    const recommendation = getRecommendation(node.type);
 
                     if (!isVisible && !isCleared) {
                       return (
@@ -59,7 +88,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             )}
                             style={{ filter: "blur(1px)", opacity: 0.3 }}
                           >
-                            <span className="text-xl text-slate-700">🌫️</span>
+                            <img src={PLACEHOLDER_ART} alt="" className="w-8 h-8 object-cover rounded opacity-30" />
                           </div>
                           <span className="text-[9px] mt-1.5 h-6" />
                         </div>
@@ -69,14 +98,14 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                     return (
                       <button
                         key={node.id}
-                        onClick={() => isAvailable && onSelectNode(node.id)}
-                        disabled={!isAvailable}
+                        onClick={() => isAvailable && !isCleared && handleNodeClick(node)}
+                        disabled={!isAvailable || isCleared}
                         className="flex flex-col items-center w-20"
                       >
                         <div
                           className={cn(
-                            "relative flex items-center justify-center rounded-xl border-2 transition-all duration-300",
-                            isBoss ? "w-16 h-16 text-2xl" : "w-14 h-14 text-xl",
+                            "relative flex items-center justify-center rounded-xl border-2 overflow-hidden transition-all duration-300",
+                            isBoss ? "w-16 h-16" : "w-14 h-14",
                             isCurrent && "ring-2 ring-amber-300 scale-110 shadow-lg shadow-amber-400/40",
                             isAvailable && !isCleared && "border-amber-400/70 bg-amber-500/15 hover:scale-110 hover:bg-amber-500/25 cursor-pointer animate-pulse shadow-lg shadow-amber-500/20",
                             isCleared && "border-emerald-600/40 bg-emerald-900/20 opacity-50",
@@ -84,9 +113,21 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             isBoss && isAvailable && !isCleared && "border-red-400/70 bg-red-500/15 shadow-lg shadow-red-500/30"
                           )}
                         >
-                          <span>{isCleared && !isBoss ? "✓" : (ROOM_ICONS[node.type] || "❓")}</span>
+                          {isCleared && !isBoss ? (
+                            <span className="text-emerald-400 text-lg font-bold">✓</span>
+                          ) : (
+                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="w-10 h-10 object-cover" />
+                          )}
+                          {recommendation && isAvailable && !isCleared && (
+                            <span className={cn(
+                              "absolute -top-1.5 -right-1.5 px-1 py-0.5 rounded-full text-[8px] font-bold whitespace-nowrap",
+                              recommendation === "Recommended" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                            )}>
+                              {recommendation === "Recommended" ? "★" : "⚔"}
+                            </span>
+                          )}
                         </div>
-                        {/* Label in its own space — no overlap */}
+                        {/* Label */}
                         <span
                           className={cn(
                             "text-[9px] mt-1.5 text-center leading-tight h-6 flex items-start justify-center",
@@ -120,6 +161,16 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
         <span className="flex items-center gap-1 text-red-300/80"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Boss</span>
         <span className="flex items-center gap-1 text-slate-400/70"><span className="w-2.5 h-2.5 rounded-full bg-slate-600" />Locked</span>
       </div>
+
+      {/* Room preview panel */}
+      {previewNode && (
+        <RoomPreviewPanel
+          node={previewNode}
+          recommendation={getRecommendation(previewNode.type)}
+          onEnter={handleEnterRoom}
+          onCancel={() => setPreviewNode(null)}
+        />
+      )}
     </div>
   );
 }

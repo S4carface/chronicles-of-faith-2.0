@@ -5,6 +5,7 @@ import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore } from "@/game/scoreManager";
+import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
@@ -50,6 +51,10 @@ export default function VictoryScreen() {
       saveProfile({ lastDailyDate: todayStr, dailyStreak: newStreak });
       if (newStreak >= 3) unlockAchievement("daily_devotion");
     }
+
+    // Record lifetime stats (story run won)
+    recordRunWon(finalScore, run.gold || 0);
+    syncStatsToCloud();
 
     // Auto-submit score — prompt for name if missing
     if (profile.playerName) {

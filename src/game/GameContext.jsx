@@ -9,6 +9,7 @@ import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
 import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
+import { recordRunStarted } from "@/game/playerStats";
 
 const GameContext = createContext(null);
 
@@ -273,6 +274,7 @@ export function GameProvider({ children }) {
       nextCardRare: false,
     });
 
+    recordRunStarted();
     Sound.playMusic("eden");
   }, [profile.unlockedHeroes, profile.activeDeck]);
 

@@ -1,0 +1,83 @@
+{
+  "name": "PlayerStats",
+  "type": "object",
+  "properties": {
+    "playerId": {
+      "type": "string"
+    },
+    "runsPlayed": {
+      "type": "number",
+      "default": 0
+    },
+    "runsCompleted": {
+      "type": "number",
+      "default": 0
+    },
+    "runsWon": {
+      "type": "number",
+      "default": 0
+    },
+    "battlesWon": {
+      "type": "number",
+      "default": 0
+    },
+    "battlesLost": {
+      "type": "number",
+      "default": 0
+    },
+    "bossesDefeated": {
+      "type": "number",
+      "default": 0
+    },
+    "bestScore": {
+      "type": "number",
+      "default": 0
+    },
+    "totalGoldEarned": {
+      "type": "number",
+      "default": 0
+    },
+    "triviaAnswered": {
+      "type": "number",
+      "default": 0
+    },
+    "triviaCorrect": {
+      "type": "number",
+      "default": 0
+    },
+    "versesRead": {
+      "type": "number",
+      "default": 0
+    },
+    "dailyChallengesCompleted": {
+      "type": "number",
+      "default": 0
+    },
+    "bestDailyStreak": {
+      "type": "number",
+      "default": 0
+    },
+    "bestDailyScore": {
+      "type": "number",
+      "default": 0
+    },
+    "totalDamageDealt": {
+      "type": "number",
+      "default": 0
+    },
+    "totalBlockGained": {
+      "type": "number",
+      "default": 0
+    },
+    "totalHealingDone": {
+      "type": "number",
+      "default": 0
+    },
+    "cardUsageJson": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "playerId"
+  ]
+}

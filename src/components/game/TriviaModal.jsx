@@ -3,6 +3,7 @@ import { useGame } from "@/game/GameContext";
 import { getQuestionForRoomDepth } from "@/data/trivia";
 import { UI_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+import { recordTriviaAnswered } from "@/game/playerStats";
 
 export default function TriviaModal({ onComplete }) {
   const { run, updateRun } = useGame();
@@ -31,6 +32,7 @@ export default function TriviaModal({ onComplete }) {
 
   const handleContinue = () => {
     const correct = selected === question.answer;
+    recordTriviaAnswered(correct);
     // Record trivia stats in the run state (single source of truth)
     updateRun({
       triviaAttempted: (run.triviaAttempted || 0) + 1,

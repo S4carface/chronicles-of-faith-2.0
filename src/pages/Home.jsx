@@ -96,6 +96,7 @@ export default function Home() {
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
   const menuItems = [
+    { label: "My Journey", art: MENU_ART.progress, path: "/journey", desc: "Your progress, streaks, and Bible learning", status: null },
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },

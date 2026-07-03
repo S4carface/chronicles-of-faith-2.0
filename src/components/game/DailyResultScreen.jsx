@@ -5,6 +5,7 @@ import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore, getDailyRank } from "@/game/scoreManager";
 import * as Sound from "@/game/soundManager";
+import { recordDailyCompleted, syncStatsToCloud } from "@/game/playerStats";
 
 function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
   if (result !== "victory") return 0;
@@ -45,13 +46,16 @@ export default function DailyResultScreen() {
 
     if (result.result === "victory" && isFirstToday) {
       const newStreak = profile.lastDailyDate === yesterday ? (profile.dailyStreak || 0) + 1 : 1;
+      const goldReward = dailyConfig?.reward?.gold || 0;
       saveProfile({
         dailyStreak: newStreak,
         lastDailyDate: todayStr,
-        gold: (profile.gold || 0) + (dailyConfig?.reward?.gold || 0),
+        gold: (profile.gold || 0) + goldReward,
       });
       setStreakUpdated(true);
+      recordDailyCompleted(score, newStreak, goldReward);
     }
+    syncStatsToCloud();
 
     const playerName = profile.playerName;
     if (!playerName) {

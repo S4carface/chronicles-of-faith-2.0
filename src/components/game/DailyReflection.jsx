@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Swords, BookOpen, Heart, Sun } from "lucide-react";
 import { getDailyReflection } from "@/data/dailyReflections";
+import { recordVerseRead } from "@/game/playerStats";
 import * as Sound from "@/game/soundManager";
 
 export default function DailyReflection({ onStartBattle, buttonText, loading }) {
@@ -10,7 +11,7 @@ export default function DailyReflection({ onStartBattle, buttonText, loading }) 
   if (!expanded) {
     return (
       <button
-        onClick={() => { Sound.sfx.click(); setExpanded(true); }}
+        onClick={() => { Sound.sfx.click(); setExpanded(true); recordVerseRead(); }}
         className="w-full mb-4 p-4 rounded-xl border border-amber-400/20 bg-slate-900/30 hover:bg-slate-900/50 transition group text-left"
       >
         <div className="flex items-center gap-3">

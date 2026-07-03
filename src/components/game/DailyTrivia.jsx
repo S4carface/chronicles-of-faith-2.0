@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BookOpen, Check, X } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
+import { recordTriviaAnswered } from "@/game/playerStats";
 
 export default function DailyTrivia() {
   const { run, updateRun, setPhase } = useGame();
@@ -23,6 +24,7 @@ export default function DailyTrivia() {
     if (correct) Sound.sfx.reward();
     else Sound.sfx.click();
     updateRun({ dailyTriviaCorrect: correct });
+    recordTriviaAnswered(correct);
     setTimeout(() => setPhase("dailyResult"), 2000);
   };
 

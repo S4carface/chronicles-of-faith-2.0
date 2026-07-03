@@ -15,6 +15,7 @@ import TutorialOverlay from "@/components/game/TutorialOverlay";
 import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+import { recordBattleWon, recordBattleLost, recordCardPlayed, recordDamage, recordBlock, recordHealing } from "@/game/playerStats";
 
 function getActionType(action) {
   if (!action) return "attack";
@@ -176,6 +177,15 @@ export default function BattleScreen() {
 
     const newState = playCardEngine(battleState, handIndex, card);
     setBattleState(newState);
+
+    // Track lifetime gameplay stats (works for both story & daily — these are gameplay stats)
+    recordCardPlayed(card.id);
+    const dmgDealt = Math.max(0, (battleState.enemy.currentHp) - (newState.enemy.currentHp));
+    if (dmgDealt > 0) recordDamage(dmgDealt);
+    const blockGained = Math.max(0, (newState.playerBlock) - (battleState.playerBlock));
+    if (blockGained > 0) recordBlock(blockGained);
+    const healed = Math.max(0, (newState.playerHp) - (battleState.playerHp));
+    if (healed > 0) recordHealing(healed);
 
     // Type-specific sounds and animations
     if (card.type === "attack") {
@@ -413,6 +423,7 @@ export default function BattleScreen() {
 
           // Counter retaliation effects — shield flash + damage number + deflect sound
           if (step.counterHit > 0) {
+            recordDamage(step.counterHit);
             Sound.sfx.deflect();
             setCounterFlash(true);
             setCounterFloat({ text: `Counter -${step.counterHit}`, color: "#fbbf24" });
@@ -535,6 +546,7 @@ export default function BattleScreen() {
       if (run.pendingEnemyId === "serpent" && run.roomsCleared === 0) {
         unlockAchievement("serpent_slayer");
       }
+      recordBattleWon(enemy.isBoss);
       const tookDamage = state.playerHp < run.playerHp;
       if (!tookDamage) {
         updateRun({
@@ -560,6 +572,7 @@ export default function BattleScreen() {
     } else {
       Sound.sfx.defeat();
       Sound.playMusic("defeat");
+      recordBattleLost();
     }
   };
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
+import { recordGoldEarned, syncStatsToCloud } from "@/game/playerStats";
 
 export default function DefeatScreen() {
   const { run, endRun, addCardsToCollection, saveProfile, profile } = useGame();
@@ -15,8 +16,11 @@ export default function DefeatScreen() {
     }
     // Save half the gold on defeat (consolation)
     if (run.gold > 0) {
-      saveProfile({ gold: Math.floor((profile.gold || 0) + run.gold / 2) });
+      const consolation = Math.floor(run.gold / 2);
+      saveProfile({ gold: Math.floor((profile.gold || 0) + consolation) });
+      recordGoldEarned(consolation);
     }
+    syncStatsToCloud();
   }, []);
 
   const handleReturnToMenu = () => {

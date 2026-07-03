@@ -49,7 +49,7 @@ export default function BattleScreen() {
   const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
-  const enemy = ENEMIES[run.pendingEnemyId];
+  const enemy = run.dailyEnemy || ENEMIES[run.pendingEnemyId];
   const [battleState, setBattleState] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [battleEnd, setBattleEnd] = useState(null);
@@ -66,7 +66,7 @@ export default function BattleScreen() {
   const [showPause, setShowPause] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
-  const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
+  const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
   const [intentExplain, setIntentExplain] = useState(null);
@@ -89,6 +89,11 @@ export default function BattleScreen() {
     if (run.shieldActive) state.shieldActive = true;
     if (run.buffAttack > 0) state.buffAttack = run.buffAttack;
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
+    if (run.isDaily) {
+      if (run.dailyMaxEnergy) { state.maxEnergy = run.dailyMaxEnergy; state.energy = run.dailyMaxEnergy; }
+      if (run.dailyEnemyStartBlock) state.enemyBlock = run.dailyEnemyStartBlock;
+      if (run.dailyPlayerStartBlock) state.playerBlock = run.dailyPlayerStartBlock;
+    }
     setBattleState(state);
   }, []);
 
@@ -377,6 +382,27 @@ export default function BattleScreen() {
   };
 
   const handleBattleEnd = (result, state) => {
+    if (run.isDaily) {
+      if (result === "victory") {
+        Sound.sfx.victory();
+        Sound.playMusic("victory");
+      } else {
+        Sound.sfx.defeat();
+        Sound.playMusic("defeat");
+      }
+      const cardsPlayed = state.log.filter(e => e.includes("You played")).length;
+      updateRun({
+        dailyResult: {
+          result,
+          playerHp: state.playerHp,
+          maxPlayerHp: state.maxPlayerHp,
+          turnNumber: state.turnNumber,
+          cardsPlayed,
+          enemyName: enemy.name,
+        },
+      });
+      return;
+    }
     if (result === "victory") {
       Sound.sfx.victory();
       const goldReward = enemy.isBoss ? 30 : 10 + Math.floor(Math.random() * 5);

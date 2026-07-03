@@ -325,6 +325,52 @@ export function GameProvider({ children }) {
     setRun(prev => prev ? { ...prev, currentBattleState: battleState } : prev);
   }, []);
 
+  const startDailyBattle = useCallback((dailyConfig) => {
+    const hero = dailyConfig.hero;
+
+    setRun({
+      hero,
+      map: null,
+      seed: dailyConfig.seed,
+      isDaily: true,
+      difficulty: "daily_standard",
+      fogOfWar: false,
+      playerHp: dailyConfig.playerHp,
+      maxHp: dailyConfig.maxHp,
+      deck: [...dailyConfig.deck],
+      gold: 0,
+      roomsCleared: 0,
+      triviaCorrect: 0,
+      triviaTotal: 0,
+      battlesWithoutDamage: 0,
+      divineEncounters: 0,
+      tookOnlyBattles: true,
+      usedScriptureOnly: true,
+      usedLegendary: false,
+      neverLostHp: true,
+      storyChoices: [],
+      currentNode: null,
+      phase: "battle",
+      pendingReward: null,
+      narrationText: "",
+      pendingEnemyId: dailyConfig.enemyId,
+      dailyEnemy: dailyConfig.enemy,
+      currentBattleState: null,
+      buffAttack: 0,
+      shieldActive: false,
+      extraDraw: dailyConfig.rule.extraDraw || 0,
+      nextCardRare: false,
+      dailyConfig,
+      dailyMaxEnergy: dailyConfig.rule.maxEnergy || 3,
+      dailyEnemyStartBlock: dailyConfig.rule.enemyStartBlock || 0,
+      dailyPlayerStartBlock: dailyConfig.rule.playerStartBlock || 0,
+      dailyResult: null,
+      dailyTriviaCorrect: false,
+    });
+
+    Sound.playMusic("battle");
+  }, []);
+
   const endRun = useCallback(() => {
     setRun(null);
     Sound.playMusic("menu");
@@ -335,6 +381,7 @@ export function GameProvider({ children }) {
     saveProfile,
     run,
     startRun,
+    startDailyBattle,
     selectNode,
     completeRoom,
     setPhase,

@@ -27,7 +27,8 @@ export default function Leaderboard() {
     try {
       let results;
       if (filter === "daily") {
-        results = await base44.entities.LeaderboardEntry.filter({ is_daily: true }, "-score", 50);
+        const today = new Date().toISOString().slice(0, 10);
+        results = await base44.entities.LeaderboardEntry.filter({ is_daily: true, run_seed: today }, "-score", 50);
       } else {
         results = await base44.entities.LeaderboardEntry.list("-score", 50);
       }
@@ -59,7 +60,7 @@ export default function Leaderboard() {
         {[
           { key: "all", label: "All Time" },
           { key: "weekly", label: "This Week" },
-          { key: "daily", label: "Daily Challenge" },
+          { key: "daily", label: "Today's Daily" },
         ].map(f => (
           <button
             key={f.key}

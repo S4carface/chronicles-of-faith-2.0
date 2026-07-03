@@ -12,6 +12,8 @@ import DefeatScreen from "@/components/game/DefeatScreen";
 import StoryNarration from "@/components/game/StoryNarration";
 import RestRoom from "@/components/game/RestRoom";
 import HeroSelect from "@/components/game/HeroSelect";
+import DailyTrivia from "@/components/game/DailyTrivia";
+import DailyResultScreen from "@/components/game/DailyResultScreen";
 
 export default function Play() {
   const { run, selectNode, endRun } = useGame();
@@ -74,6 +76,21 @@ export default function Play() {
   // Rest room (campfire)
   if (run.phase === "rest") {
     return <RestRoom />;
+  }
+
+  // Daily: trivia after victory
+  if (run.phase === "reward" && run.isDaily) {
+    return <DailyTrivia />;
+  }
+
+  // Daily: results screen
+  if (run.phase === "dailyResult") {
+    return <DailyResultScreen />;
+  }
+
+  // Daily: defeat routes to results
+  if (run.phase === "defeat" && run.isDaily) {
+    return <DailyResultScreen />;
   }
 
   // Reward (post-battle: narration + trivia + card selection)

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps } from "@/game/battleEngine";
+import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps, drawCards } from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
@@ -65,6 +65,7 @@ export default function BattleScreen() {
   const [enemyFlash, setEnemyFlash] = useState(false);
   const [playerFlash, setPlayerFlash] = useState(false);
   const [showPause, setShowPause] = useState(false);
+  const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
@@ -78,7 +79,36 @@ export default function BattleScreen() {
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
     if (run.currentBattleState) {
-      setBattleState(run.currentBattleState);
+      const saved = run.currentBattleState;
+      if (saved.turn === "enemy") {
+        // Mid-enemy-turn resume: complete the turn so the player isn't stuck.
+        // Remaining enemy actions are skipped (already-applied effects stay),
+        // DOT ticks, and the player draws a new hand.
+        let playerHp = saved.playerHp;
+        let dots = saved.dots || 0;
+        if (dots > 0) {
+          playerHp = Math.max(0, playerHp - 2);
+          dots -= 1;
+        }
+        const baseState = {
+          ...saved,
+          turn: "player",
+          turnNumber: saved.turnNumber + 1,
+          energy: saved.maxEnergy,
+          playerHp,
+          dots,
+        };
+        const drawCount = Math.max(0, 5 - (saved.skipDraw || 0));
+        const newState = drawCards(baseState, drawCount);
+        const finalState = { ...newState, skipDraw: 0 };
+        setBattleState(finalState);
+        if (playerHp <= 0) {
+          setBattleEnd("defeat");
+          handleBattleEnd("defeat", finalState);
+        }
+      } else {
+        setBattleState(saved);
+      }
       return;
     }
     const state = createBattleState(
@@ -894,7 +924,7 @@ export default function BattleScreen() {
       )}
 
       {/* Pause overlay */}
-      {showPause && (
+      {showPause && !showAbandonConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(8,12,24,0.95)" }}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
             <h2 className="text-2xl font-serif text-amber-200 text-center mb-6">Paused</h2>
@@ -933,11 +963,40 @@ export default function BattleScreen() {
               >
                 Resume Battle
               </button>
+              {!run.isDaily && (
+                <p className="text-amber-100/40 text-[10px] text-center -mt-2">
+                  Your Story Mode run is saved automatically.
+                </p>
+              )}
               <button
-                onClick={handleAbandon}
+                onClick={() => { setShowAbandonConfirm(true); Sound.sfx.click(); }}
                 className="w-full px-6 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm hover:bg-red-800/30 transition"
               >
                 Abandon Run & Return to Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Abandon confirmation */}
+      {showAbandonConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
+          <div className="max-w-sm w-full rounded-2xl border-2 border-red-500/30 p-6 animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+            <h2 className="text-lg font-serif text-red-200 text-center mb-3">Abandon this run?</h2>
+            <p className="text-amber-100/60 text-sm text-center mb-6">Your saved progress will be deleted.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowAbandonConfirm(false); Sound.sfx.click(); }}
+                className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-slate-800/40 text-amber-100/70 text-sm hover:bg-slate-800/60 transition"
+              >
+                Keep Playing
+              </button>
+              <button
+                onClick={handleAbandon}
+                className="flex-1 px-4 py-2 rounded-lg border-2 border-red-400/50 bg-red-900/30 text-red-100 text-sm font-bold hover:bg-red-800/40 transition"
+              >
+                Abandon Run
               </button>
             </div>
           </div>

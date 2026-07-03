@@ -8,23 +8,11 @@ import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
 import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
+import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 
 const GameContext = createContext(null);
 
 const STORAGE_KEY = "chronicles_of_faith_v1";
-const RUN_STORAGE_KEY = "chronicles_of_faith_run_v1";
-
-function loadRun() {
-  try {
-    const raw = localStorage.getItem(RUN_STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (["victory", "defeat", "dailyResult"].includes(parsed.phase)) return null;
-      return parsed;
-    }
-  } catch (e) {}
-  return null;
-}
 
 function loadProfile() {
   try {
@@ -69,19 +57,31 @@ function loadProfile() {
 
 export function GameProvider({ children }) {
   const [profile, setProfile] = useState(loadProfile);
-  const [run, setRun] = useState(loadRun);
+  const [run, setRun] = useState(null);
+  const [savedStoryExists, setSavedStoryExists] = useState(() => hasSavedStoryRun());
+  const [storySaveError, setStorySaveError] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState([]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   }, [profile]);
 
+  // Autosave story runs (never daily) — clears save on terminal phases
   useEffect(() => {
     if (run) {
-      try { localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(run)); } catch (e) {}
-    } else {
-      localStorage.removeItem(RUN_STORAGE_KEY);
+      if (run.isDaily) {
+        // Daily Challenge: never save or clear story save
+        return;
+      }
+      if (["victory", "defeat", "dailyResult"].includes(run.phase)) {
+        clearStoryRun();
+        setSavedStoryExists(false);
+      } else {
+        saveStoryRun(run);
+        setSavedStoryExists(true);
+      }
     }
+    // When run is null, don't touch the save — endRun handles explicit clearing
   }, [run]);
 
   // Flush state to localStorage when app goes to background (save/resume reliability)
@@ -90,8 +90,10 @@ export function GameProvider({ children }) {
       if (document.visibilityState === "hidden") {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-          if (run) localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(run));
         } catch (e) {}
+        if (run && !run.isDaily && !["victory", "defeat", "dailyResult"].includes(run.phase)) {
+          saveStoryRun(run);
+        }
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -437,10 +439,30 @@ export function GameProvider({ children }) {
     Sound.playMusic("battle");
   }, [profile.activeDeck]);
 
-  const endRun = useCallback(() => {
-    setRun(null);
-    Sound.playMusic("menu");
+  const resumeStoryRun = useCallback(() => {
+    const saved = loadStoryRun();
+    if (!saved) {
+      setSavedStoryExists(false);
+      setStorySaveError(true);
+      return false;
+    }
+    const { savedAt, ...runData } = saved;
+    setRun(runData);
+    setSavedStoryExists(true);
+    setStorySaveError(false);
+    return true;
   }, []);
+
+  const endRun = useCallback(() => {
+    const wasDaily = run?.isDaily;
+    setRun(null);
+    if (!wasDaily) {
+      clearStoryRun();
+      setSavedStoryExists(false);
+    }
+    setStorySaveError(false);
+    Sound.playMusic("menu");
+  }, [run]);
 
   const value = {
     profile,
@@ -454,6 +476,9 @@ export function GameProvider({ children }) {
     updateRun,
     saveBattleState,
     endRun,
+    resumeStoryRun,
+    savedStoryExists,
+    storySaveError,
     unlockAchievement,
     addCardsToCollection,
     addCardToCollection,

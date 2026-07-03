@@ -109,8 +109,11 @@ export default function DailyChallenge() {
         <p className="text-amber-100/50 text-xs lg:text-sm mb-4 lg:mb-6 italic">{daily.theme.verse}</p>
 
         <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6" style={{ background: "rgba(15,26,48,0.6)" }}>
-          <p className="text-amber-100/70 text-sm lg:text-base mb-3 lg:mb-4">
+          <p className="text-amber-100/70 text-sm lg:text-base mb-2">
             One daily battle. Same challenge for everyone.
+          </p>
+          <p className="text-amber-100/40 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">
+            Daily Challenge is one attempt. Leaving before finishing may end the attempt.
           </p>
 
           {/* Difficulty display */}

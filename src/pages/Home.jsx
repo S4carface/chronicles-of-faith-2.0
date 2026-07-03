@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Swords, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
@@ -8,15 +8,22 @@ import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
+import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
-  const { profile, run, endRun, Sound: Snd } = useGame();
+  const { profile, run, endRun, Sound: Snd, savedStoryExists, resumeStoryRun, storySaveError } = useGame();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [showResume, setShowResume] = useState(false);
+  const savedRunInfo = useMemo(() => {
+    if (!savedStoryExists) return null;
+    const saved = loadStoryRun();
+    if (!saved) return null;
+    return { stage: (saved.roomsCleared || 0) + 1 };
+  }, [savedStoryExists]);
 
   useEffect(() => {
     Snd.playMusic("menu");
@@ -41,7 +48,7 @@ export default function Home() {
       navigate("/collection");
       return;
     }
-    if (run) {
+    if (run || savedStoryExists) {
       setShowConfirm(true);
     } else {
       navigate("/play");
@@ -52,7 +59,7 @@ export default function Home() {
     setShowNamePrompt(false);
     if (pendingAction === "run") {
       setPendingAction(null);
-      if (run) {
+      if (run || savedStoryExists) {
         setShowConfirm(true);
       } else {
         navigate("/play");
@@ -67,6 +74,23 @@ export default function Home() {
     endRun();
     setShowConfirm(false);
     navigate("/play");
+  };
+
+  const handleContinueSaved = () => {
+    Sound.sfx.click();
+    setShowConfirm(false);
+    if (run) {
+      navigate("/play");
+    } else if (resumeStoryRun()) {
+      navigate("/play");
+    }
+  };
+
+  const handleResumeSavedRun = () => {
+    Sound.sfx.click();
+    if (resumeStoryRun()) {
+      navigate("/play");
+    }
   };
 
   const TOTAL_CARDS = 29;
@@ -145,6 +169,32 @@ export default function Home() {
         </div>
       )}
 
+      {/* Continue Saved Run — shown when no active run in memory but a story save exists */}
+      {!run && savedStoryExists && savedRunInfo && (
+        <button
+          onClick={handleResumeSavedRun}
+          className="relative w-full max-w-md lg:max-w-[600px] mb-3 px-8 py-4 lg:py-5 rounded-xl border-2 border-emerald-400/60 text-emerald-100 font-serif font-bold text-center hover:bg-emerald-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-emerald-500/20 animate-fade-in"
+          style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.25) 0%, rgba(10,60,30,0.2) 100%)" }}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <Swords className="w-5 h-5" />
+            Continue Saved Run
+          </span>
+          <span className="block text-emerald-200/60 text-xs font-body font-normal mt-1">
+            Resume your Genesis run from Stage {savedRunInfo.stage}
+          </span>
+        </button>
+      )}
+
+      {/* Story save corruption notice */}
+      {storySaveError && !savedStoryExists && (
+        <div className="w-full max-w-md mb-3 p-3 rounded-lg border border-red-500/30 bg-red-900/20 text-center animate-fade-in">
+          <p className="text-red-200/80 text-xs">
+            Saved run could not be restored. Please start a new run.
+          </p>
+        </div>
+      )}
+
       {/* Play button — primary CTA */}
       <button
         onClick={handleBeginRun}
@@ -161,21 +211,29 @@ export default function Home() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Abandon Current Run?</h2>
-            <p className="text-amber-100/60 text-sm text-center mb-6">Starting a new run will abandon your current journey. Continue?</p>
-            <div className="flex gap-3">
+            <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Saved Run Found</h2>
+            <p className="text-amber-100/60 text-sm text-center mb-6">You already have a saved Genesis run. Starting a new run will erase it.</p>
+            <div className="space-y-3">
               <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-slate-800/40 text-amber-100/70 text-sm hover:bg-slate-800/60 transition"
+                onClick={handleContinueSaved}
+                className="w-full px-4 py-2 rounded-lg border-2 border-emerald-400/50 bg-emerald-900/30 text-emerald-100 text-sm font-bold hover:bg-emerald-800/40 transition"
               >
-                Cancel
+                Continue Saved Run
               </button>
-              <button
-                onClick={handleConfirmNew}
-                className="flex-1 px-4 py-2 rounded-lg border-2 border-red-400/50 bg-red-900/30 text-red-100 text-sm font-bold hover:bg-red-800/40 transition"
-              >
-                Start New
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-slate-800/40 text-amber-100/70 text-sm hover:bg-slate-800/60 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmNew}
+                  className="flex-1 px-4 py-2 rounded-lg border-2 border-red-400/50 bg-red-900/30 text-red-100 text-sm font-bold hover:bg-red-800/40 transition"
+                >
+                  Start New Run
+                </button>
+              </div>
             </div>
           </div>
         </div>

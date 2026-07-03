@@ -194,6 +194,25 @@ export default function Settings() {
               ))}
             </div>
           </div>
+
+          {/* Guidance Tips */}
+          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-amber-300/70" />
+                <div>
+                  <span className="font-serif text-amber-100 text-sm">Guidance Tips</span>
+                  <p className="text-amber-100/40 text-[10px]">Tactical hints during battle (default: Easy on)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { saveProfile({ settings: { ...profile.settings, guidanceTips: !profile.settings.guidanceTips } }); Sound.sfx.click(); }}
+                className={`w-14 h-7 rounded-full transition relative ${profile.settings.guidanceTips ? "bg-amber-500/40" : "bg-slate-700"}`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-amber-200 transition-transform ${profile.settings.guidanceTips ? "translate-x-7" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* === PLAYER SECTION === */}

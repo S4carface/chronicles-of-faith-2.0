@@ -8,6 +8,7 @@ import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import CardDetailModal from "@/components/game/CardDetailModal";
+import GuidanceHint from "@/components/game/GuidanceHint";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -550,6 +551,11 @@ export default function BattleScreen() {
             {floatingText.text}
           </span>
         </div>
+      )}
+
+      {/* Guidance hint — Easy mode tactical suggestion */}
+      {profile.settings.guidanceTips && !battleEnd && !isEnemyTurn && (
+        <GuidanceHint battleState={battleState} />
       )}
 
       {/* Player stats — compact single row */}

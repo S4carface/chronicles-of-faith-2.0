@@ -17,7 +17,7 @@ export default function DifficultySelect() {
   const handleSelect = (key) => {
     if (key === current) return;
     Sound.sfx.click();
-    saveProfile({ difficulty: key });
+    saveProfile({ difficulty: key, settings: { ...profile.settings, guidanceTips: key === "easy" } });
   };
 
   return (

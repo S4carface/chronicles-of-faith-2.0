@@ -5,16 +5,19 @@ import { getCardById } from "@/data/cards";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import { pick } from "@/game/mapGenerator";
 import { STORY_ART, PLACEHOLDER_ART } from "@/data/art";
+import { generateTreasureCard, RUN_DECK_MAX } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
+import DeckFullModal from "@/components/game/DeckFullModal";
 
 export default function StoryChoiceRoom() {
-  const { run, completeRoom, updateRun, profile } = useGame();
+  const { run, completeRoom, updateRun, profile, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
   const node = run.currentNode;
   const story = node?.storyChoice;
   const [chosen, setChosen] = useState(null);
   const [resultText, setResultText] = useState("");
   const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
-  const narratedRef = useRef(false);
+  const [deckFullCard, setDeckFullCard] = useState(null);
+  const narratedRef = useRef(null);
 
   useEffect(() => {
     Sound.playMusic("story");
@@ -58,14 +61,21 @@ export default function StoryChoiceRoom() {
     } else if (choice.effect.type === "block") {
       updateRun({ buffAttack: run.buffAttack + choice.effect.value });
     } else if (choice.effect.type === "miracle_card") {
-      updateRun({ deck: [...run.deck, "angel_lord"] });
+      // Add to collection + run deck (with 15 cap)
+      addCardToCollection("angel_lord");
+      if (run.deck.length < RUN_DECK_MAX) {
+        addCardToRunDeck("angel_lord");
+      }
     } else if (choice.effect.type === "card_upgrade") {
       updateRun({ nextCardRare: true });
     }
 
     if (choice.effect.cardReward) {
-      const reward = pick(Math.random, TREASURE_REWARDS);
-      updateRun({ deck: [...run.deck, reward] });
+      const reward = generateTreasureCard(Math.random) || pick(Math.random, TREASURE_REWARDS);
+      addCardToCollection(reward);
+      if (run.deck.length < RUN_DECK_MAX) {
+        addCardToRunDeck(reward);
+      }
     }
     if (choice.effect.gold) {
       updateRun({ gold: run.gold + choice.effect.gold });
@@ -78,12 +88,23 @@ export default function StoryChoiceRoom() {
   const handleContinue = () => {
     Sound.stopNarration();
     Sound.sfx.click();
-    const choice = chosen === "a" ? story.choice_a : story.choice_b;
-    if (choice.effect.type === "miracle_card") {
-      completeRoom(node.id, { cardId: "angel_lord" });
-    } else {
-      completeRoom(node.id);
-    }
+    completeRoom(node.id);
+  };
+
+  const handleDeckFullReplace = (index) => {
+    replaceCardInRun(index, deckFullCard);
+    setDeckFullCard(null);
+    completeRoom(node.id);
+  };
+
+  const handleDeckFullSendToCollection = () => {
+    setDeckFullCard(null);
+    completeRoom(node.id);
+  };
+
+  const handleDeckFullSkip = () => {
+    setDeckFullCard(null);
+    completeRoom(node.id);
   };
 
   return (
@@ -148,6 +169,16 @@ export default function StoryChoiceRoom() {
             Continue →
           </button>
         </div>
+      )}
+
+      {deckFullCard && (
+        <DeckFullModal
+          rewardCardId={deckFullCard}
+          runDeck={run.deck}
+          onReplace={handleDeckFullReplace}
+          onSendToCollection={handleDeckFullSendToCollection}
+          onSkip={handleDeckFullSkip}
+        />
       )}
     </div>
   );

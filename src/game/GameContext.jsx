@@ -6,6 +6,7 @@ import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
+import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 
 const GameContext = createContext(null);
@@ -28,11 +29,32 @@ function loadRun() {
 function loadProfile() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // Migrate to cardCollection (ownedCount map) if missing
+      if (!parsed.cardCollection) {
+        const collection = { ...STARTER_COLLECTION };
+        if (parsed.collectedCards) {
+          for (const id of parsed.collectedCards) {
+            if (!collection[id]) collection[id] = 1;
+          }
+        }
+        parsed.cardCollection = collection;
+      }
+      // Migrate to activeDeck if missing
+      if (!parsed.activeDeck) {
+        parsed.activeDeck = [...STARTER_DECK];
+      }
+      // Keep collectedCards in sync (unique card IDs)
+      parsed.collectedCards = Object.keys(parsed.cardCollection);
+      return parsed;
+    }
   } catch (e) {}
   return {
     unlockedHeroes: ["adam"],
-    collectedCards: [...new Set(HEROES[0].starterDeck)],
+    cardCollection: { ...STARTER_COLLECTION },
+    activeDeck: [...STARTER_DECK],
+    collectedCards: Object.keys(STARTER_COLLECTION),
     achievements: [],
     settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal" },
     dailyStreak: 0,
@@ -108,10 +130,62 @@ export function GameProvider({ children }) {
   }, []);
 
   const addCardsToCollection = useCallback((cardIds) => {
+    setProfile(prev => {
+      const newCollection = { ...(prev.cardCollection || {}) };
+      for (const id of cardIds) {
+        newCollection[id] = (newCollection[id] || 0) + 1;
+      }
+      return {
+        ...prev,
+        cardCollection: newCollection,
+        collectedCards: Object.keys(newCollection),
+      };
+    });
+  }, []);
+
+  const addCardToCollection = useCallback((cardId) => {
+    setProfile(prev => {
+      const newCollection = { ...(prev.cardCollection || {}) };
+      newCollection[cardId] = (newCollection[cardId] || 0) + 1;
+      return {
+        ...prev,
+        cardCollection: newCollection,
+        collectedCards: Object.keys(newCollection),
+      };
+    });
+  }, []);
+
+  const addToActiveDeck = useCallback((cardId) => {
     setProfile(prev => ({
       ...prev,
-      collectedCards: [...new Set([...prev.collectedCards, ...cardIds])],
+      activeDeck: [...(prev.activeDeck || []), cardId],
     }));
+  }, []);
+
+  const removeFromActiveDeck = useCallback((index) => {
+    setProfile(prev => ({
+      ...prev,
+      activeDeck: (prev.activeDeck || []).filter((_, i) => i !== index),
+    }));
+  }, []);
+
+  const addCardToRunDeck = useCallback((cardId) => {
+    setRun(prev => {
+      if (!prev) return prev;
+      if (prev.deck.length >= RUN_DECK_MAX) return prev;
+      return { ...prev, deck: [...prev.deck, cardId] };
+    });
+  }, []);
+
+  const replaceCardInRun = useCallback((index, newCardId) => {
+    setRun(prev => {
+      if (!prev) return prev;
+      const newDeck = [...prev.deck];
+      if (index >= 0 && index < newDeck.length) {
+        newDeck[index] = newCardId;
+      }
+      return { ...prev, deck: newDeck };
+    });
   }, []);
 
   // Check collection-based achievements
@@ -172,7 +246,7 @@ export function GameProvider({ children }) {
       fogOfWar,
       playerHp: hero.maxHp,
       maxHp: hero.maxHp,
-      deck: [...hero.starterDeck],
+      deck: [...(profile.activeDeck || STARTER_DECK)],
       gold: 0,
       roomsCleared: 0,
       triviaCorrect: 0,
@@ -197,7 +271,7 @@ export function GameProvider({ children }) {
     });
 
     Sound.playMusic("eden");
-  }, [profile.unlockedHeroes]);
+  }, [profile.unlockedHeroes, profile.activeDeck]);
 
   const selectNode = useCallback((nodeId) => {
     setRun(prev => {
@@ -242,29 +316,13 @@ export function GameProvider({ children }) {
     return null;
   };
 
-  const completeRoom = useCallback((nodeId, reward) => {
+  const completeRoom = useCallback((nodeId) => {
     setRun(prev => {
       if (!prev) return prev;
       const newMap = prev.map.map(layer =>
         layer.map(n => ({ ...n, cleared: n.id === nodeId ? true : n.cleared }))
       );
       const node = findNode(newMap, nodeId);
-
-      let deck = prev.deck;
-      let collectedNew = [];
-      if (reward && reward.cardId) {
-        deck = [...deck, reward.cardId];
-        if (!profile.collectedCards.includes(reward.cardId)) {
-          collectedNew = [reward.cardId];
-        }
-      }
-
-      if (collectedNew.length > 0) {
-        setProfile(p => ({
-          ...p,
-          collectedCards: [...new Set([...p.collectedCards, ...collectedNew])],
-        }));
-      }
 
       const roomsCleared = prev.roomsCleared + 1;
       const isBoss = node && node.type === ROOM_TYPES.BOSS;
@@ -297,7 +355,6 @@ export function GameProvider({ children }) {
         return {
           ...prev,
           map: newMap,
-          deck,
           roomsCleared,
           phase: "victory",
           pendingReward: null,
@@ -307,13 +364,12 @@ export function GameProvider({ children }) {
       return {
         ...prev,
         map: newMap,
-        deck,
         roomsCleared,
         phase: "map",
         pendingReward: null,
       };
     });
-  }, [profile.collectedCards, profile.unlockedHeroes, unlockAchievement]);
+  }, [profile.unlockedHeroes, unlockAchievement]);
 
   const setPhase = useCallback((phase) => {
     setRun(prev => prev ? { ...prev, phase } : prev);
@@ -330,6 +386,14 @@ export function GameProvider({ children }) {
   const startDailyBattle = useCallback((dailyConfig) => {
     const hero = dailyConfig.hero;
 
+    // Use player's active deck instead of hero starter deck
+    let deck = [...(profile.activeDeck || STARTER_DECK)];
+    if (dailyConfig.rule.startWithRare) {
+      const rareCards = CARDS.filter(c => c.rarity === "rare");
+      const rng = createRng(dailyConfig.seed + "rare");
+      deck.push(pick(rng, rareCards).id);
+    }
+
     setRun({
       hero,
       map: null,
@@ -339,7 +403,7 @@ export function GameProvider({ children }) {
       fogOfWar: false,
       playerHp: dailyConfig.playerHp,
       maxHp: dailyConfig.maxHp,
-      deck: [...dailyConfig.deck],
+      deck,
       gold: 0,
       roomsCleared: 0,
       triviaCorrect: 0,
@@ -371,7 +435,7 @@ export function GameProvider({ children }) {
     });
 
     Sound.playMusic("battle");
-  }, []);
+  }, [profile.activeDeck]);
 
   const endRun = useCallback(() => {
     setRun(null);
@@ -392,6 +456,11 @@ export function GameProvider({ children }) {
     endRun,
     unlockAchievement,
     addCardsToCollection,
+    addCardToCollection,
+    addToActiveDeck,
+    removeFromActiveDeck,
+    addCardToRunDeck,
+    replaceCardInRun,
     achievementQueue,
     dismissAchievement,
     Sound,

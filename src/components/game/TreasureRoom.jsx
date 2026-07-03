@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { pick } from "@/game/mapGenerator";
-import { TREASURE_REWARDS } from "@/data/genesisRooms";
+import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
+import { generateTreasureCard, RUN_DECK_MAX } from "@/game/deckRules";
+import * as Sound from "@/game/soundManager";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
-import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
-import * as Sound from "@/game/soundManager";
+import DeckFullModal from "@/components/game/DeckFullModal";
 
 export default function TreasureRoom() {
-  const { run, completeRoom } = useGame();
+  const { run, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
   const node = run.currentNode;
-  const rewardCardId = node?.treasureReward || pick(Math.random, TREASURE_REWARDS);
-  const card = getCardById(rewardCardId);
   const [claimed, setClaimed] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [deckFullCard, setDeckFullCard] = useState(null);
+
+  // Generate treasure card using treasure drop rates
+  const [rewardCardId] = useState(() => generateTreasureCard(Math.random) || "sling_stone");
+  const card = getCardById(rewardCardId);
 
   useEffect(() => {
     Sound.playMusic("divine");
@@ -22,12 +25,34 @@ export default function TreasureRoom() {
 
   const handleClaim = () => {
     Sound.sfx.reward();
+    addCardToCollection(rewardCardId);
     setClaimed(true);
   };
 
   const handleContinue = () => {
     Sound.sfx.click();
-    completeRoom(node.id, { cardId: rewardCardId });
+    if (run.deck.length < RUN_DECK_MAX) {
+      addCardToRunDeck(rewardCardId);
+      completeRoom(node.id);
+    } else {
+      setDeckFullCard(rewardCardId);
+    }
+  };
+
+  const handleDeckFullReplace = (index) => {
+    replaceCardInRun(index, deckFullCard);
+    setDeckFullCard(null);
+    completeRoom(node.id);
+  };
+
+  const handleDeckFullSendToCollection = () => {
+    setDeckFullCard(null);
+    completeRoom(node.id);
+  };
+
+  const handleDeckFullSkip = () => {
+    setDeckFullCard(null);
+    completeRoom(node.id);
   };
 
   if (!card) return null;
@@ -40,7 +65,7 @@ export default function TreasureRoom() {
         </div>
         <h2 className="text-3xl font-serif text-amber-200">A Gift from Above</h2>
         <p className="text-amber-100/50 text-sm mt-2 max-w-md">
-          You have found a Biblical artifact. It has been added to your collection and deck.
+          You have found a Biblical artifact. Claim it to add to your collection and deck.
         </p>
       </div>
 
@@ -76,6 +101,16 @@ export default function TreasureRoom() {
         >
           Continue →
         </button>
+      )}
+
+      {deckFullCard && (
+        <DeckFullModal
+          rewardCardId={deckFullCard}
+          runDeck={run.deck}
+          onReplace={handleDeckFullReplace}
+          onSendToCollection={handleDeckFullSendToCollection}
+          onSkip={handleDeckFullSkip}
+        />
       )}
     </div>
   );

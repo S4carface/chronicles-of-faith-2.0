@@ -7,7 +7,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { submitBestScore } from "@/game/scoreManager";
 
 export default function VictoryScreen() {
-  const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
+  const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -31,8 +31,6 @@ export default function VictoryScreen() {
     setScore(finalScore);
 
     if (finalScore >= 500) unlockAchievement("low_score_champion");
-
-    addCardsToCollection(run.deck);
 
     if (run.gold > 0) {
       saveProfile({ gold: (profile.gold || 0) + run.gold });
@@ -155,7 +153,7 @@ export default function VictoryScreen() {
         )}
 
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-900/15 p-3 mb-6">
-          <p className="text-emerald-300/80 text-sm">{run.deck.length} cards saved to your collection</p>
+          <p className="text-emerald-300/80 text-sm">Run complete — {run.deck.length} cards in your run deck</p>
         </div>
 
         {showNamePrompt && (

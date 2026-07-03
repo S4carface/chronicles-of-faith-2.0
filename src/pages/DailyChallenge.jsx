@@ -5,6 +5,7 @@ import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
+import { validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 
 export default function DailyChallenge() {
@@ -35,6 +36,12 @@ export default function DailyChallenge() {
       setShowNamePrompt(true);
       return;
     }
+    // Validate active deck before starting
+    const deckCheck = validateDeck(profile.activeDeck);
+    if (!deckCheck.valid) {
+      navigate("/collection");
+      return;
+    }
     if (run && !run.isDaily) {
       setShowConfirm(true);
       return;
@@ -48,6 +55,11 @@ export default function DailyChallenge() {
 
   const handleNameSaved = () => {
     setShowNamePrompt(false);
+    const deckCheck = validateDeck(profile.activeDeck);
+    if (!deckCheck.valid) {
+      navigate("/collection");
+      return;
+    }
     if (run && !run.isDaily) {
       setShowConfirm(true);
       return;

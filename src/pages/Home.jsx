@@ -7,6 +7,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
+import { validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
@@ -32,6 +33,12 @@ export default function Home() {
     if (!profile.playerName) {
       setPendingAction("run");
       setShowNamePrompt(true);
+      return;
+    }
+    // Validate active deck before starting
+    const deckCheck = validateDeck(profile.activeDeck);
+    if (!deckCheck.valid) {
+      navigate("/collection");
       return;
     }
     if (run) {
@@ -65,7 +72,7 @@ export default function Home() {
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
   const menuItems = [
-    { label: "My Collection", art: MENU_ART.collection, path: "/collection", desc: "Cards gathered", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
+    { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
     { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "One daily battle", status: "New today" },

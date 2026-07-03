@@ -20,9 +20,16 @@ export default function VictoryScreen() {
 
   useEffect(() => {
     Sound.playMusic("victory");
+    // Debug-safe check: read trivia stats directly from the active run state
+    const triviaCorrect = run.triviaCorrect || 0;
+    const triviaAttempted = run.triviaAttempted || 0;
+    if (triviaAttempted > 0 || triviaCorrect > 0) {
+      console.log("[Trivia Debug] Final run stats — correct:", triviaCorrect, "attempted:", triviaAttempted, "wrong:", run.triviaWrong || 0);
+    }
+    // Scoring: 50 bonus points per correct trivia answer (no points for unanswered)
     const baseScore = Math.max(0,
       run.roomsCleared * 100 +
-      run.triviaCorrect * 50 +
+      triviaCorrect * 50 +
       run.playerHp * 5 +
       run.gold * 2 +
       (run.hero.id === "noah" ? 100 : 0)
@@ -122,7 +129,7 @@ export default function VictoryScreen() {
           <p className="text-5xl font-bold text-amber-200 mb-4">{score}</p>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="text-amber-100/60">Rooms Cleared: <span className="text-amber-200 font-bold">{run.roomsCleared}</span></div>
-            <div className="text-amber-100/60">Trivia Correct: <span className="text-amber-200 font-bold">{run.triviaCorrect}</span></div>
+            <div className="text-amber-100/60">Trivia Correct: <span className="text-amber-200 font-bold">{run.triviaCorrect || 0} / {run.triviaAttempted || 0}</span></div>
             <div className="text-amber-100/60">HP Remaining: <span className="text-amber-200 font-bold">{run.playerHp}/{run.maxHp}</span></div>
             <div className="text-amber-100/60">Gold: <span className="text-amber-200 font-bold">{run.gold}</span></div>
             <div className="text-amber-100/60">Difficulty: <span className="text-amber-200 font-bold capitalize">{run.difficulty || "normal"}</span></div>

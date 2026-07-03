@@ -5,7 +5,7 @@ import { UI_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function TriviaModal({ onComplete }) {
-  const { run } = useGame();
+  const { run, updateRun } = useGame();
   // Compute question ONCE based on room depth (difficulty scaling)
   const question = useMemo(
     () => getQuestionForRoomDepth(run.roomsCleared),
@@ -31,6 +31,12 @@ export default function TriviaModal({ onComplete }) {
 
   const handleContinue = () => {
     const correct = selected === question.answer;
+    // Record trivia stats in the run state (single source of truth)
+    updateRun({
+      triviaAttempted: (run.triviaAttempted || 0) + 1,
+      triviaCorrect: (run.triviaCorrect || 0) + (correct ? 1 : 0),
+      triviaWrong: (run.triviaWrong || 0) + (correct ? 0 : 1),
+    });
     if (correct) {
       const bonusCards = ["prayer", "faith_shield", "sling_stone", "bread_life", "wisdom", "doves_peace", "living_water"];
       const reward = bonusCards[Math.floor(Math.random() * bonusCards.length)];

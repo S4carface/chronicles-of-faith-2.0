@@ -1,42 +1,58 @@
 import React from "react";
 import { useGame } from "@/game/GameContext";
 import { DIFFICULTY_PRESETS } from "@/game/mapGenerator";
+import { HOME_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function DifficultySelect() {
   const { profile, saveProfile } = useGame();
-
-  const difficulties = Object.entries(DIFFICULTY_PRESETS);
+  const current = profile.difficulty || "normal";
+  const currentPreset = DIFFICULTY_PRESETS[current];
+  const artMap = {
+    easy: HOME_ART.difficulty_easy,
+    normal: HOME_ART.difficulty_normal,
+    hard: HOME_ART.difficulty_hard,
+  };
 
   const handleSelect = (key) => {
+    if (key === current) return;
     Sound.sfx.click();
     saveProfile({ difficulty: key });
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-md w-full mb-6">
-      {difficulties.map(([key, preset]) => {
-        const isActive = (profile.difficulty || "normal") === key;
-        return (
-          <button
-            key={key}
-            onClick={() => handleSelect(key)}
-            className={`p-4 rounded-xl border-2 text-center transition-all ${
-              isActive
-                ? "border-amber-300 bg-amber-500/20 scale-105"
-                : "border-amber-500/15 hover:border-amber-400/50 hover:bg-amber-500/10"
-            }`}
-            style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.6) 0%, rgba(15,26,48,0.6) 100%)" }}
-          >
-            <div className="text-3xl mb-2">{preset.icon}</div>
-            <h3 className="font-serif text-amber-100 text-lg">{preset.label}</h3>
-            <p className="text-amber-100/40 text-xs mt-1">{preset.desc}</p>
-            {isActive && (
-              <p className="text-amber-300 text-xs mt-2 font-bold">✓ Selected</p>
-            )}
-          </button>
-        );
-      })}
+    <div className="w-full max-w-md mx-auto">
+      {/* Compact horizontal pill selector */}
+      <div className="flex gap-2 justify-center">
+        {Object.entries(DIFFICULTY_PRESETS).map(([key, preset]) => {
+          const isActive = current === key;
+          return (
+            <button
+              key={key}
+              onClick={() => handleSelect(key)}
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-full border-2 transition-all duration-200 ${
+                isActive
+                  ? "border-amber-300 bg-amber-500/20 shadow-md shadow-amber-400/30 scale-[1.03]"
+                  : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:opacity-100 hover:border-amber-400/40"
+              }`}
+            >
+              <img src={artMap[key]} alt={preset.label} className="w-6 h-6 object-cover rounded-full" />
+              <span className={`font-serif text-sm font-semibold ${isActive ? "text-amber-100" : "text-amber-100/60"}`}>
+                {preset.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected difficulty info panel */}
+      <div className="mt-3 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/15 bg-slate-900/40">
+        <img src={artMap[current]} alt={currentPreset.label} className="w-7 h-7 object-cover rounded-full border border-amber-400/30 flex-shrink-0" />
+        <div className="min-w-0">
+          <span className="text-amber-200 font-serif text-sm font-bold">{currentPreset.label}</span>
+          <span className="text-amber-100/50 text-xs ml-2">{currentPreset.desc}</span>
+        </div>
+      </div>
     </div>
   );
 }

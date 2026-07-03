@@ -157,6 +157,13 @@ export const sfx = {
   },
   enemyWindUp: () => playTone(90, 0.25, "sawtooth", 0.05),
 
+  // Counter deflect — metallic clang when Counter retaliates
+  deflect: () => {
+    playTone(1200, 0.06, "square", 0.12);
+    setTimeout(() => playTone(900, 0.08, "triangle", 0.1), 30);
+    setTimeout(() => playTone(1600, 0.05, "sine", 0.06), 60);
+  },
+
   // Draw card — parchment/page flip sound
   drawCard: () => {
     playTone(2000, 0.04, "sawtooth", 0.04);

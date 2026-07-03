@@ -1,5 +1,7 @@
 // Battle engine logic — turn-based card combat
 
+export const COUNTER_CAP = 12;
+
 function pickEnemyAttack(enemy) {
   return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
 }
@@ -45,7 +47,7 @@ export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBl
     freeCardsRemaining: 0,
     dots: 0,
     skipDraw: 0,
-    thorns: 0,
+    counter: 0,
     heroId,
   };
 }
@@ -94,7 +96,7 @@ export function playCard(state, handIndex, card) {
   let buffAttack = state.buffAttack;
   let freeCards = state.freeCardsRemaining;
   let blockScripture = state.blockScripture;
-  let thorns = state.thorns;
+  let counter = state.counter || 0;
 
   const isScripture = card.type === "scripture";
   if (state.blockScripture && isScripture) {
@@ -123,8 +125,8 @@ export function playCard(state, handIndex, card) {
       playerBlock += totalBlock;
       log.push(`You played ${card.name} — ${totalBlock} block!${blockBonus ? " (+2 Covenant Protection)" : ""}`);
       if (card.id === "lions_den") {
-        thorns = 4;
-        log.push(`Counter Attack active — enemy will take 4 damage when it attacks!`);
+        counter = Math.min(COUNTER_CAP, counter + 4);
+        log.push(`🦁 Counter surged — now ${counter} (cap ${COUNTER_CAP}).`);
       }
       break;
     }
@@ -142,27 +144,27 @@ export function playCard(state, handIndex, card) {
       } else if (card.id === "wisdom") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
         log.push("You played Wisdom — drew 2 cards!");
-        return { ...drawn, energy: newEnergy, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
+        return { ...drawn, energy: newEnergy, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, counter, enemyBlock };
       } else if (card.id === "doves_peace") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
         log.push(`You played Dove's Peace — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 1);
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, counter, enemyBlock };
       } else if (card.id === "manna_heaven") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
         log.push(`You played Manna from Heaven — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, counter, enemyBlock };
       } else if (card.id === "coat_colors") {
         newEnergy += 3;
         log.push("You played Coat of Many Colors — gained 3 Faith!");
       } else if (card.id === "jacobs_ladder") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 3);
         log.push("You played Jacob's Ladder — drew 3 cards!");
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, counter, enemyBlock };
       } else if (card.id === "righteous_aim") {
         log.push("You played Righteous Aim — next attack deals DOUBLE!");
-        return { ...state, hand: newHand, energy: newEnergy, enemyAttackMultiplier: 2, discard: newDiscard, log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
+        return { ...state, hand: newHand, energy: newEnergy, enemyAttackMultiplier: 2, discard: newDiscard, log, buffAttack, freeCardsRemaining: freeCards, blockScripture, counter, enemyBlock };
       }
       break;
     }
@@ -201,7 +203,7 @@ export function playCard(state, handIndex, card) {
     buffAttack,
     freeCardsRemaining: freeCards,
     blockScripture,
-    thorns,
+    counter,
   };
 }
 
@@ -211,13 +213,23 @@ export function endPlayerTurn(state) {
   return { ...state, turn: "enemy", enemyAttackMultiplier: 1, log };
 }
 
+// Apply Counter retaliation to the enemy on an attack move.
+// Counter triggers once per enemy attack, persists across turns, caps at COUNTER_CAP.
+function applyCounter(state, enemyHp, log, counter) {
+  if (!counter || counter <= 0) return { enemyHp, log, counterHit: 0 };
+  const dmg = counter;
+  enemyHp = Math.max(0, enemyHp - dmg);
+  log.push(`Counter struck back — enemy took ${dmg} damage.`);
+  return { enemyHp, log, counterHit: dmg };
+}
+
 export function enemyTurn(state) {
   const log = [...state.log];
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
-  let enemyBlock = state.enemyBlock || 0; // Persists across turns
-  let thorns = state.thorns;
+  let enemyBlock = state.enemyBlock || 0;
+  let counter = state.counter || 0;
   let skipDraw = state.skipDraw;
   let blockScripture = false;
   let dots = state.dots;
@@ -248,7 +260,7 @@ export function enemyTurn(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
-      thorns: 0,
+      counter,
     };
     const drawCount = Math.max(0, 5 - skipDraw);
     const withDraw = drawCards(newState, drawCount);
@@ -283,12 +295,9 @@ export function enemyTurn(state) {
         playerHp = Math.max(0, playerHp - damage);
       }
       log.push(`💥 ${state.enemy.name} used ${action.name} — ${action.damage} damage!`);
-      // Counter / Thorns
-      if (thorns > 0) {
-        enemyHp = Math.max(0, enemyHp - thorns);
-        log.push(`🗡️ Counter Attack — ${state.enemy.name} took ${thorns} damage!`);
-        thorns = 0;
-      }
+      // Counter — triggers on every enemy attack move, even if fully blocked
+      const ctr = applyCounter(state, enemyHp, log, counter);
+      enemyHp = ctr.enemyHp;
       // Heal effect on attack+heal combos
       if (action.effect === "heal_self") {
         const healAmt = state.enemy.isBoss ? 6 : 4;
@@ -359,7 +368,7 @@ export function enemyTurn(state) {
     blockScripture,
     dots,
     log,
-    thorns,
+    counter,
   };
 
   // Draw cards for player's new turn
@@ -382,7 +391,7 @@ export function getEnemyTurnSteps(state) {
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
   let enemyBlock = state.enemyBlock || 0;
-  let thorns = state.thorns;
+  let counter = state.counter || 0;
   let skipDraw = state.skipDraw;
   let blockScripture = false;
   let dots = state.dots;
@@ -413,7 +422,7 @@ export function getEnemyTurnSteps(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
-      thorns: 0,
+      counter,
     };
     const drawCount = Math.max(0, 5 - skipDraw);
     const withDraw = drawCards(newState, drawCount);
@@ -440,6 +449,7 @@ export function getEnemyTurnSteps(state) {
     energy -= cost;
 
     const stepLog = [...log];
+    let counterHit = 0;
 
     if (action.damage > 0) {
       let damage = action.damage;
@@ -453,11 +463,10 @@ export function getEnemyTurnSteps(state) {
         playerHp = Math.max(0, playerHp - damage);
       }
       stepLog.push(`${state.enemy.name} used ${action.name} — ${action.damage} damage!`);
-      if (thorns > 0) {
-        enemyHp = Math.max(0, enemyHp - thorns);
-        stepLog.push(`Counter Attack — ${state.enemy.name} took ${thorns} damage!`);
-        thorns = 0;
-      }
+      // Counter — triggers on every enemy attack move, even if fully blocked
+      const ctr = applyCounter(state, enemyHp, stepLog, counter);
+      enemyHp = ctr.enemyHp;
+      counterHit = ctr.counterHit;
       if (action.effect === "heal_self") {
         const healAmt = state.enemy.isBoss ? 6 : 4;
         enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
@@ -494,6 +503,7 @@ export function getEnemyTurnSteps(state) {
       type: "action",
       action,
       handIndex: originalHandIdx,
+      counterHit,
       state: {
         ...state,
         enemyBlock,
@@ -502,7 +512,7 @@ export function getEnemyTurnSteps(state) {
         playerBlock,
         enemy: { ...state.enemy, currentHp: enemyHp },
         log: stepLog,
-        thorns,
+        counter,
         skipDraw,
         blockScripture,
         dots,
@@ -563,7 +573,7 @@ export function getEnemyTurnSteps(state) {
     blockScripture,
     dots,
     log: endLog,
-    thorns,
+    counter,
   };
 
   const drawCount = Math.max(0, 5 - skipDraw);

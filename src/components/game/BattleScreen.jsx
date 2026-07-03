@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2 } from "lucide-react";
+import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2, Zap } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps, drawCards } from "@/game/battleEngine";
@@ -64,6 +64,8 @@ export default function BattleScreen() {
   const [playerShake, setPlayerShake] = useState(false);
   const [enemyFlash, setEnemyFlash] = useState(false);
   const [playerFlash, setPlayerFlash] = useState(false);
+  const [counterFlash, setCounterFlash] = useState(false);
+  const [counterFloat, setCounterFloat] = useState(null);
   const [showPause, setShowPause] = useState(false);
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showLog, setShowLog] = useState(false);
@@ -351,6 +353,8 @@ export default function BattleScreen() {
       setPlayerFlash(false);
       setEnemyFlash(false);
       setEnemyAttackAnim(false);
+      setCounterFlash(false);
+      setCounterFloat(null);
     };
 
     const resolveNextStep = () => {
@@ -407,6 +411,23 @@ export default function BattleScreen() {
 
           setBattleState(step.state);
 
+          // Counter retaliation effects — shield flash + damage number + deflect sound
+          if (step.counterHit > 0) {
+            Sound.sfx.deflect();
+            setCounterFlash(true);
+            setCounterFloat({ text: `Counter -${step.counterHit}`, color: "#fbbf24" });
+            setTimeout(() => {
+              setCounterFlash(false);
+              setEnemyShake(true);
+              setEnemyFlash(true);
+            }, 200);
+            setTimeout(() => {
+              setEnemyShake(false);
+              setEnemyFlash(false);
+              setCounterFloat(null);
+            }, 700);
+          }
+
           // Check for defeat
           if (step.state.playerHp <= 0) {
             setTimeout(() => {
@@ -419,7 +440,7 @@ export default function BattleScreen() {
             return;
           }
 
-          // Check for victory (thorns kill enemy)
+          // Check for victory (counter/thorns kill enemy)
           if (step.state.enemy.currentHp <= 0) {
             setTimeout(() => {
               clearTransient();
@@ -699,6 +720,22 @@ export default function BattleScreen() {
         </div>
       )}
 
+      {/* Counter retaliation damage over enemy */}
+      {counterFloat && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+          <span
+            className="text-3xl lg:text-4xl font-serif font-bold animate-fade-in"
+            style={{
+              color: counterFloat.color,
+              textShadow: `0 0 20px ${counterFloat.color}`,
+              transform: "translateY(-120px)",
+            }}
+          >
+            {counterFloat.text}
+          </span>
+        </div>
+      )}
+
       {/* Guidance hint — Guided mode tactical suggestion */}
       {(profile.settings.guidanceLevel === "guided" || profile.settings.guidanceTips) && !battleEnd && !isEnemyTurn && (
         <GuidanceHint battleState={battleState} />
@@ -708,8 +745,11 @@ export default function BattleScreen() {
       <div className="flex-shrink-0 px-3 py-1.5 lg:py-2.5 border-t border-amber-500/10 flex items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
         <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
+            className={`relative transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
           >
+            {counterFlash && (
+              <div className="absolute inset-0 -m-1 rounded-full border-2 border-amber-300/80 animate-ping pointer-events-none" style={{ boxShadow: "0 0 20px rgba(251,191,36,0.6)" }} />
+            )}
             {heroArt ? (
               <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" />
             ) : (
@@ -730,9 +770,9 @@ export default function BattleScreen() {
                   <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.playerBlock}
                 </span>
               )}
-              {battleState.thorns > 0 && (
-                <span className="text-orange-300 flex items-center gap-0.5">
-                  <SwordsIcon className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.thorns}
+              {battleState.counter > 0 && (
+                <span className="text-amber-300 flex items-center gap-0.5 font-bold" title={`Counter: enemy takes ${battleState.counter} damage on each attack (cap 12)`}>
+                  <Zap className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.counter}
                 </span>
               )}
               {battleState.dots > 0 && (

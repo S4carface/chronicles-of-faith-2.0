@@ -40,7 +40,7 @@ export function getCardEffectText(card) {
     case "attack":
       return `⚔️ Deals ${card.value} damage`;
     case "defense":
-      if (card.id === "lions_den") return `🛡️ Gain ${card.value} Block. Counter: enemy takes 4 damage when attacking.`;
+      if (card.id === "lions_den") return `🛡️ Gain ${card.value} Block. Gain 4 Counter (stacks, cap 12).`;
       return `🛡️ Gain ${card.value} Block`;
     case "miracle":
       if (card.id === "angel_lord") return `✨ Deals ${card.value} damage. Heal 10 HP.`;

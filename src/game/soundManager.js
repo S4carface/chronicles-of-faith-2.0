@@ -2,6 +2,11 @@
 // Music: layered chord pads + harp arpeggios + bells for a sacred, reverent atmosphere
 // SFX: distinct sound families per card type and enemy action
 // Narration: voice via SpeechSynthesis API with music ducking
+//
+// Mobile audio unlock:
+//   Browsers (especially iOS Safari) start AudioContext in "suspended" state.
+//   We must resume it from a user gesture. playMusic() called before unlock
+//   stores a pending theme; the first sfx/gesture call unlocks and starts it.
 
 let audioCtx = null;
 let musicGain = null;
@@ -14,24 +19,115 @@ let narrationVol = 0.5;
 let currentMusicNodes = [];
 let musicTimeoutId = null;
 let musicTheme = null;
+let pendingMusicTheme = null;
 let duckedGain = null;
+let audioUnlocked = false;
+let unlockListeners = new Set();
 
+// Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
 function getCtx() {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    musicGain = audioCtx.createGain();
-    musicGain.gain.value = 0.15 * musicVol;
-    musicGain.connect(audioCtx.destination);
-    sfxGain = audioCtx.createGain();
-    sfxGain.gain.value = 0.3 * sfxVol;
-    sfxGain.connect(audioCtx.destination);
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = 0.15 * musicVol;
+      musicGain.connect(audioCtx.destination);
+      sfxGain = audioCtx.createGain();
+      sfxGain.gain.value = 0.3 * sfxVol;
+      sfxGain.connect(audioCtx.destination);
+    } catch (e) {
+      console.warn("[Audio] Failed to create AudioContext:", e);
+      audioCtx = null;
+    }
   }
   return audioCtx;
 }
 
+// Check if the context is in a running (playable) state
+function ctxIsRunning() {
+  const ctx = getCtx();
+  if (!ctx) return false;
+  return ctx.state === "running";
+}
+
+// Notify all subscribers of unlock state changes
+function notifyUnlockListeners() {
+  unlockListeners.forEach((cb) => {
+    try { cb(audioUnlocked); } catch (e) {}
+  });
+}
+
+// Attempt to unlock/resume audio from a user gesture.
+// Returns true if audio is now playable.
+export function unlockAudio() {
+  if (audioUnlocked && ctxIsRunning()) return true;
+  const ctx = getCtx();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") {
+    const p = ctx.resume();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        audioUnlocked = true;
+        notifyUnlockListeners();
+        // Start pending music now that audio is alive
+        if (pendingMusicTheme && musicEnabled) {
+          const theme = pendingMusicTheme;
+          pendingMusicTheme = null;
+          _startMusic(theme);
+        }
+      }).catch((e) => {
+        console.warn("[Audio] resume() failed:", e);
+      });
+    }
+    // Optimistically set unlocked — some browsers resume synchronously
+    if (ctx.state === "running") {
+      audioUnlocked = true;
+      notifyUnlockListeners();
+      if (pendingMusicTheme && musicEnabled) {
+        const theme = pendingMusicTheme;
+        pendingMusicTheme = null;
+        _startMusic(theme);
+      }
+    }
+  } else if (ctx.state === "running") {
+    audioUnlocked = true;
+    notifyUnlockListeners();
+  }
+  return audioUnlocked;
+}
+
+export function isAudioUnlocked() {
+  return audioUnlocked;
+}
+
+// UI uses this to decide whether to show a "Tap to enable sound" button
+export function needsUnlockPrompt() {
+  if (!musicEnabled) return false; // user turned music off — no need to prompt
+  if (audioUnlocked && ctxIsRunning()) return false;
+  return true;
+}
+
+// Subscribe to audio unlock state changes (returns unsubscribe fn)
+export function subscribeUnlock(cb) {
+  unlockListeners.add(cb);
+  return () => { unlockListeners.delete(cb); };
+}
+
 export function setMusicEnabled(enabled) {
   musicEnabled = enabled;
-  if (!enabled) stopMusic();
+  if (!enabled) {
+    stopMusic();
+    pendingMusicTheme = null;
+  } else {
+    // If audio is unlocked and we have a theme, play it
+    if (audioUnlocked && ctxIsRunning()) {
+      const theme = musicTheme || pendingMusicTheme;
+      if (theme) _startMusic(theme);
+    } else if (pendingMusicTheme || musicTheme) {
+      // Store pending; will start on unlock
+      pendingMusicTheme = pendingMusicTheme || musicTheme;
+    }
+  }
 }
 
 export function setSfxEnabled(enabled) {
@@ -42,7 +138,12 @@ export function setMusicVolume(vol) {
   musicVol = vol;
   if (musicGain) {
     const ctx = getCtx();
-    musicGain.gain.linearRampToValueAtTime(0.15 * vol, ctx.currentTime + 0.1);
+    if (ctx) {
+      try {
+        musicGain.gain.cancelScheduledValues(ctx.currentTime);
+        musicGain.gain.linearRampToValueAtTime(0.15 * vol, ctx.currentTime + 0.1);
+      } catch (e) {}
+    }
   }
 }
 
@@ -50,7 +151,12 @@ export function setSfxVolume(vol) {
   sfxVol = vol;
   if (sfxGain) {
     const ctx = getCtx();
-    sfxGain.gain.linearRampToValueAtTime(0.3 * vol, ctx.currentTime + 0.1);
+    if (ctx) {
+      try {
+        sfxGain.gain.cancelScheduledValues(ctx.currentTime);
+        sfxGain.gain.linearRampToValueAtTime(0.3 * vol, ctx.currentTime + 0.1);
+      } catch (e) {}
+    }
   }
 }
 
@@ -58,18 +164,25 @@ export function setNarrationVolume(vol) {
   narrationVol = vol;
 }
 
+// Lower background music to ~20% during narration
 export function duckMusic() {
   if (musicGain && duckedGain === null) {
     const ctx = getCtx();
+    if (!ctx) return;
     duckedGain = musicGain.gain.value;
-    musicGain.gain.linearRampToValueAtTime(duckedGain * 0.25, ctx.currentTime + 0.5);
+    try {
+      musicGain.gain.linearRampToValueAtTime(duckedGain * 0.2, ctx.currentTime + 0.5);
+    } catch (e) {}
   }
 }
 
 export function unDuckMusic() {
   if (musicGain && duckedGain !== null) {
     const ctx = getCtx();
-    musicGain.gain.linearRampToValueAtTime(duckedGain, ctx.currentTime + 0.5);
+    if (!ctx) { duckedGain = null; return; }
+    try {
+      musicGain.gain.linearRampToValueAtTime(duckedGain, ctx.currentTime + 0.5);
+    } catch (e) {}
     duckedGain = null;
   }
 }
@@ -78,31 +191,38 @@ function playTone(freq, duration, type = "sine", vol = 0.3, target = null) {
   if (!sfxEnabled && target === sfxGain) return;
   if (!musicEnabled && target === musicGain) return;
   const ctx = getCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(target || sfxGain);
-  osc.start();
-  osc.stop(ctx.currentTime + duration);
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(target || sfxGain);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) {
+    console.warn("[Audio] playTone error:", e);
+  }
 }
 
 // === SOUND EFFECTS ===
-// Card type-specific sound families + enemy action sounds
+// Card type-specific sound families + enemy action sounds.
+// Every sfx call attempts to unlock audio (these are triggered by user gestures).
 export const sfx = {
   // UI
-  click: () => playTone(600, 0.05, "sine", 0.1),
-  hover: () => playTone(800, 0.03, "sine", 0.05),
+  click: () => { unlockAudio(); playTone(600, 0.05, "sine", 0.1); },
+  hover: () => { playTone(800, 0.03, "sine", 0.05); },
 
   // Card play base
-  cardPlay: () => playTone(440, 0.1, "triangle", 0.12),
+  cardPlay: () => { unlockAudio(); playTone(440, 0.1, "triangle", 0.12); },
 
   // Attack cards — sharp, impactful, energetic
   attack: () => {
+    unlockAudio();
     playTone(180, 0.08, "sawtooth", 0.18);
     setTimeout(() => playTone(120, 0.1, "sawtooth", 0.14), 40);
   },
@@ -113,6 +233,7 @@ export const sfx = {
 
   // Defense cards — solid, shielding, protective
   defense: () => {
+    unlockAudio();
     playTone(220, 0.12, "triangle", 0.16);
     setTimeout(() => playTone(330, 0.15, "sine", 0.1), 50);
   },
@@ -123,6 +244,7 @@ export const sfx = {
 
   // Scripture cards — airy, sacred, reverent
   scripture: () => {
+    unlockAudio();
     [523, 659, 784].forEach((f, i) => setTimeout(() => playTone(f, 0.25, "sine", 0.1), i * 50));
     setTimeout(() => playTone(1047, 0.35, "sine", 0.06), 150);
   },
@@ -134,6 +256,7 @@ export const sfx = {
 
   // Miracle cards — divine, majestic
   miracle: () => {
+    unlockAudio();
     for (let i = 0; i < 5; i++) setTimeout(() => playTone(523 + i * 131, 0.25, "sine", 0.1), i * 45);
     setTimeout(() => playTone(2093, 0.4, "sine", 0.05), 225);
   },
@@ -178,13 +301,16 @@ export const sfx = {
 
   // Results
   victory: () => {
+    unlockAudio();
     [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.25, "triangle", 0.16), i * 130));
     setTimeout(() => playTone(1319, 0.4, "sine", 0.12), 520);
   },
   defeat: () => {
+    unlockAudio();
     [400, 300, 200, 100].forEach((f, i) => setTimeout(() => playTone(f, 0.25, "sawtooth", 0.12), i * 180));
   },
   divine: () => {
+    unlockAudio();
     [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playTone(f, 0.35, "sine", 0.1), i * 45));
   },
   achievement: () => {
@@ -200,7 +326,7 @@ export const sfx = {
 };
 
 export function stopMusic() {
-  currentMusicNodes.forEach(n => { try { n.stop(); } catch (e) {} });
+  currentMusicNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
   currentMusicNodes = [];
   if (musicTimeoutId) {
     clearTimeout(musicTimeoutId);
@@ -211,136 +337,152 @@ export function stopMusic() {
 // Chord pad — multiple sustained oscillators for warm background
 function playChordPad(freqs, duration, vol, type = "sine") {
   const ctx = getCtx();
-  freqs.forEach(freq => {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.5);
-    gain.gain.linearRampToValueAtTime(vol * 0.7, ctx.currentTime + duration * 0.7);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(musicGain);
-    osc.start();
-    osc.stop(ctx.currentTime + duration);
-    currentMusicNodes.push(osc);
-  });
+  if (!ctx || !musicGain) return;
+  try {
+    freqs.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.5);
+      gain.gain.linearRampToValueAtTime(vol * 0.7, ctx.currentTime + duration * 0.7);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(musicGain);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+      currentMusicNodes.push(osc);
+    });
+  } catch (e) {
+    console.warn("[Audio] playChordPad error:", e);
+  }
 }
 
 // Harp-like arpeggiated note
 function playHarpNote(freq, duration, vol) {
   const ctx = getCtx();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "triangle";
-  osc.frequency.value = freq;
-  gain.gain.setValueAtTime(0, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-  osc.connect(gain);
-  gain.connect(musicGain);
-  osc.start();
-  osc.stop(ctx.currentTime + duration);
-  currentMusicNodes.push(osc);
+  if (!ctx || !musicGain) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(musicGain);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+    currentMusicNodes.push(osc);
+  } catch (e) {
+    console.warn("[Audio] playHarpNote error:", e);
+  }
 }
 
 // Soft bell tone — adds sacred atmosphere
 function playBell(freq, vol) {
   const ctx = getCtx();
-  const osc1 = ctx.createOscillator();
-  const osc2 = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc1.type = "sine";
-  osc1.frequency.value = freq;
-  osc2.type = "sine";
-  osc2.frequency.value = freq * 2;
-  gain.gain.setValueAtTime(0, ctx.currentTime);
-  gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-  osc1.connect(gain);
-  osc2.connect(gain);
-  gain.connect(musicGain);
-  osc1.start();
-  osc2.start();
-  osc1.stop(ctx.currentTime + 1.5);
-  osc2.stop(ctx.currentTime + 1.5);
-  currentMusicNodes.push(osc1, osc2);
+  if (!ctx || !musicGain) return;
+  try {
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.value = freq;
+    osc2.type = "sine";
+    osc2.frequency.value = freq * 2;
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(musicGain);
+    osc1.start();
+    osc2.start();
+    osc1.stop(ctx.currentTime + 1.5);
+    osc2.stop(ctx.currentTime + 1.5);
+    currentMusicNodes.push(osc1, osc2);
+  } catch (e) {
+    console.warn("[Audio] playBell error:", e);
+  }
 }
 
-export function playMusic(theme) {
-  if (!musicEnabled) return;
+const MUSIC_THEMES = {
+  // Main menu — warm, inviting, sacred
+  menu: {
+    chords: [[262, 330, 392], [196, 247, 294], [220, 277, 330], [262, 330, 392]],
+    melody: [523, 587, 659, 784, 659, 587, 523, 392, 440, 523, 587, 659, 784, 880, 784, 659],
+    padVol: 0.04, melodyVol: 0.06, padType: "sine",
+    chordInterval: 2000, melodyInterval: 380, useBells: true,
+  },
+  // Eden / exploration — peaceful, gentle
+  eden: {
+    chords: [[294, 370, 440], [247, 294, 370], [330, 415, 494], [294, 370, 440]],
+    melody: [587, 659, 740, 880, 740, 659, 587, 494, 523, 587, 659, 740, 880, 988, 880, 740],
+    padVol: 0.035, melodyVol: 0.05, padType: "sine",
+    chordInterval: 2200, melodyInterval: 420, useBells: false,
+  },
+  // Map exploration — mysterious, adventurous
+  map: {
+    chords: [[220, 277, 330], [196, 247, 294], [247, 294, 370], [220, 277, 330]],
+    melody: [440, 523, 587, 659, 587, 523, 440, 330, 392, 440, 523, 587, 659, 784, 659, 523],
+    padVol: 0.035, melodyVol: 0.05, padType: "sine",
+    chordInterval: 2400, melodyInterval: 400, useBells: true,
+  },
+  // Battle — tense, driving
+  battle: {
+    chords: [[196, 247, 294], [165, 196, 247], [175, 220, 262], [196, 247, 294]],
+    melody: [294, 349, 392, 440, 392, 349, 294, 247, 262, 294, 349, 392, 440, 494, 440, 349],
+    padVol: 0.04, melodyVol: 0.05, padType: "sawtooth",
+    chordInterval: 1500, melodyInterval: 280, useBells: false,
+  },
+  // Boss — dark, ominous
+  boss: {
+    chords: [[131, 165, 196], [98, 131, 165], [117, 147, 175], [131, 165, 196]],
+    melody: [196, 233, 262, 311, 262, 233, 196, 165, 175, 196, 233, 262, 311, 349, 311, 233],
+    padVol: 0.04, melodyVol: 0.05, padType: "sawtooth",
+    chordInterval: 1400, melodyInterval: 250, useBells: false,
+  },
+  // Victory — triumphant, warm
+  victory: {
+    chords: [[523, 659, 784], [392, 494, 587], [440, 554, 659], [523, 659, 784]],
+    melody: [784, 880, 988, 1047, 988, 880, 784, 659, 698, 784, 880, 988, 1047, 1175, 1047, 880],
+    padVol: 0.04, melodyVol: 0.07, padType: "sine",
+    chordInterval: 1800, melodyInterval: 350, useBells: true,
+  },
+  // Divine — angelic, ethereal
+  divine: {
+    chords: [[523, 659, 784, 1047], [587, 740, 880, 1175], [523, 659, 784, 1047], [494, 622, 740, 988]],
+    melody: [1047, 1175, 1319, 1568, 1319, 1175, 1047, 880, 988, 1047, 1175, 1319, 1568, 1760, 1568, 1319],
+    padVol: 0.035, melodyVol: 0.05, padType: "sine",
+    chordInterval: 2500, melodyInterval: 400, useBells: true,
+  },
+  // Defeat — somber, mournful
+  defeat: {
+    chords: [[196, 247, 294], [175, 220, 262], [165, 196, 247], [196, 247, 294]],
+    melody: [294, 247, 196, 165, 196, 247, 220, 196, 175, 196, 247, 220, 196, 165, 147, 131],
+    padVol: 0.035, melodyVol: 0.045, padType: "sine",
+    chordInterval: 2400, melodyInterval: 500, useBells: false,
+  },
+  // Story / scripture — reverent, contemplative
+  story: {
+    chords: [[262, 330, 392], [220, 277, 330], [196, 247, 294], [262, 330, 392]],
+    melody: [523, 587, 659, 523, 587, 659, 784, 659, 587, 523, 587, 659, 784, 880, 784, 659],
+    padVol: 0.035, melodyVol: 0.055, padType: "sine",
+    chordInterval: 2400, melodyInterval: 450, useBells: true,
+  },
+};
+
+// Internal: actually start the music loop (assumes audio is unlocked)
+function _startMusic(theme) {
   stopMusic();
   musicTheme = theme;
-  getCtx();
+  const ctx = getCtx();
+  if (!ctx) return;
 
-  const themes = {
-    // Main menu — warm, inviting, sacred
-    menu: {
-      chords: [[262, 330, 392], [196, 247, 294], [220, 277, 330], [262, 330, 392]],
-      melody: [523, 587, 659, 784, 659, 587, 523, 392, 440, 523, 587, 659, 784, 880, 784, 659],
-      padVol: 0.04, melodyVol: 0.06, padType: "sine",
-      chordInterval: 2000, melodyInterval: 380, useBells: true,
-    },
-    // Eden / exploration — peaceful, gentle
-    eden: {
-      chords: [[294, 370, 440], [247, 294, 370], [330, 415, 494], [294, 370, 440]],
-      melody: [587, 659, 740, 880, 740, 659, 587, 494, 523, 587, 659, 740, 880, 988, 880, 740],
-      padVol: 0.035, melodyVol: 0.05, padType: "sine",
-      chordInterval: 2200, melodyInterval: 420, useBells: false,
-    },
-    // Map exploration — mysterious, adventurous
-    map: {
-      chords: [[220, 277, 330], [196, 247, 294], [247, 294, 370], [220, 277, 330]],
-      melody: [440, 523, 587, 659, 587, 523, 440, 330, 392, 440, 523, 587, 659, 784, 659, 523],
-      padVol: 0.035, melodyVol: 0.05, padType: "sine",
-      chordInterval: 2400, melodyInterval: 400, useBells: true,
-    },
-    // Battle — tense, driving
-    battle: {
-      chords: [[196, 247, 294], [165, 196, 247], [175, 220, 262], [196, 247, 294]],
-      melody: [294, 349, 392, 440, 392, 349, 294, 247, 262, 294, 349, 392, 440, 494, 440, 349],
-      padVol: 0.04, melodyVol: 0.05, padType: "sawtooth",
-      chordInterval: 1500, melodyInterval: 280, useBells: false,
-    },
-    // Boss — dark, ominous
-    boss: {
-      chords: [[131, 165, 196], [98, 131, 165], [117, 147, 175], [131, 165, 196]],
-      melody: [196, 233, 262, 311, 262, 233, 196, 165, 175, 196, 233, 262, 311, 349, 311, 233],
-      padVol: 0.04, melodyVol: 0.05, padType: "sawtooth",
-      chordInterval: 1400, melodyInterval: 250, useBells: false,
-    },
-    // Victory — triumphant, warm
-    victory: {
-      chords: [[523, 659, 784], [392, 494, 587], [440, 554, 659], [523, 659, 784]],
-      melody: [784, 880, 988, 1047, 988, 880, 784, 659, 698, 784, 880, 988, 1047, 1175, 1047, 880],
-      padVol: 0.04, melodyVol: 0.07, padType: "sine",
-      chordInterval: 1800, melodyInterval: 350, useBells: true,
-    },
-    // Divine — angelic, ethereal
-    divine: {
-      chords: [[523, 659, 784, 1047], [587, 740, 880, 1175], [523, 659, 784, 1047], [494, 622, 740, 988]],
-      melody: [1047, 1175, 1319, 1568, 1319, 1175, 1047, 880, 988, 1047, 1175, 1319, 1568, 1760, 1568, 1319],
-      padVol: 0.035, melodyVol: 0.05, padType: "sine",
-      chordInterval: 2500, melodyInterval: 400, useBells: true,
-    },
-    // Defeat — somber, mournful
-    defeat: {
-      chords: [[196, 247, 294], [175, 220, 262], [165, 196, 247], [196, 247, 294]],
-      melody: [294, 247, 196, 165, 196, 247, 220, 196, 175, 196, 247, 220, 196, 165, 147, 131],
-      padVol: 0.035, melodyVol: 0.045, padType: "sine",
-      chordInterval: 2400, melodyInterval: 500, useBells: false,
-    },
-    // Story / scripture — reverent, contemplative
-    story: {
-      chords: [[262, 330, 392], [220, 277, 330], [196, 247, 294], [262, 330, 392]],
-      melody: [523, 587, 659, 523, 587, 659, 784, 659, 587, 523, 587, 659, 784, 880, 784, 659],
-      padVol: 0.035, melodyVol: 0.055, padType: "sine",
-      chordInterval: 2400, melodyInterval: 450, useBells: true,
-    },
-  };
-
-  const t = themes[theme] || themes.menu;
+  const t = MUSIC_THEMES[theme] || MUSIC_THEMES.menu;
   let chordIdx = 0;
   let melodyIdx = 0;
   let step = 0;
@@ -369,6 +511,21 @@ export function playMusic(theme) {
   }
 
   playNext();
+}
+
+// Public: play a music theme. If audio isn't unlocked yet (mobile, no gesture),
+// store as pending — it starts on the first user gesture / unlock.
+export function playMusic(theme) {
+  if (!musicEnabled) return;
+  // Ensure context exists
+  getCtx();
+
+  if (!audioUnlocked || !ctxIsRunning()) {
+    // Queue for when audio is unlocked
+    pendingMusicTheme = theme;
+    return;
+  }
+  _startMusic(theme);
 }
 
 // === VOICE NARRATION via SpeechSynthesis API ===
@@ -417,15 +574,15 @@ function pickVoice(preference) {
   const voices = window.speechSynthesis.getVoices();
   if (!voices || voices.length === 0) return null;
 
-  const enVoices = voices.filter(v => v.lang && v.lang.startsWith("en"));
+  const enVoices = voices.filter((v) => v.lang && v.lang.startsWith("en"));
   const useVoices = enVoices.length > 0 ? enVoices : voices;
 
   if (preference === "male") {
-    const male = useVoices.find(v => /male|david|daniel|alex|george|fred|thomas|james|oliver|arthur|google uk english male/i.test(v.name));
+    const male = useVoices.find((v) => /male|david|daniel|alex|george|fred|thomas|james|oliver|arthur|google uk english male/i.test(v.name));
     if (male) return male;
   }
   if (preference === "female") {
-    const female = useVoices.find(v => /female|samantha|victoria|karen|moira|tessa|kate|serena|fiona|google uk english female|google us english/i.test(v.name));
+    const female = useVoices.find((v) => /female|samantha|victoria|karen|moira|tessa|kate|serena|fiona|google uk english female|google us english/i.test(v.name));
     if (female) return female;
   }
   return useVoices[0];
@@ -439,25 +596,32 @@ export function speakNarration(text, volume, voicePreference) {
 
   duckMusic();
 
-  const spokenText = verbalizeScriptureReference(text);
-  const utterance = new SpeechSynthesisUtterance(spokenText);
-  utterance.volume = vol;
-  utterance.rate = 0.85;
-  utterance.pitch = 1;
+  try {
+    const spokenText = verbalizeScriptureReference(text);
+    const utterance = new SpeechSynthesisUtterance(spokenText);
+    utterance.volume = vol;
+    utterance.rate = 0.85;
+    utterance.pitch = 1;
 
-  const voice = pickVoice(voicePreference);
-  if (voice) {
-    utterance.voice = voice;
+    const voice = pickVoice(voicePreference);
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onend = () => unDuckMusic();
+    utterance.onerror = () => unDuckMusic();
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn("[Audio] speakNarration error:", e);
+    unDuckMusic();
   }
-
-  utterance.onend = () => unDuckMusic();
-  utterance.onerror = () => unDuckMusic();
-  window.speechSynthesis.speak(utterance);
 }
 
 export function stopNarration() {
   if (window.speechSynthesis) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
     unDuckMusic();
   }
 }

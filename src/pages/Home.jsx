@@ -4,6 +4,7 @@ import { Swords, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
@@ -274,6 +275,8 @@ export default function Home() {
       {showNamePrompt && (
         <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} forceName={pendingAction === "run"} />
       )}
+
+      <AudioUnlockButton />
 
       {showResume && (
         <ResumeModal

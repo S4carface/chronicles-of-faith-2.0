@@ -4,6 +4,7 @@ import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, P
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd } = useGame();
@@ -14,8 +15,8 @@ export default function Settings() {
   const toggleMusic = () => {
     const newVal = !profile.settings.music;
     saveProfile({ settings: { ...profile.settings, music: newVal } });
+    Sound.sfx.click(); // unlock audio (user gesture) before starting music
     if (newVal) Sound.playMusic("menu");
-    Sound.sfx.click();
   };
 
   const toggleSfx = () => {
@@ -313,6 +314,8 @@ export default function Settings() {
           </p>
         </div>
       </div>
+
+      <AudioUnlockButton />
 
       {showNamePrompt && (
         <PlayerNamePrompt

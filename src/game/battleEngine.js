@@ -4,12 +4,28 @@ function pickEnemyAttack(enemy) {
   return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
 }
 
+function buildEnemyDeck(enemy) {
+  const blockAction = { name: "Raise Shield", damage: 0, icon: "🛡️", effect: "block", blockValue: 5, cost: 1, description: "Gains 5 Block" };
+  return shuffle([
+    ...enemy.attacks.map(a => ({ ...a, cost: a.cost || (a.damage >= 8 ? 2 : 1) })),
+    blockAction,
+  ]);
+}
+
 export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBlock = 0, extraDraw = 0, heroId = null) {
   const shuffled = shuffle([...deck]);
-  const intent = pickEnemyAttack(enemy);
+  const enemyDeck = buildEnemyDeck(enemy);
+  const enemyHand = enemyDeck.splice(0, 3);
+  const intent = enemyHand[0] || pickEnemyAttack(enemy);
+
   return {
     enemy: { ...enemy, currentHp: enemy.hp, maxHp: enemy.hp },
     enemyIntent: intent,
+    enemyHand,
+    enemyDeck,
+    enemyEnergy: 3,
+    enemyMaxEnergy: 3,
+    enemyBlock: 0,
     playerHp,
     maxPlayerHp: maxPlayerHp || playerHp,
     playerBlock: startingBlock,
@@ -20,7 +36,7 @@ export function createBattleState(enemy, playerHp, maxPlayerHp, deck, startingBl
     discard: [],
     turn: "player",
     turnNumber: 1,
-    log: [`Battle with ${enemy.name} begins!`, `⚠️ ${enemy.name} prepares: ${intent.name} (${intent.damage} DMG)`],
+    log: [`Battle with ${enemy.name} begins!`, `⚠️ ${enemy.name} prepares: ${intent.name}${intent.damage ? ` (${intent.damage} DMG)` : ""}`],
     enemyAttackMultiplier: 1,
     blockScripture: false,
     buffAttack: 0,
@@ -74,6 +90,7 @@ export function playCard(state, handIndex, card) {
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
+  let enemyBlock = state.enemyBlock || 0;
   let buffAttack = state.buffAttack;
   let freeCards = state.freeCardsRemaining;
   let blockScripture = state.blockScripture;
@@ -89,6 +106,12 @@ export function playCard(state, handIndex, card) {
       const passiveBonus = state.heroId === "adam" ? 1 : 0;
       let dmg = card.value + buffAttack + passiveBonus;
       if (state.enemyAttackMultiplier > 1) dmg = Math.floor(dmg * 2);
+      if (enemyBlock > 0) {
+        const absorbed = Math.min(enemyBlock, dmg);
+        enemyBlock -= absorbed;
+        dmg -= absorbed;
+        if (absorbed > 0) log.push(`🛡️ Enemy blocked ${absorbed} damage`);
+      }
       enemyHp = Math.max(0, enemyHp - dmg);
       log.push(`You played ${card.name} — ${dmg} damage!${passiveBonus ? " (+1 First Born Fury)" : ""}`);
       if (buffAttack > 0) { buffAttack = 0; }
@@ -99,7 +122,6 @@ export function playCard(state, handIndex, card) {
       const totalBlock = card.value + blockBonus;
       playerBlock += totalBlock;
       log.push(`You played ${card.name} — ${totalBlock} block!${blockBonus ? " (+2 Covenant Protection)" : ""}`);
-      // Lion's Den: counter attack
       if (card.id === "lions_den") {
         thorns = 4;
         log.push(`Counter Attack active — enemy will take 4 damage when it attacks!`);
@@ -120,33 +142,39 @@ export function playCard(state, handIndex, card) {
       } else if (card.id === "wisdom") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
         log.push("You played Wisdom — drew 2 cards!");
-        return { ...drawn, energy: newEnergy, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns };
+        return { ...drawn, energy: newEnergy, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
       } else if (card.id === "doves_peace") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
         log.push(`You played Dove's Peace — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 1);
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
       } else if (card.id === "manna_heaven") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
         log.push(`You played Manna from Heaven — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
       } else if (card.id === "coat_colors") {
         newEnergy += 3;
         log.push("You played Coat of Many Colors — gained 3 Faith!");
       } else if (card.id === "jacobs_ladder") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 3);
         log.push("You played Jacob's Ladder — drew 3 cards!");
-        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns };
+        return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
       } else if (card.id === "righteous_aim") {
         log.push("You played Righteous Aim — next attack deals DOUBLE!");
-        return { ...state, hand: newHand, energy: newEnergy, enemyAttackMultiplier: 2, discard: newDiscard, log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns };
+        return { ...state, hand: newHand, energy: newEnergy, enemyAttackMultiplier: 2, discard: newDiscard, log, buffAttack, freeCardsRemaining: freeCards, blockScripture, thorns, enemyBlock };
       }
       break;
     }
     case "miracle": {
       let dmg = card.value;
       if (state.enemyAttackMultiplier > 1) dmg = Math.floor(dmg * 2);
+      if (enemyBlock > 0) {
+        const absorbed = Math.min(enemyBlock, dmg);
+        enemyBlock -= absorbed;
+        dmg -= absorbed;
+        if (absorbed > 0) log.push(`🛡️ Enemy blocked ${absorbed} damage`);
+      }
       enemyHp = Math.max(0, enemyHp - dmg);
       log.push(`You played ${card.name} — ${dmg} holy damage!`);
       if (card.id === "angel_lord") {
@@ -167,6 +195,7 @@ export function playCard(state, handIndex, card) {
     playerHp,
     playerBlock,
     enemy: { ...state.enemy, currentHp: enemyHp },
+    enemyBlock,
     log,
     enemyAttackMultiplier: card.id === "righteous_aim" ? state.enemyAttackMultiplier : 1,
     buffAttack,
@@ -187,17 +216,30 @@ export function enemyTurn(state) {
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
+  let enemyBlock = 0; // Reset at start of enemy turn — already absorbed player attacks
   let thorns = state.thorns;
-  const attack = state.enemyIntent || pickEnemyAttack(state.enemy);
+  let skipDraw = state.skipDraw;
+  let blockScripture = false;
+  let dots = state.dots;
 
-  // Noah's Covenant Shield — negate all damage, still draw cards for next turn
+  // Noah's Covenant Shield — negate ALL incoming damage for one turn
   if (state.shieldActive) {
-    log.push(`🌈 Your Covenant Shield negated ${attack.name}!`);
-    const newIntent = pickEnemyAttack(state.enemy);
-    log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name} (${newIntent.damage} DMG)`);
+    log.push(`🌈 Your Covenant Shield negated the enemy's turn!`);
+    let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
+    if (allCards.length === 0) allCards = [...state.enemy.attacks];
+    const newDeck = shuffle(allCards);
+    const newHand = newDeck.splice(0, 3);
+    const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+    if (newIntent) {
+      log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage} DMG)` : ""}`);
+    }
     const newState = {
       ...state,
       enemyIntent: newIntent,
+      enemyHand: newHand,
+      enemyDeck: newDeck,
+      enemyBlock: 0,
+      enemyEnergy: state.enemyMaxEnergy || 3,
       playerHp,
       playerBlock: 0,
       enemy: { ...state.enemy, currentHp: enemyHp },
@@ -208,58 +250,82 @@ export function enemyTurn(state) {
       shieldActive: false,
       thorns: 0,
     };
-    const drawCount = Math.max(0, 5 - state.skipDraw);
+    const drawCount = Math.max(0, 5 - skipDraw);
     const withDraw = drawCards(newState, drawCount);
     return { ...withDraw, skipDraw: 0 };
   }
 
-  let damage = attack.damage;
+  // Enemy plays actions using energy — can attack, block, or heal
+  let energy = state.enemyMaxEnergy || 3;
+  const hand = [...(state.enemyHand || [])];
+  let deck = [...(state.enemyDeck || [])];
+  const discard = [];
 
-  // Apply block absorption
-  if (playerBlock > 0) {
-    const absorbed = Math.min(playerBlock, damage);
-    playerBlock -= absorbed;
-    damage -= absorbed;
-    if (absorbed > 0) log.push(`🛡️ Blocked ${absorbed} damage`);
-  }
-  if (damage > 0) {
-    playerHp = Math.max(0, playerHp - damage);
-  }
-  log.push(`💥 ${state.enemy.name} used ${attack.name} — ${attack.damage} damage!`);
+  while (energy > 0 && hand.length > 0) {
+    const action = hand.shift();
+    const cost = action.cost || 1;
+    if (cost > energy) {
+      discard.push(action);
+      continue;
+    }
+    energy -= cost;
 
-  // Counter / Thorns damage — enemy takes damage when attacking
-  if (thorns > 0) {
-    enemyHp = Math.max(0, enemyHp - thorns);
-    log.push(`🗡️ Counter Attack — ${state.enemy.name} took ${thorns} damage!`);
-    thorns = 0;
+    if (action.damage > 0) {
+      // Attack action
+      let damage = action.damage;
+      if (playerBlock > 0) {
+        const absorbed = Math.min(playerBlock, damage);
+        playerBlock -= absorbed;
+        damage -= absorbed;
+        if (absorbed > 0) log.push(`🛡️ Blocked ${absorbed} damage`);
+      }
+      if (damage > 0) {
+        playerHp = Math.max(0, playerHp - damage);
+      }
+      log.push(`💥 ${state.enemy.name} used ${action.name} — ${action.damage} damage!`);
+      // Counter / Thorns
+      if (thorns > 0) {
+        enemyHp = Math.max(0, enemyHp - thorns);
+        log.push(`🗡️ Counter Attack — ${state.enemy.name} took ${thorns} damage!`);
+        thorns = 0;
+      }
+      // Heal effect on attack+heal combos
+      if (action.effect === "heal_self") {
+        const healAmt = state.enemy.isBoss ? 6 : 4;
+        enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
+        log.push(`✨ ${state.enemy.name} healed ${healAmt} HP!`);
+      }
+    } else if (action.effect === "block") {
+      const blockVal = action.blockValue || 5;
+      enemyBlock += blockVal;
+      log.push(`🛡️ ${state.enemy.name} used ${action.name} — gained ${blockVal} Block!`);
+    } else if (action.effect === "heal_self") {
+      const healAmt = state.enemy.isBoss ? 6 : 4;
+      enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
+      log.push(`✨ ${state.enemy.name} used ${action.name} — healed ${healAmt} HP!`);
+    } else {
+      log.push(`${state.enemy.name} used ${action.name}!`);
+    }
+
+    // Apply non-damage effects (can be on any action)
+    if (action.effect === "skip_draw") {
+      skipDraw = 1;
+      log.push(`⚠️ ${action.description}`);
+    }
+    if (action.effect === "block_scripture") {
+      blockScripture = true;
+      log.push("⚠️ Scripture cards are blocked next turn!");
+    }
+    if (action.effect === "dot") {
+      dots = 3;
+      log.push("☠️ You are cursed — taking 2 damage per turn!");
+    }
+
+    discard.push(action);
   }
 
-  // Block resets after enemy attacks
+  // Player block resets at end of enemy turn
   playerBlock = 0;
-
-  if (attack.effect === "heal_self") {
-    const healAmt = state.enemy.isBoss ? 6 : 4;
-    enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
-    log.push(`${state.enemy.name} healed ${healAmt} HP!`);
-  }
-
-  let skipDraw = state.skipDraw;
-  if (attack.effect === "skip_draw") {
-    skipDraw = 1;
-    log.push(`⚠️ ${attack.description}`);
-  }
-
-  let blockScripture = false;
-  if (attack.effect === "block_scripture") {
-    blockScripture = true;
-    log.push("⚠️ Scripture cards are blocked next turn!");
-  }
-
-  let dots = state.dots;
-  if (attack.effect === "dot") {
-    dots = 3;
-    log.push("☠️ You are cursed — taking 2 damage per turn!");
-  }
 
   // DOT damage to player at start of their turn
   if (dots > 0) {
@@ -268,13 +334,24 @@ export function enemyTurn(state) {
     log.push(`☠️ Curse — 2 damage! (${dots} turns left)`);
   }
 
-  // Compute next enemy intent for telegraphing
-  const newIntent = pickEnemyAttack(state.enemy);
-  log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name} (${newIntent.damage} DMG)`);
+  // Build new enemy hand from remaining deck + discard
+  let allCards = [...deck, ...discard];
+  if (allCards.length === 0) allCards = [...state.enemy.attacks];
+  const newDeck = shuffle(allCards);
+  const newHand = newDeck.splice(0, 3);
+  const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+  if (newIntent) {
+    const label = newIntent.damage ? ` (${newIntent.damage} DMG)` : newIntent.effect === "block" ? " (Block)" : newIntent.effect === "heal_self" ? " (Heal)" : "";
+    log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name}${label}`);
+  }
 
   const newState = {
     ...state,
     enemyIntent: newIntent,
+    enemyHand: newHand,
+    enemyDeck: newDeck,
+    enemyBlock,
+    enemyEnergy: state.enemyMaxEnergy || 3,
     playerHp,
     playerBlock,
     enemy: { ...state.enemy, currentHp: enemyHp },
@@ -288,7 +365,7 @@ export function enemyTurn(state) {
     thorns,
   };
 
-  // Draw cards for new turn
+  // Draw cards for player's new turn
   const drawCount = Math.max(0, 5 - skipDraw);
   const withDraw = drawCards(newState, drawCount);
   return { ...withDraw, skipDraw: 0 };

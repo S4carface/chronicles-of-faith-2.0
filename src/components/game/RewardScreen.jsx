@@ -33,10 +33,15 @@ export default function RewardScreen() {
 
   const handleTriviaComplete = (result) => {
     setShowTrivia(false);
-    if (result && result.cardId) {
-      updateRun({ deck: [...run.deck, result.cardId] });
+    if (result && result.correct) {
+      if (result.cardId) {
+        updateRun({ deck: [...run.deck, result.cardId] });
+      }
+      setShowRewards(true);
+    } else {
+      // Trivia wrong — no rewards, move to next room
+      completeRoom(run.currentNode.id);
     }
-    setShowRewards(true);
   };
 
   const handleSelectReward = (cardId) => {

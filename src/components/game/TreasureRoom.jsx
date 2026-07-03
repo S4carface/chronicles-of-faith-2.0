@@ -4,6 +4,7 @@ import { getCardById } from "@/data/cards";
 import { pick } from "@/game/mapGenerator";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import Card from "@/components/game/Card";
+import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
 
 export default function TreasureRoom() {
@@ -12,6 +13,7 @@ export default function TreasureRoom() {
   const rewardCardId = node?.treasureReward || pick(Math.random, TREASURE_REWARDS);
   const card = getCardById(rewardCardId);
   const [claimed, setClaimed] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
     Sound.playMusic("divine");
@@ -39,7 +41,7 @@ export default function TreasureRoom() {
         </p>
       </div>
 
-      <div className={claimed ? "animate-pulse" : ""}>
+      <div className={claimed ? "animate-pulse" : ""} onClick={() => { Sound.sfx.click(); setShowDetail(true); }} style={{ cursor: "pointer" }}>
         <Card card={card} />
       </div>
 
@@ -47,6 +49,14 @@ export default function TreasureRoom() {
         <p className="text-amber-100/70 text-sm italic mb-2">{card.description}</p>
         <p className="text-amber-300/60 text-xs">"{card.verse}"</p>
       </div>
+
+      {showDetail && (
+        <CardDetailModal
+          card={card}
+          owned={false}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
 
       {!claimed ? (
         <button

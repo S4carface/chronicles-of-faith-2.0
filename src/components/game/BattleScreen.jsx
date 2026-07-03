@@ -228,7 +228,7 @@ export default function BattleScreen() {
             <span className="text-xl">{intent.icon}</span>
             <div className="text-left">
               <p className="text-red-200 text-xs font-bold">Next Attack:</p>
-              <p className="text-red-100 text-sm">{intent.name} — {intent.damage} DMG</p>
+              <p className="text-red-100 text-sm">{intent.name}{intent.damage ? ` — ${intent.damage} DMG` : intent.effect === "block" ? " — Block" : intent.effect === "heal_self" ? " — Heal" : ""}</p>
               {intent.description && (
                 <p className="text-red-300/60 text-[10px] italic">{intent.description}</p>
               )}
@@ -254,6 +254,13 @@ export default function BattleScreen() {
             />
           </div>
           <p className="text-center text-red-200 text-sm mt-1">{battleState.enemy.currentHp} / {battleState.enemy.maxHp} HP</p>
+          {battleState.enemyBlock > 0 && (
+            <p className="text-center text-blue-300 text-xs">🛡️ {battleState.enemyBlock} block</p>
+          )}
+          <div className="flex items-center justify-center gap-3 text-xs text-red-200/40 mt-1">
+            <span>✨ {battleState.enemyEnergy}</span>
+            <span>🃏 {battleState.enemyHand.length + battleState.enemyDeck.length} actions</span>
+          </div>
         </div>
       </div>
 
@@ -296,6 +303,10 @@ export default function BattleScreen() {
             {battleState.dots > 0 && (
               <p className="text-purple-300 text-xs">☠️ Cursed ({battleState.dots} turns)</p>
             )}
+            <div className="flex items-center gap-2 text-xs text-amber-100/40 mt-1">
+              <span>🃏 Deck: {battleState.deck.length}</span>
+              <span>🗑️ Discard: {battleState.discard.length}</span>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-4">

@@ -12,15 +12,19 @@ export default function VictoryScreen() {
   const [playerName, setPlayerName] = useState(profile.playerName || "");
   const [submitting, setSubmitting] = useState(false);
 
+  const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
+  const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
+
   useEffect(() => {
     Sound.playMusic("victory");
-    const finalScore = Math.max(0,
+    const baseScore = Math.max(0,
       run.roomsCleared * 100 +
       run.triviaCorrect * 50 +
       run.playerHp * 5 +
       run.gold * 2 +
       (run.hero.id === "noah" ? 100 : 0)
     );
+    const finalScore = Math.floor(baseScore * multiplier);
     setScore(finalScore);
 
     if (finalScore >= 500) unlockAchievement("low_score_champion");
@@ -99,6 +103,8 @@ export default function VictoryScreen() {
             <div className="text-amber-100/60">Trivia Correct: <span className="text-amber-200 font-bold">{run.triviaCorrect}</span></div>
             <div className="text-amber-100/60">HP Remaining: <span className="text-amber-200 font-bold">{run.playerHp}/{run.maxHp}</span></div>
             <div className="text-amber-100/60">Gold: <span className="text-amber-200 font-bold">{run.gold}</span></div>
+            <div className="text-amber-100/60">Difficulty: <span className="text-amber-200 font-bold capitalize">{run.difficulty || "normal"}</span></div>
+            <div className="text-amber-100/60">Multiplier: <span className="text-amber-200 font-bold">{multiplier}x</span></div>
           </div>
         </div>
 

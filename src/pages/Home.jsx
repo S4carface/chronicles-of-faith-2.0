@@ -67,13 +67,13 @@ export default function Home() {
             <div className="text-3xl group-hover:scale-110 transition-transform">{item.icon}</div>
             <div>
               <div className="font-serif text-amber-100 text-lg">{item.label}</div>
-              <div className="text-amber-100/40 text-xs">{item.desc}</div>
+              <div className="text-amber-100/60 text-xs">{item.desc}</div>
             </div>
           </Link>
         ))}
       </div>
 
-      <p className="relative text-amber-100/30 text-xs mt-12 font-serif italic text-center max-w-md">
+      <p className="relative text-amber-100/50 text-xs mt-12 font-serif italic text-center max-w-md">
         "In the beginning, God created the heavens and the earth." — Genesis 1:1
       </p>
     </div>

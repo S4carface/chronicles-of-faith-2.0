@@ -29,7 +29,7 @@ export default function DefeatScreen() {
       <div className="text-center max-w-lg">
         <div className="text-8xl mb-4 opacity-60">💀</div>
         <h1 className="text-4xl font-serif text-red-300 mb-4">You Have Fallen</h1>
-        <p className="text-amber-100/50 text-lg mb-8 font-serif italic">
+        <p className="text-amber-100/70 text-lg mb-8 font-serif italic">
           "For all have sinned and fall short of the glory of God." — Romans 3:23
         </p>
 
@@ -42,7 +42,7 @@ export default function DefeatScreen() {
           <p className="text-emerald-300/60 text-xs">🃏 Cards found during this run have been saved to your collection</p>
         </div>
 
-        <p className="text-amber-100/40 text-sm mb-6">
+        <p className="text-amber-100/60 text-sm mb-6">
           Every run is different. The path branches, enemies vary, and blessings await those who persevere. Rise again and walk the path of faith.
         </p>
 

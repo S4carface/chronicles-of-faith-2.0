@@ -39,10 +39,10 @@ export const ENEMIES = {
   },
   pharaoh: {
     id: "pharaoh",
-    name: "Pharaoh's Hardened Heart",
+    name: "Pharaoh of Egypt",
     icon: "👑",
     hp: 42,
-    narration: "Pharaoh's heart was hardened, and he refused to let God's people go. — Exodus 7:13",
+    narration: "Pharaoh said to Joseph, 'See, I have set you over all the land of Egypt.' — Genesis 41:41",
     attacks: [
       { name: "Royal Decree", damage: 7, icon: "📜" },
       { name: "Whip of Bondage", damage: 6, icon: "⛓️" },
@@ -67,7 +67,7 @@ export const ENEMIES = {
   babel_tower: {
     id: "babel_tower",
     name: "Tower of Babel",
-    icon: "🗼",
+    icon: "🏯",
     hp: 60,
     isBoss: true,
     narration: "They built a tower to the heavens to make a name for themselves, but the Lord confused their language. — Genesis 11:4-7",

@@ -36,7 +36,7 @@ export default function Settings() {
             <span className="text-2xl">🎵</span>
             <div>
               <p className="font-serif text-amber-100">Music</p>
-              <p className="text-amber-100/40 text-xs">Ambient biblical soundtracks</p>
+              <p className="text-amber-100/60 text-xs">Ambient biblical soundtracks</p>
             </div>
           </div>
           <button
@@ -53,7 +53,7 @@ export default function Settings() {
             <span className="text-2xl">🔊</span>
             <div>
               <p className="font-serif text-amber-100">Sound Effects</p>
-              <p className="text-amber-100/40 text-xs">Card plays, attacks, victory</p>
+              <p className="text-amber-100/60 text-xs">Card plays, attacks, victory</p>
             </div>
           </div>
           <button
@@ -70,7 +70,7 @@ export default function Settings() {
             <span className="text-2xl">✍️</span>
             <div>
               <p className="font-serif text-amber-100">Player Name</p>
-              <p className="text-amber-100/40 text-xs">Shown on the leaderboard</p>
+              <p className="text-amber-100/60 text-xs">Shown on the leaderboard</p>
             </div>
           </div>
           <input
@@ -85,7 +85,7 @@ export default function Settings() {
 
         {/* About */}
         <div className="p-4 rounded-xl border-2 border-amber-500/10" style={{ background: "rgba(15,26,48,0.4)" }}>
-          <p className="text-amber-100/40 text-xs text-center font-serif italic">
+          <p className="text-amber-100/60 text-xs text-center font-serif italic">
             Chronicles of Faith — A Biblical Roguelike<br/>
             Teaching the Bible through gameplay, one chapter at a time.<br/>
             Version 1.0 — Genesis

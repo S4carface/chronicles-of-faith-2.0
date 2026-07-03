@@ -36,7 +36,7 @@ export default function ProgressMap() {
         <div className="w-16" />
       </div>
 
-      <p className="text-center text-amber-100/50 text-sm mb-8 max-w-lg mx-auto font-serif italic">
+      <p className="text-center text-amber-100/70 text-sm mb-8 max-w-lg mx-auto font-serif italic">
         Your journey through the Bible, from Genesis to Revelation. Each book is a new chapter of adventure.
       </p>
 
@@ -67,7 +67,7 @@ export default function ProgressMap() {
                     <h3 className={`font-serif text-lg ${isPlayable ? "text-amber-200" : "text-slate-500"}`}>
                       {book.name} {isPlayable && <span className="text-emerald-400 text-xs ml-2">▶ Playable</span>}
                     </h3>
-                    <p className={`text-xs ${isPlayable ? "text-amber-100/50" : "text-slate-600"}`}>{book.desc}</p>
+                    <p className={`text-xs ${isPlayable ? "text-amber-100/70" : "text-slate-600"}`}>{book.desc}</p>
                   </div>
                   {isPlayable && <div className="text-amber-300 text-xl">→</div>}
                   {!isPlayable && <div className="text-slate-600 text-xl">🔒</div>}

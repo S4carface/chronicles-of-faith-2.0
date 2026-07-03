@@ -44,7 +44,7 @@ export const TRIVIA_QUESTIONS = [
   { q: "What did Joseph's father give him that made his brothers jealous?", options: ["Land", "A coat of many colors", "Gold", "A sword"], answer: 1, verse: "Genesis 37:3", difficulty: 3 },
   { q: "What did the brothers do to Joseph?", options: ["Sold him into slavery", "Killed him", "Sent him away", "Imprisoned him"], answer: 0, verse: "Genesis 37:28", difficulty: 3 },
   { q: "Where was Joseph sold into slavery?", options: ["Egypt", "Canaan", "Babylon", "Midian"], answer: 0, verse: "Genesis 37:36", difficulty: 3 },
-  { q: "Who bought Joseph in Egypt?", options: ["Pharaoh", "Potiphar", "The priest", "A merchant"], answer: 1, verse: "Genesis 37:36", difficulty: 3 },
+  { q: "Who bought Joseph after he was taken to Egypt?", options: ["Pharaoh", "Potiphar", "The priest", "A merchant"], answer: 1, verse: "Genesis 39:1", difficulty: 3 },
   { q: "What did Joseph interpret for Pharaoh?", options: ["A prophecy", "Dreams of seven fat and seven lean cows", "A vision of war", "An angel's message"], answer: 1, verse: "Genesis 41:25", difficulty: 3 },
   { q: "How many years of plenty did Joseph predict?", options: ["3", "5", "7", "10"], answer: 2, verse: "Genesis 41:29", difficulty: 3 },
   { q: "Who was Jacob's favorite wife?", options: ["Leah", "Rachel", "Bilhah", "Zilpah"], answer: 1, verse: "Genesis 29:30", difficulty: 3 },

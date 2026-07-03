@@ -108,6 +108,21 @@ export default function VictoryScreen() {
           </div>
         </div>
 
+        {/* Lesson Learned */}
+        <div className="rounded-xl border-2 border-amber-500/20 p-5 mb-6 text-center" style={{ background: "rgba(15,26,48,0.6)" }}>
+          <h3 className="text-lg font-serif text-amber-300 mb-3">📖 Lesson Learned</h3>
+          <p className="text-amber-100/80 text-sm mb-3 leading-relaxed">
+            From Creation to the Flood, from Abraham's faith to Joseph's forgiveness,
+            Genesis reveals God's faithfulness through every trial and promise.
+          </p>
+          <p className="text-amber-100/70 text-sm italic mb-2">
+            "You meant evil against me, but God meant it for good." — Genesis 50:20
+          </p>
+          <p className="text-amber-300/80 text-xs">
+            Lesson: God works through ordinary people and difficult circumstances to fulfill His promises.
+          </p>
+        </div>
+
         {run.hero.id !== "noah" && (
           <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 p-4 mb-6">
             <p className="text-amber-200 font-serif">🌈 Noah Unlocked!</p>

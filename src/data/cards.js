@@ -42,7 +42,7 @@ export const CARDS = [
   { id: "coat_colors", name: "Coat of Many Colors", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.RARE, cost: 1, value: 0, icon: "🧥", verse: "Genesis 37:3", description: "Gain 3 Faith energy." },
   { id: "jacobs_ladder", name: "Jacob's Ladder", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.RARE, cost: 1, value: 0, icon: "🪜", verse: "Genesis 28:12", description: "Draw 3 cards from your deck." },
   { id: "lions_den", name: "Lion's Den", type: CARD_TYPES.DEFENSE, rarity: RARITIES.RARE, cost: 2, value: 12, icon: "🦁", verse: "Daniel 6:16", description: "Block 12 and reflect 4 damage." },
-  { id: "burning_bush", name: "Burning Bush", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.RARE, cost: 2, value: 5, icon: "🌳", verse: "Exodus 3:2", description: "Deal 5, heal 5. The bush burned with fire." },
+  { id: "burning_bush", name: "Burning Bush", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.RARE, cost: 2, value: 5, icon: "🌿🔥", verse: "Exodus 3:2", description: "Deal 5, heal 5. The bush burned with fire." },
 
   // ===== LEGENDARY (Divine Glow) =====
   { id: "angel_lord", name: "Angel of the Lord", type: CARD_TYPES.MIRACLE, rarity: RARITIES.LEGENDARY, cost: 3, value: 20, icon: "👼", verse: "Exodus 3:2", description: "Deal 20 damage and heal 10 HP." },

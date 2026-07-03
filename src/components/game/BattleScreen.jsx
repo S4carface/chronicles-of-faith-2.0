@@ -26,6 +26,7 @@ export default function BattleScreen() {
   const [enemyFlash, setEnemyFlash] = useState(false);
   const [playerFlash, setPlayerFlash] = useState(false);
   const [showPause, setShowPause] = useState(false);
+  const [showLog, setShowLog] = useState(false);
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
 
   useEffect(() => {
@@ -269,15 +270,24 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Combat Log — scrollable */}
+      {/* Combat Log — collapsible */}
       <div className="px-4 mb-2 mx-auto w-full max-w-md">
-        <div className="rounded-lg border border-amber-500/15 bg-slate-900/50 p-2 max-h-24 overflow-y-auto">
-          {battleState.log.slice(-5).map((entry, i) => (
-            <p key={i} className="text-amber-100/70 text-xs leading-relaxed">
-              {entry}
-            </p>
-          ))}
-        </div>
+        <button
+          onClick={() => setShowLog(!showLog)}
+          className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[10px] uppercase tracking-wide hover:bg-slate-900/70 transition"
+        >
+          <span>📜 Battle Log</span>
+          <span>{showLog ? "▲" : "▼"}</span>
+        </button>
+        {showLog && (
+          <div className="rounded-lg border border-amber-500/15 bg-slate-900/50 p-2 mt-1 max-h-20 overflow-y-auto">
+            {battleState.log.slice(-4).map((entry, i) => (
+              <p key={i} className="text-amber-100/80 text-xs leading-relaxed">
+                {entry}
+              </p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Player stats */}
@@ -340,7 +350,7 @@ export default function BattleScreen() {
       </div>
 
       {/* Hand */}
-      <div className="py-4 px-4 flex justify-center gap-2 overflow-x-auto" style={{ background: "rgba(15,10,5,0.8)" }}>
+      <div className="py-4 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex justify-start gap-3 overflow-x-auto flex-nowrap snap-x" style={{ background: "rgba(15,10,5,0.8)" }}>
         {battleState.hand.length === 0 && (
           <p className="text-amber-100/40 text-sm py-8">No cards in hand — End Turn to draw</p>
         )}

@@ -59,7 +59,7 @@ export const STORY_CHOICES = [
   {
     id: "noahs_ark",
     prompt: "The rains begin to fall. The world mocks Noah. Do you help build the ark?",
-    icon: "🚢",
+    icon: "⛵",
     narration: "Noah did everything just as God commanded him. — Genesis 6:22",
     choice_a: { label: "Build faithfully", icon: "🔨", effect: { type: "block", value: 10, text: "You gain 10 block for the next battle." } },
     choice_b: { label: "Doubt and wait", icon: "🌧️", effect: { type: "damage", value: -4, gold: 20, text: "You lose 4 HP but find 20 gold." } },

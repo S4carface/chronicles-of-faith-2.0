@@ -12,85 +12,113 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0F1A30 100%)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-amber-500/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/10">
         <div>
-          <h2 className="text-xl font-serif text-amber-200">The Path of Genesis</h2>
-          <p className="text-amber-100/40 text-sm">
-            {fogOfWar ? "Choose your next destination — the path ahead is hidden" : "Choose your next destination"}
+          <h2 className="text-lg font-serif text-amber-200">Path of Genesis</h2>
+          <p className="text-amber-100/60 text-xs">
+            {fogOfWar ? "The path ahead is hidden" : "All rooms visible"}
           </p>
         </div>
         <button
           onClick={onExit}
-          className="text-amber-100/60 hover:text-amber-200 text-sm transition"
+          className="text-amber-100/70 hover:text-amber-200 text-xs transition px-3 py-1.5 rounded-lg border border-amber-500/20"
         >
-          ← Abandon Run
+          ← Abandon
         </button>
       </div>
 
-      {/* Map scroll */}
-      <div className="flex-1 overflow-x-auto overflow-y-auto p-6">
-        <div className="flex gap-8 items-start min-w-max h-full pb-4">
-          {map.map((layer, layerIdx) => (
-            <div key={layerIdx} className="flex flex-col gap-6 items-center justify-center min-h-full">
-              {layer.map((node) => {
-                const isAvailable = availableNodes.includes(node.id);
-                const isCurrent = currentNode?.id === node.id;
-                const isCleared = node.cleared;
-                const isVisited = node.visited;
-                const isBoss = node.type === "boss";
-                const isVisible = visibleSet.has(node.id);
+      {/* Map — vertical connected path */}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="flex flex-col items-center max-w-sm mx-auto">
+          {map.map((layer, layerIdx) => {
+            const isLast = layerIdx === map.length - 1;
+            return (
+              <React.Fragment key={layerIdx}>
+                <div className="mb-2">
+                  <span className="text-amber-100/50 text-[10px] uppercase tracking-wider">
+                    {isLast ? "Final Trial" : `Stage ${layerIdx + 1}`}
+                  </span>
+                </div>
 
-                // Fog of war: hidden nodes show as mist
-                if (!isVisible && !isCleared) {
-                  return (
-                    <div
-                      key={node.id}
-                      className={cn(
-                        "rounded-xl border-2",
-                        isBoss ? "w-20 h-20" : "w-16 h-16",
-                        "border-slate-700/20 bg-slate-900/20"
-                      )}
-                      style={{ filter: "blur(2px)", opacity: 0.3 }}
-                    >
-                      <div className="w-full h-full flex items-center justify-center text-2xl text-slate-700">🌫️</div>
-                    </div>
-                  );
-                }
+                {/* Nodes row */}
+                <div className="flex flex-row justify-center items-start gap-3 w-full">
+                  {layer.map((node) => {
+                    const isAvailable = availableNodes.includes(node.id);
+                    const isCurrent = currentNode?.id === node.id;
+                    const isCleared = node.cleared;
+                    const isBoss = node.type === "boss";
+                    const isVisible = visibleSet.has(node.id);
 
-                return (
-                  <button
-                    key={node.id}
-                    onClick={() => isAvailable && onSelectNode(node.id)}
-                    disabled={!isAvailable}
-                    className={cn(
-                      "relative flex flex-col items-center justify-center rounded-xl border-2 transition-all duration-300",
-                      isBoss ? "w-20 h-20 text-3xl" : "w-16 h-16 text-2xl",
-                      isCurrent && "ring-2 ring-amber-300 scale-110",
-                      isAvailable && !isCleared && "border-amber-400/60 bg-amber-500/10 hover:scale-110 hover:bg-amber-500/20 cursor-pointer animate-pulse",
-                      isCleared && "border-slate-600/30 bg-slate-800/40 opacity-40",
-                      !isAvailable && !isCleared && "border-slate-700/30 bg-slate-900/40 opacity-30 cursor-not-allowed",
-                      isBoss && isAvailable && "border-red-400/60 bg-red-500/10"
-                    )}
-                  >
-                    <span>{isCleared && !isBoss ? "✓" : (ROOM_ICONS[node.type] || "❓")}</span>
-                    {isAvailable && !isCleared && (
-                      <span className="absolute -bottom-5 text-[9px] text-amber-200/70 whitespace-nowrap font-medium">
-                        {ROOM_LABELS[node.type]}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+                    if (!isVisible && !isCleared) {
+                      return (
+                        <div key={node.id} className="flex flex-col items-center w-20">
+                          <div
+                            className={cn(
+                              "rounded-lg border-2 border-slate-700/20 bg-slate-900/20 flex items-center justify-center",
+                              isBoss ? "w-16 h-16" : "w-14 h-14"
+                            )}
+                            style={{ filter: "blur(1px)", opacity: 0.3 }}
+                          >
+                            <span className="text-xl text-slate-700">🌫️</span>
+                          </div>
+                          <span className="text-[9px] mt-1.5 h-6" />
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={node.id}
+                        onClick={() => isAvailable && onSelectNode(node.id)}
+                        disabled={!isAvailable}
+                        className="flex flex-col items-center w-20"
+                      >
+                        <div
+                          className={cn(
+                            "relative flex items-center justify-center rounded-xl border-2 transition-all duration-300",
+                            isBoss ? "w-16 h-16 text-2xl" : "w-14 h-14 text-xl",
+                            isCurrent && "ring-2 ring-amber-300 scale-110 shadow-lg shadow-amber-400/40",
+                            isAvailable && !isCleared && "border-amber-400/70 bg-amber-500/15 hover:scale-110 hover:bg-amber-500/25 cursor-pointer animate-pulse shadow-lg shadow-amber-500/20",
+                            isCleared && "border-emerald-600/40 bg-emerald-900/20 opacity-50",
+                            !isAvailable && !isCleared && "border-slate-600/40 bg-slate-800/40 opacity-40 cursor-not-allowed",
+                            isBoss && isAvailable && !isCleared && "border-red-400/70 bg-red-500/15 shadow-lg shadow-red-500/30"
+                          )}
+                        >
+                          <span>{isCleared && !isBoss ? "✓" : (ROOM_ICONS[node.type] || "❓")}</span>
+                        </div>
+                        {/* Label in its own space — no overlap */}
+                        <span
+                          className={cn(
+                            "text-[9px] mt-1.5 text-center leading-tight h-6 flex items-start justify-center",
+                            isAvailable && !isCleared ? "text-amber-200/80 font-medium" : "text-amber-100/50"
+                          )}
+                        >
+                          {ROOM_LABELS[node.type]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Connector between layers */}
+                {!isLast && (
+                  <div className="my-1 flex flex-col items-center">
+                    <div className="w-0.5 h-6 bg-gradient-to-b from-amber-500/40 to-amber-500/20 rounded-full" />
+                    <div className="text-amber-500/40 text-[8px]">▼</div>
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
 
-      {/* Footer info */}
-      <div className="px-6 py-3 border-t border-amber-500/10 text-center">
-        <p className="text-amber-100/30 text-xs">
-          {fogOfWar ? "🌫️ Fog of War — only nearby rooms are visible" : "✨ All rooms visible (Easy Mode)"}
-        </p>
+      {/* Legend */}
+      <div className="px-4 py-3 border-t border-amber-500/10 flex flex-wrap items-center justify-center gap-3 text-[9px]">
+        <span className="flex items-center gap-1 text-amber-200/80"><span className="w-2.5 h-2.5 rounded-full bg-amber-400" />Available</span>
+        <span className="flex items-center gap-1 text-emerald-300/80"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />Cleared</span>
+        <span className="flex items-center gap-1 text-red-300/80"><span className="w-2.5 h-2.5 rounded-full bg-red-500" />Boss</span>
+        <span className="flex items-center gap-1 text-slate-400/70"><span className="w-2.5 h-2.5 rounded-full bg-slate-600" />Locked</span>
       </div>
     </div>
   );

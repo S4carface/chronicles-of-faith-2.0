@@ -48,7 +48,7 @@ export default function Shop() {
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
           <h1 className="text-3xl font-serif text-amber-200">The Marketplace</h1>
-          <p className="text-amber-100/40 text-xs mt-1">Spend your hard-earned gold</p>
+          <p className="text-amber-100/60 text-xs mt-1">Spend your hard-earned gold</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20">
           <span className="text-2xl">💰</span>
@@ -110,7 +110,7 @@ export default function Shop() {
           )}
           <button
             onClick={() => setPurchased(null)}
-            className="block mx-auto mt-4 text-amber-100/40 text-sm hover:text-amber-200"
+            className="block mx-auto mt-4 text-amber-100/60 text-sm hover:text-amber-200"
           >
             Close
           </button>
@@ -125,7 +125,7 @@ export default function Shop() {
         />
       )}
 
-      <p className="text-amber-100/30 text-xs mt-12 font-serif italic text-center max-w-md mx-auto">
+      <p className="text-amber-100/50 text-xs mt-12 font-serif italic text-center max-w-md mx-auto">
         "The wealth of the rich is their fortified city, but poverty is the ruin of the poor." — Proverbs 10:15
       </p>
     </div>

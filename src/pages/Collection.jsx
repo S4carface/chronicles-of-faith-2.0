@@ -51,7 +51,7 @@ export default function Collection() {
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
           <h1 className="text-3xl font-serif text-amber-200">My Collection</h1>
-          <p className="text-amber-100/40 text-xs mt-1">{stats.owned} / {stats.total} cards — {stats.percent}% complete</p>
+          <p className="text-amber-100/60 text-xs mt-1">{stats.owned} / {stats.total} cards — {stats.percent}% complete</p>
         </div>
         <div className="w-16" />
       </div>
@@ -94,7 +94,7 @@ export default function Collection() {
             className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
               filter === f
                 ? "bg-amber-500/20 border border-amber-400/50 text-amber-200"
-                : "border border-amber-500/10 text-amber-100/40 hover:text-amber-100/70"
+                : "border border-amber-500/10 text-amber-100/60 hover:text-amber-100/70"
             }`}
           >
             {f}

@@ -49,12 +49,12 @@ export default function DailyChallenge() {
           <div className="flex items-center justify-around text-center">
             <div>
               <p className="text-2xl font-bold text-amber-200">{profile.dailyStreak}</p>
-              <p className="text-amber-100/40 text-xs">Day Streak</p>
+              <p className="text-amber-100/60 text-xs">Day Streak</p>
             </div>
             <div className="w-px h-8 bg-amber-500/20" />
             <div>
               <p className="text-2xl font-bold text-amber-200">{completedToday ? "✓" : "—"}</p>
-              <p className="text-amber-100/40 text-xs">Today's Status</p>
+              <p className="text-amber-100/60 text-xs">Today's Status</p>
             </div>
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function DailyChallenge() {
         {completedToday ? (
           <div className="text-center">
             <p className="text-emerald-300 mb-4">✓ You've completed today's challenge!</p>
-            <p className="text-amber-100/40 text-xs mb-6">Come back tomorrow for a new adventure.</p>
+            <p className="text-amber-100/60 text-xs mb-6">Come back tomorrow for a new adventure.</p>
             <button
               onClick={() => { Sound.sfx.click(); navigate("/leaderboard"); }}
               className="inline-block px-8 py-3 rounded-lg border-2 border-amber-400/40 bg-amber-900/20 text-amber-200 font-serif hover:bg-amber-800/30 transition"
@@ -80,7 +80,7 @@ export default function DailyChallenge() {
           </button>
         )}
 
-        <p className="text-amber-100/30 text-xs mt-8 font-serif italic">
+        <p className="text-amber-100/50 text-xs mt-8 font-serif italic">
           "His mercies are new every morning." — Lamentations 3:23
         </p>
       </div>

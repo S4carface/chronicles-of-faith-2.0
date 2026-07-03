@@ -17,7 +17,7 @@ export default function Achievements() {
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
           <h1 className="text-3xl font-serif text-amber-200">Achievements</h1>
-          <p className="text-amber-100/40 text-xs mt-1">{unlockedCount} / {ACHIEVEMENTS.length} unlocked</p>
+          <p className="text-amber-100/60 text-xs mt-1">{unlockedCount} / {ACHIEVEMENTS.length} unlocked</p>
         </div>
         <div className="w-16" />
       </div>

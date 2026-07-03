@@ -43,13 +43,6 @@ export function GameProvider({ children }) {
     Sound.setSfxEnabled(profile.settings.sfx);
   }, [profile.settings]);
 
-  // Check collection-based achievements
-  useEffect(() => {
-    if (profile.collectedCards.length >= 15 && !profile.achievements.includes("collector")) {
-      unlockAchievement("collector");
-    }
-  }, [profile.collectedCards, profile.achievements, unlockAchievement]);
-
   const saveProfile = useCallback((updates) => {
     setProfile(prev => ({ ...prev, ...updates }));
   }, []);
@@ -73,6 +66,13 @@ export function GameProvider({ children }) {
       collectedCards: [...new Set([...prev.collectedCards, ...cardIds])],
     }));
   }, []);
+
+  // Check collection-based achievements
+  useEffect(() => {
+    if (profile.collectedCards.length >= 15 && !profile.achievements.includes("collector")) {
+      unlockAchievement("collector");
+    }
+  }, [profile.collectedCards, profile.achievements, unlockAchievement]);
 
   // ===== RUN MANAGEMENT =====
   const startRun = useCallback((heroId, isDaily = false, seedOverride = null) => {

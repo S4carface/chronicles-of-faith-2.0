@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap } from "lucide-react";
+import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
@@ -44,6 +44,18 @@ export default function Settings() {
   };
 
   const enemyAnim = profile.settings.enemyAnimation || "step";
+
+  const setGuidanceLevel = (level) => {
+    saveProfile({ settings: { ...profile.settings, guidanceLevel: level, guidanceTips: level === "guided" } });
+    Sound.sfx.click();
+  };
+
+  const guidanceLevel = profile.settings.guidanceLevel || "normal";
+
+  const previewVoice = () => {
+    Sound.sfx.click();
+    Sound.speakNarration("The Lord is my shepherd, I lack nothing. Psalm chapter 23, verse 1.", (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
+  };
 
   return (
     <div className="min-h-screen p-6 flex flex-col items-center" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
@@ -141,29 +153,39 @@ export default function Settings() {
               </div>
             )}
             {profile.settings.narration && (
-              <div className="mt-3">
-                <p className="text-amber-100/50 text-[10px] mb-2">Narrator Voice</p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {[
-                    { value: "default", label: "Default" },
-                    { value: "male", label: "Warm Male" },
-                    { value: "female", label: "Warm Female" },
-                    { value: "system", label: "System" },
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => { saveProfile({ settings: { ...profile.settings, narrationVoice: opt.value } }); Sound.sfx.click(); }}
-                      className={`px-1 py-1.5 rounded-lg border text-[10px] font-medium transition ${
-                        (profile.settings.narrationVoice || "default") === opt.value
-                          ? "border-amber-400/60 bg-amber-600/20 text-amber-100"
-                          : "border-amber-500/15 bg-slate-900/40 text-amber-100/50"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+              <>
+                <div className="mt-3">
+                  <p className="text-amber-100/50 text-[10px] mb-2">Narrator Voice</p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[
+                      { value: "default", label: "Default" },
+                      { value: "male", label: "Warm Male" },
+                      { value: "female", label: "Warm Female" },
+                      { value: "system", label: "System" },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => { saveProfile({ settings: { ...profile.settings, narrationVoice: opt.value } }); Sound.sfx.click(); }}
+                        className={`px-1 py-1.5 rounded-lg border text-[10px] font-medium transition ${
+                          (profile.settings.narrationVoice || "default") === opt.value
+                            ? "border-amber-400/60 bg-amber-600/20 text-amber-100"
+                            : "border-amber-500/15 bg-slate-900/40 text-amber-100/50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+                <button
+                  onClick={previewVoice}
+                  className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition"
+                >
+                  <Play className="w-3 h-3" />
+                  Preview Voice
+                </button>
+                <p className="text-amber-100/30 text-[9px] mt-1.5 text-center italic">Scripture references are read as "Genesis chapter 3, verse 1"</p>
+              </>
             )}
           </div>
         </div>
@@ -195,23 +217,37 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Guidance Tips */}
+          {/* Guidance Level */}
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-amber-300/70" />
-                <div>
-                  <span className="font-serif text-amber-100 text-sm">Guidance Tips</span>
-                  <p className="text-amber-100/40 text-[10px]">Tactical hints during battle (default: Easy on)</p>
-                </div>
-              </div>
-              <button
-                onClick={() => { saveProfile({ settings: { ...profile.settings, guidanceTips: !profile.settings.guidanceTips } }); Sound.sfx.click(); }}
-                className={`w-14 h-7 rounded-full transition relative ${profile.settings.guidanceTips ? "bg-amber-500/40" : "bg-slate-700"}`}
-              >
-                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-amber-200 transition-transform ${profile.settings.guidanceTips ? "translate-x-7" : "translate-x-0.5"}`} />
-              </button>
+            <div className="flex items-center gap-2 mb-1">
+              <GraduationCap className="w-4 h-4 text-amber-300/70" />
+              <span className="font-serif text-amber-100 text-sm">Guidance Level</span>
             </div>
+            <p className="text-amber-100/40 text-[10px] mb-3">How much help you receive during play</p>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: "guided", label: "Guided", desc: "Hints & explanations" },
+                { value: "normal", label: "Normal", desc: "Some clarity" },
+                { value: "expert", label: "Expert", desc: "Less hand-holding" },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setGuidanceLevel(opt.value)}
+                  className={`px-2 py-2 rounded-lg border-2 text-[11px] font-medium transition ${
+                    guidanceLevel === opt.value
+                      ? "border-amber-400/60 bg-amber-600/20 text-amber-100"
+                      : "border-amber-500/15 bg-slate-900/40 text-amber-100/50"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-amber-100/40 text-[10px] mt-2 italic">
+              {guidanceLevel === "guided" && "Shows tactical hints, explains enemy intent, and recommends actions."}
+              {guidanceLevel === "normal" && "Shows enemy intent values with fewer hints."}
+              {guidanceLevel === "expert" && "More mystery, less hand-holding, harder decisions."}
+            </p>
           </div>
         </div>
 

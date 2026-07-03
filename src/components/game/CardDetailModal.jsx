@@ -67,7 +67,7 @@ export default function CardDetailModal({ card, owned, onClose, onSelect, select
           </div>
           <div className="rounded-lg border border-slate-600/20 bg-slate-800/40 p-2 text-center">
             <p className="text-xs text-amber-100/40">Status</p>
-            <p className="text-sm font-bold text-amber-100">{justCollected ? "Added to Collection" : owned ? "Already Collected" : "New Card"}</p>
+            <p className="text-sm font-bold text-amber-100">{justCollected ? "Added to Collection" : owned ? "Already Owned" : "New Card"}</p>
           </div>
         </div>
 

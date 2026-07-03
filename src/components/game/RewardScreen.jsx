@@ -10,11 +10,13 @@ import TriviaModal from "@/components/game/TriviaModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
 
 export default function RewardScreen() {
-  const { run, completeRoom, updateRun } = useGame();
+  const { run, completeRoom, updateRun, profile } = useGame();
   const [showNarration, setShowNarration] = useState(true);
   const [showTrivia, setShowTrivia] = useState(false);
   const [showRewards, setShowRewards] = useState(false);
   const [detailCard, setDetailCard] = useState(null);
+  const guidanceLevel = profile.settings.guidanceLevel || "normal";
+  const isGuided = guidanceLevel === "guided" || profile.settings.guidanceTips;
 
   const enemy = run.currentNode ? ENEMIES[run.pendingEnemyId] : null;
   const narrationText = enemy?.narration || "Your faith has carried you through another trial.";
@@ -81,13 +83,22 @@ export default function RewardScreen() {
         {rewards.map((cardId) => {
           const card = getCardById(cardId);
           if (!card) return null;
+          const alreadyOwned = profile.collectedCards.includes(cardId);
           return (
             <div
               key={cardId}
               onClick={() => { Sound.sfx.click(); setDetailCard(card); }}
               className="transform hover:scale-105 transition cursor-pointer"
             >
-              <RewardCardMini card={card} />
+              <RewardCardMini card={card} alreadyOwned={alreadyOwned} />
+              {isGuided && (
+                <p className="text-amber-300/50 text-[9px] text-center mt-1 max-w-[9rem] italic">
+                  {card.type === "attack" && "Recommended: good damage"}
+                  {card.type === "defense" && "Recommended: helps you survive"}
+                  {card.type === "scripture" && "Recommended: restores faith or heals"}
+                  {card.type === "miracle" && "Recommended: powerful divine strike"}
+                </p>
+              )}
             </div>
           );
         })}
@@ -113,13 +124,18 @@ export default function RewardScreen() {
   );
 }
 
-function RewardCardMini({ card }) {
+function RewardCardMini({ card, alreadyOwned }) {
   const rarityBorder = card.rarity === "legendary" ? "border-amber-300/80" : card.rarity === "rare" ? "border-emerald-400/70" : "border-sky-400/60";
   const rarityGlow = card.rarity === "legendary" ? "shadow-xl shadow-amber-400/40" : card.rarity === "rare" ? "shadow-lg shadow-emerald-500/25" : "shadow-md shadow-sky-500/10";
 
   return (
     <div className={`w-36 h-52 rounded-lg border-2 ${rarityBorder} ${rarityGlow} overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between transition-all`}>
-      <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
+      <div className="flex items-center justify-between w-full">
+        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${alreadyOwned ? "text-emerald-300 bg-emerald-900/30" : "text-amber-200 bg-amber-900/30"}`}>
+          {alreadyOwned ? "Already Owned" : "New Card"}
+        </span>
+        <span className="text-xs text-amber-300/60">{card.cost} ✨</span>
+      </div>
       <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-14 h-14 object-cover rounded-lg animate-fade-in" />
       <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
       <div className="text-[9px] text-amber-300/50 uppercase font-bold">{card.rarity}</div>

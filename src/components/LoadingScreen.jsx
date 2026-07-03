@@ -7,27 +7,38 @@ const SCRIPTURES = [
   { text: "Trust in the Lord with all your heart.", ref: "Proverbs 3:5" },
   { text: "Faith is the substance of things hoped for.", ref: "Hebrews 11:1" },
   { text: "I can do all things through Christ who strengthens me.", ref: "Philippians 4:13" },
+  { text: "Your word is a lamp to my feet and a light to my path.", ref: "Psalm 119:105" },
+  { text: "Be strong and courageous. Do not be afraid.", ref: "Joshua 1:9" },
+  { text: "For God so loved the world that he gave his one and only Son.", ref: "John 3:16" },
+  { text: "The earth is the Lord's, and everything in it.", ref: "Psalm 24:1" },
+  { text: "Commit your way to the Lord; trust in him.", ref: "Psalm 37:5" },
 ];
 
 const TIPS = [
-  "Tip: Defense cards reduce incoming damage.",
-  "Tip: Watch the enemy's next move before ending your turn.",
-  "Tip: Scripture cards often heal, draw, or restore Faith.",
-  "Tip: Treasure rooms strengthen your deck for later battles.",
+  "Tip: Attack cards damage enemies.",
+  "Tip: Defense cards protect you before the enemy strikes.",
+  "Tip: Scripture cards support, heal, draw, or restore faith.",
+  "Tip: Enemy intent shows what the enemy plans to do next.",
+  "Tip: Treasure rooms give rewards. Story Choices shape your journey.",
   "Tip: Divine Intervention can save a difficult run.",
   "Tip: Keep your HP high before boss battles.",
+  "Tip: Tap an enemy intent chip to see what it does.",
   "Tip: Daily challenges give the same map to all players.",
+  "Tip: Faith energy is spent to play cards each turn.",
 ];
 
 export default function LoadingScreen({ message }) {
   const [tipIdx, setTipIdx] = useState(Math.floor(Math.random() * TIPS.length));
-  const [scriptureIdx] = useState(Math.floor(Math.random() * SCRIPTURES.length));
+  const [scriptureIdx, setScriptureIdx] = useState(Math.floor(Math.random() * SCRIPTURES.length));
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const tipInterval = setInterval(() => {
       setTipIdx(prev => (prev + 1) % TIPS.length);
     }, 4000);
-    return () => clearInterval(interval);
+    const scriptureInterval = setInterval(() => {
+      setScriptureIdx(prev => (prev + 1) % SCRIPTURES.length);
+    }, 6000);
+    return () => { clearInterval(tipInterval); clearInterval(scriptureInterval); };
   }, []);
 
   const scripture = SCRIPTURES[scriptureIdx];

@@ -34,7 +34,7 @@ function loadProfile() {
     unlockedHeroes: ["adam"],
     collectedCards: [...new Set(HEROES[0].starterDeck)],
     achievements: [],
-    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false },
+    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal" },
     dailyStreak: 0,
     lastDailyDate: null,
     playerName: "",
@@ -61,6 +61,24 @@ export function GameProvider({ children }) {
       localStorage.removeItem(RUN_STORAGE_KEY);
     }
   }, [run]);
+
+  // Flush state to localStorage when app goes to background (save/resume reliability)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+          if (run) localStorage.setItem(RUN_STORAGE_KEY, JSON.stringify(run));
+        } catch (e) {}
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handleVisibilityChange);
+    };
+  }, [profile, run]);
 
   useEffect(() => {
     Sound.setMusicEnabled(profile.settings.music);

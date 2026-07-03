@@ -4,6 +4,7 @@ import { Swords } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import { HOME_ART, MENU_ART } from "@/data/art";
+import { getSavedRoute } from "@/components/ScrollToTop";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
@@ -13,6 +14,10 @@ export default function Home() {
 
   useEffect(() => {
     Snd.playMusic("menu");
+    // Auto-resume: if player has an unfinished run and was in /play, send them straight back
+    if (run && getSavedRoute() === "/play") {
+      navigate("/play", { replace: true });
+    }
   }, []);
 
   const handleBeginRun = () => {

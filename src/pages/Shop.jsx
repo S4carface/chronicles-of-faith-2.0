@@ -105,8 +105,11 @@ export default function Shop() {
                 }`}
               >
                 <Coins className="w-4 h-4" />
-                {item.cost} gold
+                {canAfford ? `${item.cost} gold` : `Need ${item.cost} gold`}
               </button>
+              {!canAfford && (
+                <p className="text-amber-100/30 text-[9px] mt-1.5 text-center">Earn gold by winning battles</p>
+              )}
             </div>
           );
         })}

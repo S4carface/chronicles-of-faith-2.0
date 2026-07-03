@@ -429,6 +429,8 @@ export default function BattleScreen() {
   const isEnemyTurn = battleState.turn === "enemy" || animating;
   const enemyArt = ENEMY_ART[enemy.id];
   const heroArt = HERO_ART[hero.id];
+  const guidanceLevel = profile.settings.guidanceLevel || "normal";
+  const hideIntentValues = guidanceLevel === "expert" && !profile.settings.guidanceTips;
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>
@@ -473,6 +475,7 @@ export default function BattleScreen() {
                     <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm flex-shrink-0" />
                     <span className={`${intentInfo.color} text-[9px] font-medium leading-none`}>{action.name}</span>
                     {(() => {
+                      if (hideIntentValues) return null;
                       const amt = getIntentAmountText(action, enemy);
                       if (!amt) return null;
                       const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
@@ -559,8 +562,8 @@ export default function BattleScreen() {
         </div>
       )}
 
-      {/* Guidance hint — Easy mode tactical suggestion */}
-      {profile.settings.guidanceTips && !battleEnd && !isEnemyTurn && (
+      {/* Guidance hint — Guided mode tactical suggestion */}
+      {(profile.settings.guidanceLevel === "guided" || profile.settings.guidanceTips) && !battleEnd && !isEnemyTurn && (
         <GuidanceHint battleState={battleState} />
       )}
 

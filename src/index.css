@@ -107,6 +107,19 @@
     padding-right: env(safe-area-inset-right);
   }
 
+  /* Desktop: remove mobile safe-area spacing (env() is 0 on desktop anyway,
+     but this guarantees no awkward gaps on large screens) */
+  @media (min-width: 1024px) {
+    body {
+      padding-top: 0;
+      padding-bottom: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+    .safe-area-top { padding-top: 0.5rem !important; }
+    .safe-area-bottom { padding-bottom: 0.5rem !important; }
+  }
+
   .min-h-screen { min-height: 100dvh; }
 
   .dark {

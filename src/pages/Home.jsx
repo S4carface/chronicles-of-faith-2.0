@@ -48,7 +48,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 pt-[calc(1.5rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))] relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
+    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
       {/* Floating particles */}
       {Array.from({ length: 18 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
@@ -77,13 +77,13 @@ export default function Home() {
       </div>
 
       {/* Difficulty selector — compact horizontal */}
-      <div className="relative w-full mb-4">
+      <div className="relative w-full max-w-md lg:max-w-2xl mb-4 lg:mb-5">
         <DifficultySelect />
       </div>
 
       {/* Resume prompt */}
       {run && (
-        <div className="relative w-full max-w-md mb-4 p-4 rounded-xl border-2 border-emerald-400/40 bg-emerald-900/20 animate-fade-in">
+        <div className="relative w-full max-w-md lg:max-w-2xl mb-4 p-4 rounded-xl border-2 border-emerald-400/40 bg-emerald-900/20 animate-fade-in">
           <p className="text-emerald-200 font-serif text-sm text-center mb-3">Continue your Genesis run?</p>
           <div className="flex gap-3">
             <button
@@ -105,7 +105,7 @@ export default function Home() {
       {/* Play button — primary CTA */}
       <button
         onClick={handleBeginRun}
-        className="relative w-full max-w-md mb-6 px-8 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+        className="relative w-full max-w-md lg:max-w-2xl mb-6 px-8 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl lg:text-2xl font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
         style={{ background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)" }}
       >
         <span className="flex items-center justify-center gap-2">
@@ -138,25 +138,25 @@ export default function Home() {
         </div>
       )}
 
-      {/* Secondary menu — compact premium rows */}
-      <div className="relative w-full max-w-md grid grid-cols-1 gap-1.5">
+      {/* Secondary menu — single column on mobile, two-column grid on desktop */}
+      <div className="relative w-full max-w-md lg:max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-3 lg:px-0">
         {menuItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             onClick={() => Sound.sfx.click()}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
+            className="flex items-center gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
             style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.45) 0%, rgba(15,26,48,0.45) 100%)" }}
           >
-            <div className="flex-shrink-0 w-8 h-8 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
+            <div className="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
               <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-serif text-amber-100 text-[13px] leading-tight">{item.label}</div>
-              <div className="text-amber-100/40 text-[10px] leading-tight">{item.desc}</div>
+              <div className="font-serif text-amber-100 text-[13px] lg:text-sm leading-tight">{item.label}</div>
+              <div className="text-amber-100/40 text-[10px] lg:text-[11px] leading-tight">{item.desc}</div>
             </div>
             {item.status && (
-              <span className="flex-shrink-0 text-amber-300/60 text-[10px] font-medium font-serif tracking-wide">
+              <span className="flex-shrink-0 text-amber-300/60 text-[10px] lg:text-xs font-medium font-serif tracking-wide">
                 {item.status}
               </span>
             )}

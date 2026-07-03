@@ -23,7 +23,7 @@ export default function RoomTooltip({ nodeType }) {
   if (!info) return null;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         className="w-4 h-4 rounded-full bg-slate-900/80 border border-amber-500/30 flex items-center justify-center hover:bg-amber-500/20 transition"

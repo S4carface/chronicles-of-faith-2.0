@@ -59,13 +59,13 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen p-6 flex flex-col items-center" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="flex items-center justify-between mb-6 w-full max-w-md">
+      <div className="flex items-center justify-between mb-6 w-full max-w-md lg:max-w-3xl">
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <h1 className="text-3xl font-serif text-amber-200">Settings</h1>
         <div className="w-16" />
       </div>
 
-      <div className="max-w-md w-full space-y-5">
+      <div className="max-w-md lg:max-w-3xl w-full space-y-5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
         {/* === AUDIO SECTION === */}
         <div className="space-y-3">
           <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Audio</h2>
@@ -191,7 +191,7 @@ export default function Settings() {
         </div>
 
         {/* === BATTLE SECTION === */}
-        <div className="space-y-3">
+        <div className="space-y-3 lg:self-start">
           <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Battle</h2>
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
             <p className="font-serif text-amber-100 text-sm mb-1">Enemy Turn Animation</p>
@@ -296,7 +296,7 @@ export default function Settings() {
         </div>
 
         {/* About */}
-        <div className="p-4 rounded-xl border-2 border-amber-500/10" style={{ background: "rgba(15,26,48,0.4)" }}>
+        <div className="p-4 rounded-xl border-2 border-amber-500/10 lg:col-span-2" style={{ background: "rgba(15,26,48,0.4)" }}>
           <p className="text-amber-100/60 text-xs text-center font-serif italic">
             Chronicles of Faith — A Biblical Roguelike<br/>
             Teaching the Bible through gameplay, one chapter at a time.<br/>

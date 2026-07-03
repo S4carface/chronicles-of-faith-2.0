@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Swords, Layers, Map, Calendar, Trophy, Medal, Settings, ShoppingBag } from "lucide-react";
+import { Swords } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
-import { HOME_ART } from "@/data/art";
+import { HOME_ART, MENU_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
@@ -13,14 +13,16 @@ export default function Home() {
     Snd.playMusic("menu");
   }, []);
 
+  const TOTAL_CARDS = 29;
+  const TOTAL_ACHIEVEMENTS = 16;
   const menuItems = [
-    { label: "My Collection", icon: Layers, path: "/collection", desc: `${profile.collectedCards.length} cards collected` },
-    { label: "Shop", icon: ShoppingBag, path: "/shop", desc: `${profile.gold || 0} gold — buy card packs` },
-    { label: "Progress Map", icon: Map, path: "/progress", desc: "Genesis to Revelation roadmap" },
-    { label: "Daily Challenge", icon: Calendar, path: "/daily", desc: "Today's special run" },
-    { label: "Leaderboard", icon: Trophy, path: "/leaderboard", desc: "See top scores" },
-    { label: "Achievements", icon: Medal, path: "/achievements", desc: `${profile.achievements.length} unlocked` },
-    { label: "Settings", icon: Settings, path: "/settings", desc: "Music & sound options" },
+    { label: "My Collection", art: MENU_ART.collection, path: "/collection", desc: "Cards gathered", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
+    { label: "Shop", art: MENU_ART.shop, path: "/shop", desc: "Card packs & relics", status: `${profile.gold || 0} gold` },
+    { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
+    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Today's special run", status: "New today" },
+    { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Top scores", status: null },
+    { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
+    { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
   ];
 
   return (
@@ -70,28 +72,30 @@ export default function Home() {
         </span>
       </Link>
 
-      {/* Secondary menu — clean compact rows */}
-      <div className="relative w-full max-w-md grid grid-cols-1 gap-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => Sound.sfx.click()}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-lg border border-amber-500/15 hover:border-amber-400/40 transition-all duration-200 hover:scale-[1.01] group"
-              style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.5) 0%, rgba(15,26,48,0.5) 100%)" }}
-            >
-              <div className="flex-shrink-0 w-9 h-9 rounded-lg border border-amber-500/20 bg-slate-900/50 flex items-center justify-center group-hover:scale-105 transition-transform">
-                <Icon className="w-4 h-4 text-amber-300/80" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-serif text-amber-100 text-sm leading-tight">{item.label}</div>
-                <div className="text-amber-100/45 text-[11px] leading-tight">{item.desc}</div>
-              </div>
-            </Link>
-          );
-        })}
+      {/* Secondary menu — compact premium rows */}
+      <div className="relative w-full max-w-md grid grid-cols-1 gap-1.5">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={() => Sound.sfx.click()}
+            className="flex items-center gap-3 px-3 py-2 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
+            style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.45) 0%, rgba(15,26,48,0.45) 100%)" }}
+          >
+            <div className="flex-shrink-0 w-8 h-8 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
+              <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="font-serif text-amber-100 text-[13px] leading-tight">{item.label}</div>
+              <div className="text-amber-100/40 text-[10px] leading-tight">{item.desc}</div>
+            </div>
+            {item.status && (
+              <span className="flex-shrink-0 text-amber-300/60 text-[10px] font-medium font-serif tracking-wide">
+                {item.status}
+              </span>
+            )}
+          </Link>
+        ))}
       </div>
 
       <p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">

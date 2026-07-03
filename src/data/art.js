@@ -52,6 +52,16 @@ export const HOME_ART = {
   difficulty_hard: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/c9fcf936c_generated_image.png",
 };
 
+export const MENU_ART = {
+  collection: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/25b26b1cf_generated_image.png",
+  shop: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/13284979c_generated_image.png",
+  progress: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/45e714942_generated_image.png",
+  daily: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/2046e55eb_generated_image.png",
+  leaderboard: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/a326e5b67_generated_image.png",
+  achievements: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d88ddec4e_generated_image.png",
+  settings: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/a314c8781_generated_image.png",
+};
+
 export const BLESSING_ART = {
   covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",
   manna: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/8a9223f41_generated_image.png",

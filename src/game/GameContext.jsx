@@ -18,7 +18,7 @@ function loadRun() {
     const raw = localStorage.getItem(RUN_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed.phase === "victory" || parsed.phase === "defeat") return null;
+      if (["victory", "defeat", "dailyResult"].includes(parsed.phase)) return null;
       return parsed;
     }
   } catch (e) {}
@@ -74,9 +74,11 @@ export function GameProvider({ children }) {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleVisibilityChange);
     };
   }, [profile, run]);
 

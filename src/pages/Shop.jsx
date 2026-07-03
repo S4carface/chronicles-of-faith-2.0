@@ -50,8 +50,8 @@ export default function Shop() {
       <div className="flex items-center justify-between mb-8">
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
-          <h1 className="text-3xl font-serif text-amber-200">The Marketplace</h1>
-          <p className="text-amber-100/60 text-xs mt-1">Buy card packs and relics</p>
+          <h1 className="text-3xl font-serif text-amber-200">Marketplace</h1>
+          <p className="text-amber-100/60 text-xs mt-1">Buy card packs & relics</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20">
           <Coins className="w-5 h-5 text-amber-300" />

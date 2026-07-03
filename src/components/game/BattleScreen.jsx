@@ -461,7 +461,7 @@ export default function BattleScreen() {
   const enemyArt = ENEMY_ART[enemy.id];
   const heroArt = HERO_ART[hero.id];
   const guidanceLevel = profile.settings.guidanceLevel || "normal";
-  const hideIntentValues = guidanceLevel === "expert" && !profile.settings.guidanceTips;
+  const hideIntentValues = guidanceLevel === "expert";
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>

@@ -244,9 +244,9 @@ export default function Settings() {
               ))}
             </div>
             <p className="text-amber-100/40 text-[10px] mt-2 italic">
-              {guidanceLevel === "guided" && "Shows tactical hints, explains enemy intent, and recommends actions."}
-              {guidanceLevel === "normal" && "Shows enemy intent values with fewer hints."}
-              {guidanceLevel === "expert" && "More mystery, less hand-holding, harder decisions."}
+              {guidanceLevel === "guided" && "Shows enemy values and helpful hints."}
+              {guidanceLevel === "normal" && "Shows enemy values with fewer hints."}
+              {guidanceLevel === "expert" && "Hides exact enemy values for a harder challenge."}
             </p>
           </div>
         </div>

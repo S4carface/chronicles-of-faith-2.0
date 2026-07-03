@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Swords } from "lucide-react";
+import { Swords, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import ResumeModal from "@/components/game/ResumeModal";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import * as Sound from "@/game/soundManager";
@@ -11,21 +13,47 @@ export default function Home() {
   const { profile, run, endRun, Sound: Snd } = useGame();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [showResume, setShowResume] = useState(false);
 
   useEffect(() => {
     Snd.playMusic("menu");
-    // Auto-resume: if player has an unfinished run and was in /play, send them straight back
     if (run && getSavedRoute() === "/play") {
-      navigate("/play", { replace: true });
+      setShowResume(true);
+    }
+    if (!profile.playerName && !localStorage.getItem("namePromptSeen")) {
+      setShowNamePrompt(true);
     }
   }, []);
 
   const handleBeginRun = () => {
     Sound.sfx.click();
+    if (!profile.playerName) {
+      setPendingAction("run");
+      setShowNamePrompt(true);
+      return;
+    }
     if (run) {
       setShowConfirm(true);
     } else {
       navigate("/play");
+    }
+  };
+
+  const handleNameSaved = (name) => {
+    setShowNamePrompt(false);
+    localStorage.setItem("namePromptSeen", "true");
+    if (pendingAction === "run") {
+      setPendingAction(null);
+      if (run) {
+        setShowConfirm(true);
+      } else {
+        navigate("/play");
+      }
+    } else if (pendingAction === "daily") {
+      setPendingAction(null);
+      navigate("/daily");
     }
   };
 
@@ -39,9 +67,9 @@ export default function Home() {
   const TOTAL_ACHIEVEMENTS = 16;
   const menuItems = [
     { label: "My Collection", art: MENU_ART.collection, path: "/collection", desc: "Cards gathered", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
-    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs and relics", status: `${profile.gold || 0} gold` },
+    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
-    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Today's battle", status: "New today" },
+    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "One daily battle", status: "New today" },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Top scores", status: null },
     { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
     { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
@@ -75,6 +103,15 @@ export default function Home() {
         </p>
         <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
       </div>
+
+      {/* Player name row */}
+      <button
+        onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
+        className="flex items-center gap-1.5 text-amber-100/60 hover:text-amber-200 transition text-sm mb-3"
+      >
+        <span>Player: {profile.playerName || "Anonymous Warrior"}</span>
+        <Pencil className="w-3 h-3" />
+      </button>
 
       {/* Difficulty selector — compact horizontal */}
       <div className="relative w-full max-w-md lg:max-w-[600px] mb-4 lg:mb-5">
@@ -167,6 +204,17 @@ export default function Home() {
       <p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">
         "In the beginning, God created the heavens and the earth." — Genesis 1:1
       </p>
+
+      {showNamePrompt && (
+        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => { setShowNamePrompt(false); localStorage.setItem("namePromptSeen", "true"); }} />
+      )}
+
+      {showResume && (
+        <ResumeModal
+          onResume={() => { setShowResume(false); navigate("/play"); }}
+          onAbandon={() => { setShowResume(false); endRun(); if (!profile.playerName && !localStorage.getItem("namePromptSeen")) setShowNamePrompt(true); }}
+        />
+      )}
     </div>
   );
 }

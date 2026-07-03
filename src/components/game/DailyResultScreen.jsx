@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Trophy, Skull, Heart, Clock, Swords, BookOpen, Coins, Flame, BarChart3 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { base44 } from "@/api/base44Client";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import * as Sound from "@/game/soundManager";
 
 function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
@@ -21,17 +22,20 @@ export default function DailyResultScreen() {
   const submitted = useRef(false);
   const [finalScore, setFinalScore] = useState(0);
   const [streakUpdated, setStreakUpdated] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [rank, setRank] = useState(null);
+  const calculatedScore = useRef(0);
 
   const result = run?.dailyResult;
   const dailyConfig = run?.dailyConfig;
 
   useEffect(() => {
     if (submitted.current || !result) return;
-    submitted.current = true;
 
     const triviaCorrect = run.dailyTriviaCorrect;
     const score = calculateScore(result.result, result.playerHp, result.maxPlayerHp, result.turnNumber, result.cardsPlayed, triviaCorrect);
     setFinalScore(score);
+    calculatedScore.current = score;
 
     const todayStr = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -47,9 +51,22 @@ export default function DailyResultScreen() {
       setStreakUpdated(true);
     }
 
-    const playerName = profile.playerName || "Anonymous Warrior";
+    const playerName = profile.playerName;
+    if (!playerName) {
+      setShowNamePrompt(true);
+      return;
+    }
+
+    submitted.current = true;
     submitLeaderboard(playerName, score, result, triviaCorrect, todayStr, run.hero?.id || "adam");
   }, []);
+
+  const handleNameSaved = (name) => {
+    setShowNamePrompt(false);
+    submitted.current = true;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    submitLeaderboard(name, calculatedScore.current, result, run.dailyTriviaCorrect, todayStr, run.hero?.id || "adam");
+  };
 
   const submitLeaderboard = async (playerName, score, result, triviaCorrect, todayStr, heroId) => {
     try {
@@ -80,6 +97,13 @@ export default function DailyResultScreen() {
           run_seed: todayStr,
         });
       }
+
+      const allDaily = await base44.entities.LeaderboardEntry.filter({
+        is_daily: true,
+        run_seed: todayStr,
+      }, "-score", 50);
+      const playerRank = allDaily.findIndex(e => e.player_name === playerName) + 1;
+      setRank(playerRank > 0 ? playerRank : null);
     } catch (e) {
       // Silent fail — leaderboard is secondary
     }
@@ -98,6 +122,7 @@ export default function DailyResultScreen() {
   const isVictory = result.result === "victory";
   const triviaCorrect = run.dailyTriviaCorrect;
   const goldEarned = isVictory && streakUpdated ? (dailyConfig?.reward?.gold || 0) : 0;
+  const playerNameDisplay = profile.playerName || "Anonymous Warrior";
 
   const handleReturn = () => {
     Sound.sfx.click();
@@ -125,7 +150,8 @@ export default function DailyResultScreen() {
         <h1 className="font-serif text-4xl lg:text-5xl mb-2" style={{ color: isVictory ? "#fcd34d" : "#fca5a5" }}>
           {isVictory ? "Victory!" : "Defeated"}
         </h1>
-        <p className="text-amber-100/50 text-xs lg:text-sm mb-6 italic">{dailyConfig?.theme?.title}</p>
+        <p className="text-amber-100/50 text-xs lg:text-sm mb-2 italic">{dailyConfig?.theme?.title}</p>
+        <p className="text-amber-100/40 text-[10px] lg:text-xs mb-6">Player: {playerNameDisplay}</p>
 
         <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6" style={{ background: "rgba(15,26,48,0.6)" }}>
           <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide mb-1">Score</p>
@@ -182,6 +208,15 @@ export default function DailyResultScreen() {
               </p>
             </div>
           </div>
+          {rank && (
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-300/60" />
+              <div className="text-left">
+                <p className="text-amber-100/40 text-[9px] lg:text-[10px] uppercase">Rank</p>
+                <p className="text-amber-100 text-sm lg:text-base font-bold">#{rank}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -200,6 +235,15 @@ export default function DailyResultScreen() {
           </button>
         </div>
       </div>
+
+      {showNamePrompt && (
+        <PlayerNamePrompt
+          onSave={handleNameSaved}
+          onCancel={() => setShowNamePrompt(false)}
+          title="Choose Your Name"
+          subtitle="Enter your name to submit your score to the leaderboard."
+        />
+      )}
     </div>
   );
 }

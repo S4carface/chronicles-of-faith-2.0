@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Star, Cross, Sword, BookOpen, Calendar, Layers, Footprints, Route, Heart, CloudRain, Waves, Building2, Sparkles, Wand2, Trophy, ShieldCheck } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
-import { ENEMY_ART } from "@/data/art";
+import { ENEMY_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 const ICON_MAP = {
@@ -37,9 +37,12 @@ export default function AchievementBanner() {
         }}
       >
         <div className="w-12 h-12 rounded-lg border border-amber-400/50 overflow-hidden flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-          {achievement.art && ENEMY_ART[achievement.art]
-            ? <img src={ENEMY_ART[achievement.art]} alt={achievement.name} className="w-full h-full object-cover" />
-            : (() => { const Icon = ICON_MAP[achievement.icon] || Star; return <Icon className="w-6 h-6 text-amber-300" />; })()}
+          {(() => {
+            const artUrl = achievement.art === "victory_crest" ? VICTORY_ART.crest : ENEMY_ART[achievement.art];
+            if (artUrl) return <img src={artUrl} alt={achievement.name} className="w-full h-full object-cover" />;
+            const Icon = ICON_MAP[achievement.icon] || Star;
+            return <Icon className="w-6 h-6 text-amber-300" />;
+          })()}
         </div>
         <div>
           <p className="text-amber-300/60 text-xs font-bold uppercase tracking-wider">Achievement Unlocked!</p>

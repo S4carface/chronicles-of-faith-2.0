@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen } from "lucide-react";
+import { HOME_ART } from "@/data/art";
 
 const SCRIPTURES = [
   { text: "In the beginning, God created the heavens and the earth.", ref: "Genesis 1:1" },
@@ -15,15 +15,15 @@ const SCRIPTURES = [
 ];
 
 const TIPS = [
-  "Tip: Attack cards damage enemies.",
-  "Tip: Defense cards protect you before the enemy strikes.",
-  "Tip: Scripture cards support, heal, draw, or restore faith.",
-  "Tip: Enemy intent shows what the enemy plans to do next.",
+  "Tip: Defense cards are strongest before the enemy attacks.",
+  "Tip: Enemy intent shows what your opponent plans to do next.",
+  "Tip: Scripture cards can heal, draw, or restore Faith.",
+  "Tip: Attack cards damage enemies. Miracle cards deal holy damage.",
   "Tip: Treasure rooms give rewards. Story Choices shape your journey.",
   "Tip: Divine Intervention can save a difficult run.",
   "Tip: Keep your HP high before boss battles.",
   "Tip: Tap an enemy intent chip to see what it does.",
-  "Tip: Daily challenges give the same map to all players.",
+  "Tip: Daily Challenge gives the same battle to all players each day.",
   "Tip: Faith energy is spent to play cards each turn.",
 ];
 
@@ -59,12 +59,12 @@ export default function LoadingScreen({ message }) {
 
       <div className="relative mb-6">
         <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(201,168,76,0.15)" }} />
-        <div className="relative w-20 h-20 rounded-full border-2 border-amber-400/40 flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}>
-          <BookOpen className="w-10 h-10 text-amber-300/80 animate-icon-float" />
+        <div className="relative w-20 h-20 rounded-full border-2 border-amber-400/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}>
+          <img src={HOME_ART.cross} alt="Chronicles of Faith" className="w-full h-full object-cover animate-icon-float" />
         </div>
       </div>
 
-      <h1 className="text-2xl md:text-3xl font-serif text-amber-200 tracking-wide mb-1" style={{ textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
+      <h1 className="font-serif text-amber-200 tracking-wide mb-1" style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
         Chronicles of Faith
       </h1>
       <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mb-4" />

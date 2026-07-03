@@ -4,13 +4,14 @@ import { useGame } from "@/game/GameContext";
 import { base44 } from "@/api/base44Client";
 import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
-  const [playerName, setPlayerName] = useState(profile.playerName || "");
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
@@ -43,16 +44,22 @@ export default function VictoryScreen() {
       saveProfile({ lastDailyDate: todayStr, dailyStreak: newStreak });
       if (newStreak >= 3) unlockAchievement("daily_devotion");
     }
+
+    // Auto-submit score — prompt for name if missing
+    if (profile.playerName) {
+      submitScore(profile.playerName, finalScore);
+    } else {
+      setShowNamePrompt(true);
+    }
   }, []);
 
-  const handleSubmit = async () => {
+  const submitScore = async (name, scoreToSubmit) => {
     if (submitting) return;
     setSubmitting(true);
-    saveProfile({ playerName });
     try {
       await base44.entities.LeaderboardEntry.create({
-        player_name: playerName || "Anonymous",
-        score,
+        player_name: name || "Anonymous Warrior",
+        score: scoreToSubmit,
         rooms_cleared: run.roomsCleared,
         trivia_correct: run.triviaCorrect,
         hero_used: run.hero.id,
@@ -65,6 +72,11 @@ export default function VictoryScreen() {
       setSubmitted(true);
     }
     setSubmitting(false);
+  };
+
+  const handleNameSaved = (name) => {
+    setShowNamePrompt(false);
+    submitScore(name, score);
   };
 
   const handleReturnToMenu = () => {
@@ -138,27 +150,19 @@ export default function VictoryScreen() {
           <p className="text-emerald-300/80 text-sm">{run.deck.length} cards saved to your collection</p>
         </div>
 
-        {!submitted ? (
-          <div className="mb-6">
-            <p className="text-amber-100/60 text-sm mb-3">Submit your score to the leaderboard:</p>
-            <input
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Your name"
-              maxLength={20}
-              className="w-full px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 text-center mb-3 outline-none focus:border-amber-400/50"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full px-6 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition disabled:opacity-50"
-            >
-              {submitting ? "Submitting..." : "Submit Score"}
-            </button>
-          </div>
-        ) : (
-          <p className="text-emerald-300 text-sm mb-6">Score submitted to the leaderboard!</p>
+        {showNamePrompt && (
+          <PlayerNamePrompt
+            onSave={handleNameSaved}
+            onCancel={() => setShowNamePrompt(false)}
+            title="Choose Your Name"
+            subtitle="Enter your name to submit your score to the leaderboard."
+          />
+        )}
+
+        {!showNamePrompt && (
+          submitted
+            ? <p className="text-emerald-300 text-sm mb-6">Score submitted to the leaderboard!</p>
+            : <p className="text-amber-100/60 text-sm mb-6">Submitting score to leaderboard...</p>
         )}
 
         <button

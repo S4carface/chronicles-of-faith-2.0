@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trophy, ScrollText, Calendar } from "lucide-react";
+import { ScrollText, Calendar } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useGame } from "@/game/GameContext";
+import { VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 const RANK_STYLES = [
@@ -50,7 +51,7 @@ export default function Leaderboard() {
       <div className="flex items-center justify-between mb-8">
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-amber-300" />
+          <img src={VICTORY_ART.crest} alt="" className="w-7 h-7 object-cover rounded-full border-2 border-amber-400/50" />
           <h1 className="text-3xl font-serif text-amber-200">Leaderboard</h1>
         </div>
         <div className="w-16" />
@@ -114,8 +115,10 @@ export default function Leaderboard() {
                   <div className="flex-1 min-w-0">
                     <div className="font-serif text-amber-100">{entry.player_name}</div>
                     <div className="text-amber-100/60 text-xs flex items-center gap-1">
-                      {heroNames[entry.hero_used] || entry.hero_used} • {entry.rooms_cleared} rooms • {entry.trivia_correct} trivia
-                      {entry.is_daily && <span className="text-amber-300/60 ml-1 flex items-center gap-0.5"><Calendar className="w-3 h-3" />Daily</span>}
+                      {entry.is_daily
+                        ? <span className="text-amber-300/60 flex items-center gap-0.5"><Calendar className="w-3 h-3" />Daily Challenge</span>
+                        : <span>{heroNames[entry.hero_used] || entry.hero_used} • {entry.rooms_cleared} rooms • {entry.trivia_correct} trivia</span>
+                      }
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-amber-200 font-serif">{entry.score}</div>

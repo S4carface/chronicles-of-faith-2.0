@@ -9,11 +9,11 @@ export const ACHIEVEMENTS = [
   { id: "narrow_path", name: "The Narrow Path", icon: "route", description: "Complete a run taking only Battle rooms", verse: "Matthew 7:14" },
   { id: "by_faith_alone", name: "By Faith Alone", icon: "heart", description: "Win a battle using only scripture cards", verse: "Ephesians 2:8" },
   { id: "noah_unlocked", name: "Covenant Keeper", icon: "cloud-rain", description: "Unlock Noah as a playable hero", verse: "Genesis 9:13" },
-  { id: "flood_survivor", name: "Flood Survivor", icon: "waves", description: "Defeat The Great Flood boss", verse: "Genesis 9:11" },
-  { id: "babel_destroyer", name: "Tower Toppler", icon: "building-2", description: "Defeat the Tower of Babel boss", verse: "Genesis 11:8" },
+  { id: "flood_survivor", name: "Flood Survivor", icon: "waves", art: "the_flood", description: "Defeat The Great Flood boss", verse: "Genesis 9:11" },
+  { id: "babel_destroyer", name: "Tower Toppler", icon: "building-2", art: "babel_tower", description: "Defeat the Tower of Babel boss", verse: "Genesis 11:8" },
   { id: "divine_favor", name: "Divine Favor", icon: "sparkles", description: "Encounter 3 Divine Intervention rooms in one run", verse: "Exodus 33:14" },
   { id: "miracle_worker", name: "Miracle Worker", icon: "wand-2", description: "Play a Legendary card in battle", verse: "John 2:11" },
-  { id: "low_score_champion", name: "Humble Victor", icon: "trophy", description: "Score over 500 points in a single run", verse: "James 4:6" },
+  { id: "low_score_champion", name: "Humble Victor", icon: "trophy", art: "victory_crest", description: "Score over 500 points in a single run", verse: "James 4:6" },
   { id: "unscathed", name: "Unscathed", icon: "shield-check", description: "Complete 3 battles without taking damage", verse: "Psalm 91:7" },
 ];
 

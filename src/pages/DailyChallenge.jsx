@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Swords, Check, Flame, Crown, Coins, Sparkles } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
@@ -11,6 +12,7 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
 
   const daily = getDailyChallenge();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -19,8 +21,20 @@ export default function DailyChallenge() {
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
+  const beginDaily = () => {
+    setLoading(true);
+    setTimeout(() => {
+      startDailyBattle(daily);
+      navigate("/play");
+    }, 300);
+  };
+
   const handleStart = () => {
     Sound.sfx.click();
+    if (!profile.playerName) {
+      setShowNamePrompt(true);
+      return;
+    }
     if (run && !run.isDaily) {
       setShowConfirm(true);
       return;
@@ -29,11 +43,16 @@ export default function DailyChallenge() {
       navigate("/play");
       return;
     }
-    setLoading(true);
-    setTimeout(() => {
-      startDailyBattle(daily);
-      navigate("/play");
-    }, 300);
+    beginDaily();
+  };
+
+  const handleNameSaved = () => {
+    setShowNamePrompt(false);
+    if (run && !run.isDaily) {
+      setShowConfirm(true);
+      return;
+    }
+    beginDaily();
   };
 
   const handleConfirmAbandon = () => {
@@ -78,9 +97,16 @@ export default function DailyChallenge() {
         <p className="text-amber-100/50 text-xs lg:text-sm mb-4 lg:mb-6 italic">{daily.theme.verse}</p>
 
         <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6" style={{ background: "rgba(15,26,48,0.6)" }}>
-          <p className="text-amber-100/70 text-sm lg:text-base mb-4 lg:mb-6">
-            A short daily trial. Same battle for everyone. New challenge every day.
+          <p className="text-amber-100/70 text-sm lg:text-base mb-3 lg:mb-4">
+            One daily battle. Same challenge for everyone.
           </p>
+
+          {/* Difficulty display */}
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">Today's Difficulty:</span>
+            <span className={`font-serif font-bold text-sm lg:text-base ${daily.difficulty === "easy" ? "text-emerald-300" : daily.difficulty === "normal" ? "text-amber-200" : "text-red-300"}`}>{daily.difficultyLabel}</span>
+          </div>
+          <p className="text-amber-100/50 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">{daily.difficultyDesc}</p>
 
           <div className="grid grid-cols-1 gap-3 text-left">
             <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
@@ -185,6 +211,10 @@ export default function DailyChallenge() {
             </div>
           </div>
         </div>
+      )}
+
+      {showNamePrompt && (
+        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />
       )}
     </div>
   );

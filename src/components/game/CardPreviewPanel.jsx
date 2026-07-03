@@ -2,12 +2,13 @@ import React from "react";
 import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART } from "@/data/art";
 import { cn } from "@/utils";
+import { Sparkles, X, Swords, Shield, BookOpen, Wand2 } from "lucide-react";
 
-const TYPE_LABELS = {
-  attack: { text: "Attack", color: "text-red-300" },
-  defense: { text: "Defense", color: "text-blue-300" },
-  scripture: { text: "Scripture", color: "text-emerald-300" },
-  miracle: { text: "Miracle", color: "text-yellow-200" },
+const TYPE_INFO = {
+  attack: { text: "Attack", color: "text-red-300", icon: Swords, border: "border-red-400/30" },
+  defense: { text: "Defense", color: "text-blue-300", icon: Shield, border: "border-blue-400/30" },
+  scripture: { text: "Scripture", color: "text-emerald-300", icon: BookOpen, border: "border-emerald-400/30" },
+  miracle: { text: "Miracle", color: "text-yellow-200", icon: Wand2, border: "border-yellow-400/30" },
 };
 
 const RARITY_BORDER = {
@@ -18,55 +19,92 @@ const RARITY_BORDER = {
 
 export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCancel }) {
   if (!card) return null;
-  const typeInfo = TYPE_LABELS[card.type] || TYPE_LABELS.attack;
+  const typeInfo = TYPE_INFO[card.type] || TYPE_INFO.attack;
   const effectText = getCardEffectText(card);
   const canPlay = playable && !blocked;
   const artUrl = CARD_ART[card.id];
   const rarityBorder = RARITY_BORDER[card.rarity] || RARITY_BORDER.common;
+  const TypeIcon = typeInfo.icon;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:inset-x-auto lg:bottom-4 lg:right-4 lg:max-w-sm lg:rounded-xl lg:border-2 lg:border-amber-500/30 animate-fade-in" style={{ background: "rgba(8,12,24,0.97)", borderTop: "1px solid rgba(201,168,76,0.2)" }}>
-      <div className="max-w-md lg:max-w-none mx-auto px-3 py-2 lg:px-4 lg:py-3">
-        <div className="flex items-center gap-2.5 lg:gap-3">
-          {/* Compact card thumbnail */}
-          <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
-            <div className="relative w-11 h-11 lg:w-14 lg:h-14" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
-              <span className="absolute top-0 left-0 w-4 h-4 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[8px] font-bold z-10">{card.cost}</span>
-              {artUrl ? (
-                <img src={artUrl} alt={card.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xl flex items-center justify-center w-full h-full">{card.icon}</span>
-              )}
+    <>
+      {/* Mobile: bottom sheet */}
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
+        <div className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-start gap-3 mb-3">
+            <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
+              <div className="relative w-12 h-12" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
+                <span className="absolute top-0 left-0 w-4 h-4 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[8px] font-bold z-10">{card.cost}</span>
+                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" /> : <span className="text-xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+              </div>
             </div>
-          </div>
-
-          {/* Compact info — single-line effect */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <h4 className="font-serif text-amber-100 text-xs lg:text-sm leading-tight truncate">{card.name}</h4>
-              <span className={cn("text-[9px] lg:text-[10px] font-semibold uppercase flex-shrink-0", typeInfo.color)}>{typeInfo.text}</span>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-serif text-amber-100 text-base leading-tight">{card.name}</h4>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={cn("text-[10px] font-semibold uppercase flex items-center gap-0.5", typeInfo.color)}>
+                  <TypeIcon className="w-3 h-3" />{typeInfo.text}
+                </span>
+                <span className="text-amber-300/40 text-[10px]">·</span>
+                <span className="flex items-center gap-0.5 text-amber-300/60 text-[10px]"><Sparkles className="w-3 h-3" />{card.cost} Faith</span>
+              </div>
             </div>
-            <p className="text-amber-100/70 text-[10px] lg:text-[11px] leading-tight truncate">{effectText}</p>
-            <p className="text-amber-300/40 text-[8px] lg:text-[9px] italic truncate">{card.verse}</p>
+            <button onClick={onCancel} className="flex-shrink-0 w-8 h-8 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-
-          {/* Inline actions */}
-          <button
-            onClick={onPlay}
-            disabled={!canPlay}
-            className="flex-shrink-0 px-3 py-1.5 lg:px-4 lg:py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-xs lg:text-sm hover:bg-amber-600/40 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            Play
-          </button>
-          <button
-            onClick={onCancel}
-            className="flex-shrink-0 px-3 py-1.5 lg:px-3 lg:py-2 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/70 text-xs lg:text-sm hover:bg-slate-700/40 transition"
-          >
-            Cancel
-          </button>
+          <div className="rounded-lg border border-amber-500/15 bg-slate-900/40 px-3 py-2 mb-2">
+            <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
+          </div>
+          <p className="text-amber-300/40 text-[10px] italic mb-3 text-center">{card.verse}</p>
+          <div className="flex gap-3">
+            <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/70 font-medium text-sm">Cancel</button>
+            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-base hover:bg-amber-600/40 transition disabled:opacity-40 disabled:cursor-not-allowed">Play Card</button>
+          </div>
+          {blocked && <p className="text-red-300 text-[10px] mt-2 text-center">Scripture cards are blocked this turn</p>}
         </div>
-        {blocked && <p className="text-red-300 text-[9px] mt-0.5 text-center">Scripture cards are blocked this turn</p>}
       </div>
-    </div>
+
+      {/* Desktop: right-side inspector panel */}
+      <div className="hidden lg:flex fixed right-4 top-1/2 -translate-y-1/2 z-40 w-80 animate-fade-in">
+        <div className="w-full rounded-xl border-2 border-amber-500/30 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.95) 0%, rgba(15,26,48,0.95) 100%)" }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/15">
+            <span className="text-amber-300/60 text-[10px] uppercase tracking-wide font-bold">Selected Card</span>
+            <button onClick={onCancel} className="w-7 h-7 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60 hover:text-amber-200">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
+              <div className="relative w-16 h-16" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
+                <span className="absolute top-0 left-0 w-5 h-5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[10px] font-bold z-10">{card.cost}</span>
+                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <h4 className="font-serif text-amber-100 text-lg leading-tight">{card.name}</h4>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={cn("text-xs font-semibold uppercase flex items-center gap-0.5", typeInfo.color)}>
+                  <TypeIcon className="w-3.5 h-3.5" />{typeInfo.text}
+                </span>
+                <span className="text-amber-300/40 text-xs">·</span>
+                <span className="flex items-center gap-0.5 text-amber-300/60 text-xs"><Sparkles className="w-3 h-3" />{card.cost} Faith</span>
+              </div>
+            </div>
+          </div>
+          <div className="px-4 pb-3">
+            <div className="rounded-lg border border-amber-500/15 bg-slate-900/40 px-3 py-2 mb-2">
+              <p className="text-amber-100/40 text-[10px] uppercase tracking-wide mb-1">Effect</p>
+              <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
+            </div>
+            <p className="text-amber-300/40 text-[11px] italic text-center mb-3">{card.verse}</p>
+          </div>
+          <div className="px-4 pb-4 flex gap-3">
+            <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/70 font-medium text-sm">Cancel</button>
+            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-base hover:bg-amber-600/40 transition disabled:opacity-40 disabled:cursor-not-allowed">Play Card</button>
+          </div>
+          {blocked && <p className="text-red-300 text-xs pb-3 text-center">Scripture cards are blocked this turn</p>}
+        </div>
+      </div>
+    </>
   );
 }

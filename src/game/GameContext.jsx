@@ -26,6 +26,9 @@ function loadProfile() {
     lastDailyDate: null,
     playerName: "",
     battlesUnscathed: 0,
+    difficulty: "normal",
+    gold: 0,
+    tutorialSeen: false,
   };
 }
 
@@ -79,8 +82,10 @@ export function GameProvider({ children }) {
     const hero = HERO_MAP[heroId];
     if (!hero || !profile.unlockedHeroes.includes(heroId)) return;
 
+    const difficulty = profile.difficulty || "normal";
     const seed = seedOverride || (isDaily ? new Date().toISOString().slice(0, 10) : `run-${Date.now()}-${Math.random()}`);
-    const map = generateMap(seed);
+    const map = generateMap(seed, difficulty);
+    const fogOfWar = difficulty !== "easy";
     const enemyRng = createRng(seed);
 
     // Assign enemies to battle nodes
@@ -119,6 +124,8 @@ export function GameProvider({ children }) {
       map,
       seed,
       isDaily,
+      difficulty,
+      fogOfWar,
       playerHp: hero.maxHp,
       maxHp: hero.maxHp,
       deck: [...hero.starterDeck],

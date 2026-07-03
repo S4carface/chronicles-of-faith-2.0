@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
+import DifficultySelect from "@/components/game/DifficultySelect";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
   const menuItems = [
     { label: "Play", icon: "⚔️", path: "/play", desc: "Begin your journey through Genesis" },
     { label: "My Collection", icon: "🃏", path: "/collection", desc: `${profile.collectedCards.length} cards collected` },
+    { label: "Shop", icon: "🛒", path: "/shop", desc: `${profile.gold || 0} gold — buy card packs` },
     { label: "Progress Map", icon: "🗺️", path: "/progress", desc: "Genesis to Revelation roadmap" },
     { label: "Daily Challenge", icon: "📅", path: "/daily", desc: "Today's special run" },
     { label: "Leaderboard", icon: "🏆", path: "/leaderboard", desc: "See top scores" },
@@ -45,6 +47,11 @@ export default function Home() {
           A Biblical Roguelike Journey
         </p>
         <div className="w-32 h-px mx-auto mt-4 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+      </div>
+
+      {/* Difficulty selector */}
+      <div className="relative mb-6">
+        <DifficultySelect />
       </div>
 
       {/* Menu */}

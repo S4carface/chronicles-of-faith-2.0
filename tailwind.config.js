@@ -95,7 +95,8 @@ module.exports = {
   			'attack-lunge': 'attackLunge 0.5s ease-out',
   			'enemy-lunge': 'enemyLunge 0.5s ease-out',
   			'damage-flash': 'damageFlash 0.3s ease-in-out',
-  			'heal-pulse': 'healPulse 0.5s ease-in-out'
+  			'heal-pulse': 'healPulse 0.5s ease-in-out',
+  			'icon-float': 'iconFloat 3s ease-in-out infinite'
   		},
   		keyframes: {
   			'fade-in': {

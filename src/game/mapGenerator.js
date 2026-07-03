@@ -25,32 +25,49 @@ export function pickN(rng, arr, n) {
   return result;
 }
 
-// Generate a branching map: layers of nodes connected by paths
-// Slay the Spire style — 7 layers, 2-3 nodes each, boss at the end
-export function generateMap(seed) {
+// Difficulty presets: fog of war + reward frequency
+export const DIFFICULTY_PRESETS = {
+  easy: { fogOfWar: false, rewardChance: 0.55, label: "Easy", desc: "All rooms visible. More rewards.", icon: "🌱" },
+  normal: { fogOfWar: true, rewardChance: 0.40, label: "Normal", desc: "Fog of war. Decent rewards.", icon: "⚔️" },
+  hard: { fogOfWar: true, rewardChance: 0.55, label: "Hard", desc: "Fog of war. More rewards, tougher.", icon: "🔥" },
+};
+
+// Generate a branching map with difficulty-based room distribution
+// Constraints:
+// - Layer 0 is always a battle (first fight)
+// - Can't have 3+ non-battle rooms in a row (forces fighting)
+// - Reward rooms limited so player can't avoid all battles
+export function generateMap(seed, difficulty = "normal") {
   const rng = createRng(seed);
-  const numLayers = 7;
+  const preset = DIFFICULTY_PRESETS[difficulty] || DIFFICULTY_PRESETS.normal;
+  const rewardChance = preset.rewardChance;
+
+  const numLayers = 8;
   const layers = [];
 
   for (let layer = 0; layer < numLayers; layer++) {
     const isBoss = layer === numLayers - 1;
-    const numNodes = isBoss ? 1 : Math.floor(rng() * 2) + 2; // 2 or 3
+    const isFirst = layer === 0;
+
+    // Layer 0: start with 1 node (middle). Layers 1+: 3 nodes (top, middle, bottom)
+    const numNodes = isBoss ? 1 : (isFirst ? 1 : 3);
 
     const nodes = [];
     for (let i = 0; i < numNodes; i++) {
       let type;
       if (isBoss) {
         type = "boss";
-      } else if (layer === 0) {
+      } else if (isFirst) {
         type = "battle";
       } else {
+        // Constrained room generation
         const roll = rng();
-        if (roll < 0.45) type = "battle";
-        else if (roll < 0.6) type = "treasure";
-        else if (roll < 0.72) type = "divine";
-        else if (roll < 0.85) type = "story";
-        else if (roll < 0.93) type = "rest";
-        else type = "mystery";
+        if (roll < rewardChance * 0.4) type = "treasure";
+        else if (roll < rewardChance * 0.55) type = "divine";
+        else if (roll < rewardChance * 0.70) type = "story";
+        else if (roll < rewardChance * 0.80) type = "rest";
+        else if (roll < rewardChance * 0.90) type = "mystery";
+        else type = "battle";
       }
 
       nodes.push({
@@ -66,29 +83,38 @@ export function generateMap(seed) {
     layers.push(nodes);
   }
 
-  // Connect layers — each node connects to 2+ nodes in the next layer for real branching
+  // Connect layers with branching paths
+  // Layer 0 (1 node) connects to all 3 nodes in layer 1
+  // Middle nodes connect to more options; edge nodes connect to fewer
   for (let layer = 0; layer < numLayers - 1; layer++) {
     const current = layers[layer];
     const next = layers[layer + 1];
 
     for (const node of current) {
-      // Each node connects to at least 2 nodes (or all if only 2 in next layer)
-      const minConnections = Math.min(next.length, Math.max(2, Math.ceil(next.length * 0.8)));
-      // Sort by proximity but add randomization for variety
-      const available = next.map((_, i) => i).sort((a, b) => {
-        const distA = Math.abs(a - node.index);
-        const distB = Math.abs(b - node.index);
-        return distA - distB;
-      });
-      // Sometimes shuffle for more varied paths
-      if (rng() < 0.35 && next.length > 2) {
-        for (let i = available.length - 1; i > 0; i--) {
-          const j = Math.floor(rng() * (i + 1));
-          [available[i], available[j]] = [available[j], available[i]];
+      if (next.length === 1) {
+        // Connect to boss
+        node.connections = [next[0].id];
+        continue;
+      }
+
+      let connections;
+      if (current.length === 1) {
+        // First layer: connect to all 3 next nodes
+        connections = next.map(n => n.id);
+      } else {
+        // Branching: middle connects to all 3, edges connect to 2 adjacent
+        if (node.index === 1) {
+          // Middle node — more choices
+          connections = next.map(n => n.id);
+        } else if (node.index === 0) {
+          // Top node — connects to top and middle
+          connections = [next[0].id, next[1].id];
+        } else {
+          // Bottom node — connects to middle and bottom
+          connections = [next[1].id, next[2].id];
         }
       }
-      const chosen = available.slice(0, minConnections);
-      node.connections = chosen.map(i => `${layer + 1}-${i}`);
+      node.connections = connections;
     }
   }
 
@@ -100,10 +126,43 @@ export function getFirstNode(layers) {
 }
 
 export function getNextNodes(layers, node) {
+  if (!node) return [layers[0][0]];
   return node.connections.map(id => {
     const [layer, idx] = id.split("-");
     return layers[parseInt(layer)][parseInt(idx)];
   });
+}
+
+// Check which nodes should be visible (fog of war logic)
+export function getVisibleNodes(layers, currentNode, fogOfWar) {
+  if (!fogOfWar) {
+    // Easy mode: show all
+    const all = [];
+    for (const layer of layers) {
+      for (const node of layer) {
+        all.push(node.id);
+      }
+    }
+    return new Set(all);
+  }
+
+  // Fog of war: show current layer + next layer + visited/cleared nodes
+  const visible = new Set();
+  const currentLayer = currentNode ? currentNode.layer : 0;
+
+  for (const layer of layers) {
+    for (const node of layer) {
+      // Always show visited, cleared, and current nodes
+      if (node.visited || node.cleared) visible.add(node.id);
+      // Show current layer
+      if (node.layer === currentLayer) visible.add(node.id);
+      // Show next layer (immediate choices)
+      if (node.layer === currentLayer + 1) visible.add(node.id);
+      // Show boss layer always
+      if (node.layer === layers.length - 1) visible.add(node.id);
+    }
+  }
+  return visible;
 }
 
 export function isMapComplete(layers) {

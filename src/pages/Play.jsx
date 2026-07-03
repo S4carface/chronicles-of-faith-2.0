@@ -44,6 +44,7 @@ export default function Play() {
         currentNode={run.currentNode}
         onSelectNode={selectNode}
         onExit={() => { endRun(); navigate("/"); }}
+        fogOfWar={run.fogOfWar}
       />
     );
   }

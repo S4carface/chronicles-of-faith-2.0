@@ -1,17 +1,20 @@
 import React, { useState, useMemo } from "react";
 import { useGame } from "@/game/GameContext";
-import { TRIVIA_QUESTIONS } from "@/data/trivia";
+import { getQuestionForRoomDepth } from "@/data/trivia";
 import * as Sound from "@/game/soundManager";
 
 export default function TriviaModal({ onComplete }) {
-  const { run, updateRun } = useGame();
-  // Fix glitch: compute question ONCE via useMemo, not from live run.triviaTotal on every render
+  const { run } = useGame();
+  // Compute question ONCE based on room depth (difficulty scaling)
   const question = useMemo(
-    () => TRIVIA_QUESTIONS[run.triviaTotal % TRIVIA_QUESTIONS.length],
+    () => getQuestionForRoomDepth(run.roomsCleared),
     [] // eslint-disable-line react-hooks/exhaustive-deps
   );
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
+
+  const difficultyLabels = { 1: "Easy", 2: "Medium", 3: "Hard" };
+  const difficultyColors = { 1: "text-emerald-300", 2: "text-amber-300", 3: "text-red-300" };
 
   const handleAnswer = (idx) => {
     if (answered) return;
@@ -20,10 +23,8 @@ export default function TriviaModal({ onComplete }) {
     const correct = idx === question.answer;
     if (correct) {
       Sound.sfx.trivia_correct();
-      updateRun({ triviaCorrect: run.triviaCorrect + 1, triviaTotal: run.triviaTotal + 1 });
     } else {
       Sound.sfx.trivia_wrong();
-      updateRun({ triviaTotal: run.triviaTotal + 1 });
     }
   };
 
@@ -44,7 +45,13 @@ export default function TriviaModal({ onComplete }) {
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">📖</div>
           <h2 className="text-2xl font-serif text-amber-200">Test Your Knowledge</h2>
-          <p className="text-amber-100/50 text-sm mt-1">Answer correctly for a bonus reward!</p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <span className="text-amber-100/50 text-sm">Difficulty:</span>
+            <span className={`text-sm font-bold ${difficultyColors[question.difficulty]}`}>
+              {difficultyLabels[question.difficulty]}
+            </span>
+          </div>
+          <p className="text-amber-100/50 text-xs mt-1">Answer correctly for a bonus reward!</p>
         </div>
 
         <p className="text-lg text-amber-50 font-serif mb-6 text-center">{question.q}</p>

@@ -1,11 +1,13 @@
 import React from "react";
 import { ROOM_ICONS, ROOM_LABELS } from "@/data/genesisRooms";
+import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
 
-export default function MapView({ map, currentNode, onSelectNode, onExit }) {
+export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar }) {
   const availableNodes = currentNode
     ? currentNode.connections
     : [map[0][0].id];
+  const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0F1A30 100%)" }}>
@@ -13,7 +15,9 @@ export default function MapView({ map, currentNode, onSelectNode, onExit }) {
       <div className="flex items-center justify-between px-6 py-4 border-b border-amber-500/10">
         <div>
           <h2 className="text-xl font-serif text-amber-200">The Path of Genesis</h2>
-          <p className="text-amber-100/40 text-sm">Choose your next destination</p>
+          <p className="text-amber-100/40 text-sm">
+            {fogOfWar ? "Choose your next destination — the path ahead is hidden" : "Choose your next destination"}
+          </p>
         </div>
         <button
           onClick={onExit}
@@ -24,8 +28,8 @@ export default function MapView({ map, currentNode, onSelectNode, onExit }) {
       </div>
 
       {/* Map scroll */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
-        <div className="flex gap-12 items-start min-w-max h-full pb-4">
+      <div className="flex-1 overflow-x-auto overflow-y-auto p-6">
+        <div className="flex gap-8 items-start min-w-max h-full pb-4">
           {map.map((layer, layerIdx) => (
             <div key={layerIdx} className="flex flex-col gap-6 items-center justify-center min-h-full">
               {layer.map((node) => {
@@ -34,6 +38,24 @@ export default function MapView({ map, currentNode, onSelectNode, onExit }) {
                 const isCleared = node.cleared;
                 const isVisited = node.visited;
                 const isBoss = node.type === "boss";
+                const isVisible = visibleSet.has(node.id);
+
+                // Fog of war: hidden nodes show as mist
+                if (!isVisible && !isCleared) {
+                  return (
+                    <div
+                      key={node.id}
+                      className={cn(
+                        "rounded-xl border-2",
+                        isBoss ? "w-20 h-20" : "w-16 h-16",
+                        "border-slate-700/20 bg-slate-900/20"
+                      )}
+                      style={{ filter: "blur(2px)", opacity: 0.3 }}
+                    >
+                      <div className="w-full h-full flex items-center justify-center text-2xl text-slate-700">🌫️</div>
+                    </div>
+                  );
+                }
 
                 return (
                   <button
@@ -50,10 +72,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit }) {
                       isBoss && isAvailable && "border-red-400/60 bg-red-500/10"
                     )}
                   >
-                    <span>{ROOM_ICONS[node.type] || "❓"}</span>
-                    {isCleared && (
-                      <span className="absolute -top-2 -right-2 text-emerald-400 text-sm">✓</span>
-                    )}
+                    <span>{isCleared && !isBoss ? "✓" : (ROOM_ICONS[node.type] || "❓")}</span>
                     {isAvailable && !isCleared && (
                       <span className="absolute -bottom-5 text-[9px] text-amber-200/70 whitespace-nowrap font-medium">
                         {ROOM_LABELS[node.type]}
@@ -62,13 +81,16 @@ export default function MapView({ map, currentNode, onSelectNode, onExit }) {
                   </button>
                 );
               })}
-              {/* Connector lines to next layer */}
-              {layerIdx < map.length - 1 && (
-                <div className="absolute" />
-              )}
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Footer info */}
+      <div className="px-6 py-3 border-t border-amber-500/10 text-center">
+        <p className="text-amber-100/30 text-xs">
+          {fogOfWar ? "🌫️ Fog of War — only nearby rooms are visible" : "✨ All rooms visible (Easy Mode)"}
+        </p>
       </div>
     </div>
   );

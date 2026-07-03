@@ -4,13 +4,17 @@ import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
 export default function DefeatScreen() {
-  const { run, endRun, addCardsToCollection } = useGame();
+  const { run, endRun, addCardsToCollection, saveProfile, profile } = useGame();
   const navigate = useNavigate();
 
   // Save cards collected during the run even on defeat
   useEffect(() => {
     if (run.deck) {
       addCardsToCollection(run.deck);
+    }
+    // Save half the gold on defeat (consolation)
+    if (run.gold > 0) {
+      saveProfile({ gold: Math.floor((profile.gold || 0) + run.gold / 2) });
     }
   }, []);
 

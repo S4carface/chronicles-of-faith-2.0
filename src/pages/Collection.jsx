@@ -1,28 +1,48 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
-import { CARDS } from "@/data/cards";
-import Card from "@/components/game/Card";
+import { CARDS, getCardById } from "@/data/cards";
+import Card, { getCardEffectText } from "@/components/game/Card";
+import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
 
 export default function Collection() {
   const { profile, Sound: Snd } = useGame();
   const [filter, setFilter] = useState("all");
+  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
-  const collected = new Set(profile.collectedCards);
+  const collected = useMemo(() => new Set(profile.collectedCards), [profile.collectedCards]);
+
   const filtered = CARDS.filter(c => {
     if (filter === "all") return true;
     return c.rarity === filter;
   });
 
-  const stats = {
-    total: CARDS.length,
-    owned: collected.size,
-    common: CARDS.filter(c => c.rarity === "common" && collected.has(c.id)).length,
-    rare: CARDS.filter(c => c.rarity === "rare" && collected.has(c.id)).length,
-    legendary: CARDS.filter(c => c.rarity === "legendary" && collected.has(c.id)).length,
+  const stats = useMemo(() => {
+    const commonTotal = CARDS.filter(c => c.rarity === "common").length;
+    const rareTotal = CARDS.filter(c => c.rarity === "rare").length;
+    const legendaryTotal = CARDS.filter(c => c.rarity === "legendary").length;
+    const commonOwned = CARDS.filter(c => c.rarity === "common" && collected.has(c.id)).length;
+    const rareOwned = CARDS.filter(c => c.rarity === "rare" && collected.has(c.id)).length;
+    const legendaryOwned = CARDS.filter(c => c.rarity === "legendary" && collected.has(c.id)).length;
+    return {
+      total: CARDS.length,
+      owned: collected.size,
+      commonOwned, rareOwned, legendaryOwned,
+      commonTotal, rareTotal, legendaryTotal,
+      percent: Math.round((collected.size / CARDS.length) * 100),
+      commonPercent: Math.round((commonOwned / commonTotal) * 100),
+      rarePercent: Math.round((rareOwned / rareTotal) * 100),
+      legendaryPercent: Math.round((legendaryOwned / legendaryTotal) * 100),
+    };
+  }, [collected]);
+
+  const rarityDropRates = {
+    common: "70% drop rate",
+    rare: "25% drop rate",
+    legendary: "5% drop rate",
   };
 
   return (
@@ -31,24 +51,37 @@ export default function Collection() {
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
           <h1 className="text-3xl font-serif text-amber-200">My Collection</h1>
-          <p className="text-amber-100/40 text-xs mt-1">{stats.owned} / {stats.total} cards discovered</p>
+          <p className="text-amber-100/40 text-xs mt-1">{stats.owned} / {stats.total} cards — {stats.percent}% complete</p>
         </div>
         <div className="w-16" />
       </div>
 
-      {/* Stats */}
+      {/* Overall progress bar */}
+      <div className="max-w-md mx-auto mb-6">
+        <div className="w-full h-3 bg-slate-900 rounded-full border border-amber-500/20 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-amber-600 to-amber-300 transition-all duration-500" style={{ width: `${stats.percent}%` }} />
+        </div>
+      </div>
+
+      {/* Rarity stats with percentages and drop rates */}
       <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mb-8">
-        <div className="text-center p-3 rounded-lg border border-slate-400/20 bg-slate-700/20">
-          <p className="text-2xl font-bold text-slate-300">{stats.common}</p>
-          <p className="text-slate-400 text-xs">Common</p>
+        <div className="text-center p-3 rounded-lg border border-sky-400/20 bg-sky-900/10">
+          <p className="text-2xl font-bold text-sky-300">{stats.commonOwned}/{stats.commonTotal}</p>
+          <p className="text-sky-400/60 text-xs">Common</p>
+          <p className="text-sky-300/40 text-[10px] mt-1">{stats.commonPercent}% owned</p>
+          <p className="text-sky-300/30 text-[9px]">{rarityDropRates.common}</p>
         </div>
-        <div className="text-center p-3 rounded-lg border border-amber-400/20 bg-amber-700/10">
-          <p className="text-2xl font-bold text-amber-300">{stats.rare}</p>
-          <p className="text-amber-400/60 text-xs">Rare</p>
+        <div className="text-center p-3 rounded-lg border border-emerald-400/20 bg-emerald-900/10">
+          <p className="text-2xl font-bold text-emerald-300">{stats.rareOwned}/{stats.rareTotal}</p>
+          <p className="text-emerald-400/60 text-xs">Rare</p>
+          <p className="text-emerald-300/40 text-[10px] mt-1">{stats.rarePercent}% owned</p>
+          <p className="text-emerald-300/30 text-[9px]">{rarityDropRates.rare}</p>
         </div>
-        <div className="text-center p-3 rounded-lg border border-yellow-400/20 bg-yellow-700/10">
-          <p className="text-2xl font-bold text-yellow-200">{stats.legendary}</p>
-          <p className="text-yellow-400/60 text-xs">Legendary</p>
+        <div className="text-center p-3 rounded-lg border border-amber-400/20 bg-amber-900/10">
+          <p className="text-2xl font-bold text-amber-200">{stats.legendaryOwned}/{stats.legendaryTotal}</p>
+          <p className="text-amber-400/60 text-xs">Legendary</p>
+          <p className="text-amber-300/40 text-[10px] mt-1">{stats.legendaryPercent}% owned</p>
+          <p className="text-amber-300/30 text-[9px]">{rarityDropRates.legendary}</p>
         </div>
       </div>
 
@@ -69,12 +102,16 @@ export default function Collection() {
         ))}
       </div>
 
-      {/* Cards grid */}
+      {/* Cards grid — click any card for details */}
       <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3 max-w-4xl mx-auto pb-12">
         {filtered.map(card => {
           const owned = collected.has(card.id);
           return (
-            <div key={card.id} className="relative">
+            <div
+              key={card.id}
+              onClick={() => { Sound.sfx.click(); setSelectedCard(card); }}
+              className="relative cursor-pointer hover:scale-105 transition-transform"
+            >
               {owned ? (
                 <Card card={card} small />
               ) : (
@@ -87,6 +124,15 @@ export default function Collection() {
           );
         })}
       </div>
+
+      {/* Card detail modal */}
+      {selectedCard && (
+        <CardDetailModal
+          card={selectedCard}
+          owned={collected.has(selectedCard.id)}
+          onClose={() => setSelectedCard(null)}
+        />
+      )}
     </div>
   );
 }

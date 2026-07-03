@@ -90,6 +90,11 @@
     50% { filter: brightness(1.4); transform: scale(1.05); }
   }
 
+  @keyframes iconFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-3px) rotate(2deg); }
+  }
+
   .font-serif { font-family: var(--font-heading); }
 
   body {

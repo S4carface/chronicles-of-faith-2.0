@@ -28,6 +28,11 @@ export default function VictoryScreen() {
     // Save ALL cards collected during the run to the collection
     addCardsToCollection(run.deck);
 
+    // Save gold earned during the run to profile
+    if (run.gold > 0) {
+      saveProfile({ gold: (profile.gold || 0) + run.gold });
+    }
+
     // Track daily challenge completion
     if (run.isDaily) {
       const todayStr = new Date().toISOString().slice(0, 10);

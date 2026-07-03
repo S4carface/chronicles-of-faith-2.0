@@ -5,6 +5,7 @@ import { getCardById } from "@/data/cards";
 import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd } from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
+import TutorialOverlay from "@/components/game/TutorialOverlay";
 import * as Sound from "@/game/soundManager";
 
 export default function BattleScreen() {
@@ -25,12 +26,14 @@ export default function BattleScreen() {
   const [enemyFlash, setEnemyFlash] = useState(false);
   const [playerFlash, setPlayerFlash] = useState(false);
   const [showPause, setShowPause] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
     const state = createBattleState(
       enemy,
       run.playerHp,
+      run.maxHp,
       run.deck,
       0,
       run.extraDraw
@@ -40,6 +43,11 @@ export default function BattleScreen() {
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
     setBattleState(state);
   }, []);
+
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    saveProfile({ tutorialSeen: true });
+  };
 
   const handlePlayCard = (handIndex) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
@@ -139,6 +147,7 @@ export default function BattleScreen() {
   const handleBattleEnd = (result, state) => {
     if (result === "victory") {
       Sound.sfx.victory();
+      const goldReward = enemy.isBoss ? 30 : 10 + Math.floor(Math.random() * 5);
       if (run.pendingEnemyId === "serpent" && run.roomsCleared === 0) {
         unlockAchievement("serpent_slayer");
       }
@@ -147,6 +156,7 @@ export default function BattleScreen() {
         updateRun({
           battlesWithoutDamage: run.battlesWithoutDamage + 1,
           playerHp: state.playerHp,
+          gold: run.gold + goldReward,
         });
         if (run.battlesWithoutDamage + 1 >= 3) {
           unlockAchievement("unscathed");
@@ -159,6 +169,7 @@ export default function BattleScreen() {
           battlesWithoutDamage: 0,
           playerHp: state.playerHp,
           neverLostHp: false,
+          gold: run.gold + goldReward,
         });
       }
       Sound.playMusic("victory");
@@ -275,6 +286,9 @@ export default function BattleScreen() {
             {battleState.playerBlock > 0 && (
               <p className="text-blue-300 text-xs">🛡️ {battleState.playerBlock} block</p>
             )}
+            {battleState.thorns > 0 && (
+              <p className="text-orange-300 text-xs">🗡️ Counter: {battleState.thorns} dmg</p>
+            )}
             {battleState.dots > 0 && (
               <p className="text-purple-300 text-xs">☠️ Cursed ({battleState.dots} turns)</p>
             )}
@@ -357,6 +371,11 @@ export default function BattleScreen() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Tutorial overlay */}
+      {showTutorial && (
+        <TutorialOverlay onComplete={handleTutorialComplete} />
       )}
 
       {/* Pause overlay */}

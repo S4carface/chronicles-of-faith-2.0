@@ -8,7 +8,6 @@ const RARITY_STYLES = {
     bg: "from-sky-800/50 to-slate-800",
     label: "text-sky-200",
     badge: "bg-sky-600/40",
-    accent: "sky",
   },
   rare: {
     border: "border-emerald-400/70",
@@ -16,7 +15,6 @@ const RARITY_STYLES = {
     bg: "from-emerald-800/40 to-slate-800",
     label: "text-emerald-200",
     badge: "bg-emerald-600/40",
-    accent: "emerald",
   },
   legendary: {
     border: "border-amber-300/80",
@@ -24,7 +22,6 @@ const RARITY_STYLES = {
     bg: "from-amber-700/30 via-yellow-700/20 to-slate-800",
     label: "text-amber-100",
     badge: "bg-amber-500/30",
-    accent: "amber",
   },
 };
 
@@ -35,10 +32,43 @@ const TYPE_LABELS = {
   miracle: { text: "Miracle", color: "text-yellow-200" },
 };
 
+// Build a clear effect summary from card data
+export function getCardEffectText(card) {
+  if (!card) return "";
+  switch (card.type) {
+    case "attack":
+      return `⚔️ Deals ${card.value} damage`;
+    case "defense":
+      if (card.id === "lions_den") return `🛡️ Gain ${card.value} Block. Counter: enemy takes 4 damage when attacking.`;
+      return `🛡️ Gain ${card.value} Block`;
+    case "miracle":
+      if (card.id === "angel_lord") return `✨ Deals ${card.value} damage. Heal 10 HP.`;
+      return `✨ Deals ${card.value} holy damage`;
+    case "scripture":
+      switch (card.id) {
+        case "prayer": return "💚 Heal 4 HP";
+        case "bread_life": return "💚 Heal 5 HP";
+        case "living_water": return "💚 Heal 6 HP";
+        case "burning_bush": return "💚 Heal 5 HP. Deal 5 damage.";
+        case "song_praise": return "✨ Gain 2 Faith energy";
+        case "wisdom": return "🃏 Draw 2 cards";
+        case "doves_peace": return "💚 Heal 3 HP. Draw 1 card.";
+        case "manna_heaven": return "💚 Heal 10 HP. Draw 2 cards.";
+        case "coat_colors": return "✨ Gain 3 Faith energy";
+        case "jacobs_ladder": return "🃏 Draw 3 cards";
+        case "righteous_aim": return "⚔️ Next attack deals DOUBLE damage";
+        default: return card.description || "";
+      }
+    default:
+      return card.description || "";
+  }
+}
+
 export default function Card({ card, onClick, playable, selected, small, inHand }) {
   if (!card) return null;
   const style = RARITY_STYLES[card.rarity] || RARITY_STYLES.common;
   const typeInfo = TYPE_LABELS[card.type] || TYPE_LABELS.attack;
+  const effectText = getCardEffectText(card);
 
   return (
     <div
@@ -67,7 +97,7 @@ export default function Card({ card, onClick, playable, selected, small, inHand 
       </div>
 
       {/* Card icon */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "text-2xl" : "text-4xl")}>
+      <div className={cn("flex items-center justify-center mt-7 mb-1 animate-icon-float", small ? "text-2xl" : "text-4xl")}>
         {card.icon}
       </div>
 
@@ -81,10 +111,10 @@ export default function Card({ card, onClick, playable, selected, small, inHand 
         {typeInfo.text}
       </div>
 
-      {/* Effect */}
+      {/* Effect text */}
       {!small && (
-        <div className="px-2 mt-1 text-[9px] text-slate-300 text-center leading-tight h-10 overflow-hidden">
-          {card.description}
+        <div className="px-2 mt-1 text-[9px] text-slate-200 text-center leading-tight h-10 overflow-hidden">
+          {effectText}
         </div>
       )}
 

@@ -9,6 +9,7 @@ import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
+import { getIntentExplanation } from "@/game/intentExplanations";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -66,6 +67,7 @@ export default function BattleScreen() {
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
+  const [intentExplain, setIntentExplain] = useState(null);
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -459,11 +461,15 @@ export default function BattleScreen() {
               const isResolved = currentIntentIdx > i;
               return (
                 <React.Fragment key={i}>
-                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border transition-all duration-200 ${
-                    isCurrent ? `${intentInfo.border} bg-amber-500/20 scale-110 shadow-md shadow-amber-400/20` :
-                    isResolved ? "border-slate-700/20 opacity-25" :
-                    `${intentInfo.border} bg-slate-900/40`
-                  }`}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIntentExplain(action); Sound.sfx.click(); }}
+                    disabled={isResolved}
+                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border transition-all duration-200 ${
+                      isCurrent ? `${intentInfo.border} bg-amber-500/20 scale-110 shadow-md shadow-amber-400/20` :
+                      isResolved ? "border-slate-700/20 opacity-25" :
+                      `${intentInfo.border} bg-slate-900/40 hover:bg-slate-800/60`
+                    }`}
+                  >
                     <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm flex-shrink-0" />
                     <span className={`${intentInfo.color} text-[9px] font-medium leading-none`}>{action.name}</span>
                     {(() => {
@@ -472,7 +478,7 @@ export default function BattleScreen() {
                       const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
                       return <span className={`text-[8px] font-bold leading-none ${amtColor}`}>{amt}</span>;
                     })()}
-                  </div>
+                  </button>
                   {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
                 </React.Fragment>
               );
@@ -714,6 +720,25 @@ export default function BattleScreen() {
           owned={false}
           onClose={() => setLongPressCard(null)}
         />
+      )}
+
+      {/* Intent explanation popover */}
+      {intentExplain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.85)" }} onClick={() => setIntentExplain(null)}>
+          <div
+            className="max-w-xs w-full rounded-xl border-2 p-4 animate-fade-in"
+            style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)", borderColor: getActionType(intentExplain) === "attack" ? "rgba(248,113,113,0.5)" : getActionType(intentExplain) === "block" ? "rgba(96,165,250,0.5)" : getActionType(intentExplain) === "heal" ? "rgba(52,211,153,0.5)" : "rgba(192,132,252,0.5)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-serif text-amber-200">{intentExplain.name}</h3>
+              <button onClick={() => setIntentExplain(null)} className="text-amber-100/40 hover:text-amber-200 text-sm">✕</button>
+            </div>
+            <p className="text-amber-100/80 text-xs leading-relaxed">
+              {getIntentExplanation(intentExplain, enemy)}
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Tutorial overlay */}

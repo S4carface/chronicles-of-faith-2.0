@@ -1,0 +1,23 @@
+{
+  "name": "DailyChallenge",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string"
+    },
+    "story_theme": {
+      "type": "string"
+    },
+    "seed": {
+      "type": "string"
+    },
+    "completions": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "date",
+    "seed"
+  ]
+}

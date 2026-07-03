@@ -7,6 +7,16 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
+import { GameProvider } from "@/game/GameContext";
+import AchievementBanner from "@/components/game/AchievementBanner";
+import Home from "./pages/Home";
+import Play from "./pages/Play";
+import Collection from "./pages/Collection";
+import ProgressMap from "./pages/ProgressMap";
+import DailyChallenge from "./pages/DailyChallenge";
+import Leaderboard from "./pages/Leaderboard";
+import Achievements from "./pages/Achievements";
+import Settings from "./pages/Settings";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -33,10 +43,20 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <GameProvider>
+      <AchievementBanner />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/play" element={<Play />} />
+        <Route path="/collection" element={<Collection />} />
+        <Route path="/progress" element={<ProgressMap />} />
+        <Route path="/daily" element={<DailyChallenge />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/achievements" element={<Achievements />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </GameProvider>
   );
 };
 

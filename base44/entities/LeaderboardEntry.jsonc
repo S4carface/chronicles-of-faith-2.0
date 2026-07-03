@@ -1,0 +1,37 @@
+{
+  "name": "LeaderboardEntry",
+  "type": "object",
+  "properties": {
+    "player_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "score": {
+      "type": "number"
+    },
+    "rooms_cleared": {
+      "type": "number"
+    },
+    "trivia_correct": {
+      "type": "number"
+    },
+    "hero_used": {
+      "type": "string"
+    },
+    "is_daily": {
+      "type": "boolean",
+      "default": false
+    },
+    "damage_taken": {
+      "type": "number"
+    },
+    "run_seed": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "player_name",
+    "score",
+    "hero_used"
+  ]
+}

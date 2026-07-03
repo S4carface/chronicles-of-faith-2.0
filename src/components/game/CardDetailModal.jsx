@@ -33,7 +33,9 @@ export default function CardDetailModal({ card, owned, onClose, onSelect, select
         <div className="flex justify-center mb-4">
           <div className={`w-32 h-48 rounded-lg border-2 ${rarity.border} bg-gradient-to-b from-slate-800 to-slate-900 p-3 flex flex-col items-center justify-between`}>
             <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
-            <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="w-20 h-20 object-cover rounded-lg" />
+            <div className="w-20 h-20 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+              <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="w-full h-full object-cover" />
+            </div>
             <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
             <div className="text-[8px] text-amber-300/40 italic text-center">{card.verse}</div>
           </div>

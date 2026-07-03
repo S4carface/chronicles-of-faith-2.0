@@ -122,8 +122,8 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       </div>
 
       {/* Card artwork */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1", small ? "h-14" : "h-14")}>
-        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className={cn("object-cover rounded animate-icon-float", small ? "w-14 h-14" : "w-14 h-14")} />
+      <div className={cn("flex items-center justify-center mt-7 mb-1 overflow-hidden rounded", small ? "h-14" : "h-14")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className={cn("object-cover animate-icon-float", small ? "w-14 h-14" : "w-14 h-14")} />
       </div>
 
       {/* Card name */}

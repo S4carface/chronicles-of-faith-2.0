@@ -488,7 +488,9 @@ export default function BattleScreen() {
             } ${enemyShake ? "animate-shake" : ""} ${enemyFlash ? "animate-damage-flash" : ""}`}
           >
             {enemyArt ? (
-              <img src={enemyArt} alt={enemy.name} className="w-24 h-24 object-cover rounded-lg border-2 border-red-900/50" />
+              <div className="w-24 h-24 rounded-lg border-2 border-red-900/60 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A0A0A 0%, #2A1212 100%)" }}>
+                <img src={enemyArt} alt={enemy.name} className="w-full h-full object-cover" />
+              </div>
             ) : (
               <span className="text-5xl">{enemy.icon}</span>
             )}

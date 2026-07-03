@@ -47,9 +47,9 @@ export default function Achievements() {
             >
               <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border overflow-hidden ${
                 isUnlocked
-                  ? "border-amber-400/40 bg-amber-500/10"
+                  ? "border-amber-400/40"
                   : "border-slate-600/30 bg-slate-800/50"
-              }`}>
+              }`} style={isUnlocked ? { background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" } : {}}>
                 {isUnlocked
                   ? (achievement.art && ENEMY_ART[achievement.art]
                     ? <img src={ENEMY_ART[achievement.art]} alt={achievement.name} className="w-full h-full object-cover" />

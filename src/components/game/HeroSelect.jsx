@@ -69,17 +69,17 @@ export default function HeroSelect() {
         onMouseDown={onDragStart}
         onMouseUp={onDragEnd}
       >
-        <div className="relative w-full max-w-sm" style={{ cursor: "grab" }}>
+        <div className="relative w-full max-w-sm lg:max-w-2xl" style={{ cursor: "grab" }}>
           {/* Nav arrows */}
           <button
             onClick={goPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-6 z-10 w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-6 lg:-translate-x-8 z-10 w-9 h-9 lg:w-11 lg:h-11 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 text-lg lg:text-2xl hover:bg-amber-500/20 transition"
           >
             ‹
           </button>
           <button
             onClick={goNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-6 z-10 w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-6 lg:translate-x-8 z-10 w-9 h-9 lg:w-11 lg:h-11 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 text-lg lg:text-2xl hover:bg-amber-500/20 transition"
           >
             ›
           </button>
@@ -91,7 +91,7 @@ export default function HeroSelect() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -80 }}
               transition={{ duration: 0.2 }}
-              className={`rounded-xl border-2 p-6 text-center ${
+              className={`rounded-xl border-2 p-6 lg:p-10 text-center ${
                 unlocked
                   ? "border-amber-400/60 bg-amber-500/10"
                   : "border-slate-700/30 bg-slate-900/40 opacity-60"
@@ -100,28 +100,28 @@ export default function HeroSelect() {
             >
               <div className="mb-3 flex justify-center">
                 {unlocked && HERO_ART[hero.id] ? (
-                  <img src={HERO_ART[hero.id]} alt={hero.name} className="w-28 h-28 object-cover rounded-xl border-2 border-amber-400/40" />
+                  <img src={HERO_ART[hero.id]} alt={hero.name} className="w-28 h-28 lg:w-44 lg:h-44 object-cover rounded-xl border-2 border-amber-400/40" />
                 ) : (
-                  <span className="text-7xl">{unlocked ? hero.icon : "🔒"}</span>
+                  <span className="text-7xl lg:text-8xl">{unlocked ? hero.icon : "🔒"}</span>
                 )}
               </div>
-              <h3 className="text-2xl font-serif text-amber-100">{hero.name}</h3>
-              <p className="text-amber-300/60 text-xs mb-4">{hero.title}</p>
+              <h3 className="text-2xl lg:text-4xl font-serif text-amber-100">{hero.name}</h3>
+              <p className="text-amber-300/60 text-xs lg:text-base mb-4">{hero.title}</p>
 
               {!unlocked ? (
                 <p className="text-amber-100/40 text-sm py-6">Complete Genesis to unlock</p>
               ) : (
-                <div className="space-y-2 mb-4">
-                  <p className="text-amber-100/60 text-xs">{hero.description}</p>
-                  <div className="text-xs text-emerald-300/70 bg-emerald-900/20 rounded-lg p-2">
+                <div className="space-y-2 lg:space-y-3 mb-4 lg:max-w-xl lg:mx-auto">
+                  <p className="text-amber-100/60 text-xs lg:text-base">{hero.description}</p>
+                  <div className="text-xs lg:text-base text-emerald-300/70 bg-emerald-900/20 rounded-lg p-2 lg:p-3">
                     ⚡ {hero.ability}
                   </div>
                   {hero.passive && (
-                    <div className="text-xs text-sky-300/70 bg-sky-900/20 rounded-lg p-2">
+                    <div className="text-xs lg:text-base text-sky-300/70 bg-sky-900/20 rounded-lg p-2 lg:p-3">
                       🌟 Passive: {hero.passive.description}
                     </div>
                   )}
-                  <div className="flex items-center justify-center gap-3 text-xs">
+                  <div className="flex items-center justify-center gap-3 text-xs lg:text-base">
                     <span className="text-amber-100/40">❤️ {hero.maxHp} HP</span>
                     <span className="text-amber-100/40">🃏 {hero.starterDeck.length} cards</span>
                     {hasAttackCards ? (
@@ -158,7 +158,7 @@ export default function HeroSelect() {
         <button
           onClick={handleStart}
           disabled={!unlocked}
-          className="w-full max-w-sm mx-auto block px-8 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition disabled:opacity-40 disabled:cursor-not-allowed animate-pulse"
+          className="w-full max-w-sm lg:max-w-md mx-auto block px-8 py-4 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg lg:text-2xl hover:bg-amber-600/40 transition disabled:opacity-40 disabled:cursor-not-allowed animate-pulse"
         >
           {unlocked ? "⚔️ Begin Genesis Run" : "🔒 Locked"}
         </button>

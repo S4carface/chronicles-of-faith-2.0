@@ -11,6 +11,7 @@ import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
+import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
@@ -46,6 +47,7 @@ const INTENT_TYPE_MAP = {
 
 export default function BattleScreen() {
   const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
+  const { isDesktop } = useResponsive();
   const navigate = useNavigate();
   const enemy = ENEMIES[run.pendingEnemyId];
   const [battleState, setBattleState] = useState(null);
@@ -95,6 +97,9 @@ export default function BattleScreen() {
       saveBattleState(battleState);
     }
   }, [battleState]);
+
+  // Desktop: expand combat log by default for readability
+  useEffect(() => { setShowLog(isDesktop); }, [isDesktop]);
 
   const handleTutorialComplete = () => {
     setShowTutorial(false);
@@ -446,17 +451,17 @@ export default function BattleScreen() {
       </div>
 
       {/* Enemy area */}
-      <div className="flex-shrink-0 flex flex-col items-center px-3 pb-1">
+      <div className="flex-shrink-0 flex flex-col items-center px-3 pb-1 lg:pt-3">
         <div className="text-center mb-1">
-          <h2 className="text-lg font-serif text-red-200 leading-tight">{enemy.name}</h2>
+          <h2 className="text-lg lg:text-3xl font-serif text-red-200 leading-tight">{enemy.name}</h2>
           {enemy.isBoss && (
-            <span className="inline-block text-red-400 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-full border border-red-500/30 bg-red-900/30 mt-0.5">BOSS</span>
+            <span className="inline-block text-red-400 text-[9px] lg:text-xs font-bold tracking-widest px-2 py-0.5 rounded-full border border-red-500/30 bg-red-900/30 mt-0.5">BOSS</span>
           )}
         </div>
 
         {/* Enemy Intent — compact strip with painted icons */}
         {battleState.enemyHand?.length > 0 && !battleEnd && (
-          <div className="mb-1 flex items-center gap-1 justify-center flex-wrap max-w-[95%]">
+          <div className="mb-1 flex items-center gap-1 lg:gap-2 justify-center flex-wrap max-w-[95%] lg:max-w-[600px]">
             {battleState.enemyHand.map((action, i) => {
               const actionType = getActionType(action);
               const intentInfo = INTENT_TYPE_MAP[actionType];
@@ -467,20 +472,20 @@ export default function BattleScreen() {
                   <button
                     onClick={(e) => { e.stopPropagation(); setIntentExplain(action); Sound.sfx.click(); }}
                     disabled={isResolved}
-                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border transition-all duration-200 ${
+                    className={`flex items-center gap-1 px-1.5 py-0.5 lg:px-2.5 lg:py-1 rounded-md border transition-all duration-200 ${
                       isCurrent ? `${intentInfo.border} bg-amber-500/20 scale-110 shadow-md shadow-amber-400/20` :
                       isResolved ? "border-slate-700/20 opacity-25" :
                       `${intentInfo.border} bg-slate-900/40 hover:bg-slate-800/60`
                     }`}
                   >
-                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm flex-shrink-0" />
-                    <span className={`${intentInfo.color} text-[9px] font-medium leading-none`}>{action.name}</span>
+                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 lg:w-5 lg:h-5 object-cover rounded-sm flex-shrink-0" />
+                    <span className={`${intentInfo.color} text-[9px] lg:text-xs font-medium leading-none`}>{action.name}</span>
                     {(() => {
                       if (hideIntentValues) return null;
                       const amt = getIntentAmountText(action, enemy);
                       if (!amt) return null;
                       const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
-                      return <span className={`text-[8px] font-bold leading-none ${amtColor}`}>{amt}</span>;
+                      return <span className={`text-[8px] lg:text-xs font-bold leading-none ${amtColor}`}>{amt}</span>;
                     })()}
                   </button>
                   {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
@@ -499,7 +504,7 @@ export default function BattleScreen() {
             } ${enemyShake ? "animate-shake" : ""} ${enemyFlash ? "animate-damage-flash" : ""}`}
           >
             {enemyArt ? (
-              <div className="w-24 h-24 rounded-lg border-2 border-red-900/60 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A0A0A 0%, #2A1212 100%)" }}>
+              <div className="w-24 h-24 lg:w-40 lg:h-40 rounded-lg border-2 border-red-900/60 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A0A0A 0%, #2A1212 100%)" }}>
                 <img src={enemyArt} alt={enemy.name} className="w-full h-full object-cover" />
               </div>
             ) : (
@@ -507,17 +512,17 @@ export default function BattleScreen() {
             )}
           </div>
           {/* Enemy HP bar */}
-          <div className="w-36 h-3 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
+          <div className="w-36 lg:w-56 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"
               style={{ width: `${(battleState.enemy.currentHp / battleState.enemy.maxHp) * 100}%` }}
             />
           </div>
           <div className="flex items-center justify-center gap-2 mt-0.5">
-            <p className="text-red-200 text-[11px]">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
+            <p className="text-red-200 text-[11px] lg:text-base">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
             {battleState.enemyBlock > 0 && (
-              <span className="text-blue-300 text-[11px] flex items-center gap-0.5">
-                <Shield className="w-3 h-3 inline" />{battleState.enemyBlock}
+              <span className="text-blue-300 text-[11px] lg:text-base flex items-center gap-0.5">
+                <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.enemyBlock}
               </span>
             )}
           </div>
@@ -525,21 +530,21 @@ export default function BattleScreen() {
       </div>
 
       {/* Combat Log */}
-      <div className="flex-shrink-0 px-3 py-1">
+      <div className="flex-shrink-0 px-3 py-1 lg:py-2">
         <button
           onClick={() => setShowLog(!showLog)}
-          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] uppercase tracking-wide hover:bg-slate-900/70 transition"
+          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] lg:text-xs uppercase tracking-wide hover:bg-slate-900/70 transition"
         >
           <span className="truncate flex items-center gap-1">
             <span className="text-amber-300/40">Log:</span>
             {battleState.log[battleState.log.length - 1] || "Battle log"}
           </span>
-          {showLog ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
+          {showLog ? <ChevronUp className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />}
         </button>
         {showLog && (
-          <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 mt-1 max-h-16 overflow-y-auto">
-            {battleState.log.slice(-4).map((entry, i) => (
-              <p key={i} className="text-amber-100/80 text-[11px] leading-snug">
+          <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-2 mt-1 max-h-16 lg:max-h-32 overflow-y-auto">
+            {battleState.log.slice(-6).map((entry, i) => (
+              <p key={i} className="text-amber-100/80 text-[11px] lg:text-sm leading-snug">
                 {entry}
               </p>
             ))}
@@ -569,39 +574,39 @@ export default function BattleScreen() {
       )}
 
       {/* Player stats — compact single row */}
-      <div className="flex-shrink-0 px-3 py-1.5 border-t border-amber-500/10 flex items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
+      <div className="flex-shrink-0 px-3 py-1.5 lg:py-2.5 border-t border-amber-500/10 flex items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={`transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
           >
             {heroArt ? (
-              <img src={heroArt} alt={hero.name} className="w-8 h-8 object-cover rounded-full border border-amber-500/30" />
+              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" />
             ) : (
-              <span className="text-2xl">{hero.icon}</span>
+              <span className="text-2xl lg:text-4xl">{hero.icon}</span>
             )}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <Heart className="w-3 h-3 text-red-400 flex-shrink-0" />
-              <div className="w-16 h-3 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
+              <Heart className="w-3 h-3 lg:w-5 lg:h-5 text-red-400 flex-shrink-0" />
+              <div className="w-16 lg:w-36 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
               </div>
-              <span className="text-emerald-200 text-[11px] font-bold flex-shrink-0">{battleState.playerHp}/{battleState.maxPlayerHp}</span>
+              <span className="text-emerald-200 text-[11px] lg:text-base font-bold flex-shrink-0">{battleState.playerHp}/{battleState.maxPlayerHp}</span>
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[10px]">
+            <div className="flex items-center gap-2 mt-0.5 text-[10px] lg:text-sm">
               {battleState.playerBlock > 0 && (
                 <span className="text-blue-300 flex items-center gap-0.5">
-                  <Shield className="w-3 h-3 inline" />{battleState.playerBlock}
+                  <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.playerBlock}
                 </span>
               )}
               {battleState.thorns > 0 && (
                 <span className="text-orange-300 flex items-center gap-0.5">
-                  <SwordsIcon className="w-3 h-3 inline" />{battleState.thorns}
+                  <SwordsIcon className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.thorns}
                 </span>
               )}
               {battleState.dots > 0 && (
                 <span className="text-purple-300 flex items-center gap-0.5">
-                  <Skull className="w-3 h-3 inline" />{battleState.dots}
+                  <Skull className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.dots}
                 </span>
               )}
               <span className="text-amber-100/40">Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
@@ -615,21 +620,21 @@ export default function BattleScreen() {
             <button
               onClick={handleCovenantShield}
               disabled={isEnemyTurn}
-              className="px-2 py-1 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition disabled:opacity-40"
+              className="px-2 py-1 lg:px-3 lg:py-2 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition disabled:opacity-40"
               title="Covenant Shield"
             >
-              <Shield className="w-3 h-3" />
+              <Shield className="w-3 h-3 lg:w-5 lg:h-5" />
             </button>
           )}
-          <div className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-amber-900/20 border border-amber-400/30">
-            <Sparkles className="w-3 h-3 text-yellow-200" />
-            <span className="text-yellow-200 text-sm font-bold">{battleState.energy}</span>
-            <span className="text-yellow-100/50 text-[9px]">/{battleState.maxEnergy}</span>
+          <div className="flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
+            <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
+            <span className="text-yellow-200 text-sm lg:text-xl font-bold">{battleState.energy}</span>
+            <span className="text-yellow-100/50 text-[9px] lg:text-xs">/{battleState.maxEnergy}</span>
           </div>
           <button
             onClick={handleEndTurn}
             disabled={isEnemyTurn}
-            className="px-3 py-1.5 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-xs hover:bg-amber-600/40 transition disabled:opacity-40 whitespace-nowrap"
+            className="px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-xs lg:text-base hover:bg-amber-600/40 transition disabled:opacity-40 whitespace-nowrap"
           >
             End Turn →
           </button>
@@ -638,11 +643,11 @@ export default function BattleScreen() {
 
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div className={`flex-1 flex items-end overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}>
+        <div className={`flex-1 flex items-end justify-center overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}>
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}
-          <div className="flex gap-2 overflow-x-auto flex-nowrap snap-x pb-1 w-full">
+          <div className="flex gap-2 lg:gap-4 overflow-x-auto flex-nowrap snap-x pb-1 w-full justify-center">
             {battleState.hand.map((cardId, idx) => {
               const card = getCardById(cardId);
               if (!card) return null;
@@ -653,7 +658,7 @@ export default function BattleScreen() {
                   key={idx}
                   card={card}
                   inHand
-                  small
+                  small={!isDesktop}
                   playable={playable && !blocked && !isEnemyTurn}
                   selected={selectedCard === idx}
                   onClick={() => handleSelectCard(idx)}

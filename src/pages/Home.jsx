@@ -67,17 +67,17 @@ export default function Home() {
         <div className="flex justify-center mb-2">
           <img src={HOME_ART.cross} alt="Chronicles of Faith" className="w-14 h-14 object-cover rounded-full border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-serif text-amber-200 tracking-wide leading-tight" style={{ textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
+        <h1 className="font-serif text-amber-200 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
           Chronicles of Faith
         </h1>
-        <p className="text-amber-100/45 text-xs mt-1 font-serif italic tracking-wide">
+        <p className="text-amber-100/45 mt-1 font-serif italic tracking-wide" style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)" }}>
           A Biblical Roguelike Journey
         </p>
         <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
       </div>
 
       {/* Difficulty selector — compact horizontal */}
-      <div className="relative w-full max-w-md lg:max-w-2xl mb-4 lg:mb-5">
+      <div className="relative w-full max-w-md lg:max-w-[600px] mb-4 lg:mb-5">
         <DifficultySelect />
       </div>
 
@@ -105,7 +105,7 @@ export default function Home() {
       {/* Play button — primary CTA */}
       <button
         onClick={handleBeginRun}
-        className="relative w-full max-w-md lg:max-w-2xl mb-6 px-8 py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl lg:text-2xl font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+        className="relative w-full max-w-md lg:max-w-[600px] mb-6 px-8 py-4 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20" style={{ fontSize: "clamp(1.1rem, 2vw, 1.75rem)" }}
         style={{ background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)" }}
       >
         <span className="flex items-center justify-center gap-2">
@@ -139,24 +139,24 @@ export default function Home() {
       )}
 
       {/* Secondary menu — single column on mobile, two-column grid on desktop */}
-      <div className="relative w-full max-w-md lg:max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-3 lg:px-0">
+      <div className="relative w-full max-w-md lg:max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-4 lg:px-0">
         {menuItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             onClick={() => Sound.sfx.click()}
-            className="flex items-center gap-3 px-3 py-2 lg:px-4 lg:py-3 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
+            className="flex items-center gap-3 px-3 py-2 lg:px-5 lg:py-4 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
             style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.45) 0%, rgba(15,26,48,0.45) 100%)" }}
           >
-            <div className="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
+            <div className="flex-shrink-0 w-8 h-8 lg:w-12 lg:h-12 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
               <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-serif text-amber-100 text-[13px] lg:text-sm leading-tight">{item.label}</div>
-              <div className="text-amber-100/40 text-[10px] lg:text-[11px] leading-tight">{item.desc}</div>
+              <div className="font-serif text-amber-100 text-[13px] lg:text-base leading-tight">{item.label}</div>
+              <div className="text-amber-100/40 text-[10px] lg:text-sm leading-tight">{item.desc}</div>
             </div>
             {item.status && (
-              <span className="flex-shrink-0 text-amber-300/60 text-[10px] lg:text-xs font-medium font-serif tracking-wide">
+              <span className="flex-shrink-0 text-amber-300/60 text-[10px] lg:text-sm font-medium font-serif tracking-wide">
                 {item.status}
               </span>
             )}

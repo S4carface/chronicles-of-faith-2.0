@@ -104,18 +104,18 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
         )}
       </div>
 
-      <div className="relative max-w-2xl px-8 text-center">
+      <div className="relative max-w-2xl lg:max-w-[900px] px-8 lg:px-12 text-center">
         <div className="flex justify-center mb-6">
-          <img src={HOME_ART.cross} alt="" className="w-14 h-14 object-cover rounded-full border-2 border-amber-400/30 opacity-80 animate-icon-float" />
+          <img src={HOME_ART.cross} alt="" className="w-14 h-14 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/30 opacity-80 animate-icon-float" />
         </div>
-        <p className="text-2xl md:text-3xl font-serif text-amber-100 leading-relaxed min-h-[6rem]">
+        <p className="font-serif text-amber-100 leading-relaxed min-h-[6rem]" style={{ fontSize: "clamp(1.25rem, 3vw, 2.25rem)" }}>
           {displayed}
           {!done && <span className="animate-pulse">▊</span>}
         </p>
         {done && (
           <button
             onClick={(e) => { e.stopPropagation(); handleContinue(); }}
-            className="mt-8 px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition animate-fade-in"
+            className="mt-8 px-10 py-3 lg:px-14 lg:py-4 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg lg:text-2xl hover:bg-amber-600/40 transition animate-fade-in"
           >
             Continue →
           </button>

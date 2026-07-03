@@ -6,6 +6,7 @@ import { getDailyChallenge } from "@/data/dailyChallenge";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import { validateDeck } from "@/game/deckRules";
+import DailyReflection from "@/components/game/DailyReflection";
 import * as Sound from "@/game/soundManager";
 
 export default function DailyChallenge() {
@@ -190,6 +191,12 @@ export default function DailyChallenge() {
             <p className="text-emerald-300/80 text-xs lg:text-sm">✓ Completed Today — Replay to beat your best score!</p>
           </div>
         )}
+
+        <DailyReflection
+          onStartBattle={handleStart}
+          buttonText={hasActiveDaily ? "Continue Daily Battle" : "Begin Daily Battle"}
+          loading={loading}
+        />
 
         <button
           onClick={handleStart}

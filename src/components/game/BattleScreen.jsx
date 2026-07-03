@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
@@ -7,6 +7,7 @@ import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
+import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
@@ -70,6 +71,9 @@ export default function BattleScreen() {
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
   const [intentExplain, setIntentExplain] = useState(null);
+  const [endTurnConfirm, setEndTurnConfirm] = useState(null);
+  const [undoData, setUndoData] = useState(null);
+  const undoTimeoutRef = useRef(null);
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -105,6 +109,13 @@ export default function BattleScreen() {
 
   // Desktop: expand combat log by default for readability
   useEffect(() => { setShowLog(isDesktop); }, [isDesktop]);
+
+  // Cleanup undo timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+    };
+  }, []);
 
   const handleTutorialComplete = () => {
     setShowTutorial(false);
@@ -195,12 +206,76 @@ export default function BattleScreen() {
     setSelectedCard(prev => prev === idx ? null : idx);
   };
 
-  const handleEndTurn = () => {
+  const handleEndTurnClick = () => {
+    if (animating || battleState.turn !== "player" || battleEnd) return;
+    Sound.sfx.click();
+
+    const gLevel = profile.settings.guidanceLevel || "normal";
+    const isEasyOrGuided = profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips;
+    const isHardOrExpert = profile.difficulty === "hard" || gLevel === "expert";
+
+    // Warning 1: card is selected (all modes)
+    if (selectedCard !== null) {
+      setEndTurnConfirm({ type: "selected" });
+      return;
+    }
+
+    // Warning 2: playable cards while enemy about to attack (Easy/Guided only)
+    if (isEasyOrGuided && !isHardOrExpert) {
+      const enemyAttacking = (battleState.enemyHand || []).some(a => a.damage > 0);
+      const hasPlayable = battleState.hand.some(cardId => {
+        const c = getCardById(cardId);
+        if (!c) return false;
+        const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= c.cost;
+        const blocked = battleState.blockScripture && c.type === "scripture";
+        return playable && !blocked;
+      });
+      if (enemyAttacking && hasPlayable) {
+        setEndTurnConfirm({ type: "playable" });
+        return;
+      }
+    }
+
+    performEndTurn();
+  };
+
+  const performEndTurn = (opts = {}) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
     const enemyAnim = profile.settings.enemyAnimation || "step";
+    const gLevel = profile.settings.guidanceLevel || "normal";
+    const canUndo = (profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips) && enemyAnim !== "skip";
+
+    const preEndSnapshot = battleState;
     const endedState = endPlayerTurn(battleState);
     setBattleState(endedState);
 
+    // Undo window for Easy/Guided before enemy actions begin
+    if (canUndo && !opts.bypassUndo) {
+      setUndoData({ snapshot: preEndSnapshot, endedState, enemyAnim });
+      undoTimeoutRef.current = setTimeout(() => {
+        setUndoData(null);
+        undoTimeoutRef.current = null;
+        runEnemyTurn(endedState, enemyAnim);
+      }, 2000);
+      return;
+    }
+
+    runEnemyTurn(endedState, enemyAnim);
+  };
+
+  const handleUndoEndTurn = () => {
+    if (undoTimeoutRef.current) {
+      clearTimeout(undoTimeoutRef.current);
+      undoTimeoutRef.current = null;
+    }
+    if (undoData?.snapshot) {
+      setBattleState(undoData.snapshot);
+    }
+    setUndoData(null);
+    Sound.sfx.click();
+  };
+
+  const runEnemyTurn = (endedState, enemyAnim) => {
     // Skip mode — instant resolve
     if (enemyAnim === "skip") {
       const enemyState = enemyTurn(endedState);
@@ -657,10 +732,19 @@ export default function BattleScreen() {
             <span className="text-yellow-200 text-sm lg:text-xl font-bold">{battleState.energy}</span>
             <span className="text-yellow-100/50 text-[9px] lg:text-xs">/{battleState.maxEnergy}</span>
           </div>
+          {selectedCard !== null && (
+            <span className="hidden lg:block text-amber-300/50 text-[10px] italic mr-2 max-w-[120px] text-right leading-tight">
+              Confirm your card or cancel before ending your turn.
+            </span>
+          )}
           <button
-            onClick={handleEndTurn}
+            onClick={handleEndTurnClick}
             disabled={isEnemyTurn}
-            className="px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-xs lg:text-base hover:bg-amber-600/40 transition disabled:opacity-40 whitespace-nowrap"
+            className={`px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 font-bold text-xs lg:text-base transition whitespace-nowrap ${
+              selectedCard !== null
+                ? "border-amber-500/20 bg-amber-900/10 text-amber-100/40 hover:bg-amber-900/20"
+                : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
+            } disabled:opacity-40`}
           >
             End Turn →
           </button>
@@ -773,6 +857,34 @@ export default function BattleScreen() {
               {getIntentExplanation(intentExplain, enemy)}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* End Turn confirmation */}
+      {endTurnConfirm && (
+        <EndTurnConfirmModal
+          type={endTurnConfirm.type}
+          onPlaySelected={() => {
+            setEndTurnConfirm(null);
+            if (selectedCard !== null) handlePlayCard(selectedCard);
+          }}
+          onEndTurn={() => {
+            setEndTurnConfirm(null);
+            performEndTurn();
+          }}
+          onCancel={() => { setEndTurnConfirm(null); Sound.sfx.click(); }}
+        />
+      )}
+
+      {/* Undo End Turn (Easy/Guided) */}
+      {undoData && (
+        <div className="fixed inset-x-0 bottom-20 lg:bottom-24 z-40 flex justify-center px-4 pointer-events-none">
+          <button
+            onClick={handleUndoEndTurn}
+            className="pointer-events-auto px-6 py-2.5 rounded-full border-2 border-sky-400/60 bg-sky-900/40 backdrop-blur-sm text-sky-100 font-bold text-sm hover:bg-sky-800/50 transition animate-fade-in shadow-lg shadow-sky-500/20"
+          >
+            ↩ Undo End Turn
+          </button>
         </div>
       )}
 

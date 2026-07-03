@@ -222,16 +222,21 @@ export default function BattleScreen() {
           {enemy.isBoss && <span className="text-red-400 text-sm font-bold tracking-widest">⚠ BOSS ⚠</span>}
         </div>
 
-        {/* Enemy Intent — Telegraphing */}
-        {intent && !battleEnd && (
-          <div className="mb-3 px-4 py-2 rounded-lg border-2 border-red-500/40 bg-red-900/30 flex items-center gap-2 animate-fade-in">
-            <span className="text-xl">{intent.icon}</span>
-            <div className="text-left">
-              <p className="text-red-200 text-xs font-bold">Next Attack:</p>
-              <p className="text-red-100 text-sm">{intent.name}{intent.damage ? ` — ${intent.damage} DMG` : intent.effect === "block" ? " — Block" : intent.effect === "heal_self" ? " — Heal" : ""}</p>
-              {intent.description && (
-                <p className="text-red-300/60 text-[10px] italic">{intent.description}</p>
-              )}
+        {/* Enemy Intent — Telegraphing all moves */}
+        {battleState.enemyHand?.length > 0 && !battleEnd && (
+          <div className="mb-3 px-3 py-2 rounded-lg border-2 border-red-500/40 bg-red-900/30 flex flex-col items-center gap-1 animate-fade-in max-w-md">
+            <p className="text-red-200 text-[10px] font-bold uppercase tracking-wide">Enemy's Plan</p>
+            <div className="flex items-center gap-1 flex-wrap justify-center">
+              {battleState.enemyHand.map((action, i) => (
+                <React.Fragment key={i}>
+                  <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-950/40">
+                    <span className="text-sm">{action.icon}</span>
+                    <span className="text-red-100 text-[11px] font-medium">{action.name}</span>
+                    <span className="text-red-300/60 text-[10px]">{action.damage ? `${action.damage}dmg` : action.effect === "block" ? "block" : action.effect === "heal_self" ? "heal" : ""}</span>
+                  </div>
+                  {i < battleState.enemyHand.length - 1 && <span className="text-red-300/30 text-xs">→</span>}
+                </React.Fragment>
+              ))}
             </div>
           </div>
         )}
@@ -276,8 +281,8 @@ export default function BattleScreen() {
       </div>
 
       {/* Player stats */}
-      <div className="px-6 py-3 border-t border-amber-500/10 flex items-center justify-between" style={{ background: "rgba(15,10,5,0.6)" }}>
-        <div className="flex items-center gap-4">
+      <div className="px-4 py-3 border-t border-amber-500/10 flex flex-wrap items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
+        <div className="flex items-center gap-3">
           <div
             className={`text-3xl transition-transform ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
           >
@@ -289,7 +294,7 @@ export default function BattleScreen() {
             )}
             <div className="flex items-center gap-2">
               <span className="text-2xl">❤️</span>
-              <div className="w-32 h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
+              <div className="w-24 h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
               </div>
               <span className="text-emerald-200 text-sm font-bold">{battleState.playerHp}/{battleState.maxPlayerHp}</span>
@@ -309,25 +314,25 @@ export default function BattleScreen() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {hero.id === "noah" && !covenantShieldUsed && (
             <button
               onClick={handleCovenantShield}
               disabled={isEnemyTurn}
-              className="px-3 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 text-xs font-bold hover:bg-amber-500/20 transition disabled:opacity-40"
+              className="px-2 py-1.5 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 text-[11px] font-bold hover:bg-amber-500/20 transition disabled:opacity-40"
             >
               🌈 Shield
             </button>
           )}
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">✨</span>
-            <span className="text-yellow-200 text-xl font-bold">{battleState.energy}</span>
-            <span className="text-yellow-100/50 text-xs">/ {battleState.maxEnergy}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-xl">✨</span>
+            <span className="text-yellow-200 text-lg font-bold">{battleState.energy}</span>
+            <span className="text-yellow-100/50 text-[10px]">/ {battleState.maxEnergy}</span>
           </div>
           <button
             onClick={handleEndTurn}
             disabled={isEnemyTurn}
-            className="px-5 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition disabled:opacity-40"
+            className="px-4 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-sm hover:bg-amber-600/40 transition disabled:opacity-40"
           >
             End Turn →
           </button>

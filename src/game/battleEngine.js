@@ -216,7 +216,7 @@ export function enemyTurn(state) {
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
-  let enemyBlock = 0; // Reset at start of enemy turn — already absorbed player attacks
+  let enemyBlock = state.enemyBlock || 0; // Persists across turns
   let thorns = state.thorns;
   let skipDraw = state.skipDraw;
   let blockScripture = false;
@@ -238,10 +238,10 @@ export function enemyTurn(state) {
       enemyIntent: newIntent,
       enemyHand: newHand,
       enemyDeck: newDeck,
-      enemyBlock: 0,
+      enemyBlock: state.enemyBlock || 0,
       enemyEnergy: state.enemyMaxEnergy || 3,
       playerHp,
-      playerBlock: 0,
+      playerBlock: state.playerBlock,
       enemy: { ...state.enemy, currentHp: enemyHp },
       log,
       turn: "player",
@@ -323,9 +323,6 @@ export function enemyTurn(state) {
 
     discard.push(action);
   }
-
-  // Player block resets at end of enemy turn
-  playerBlock = 0;
 
   // DOT damage to player at start of their turn
   if (dots > 0) {

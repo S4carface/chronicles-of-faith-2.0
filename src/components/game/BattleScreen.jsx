@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd } from "@/game/battleEngine";
+import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps } from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
-import { ENEMY_ART, HERO_ART } from "@/data/art";
+import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+
+function getActionType(action) {
+  if (!action) return "attack";
+  if (action.effect === "block") return "block";
+  if (["skip_draw", "block_scripture", "dot", "drain", "discard", "random_card"].includes(action.effect)) return "curse";
+  if (action.damage > 0) return "attack";
+  if (action.effect === "heal_self") return "heal";
+  return "attack";
+}
+
+const INTENT_TYPE_MAP = {
+  attack: { art: INTENT_ART.attack, label: "Strike", color: "text-red-300", border: "border-red-500/40" },
+  block: { art: INTENT_ART.block, label: "Shield", color: "text-blue-300", border: "border-blue-500/40" },
+  heal: { art: INTENT_ART.heal, label: "Heal", color: "text-emerald-300", border: "border-emerald-500/40" },
+  curse: { art: INTENT_ART.curse, label: "Curse", color: "text-purple-300", border: "border-purple-500/40" },
+};
 
 export default function BattleScreen() {
   const { run, updateRun, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
@@ -32,6 +49,8 @@ export default function BattleScreen() {
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0);
+  const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
+  const [floatingText, setFloatingText] = useState(null);
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -78,14 +97,26 @@ export default function BattleScreen() {
     const newState = playCardEngine(battleState, handIndex, card);
     setBattleState(newState);
 
-    // Trigger animations
-    if (card.type === "attack" || card.type === "miracle") {
+    // Type-specific sounds and animations
+    if (card.type === "attack") {
       Sound.sfx.attack();
+      setPlayerAttackAnim(true);
+      setTimeout(() => {
+        Sound.sfx.hit();
+        setEnemyShake(true);
+        setEnemyFlash(true);
+      }, 250);
+      setTimeout(() => {
+        setPlayerAttackAnim(false);
+        setEnemyShake(false);
+        setEnemyFlash(false);
+      }, 600);
+    } else if (card.type === "miracle") {
+      Sound.sfx.miracle();
       setPlayerAttackAnim(true);
       setTimeout(() => {
         setEnemyShake(true);
         setEnemyFlash(true);
-        Sound.sfx.enemyAttack();
       }, 250);
       setTimeout(() => {
         setPlayerAttackAnim(false);
@@ -93,11 +124,11 @@ export default function BattleScreen() {
         setEnemyFlash(false);
       }, 600);
     } else if (card.type === "scripture") {
-      Sound.sfx.heal();
+      Sound.sfx.scripture();
       setPlayerFlash(true);
       setTimeout(() => setPlayerFlash(false), 500);
     } else if (card.type === "defense") {
-      Sound.sfx.shield();
+      Sound.sfx.defense();
     }
 
     const end = checkBattleEnd(newState);
@@ -116,37 +147,181 @@ export default function BattleScreen() {
 
   const handleEndTurn = () => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
-    setAnimating(true);
+    const enemyAnim = profile.settings.enemyAnimation || "step";
     const endedState = endPlayerTurn(battleState);
     setBattleState(endedState);
 
-    // Enemy wind-up phase
+    // Skip mode — instant resolve
+    if (enemyAnim === "skip") {
+      const enemyState = enemyTurn(endedState);
+      setBattleState(enemyState);
+      const end = checkBattleEnd(enemyState);
+      if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
+      return;
+    }
+
+    // Fast mode — single animation
+    if (enemyAnim === "fast") {
+      setAnimating(true);
+      setTimeout(() => {
+        Sound.sfx.enemyWindUp();
+        setEnemyAttackAnim(true);
+      }, 300);
+      setTimeout(() => {
+        const enemyState = enemyTurn(endedState);
+        setEnemyAttackAnim(false);
+        setPlayerShake(true);
+        setPlayerFlash(true);
+        Sound.sfx.enemyAttack();
+        setBattleState(enemyState);
+        setTimeout(() => {
+          setPlayerShake(false);
+          setPlayerFlash(false);
+        }, 400);
+        const end = checkBattleEnd(enemyState);
+        if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
+        setAnimating(false);
+      }, 800);
+      return;
+    }
+
+    // Step-by-step mode (default)
+    setAnimating(true);
+    const steps = getEnemyTurnSteps(endedState);
+    let stepIdx = 0;
+
+    const clearTransient = () => {
+      setFloatingText(null);
+      setPlayerShake(false);
+      setPlayerFlash(false);
+      setEnemyFlash(false);
+      setEnemyAttackAnim(false);
+    };
+
+    const resolveNextStep = () => {
+      if (stepIdx >= steps.length) {
+        clearTransient();
+        setAnimating(false);
+        setCurrentIntentIdx(-1);
+        return;
+      }
+
+      const step = steps[stepIdx];
+
+      // Shield step — Covenant Shield negates entire turn
+      if (step.type === "shield") {
+        Sound.sfx.divine();
+        setFloatingText({ text: "Covenant Shield!", color: "#fbbf24", pos: "bottom" });
+        setBattleState(step.state);
+        setTimeout(() => {
+          clearTransient();
+          stepIdx++;
+          resolveNextStep();
+        }, 1200);
+        return;
+      }
+
+      // Action step — enemy plays one action
+      if (step.type === "action") {
+        setCurrentIntentIdx(step.handIndex);
+        Sound.sfx.enemyWindUp();
+        setEnemyAttackAnim(true);
+
+        setTimeout(() => {
+          setEnemyAttackAnim(false);
+          const actionType = getActionType(step.action);
+
+          if (actionType === "attack") {
+            Sound.sfx.enemyAttack();
+            setPlayerShake(true);
+            setPlayerFlash(true);
+            setFloatingText({ text: `-${step.action.damage}`, color: "#f87171", pos: "bottom" });
+          } else if (actionType === "block") {
+            Sound.sfx.enemyDefend();
+            setEnemyFlash(true);
+            setFloatingText({ text: `+${step.action.blockValue || 5} Block`, color: "#60a5fa", pos: "top" });
+          } else if (actionType === "heal") {
+            Sound.sfx.enemyHeal();
+            setEnemyFlash(true);
+            setFloatingText({ text: `+${enemy.isBoss ? 6 : 4} HP`, color: "#34d399", pos: "top" });
+          } else if (actionType === "curse") {
+            Sound.sfx.enemyCurse();
+            setPlayerFlash(true);
+            setFloatingText({ text: step.action.effect === "dot" ? "Cursed!" : "Hex!", color: "#c084fc", pos: "bottom" });
+          }
+
+          setBattleState(step.state);
+
+          // Check for defeat
+          if (step.state.playerHp <= 0) {
+            setTimeout(() => {
+              clearTransient();
+              setBattleEnd("defeat");
+              handleBattleEnd("defeat", step.state);
+              setAnimating(false);
+              setCurrentIntentIdx(-1);
+            }, 600);
+            return;
+          }
+
+          // Check for victory (thorns kill enemy)
+          if (step.state.enemy.currentHp <= 0) {
+            setTimeout(() => {
+              clearTransient();
+              setBattleEnd("victory");
+              handleBattleEnd("victory", step.state);
+              setAnimating(false);
+              setCurrentIntentIdx(-1);
+            }, 600);
+            return;
+          }
+
+          setTimeout(() => {
+            clearTransient();
+            stepIdx++;
+            resolveNextStep();
+          }, 700);
+        }, 400);
+        return;
+      }
+
+      // DOT step — curse damage
+      if (step.type === "dot") {
+        Sound.sfx.enemyCurse();
+        setPlayerShake(true);
+        setFloatingText({ text: "-2 Curse", color: "#c084fc", pos: "bottom" });
+        setBattleState(step.state);
+        setTimeout(() => {
+          clearTransient();
+          if (step.state.playerHp <= 0) {
+            setBattleEnd("defeat");
+            handleBattleEnd("defeat", step.state);
+            setAnimating(false);
+            setCurrentIntentIdx(-1);
+            return;
+          }
+          stepIdx++;
+          resolveNextStep();
+        }, 700);
+        return;
+      }
+
+      // End step — draw new hand, return to player
+      if (step.type === "end") {
+        setBattleState(step.state);
+        setCurrentIntentIdx(-1);
+        setAnimating(false);
+        const end = checkBattleEnd(step.state);
+        if (end) { setBattleEnd(end); handleBattleEnd(end, step.state); }
+        return;
+      }
+    };
+
+    // Start with wind-up
     setTimeout(() => {
       Sound.sfx.enemyWindUp();
-      setEnemyAttackAnim(true);
+      resolveNextStep();
     }, 400);
-
-    // Enemy strikes
-    setTimeout(() => {
-      const enemyState = enemyTurn(endedState);
-      setEnemyAttackAnim(false);
-      setPlayerShake(true);
-      setPlayerFlash(true);
-      Sound.sfx.enemyAttack();
-      setBattleState(enemyState);
-
-      setTimeout(() => {
-        setPlayerShake(false);
-        setPlayerFlash(false);
-      }, 500);
-
-      const end = checkBattleEnd(enemyState);
-      if (end) {
-        setBattleEnd(end);
-        handleBattleEnd(end, enemyState);
-      }
-      setAnimating(false);
-    }, 1100);
   };
 
   const handleCovenantShield = () => {
@@ -211,7 +386,6 @@ export default function BattleScreen() {
 
   if (!battleState) return <div className="min-h-screen flex items-center justify-center text-amber-200">Loading battle...</div>;
 
-  const intent = battleState.enemyIntent;
   const isEnemyTurn = battleState.turn === "enemy" || animating;
   const enemyArt = ENEMY_ART[enemy.id];
   const heroArt = HERO_ART[hero.id];
@@ -224,31 +398,42 @@ export default function BattleScreen() {
           onClick={() => { setShowPause(true); Sound.sfx.click(); }}
           className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
         >
-          ⏸
+          <Pause className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Enemy area — compressed */}
+      {/* Enemy area */}
       <div className="flex-shrink-0 flex flex-col items-center px-3 pb-1">
         <div className="text-center mb-1">
           <h2 className="text-lg font-serif text-red-200 leading-tight">{enemy.name}</h2>
-          {enemy.isBoss && <span className="text-red-400 text-[10px] font-bold tracking-widest">⚠ BOSS ⚠</span>}
+          {enemy.isBoss && (
+            <span className="inline-block text-red-400 text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-full border border-red-500/30 bg-red-900/30 mt-0.5">BOSS</span>
+          )}
         </div>
 
-        {/* Enemy Intent — compact single row */}
+        {/* Enemy Intent — compact strip with painted icons */}
         {battleState.enemyHand?.length > 0 && !battleEnd && (
-          <div className="mb-1 px-2 py-1 rounded-lg border border-red-500/40 bg-red-900/30 flex items-center gap-1 justify-center flex-wrap max-w-[95%]">
-            <span className="text-red-200 text-[9px] font-bold uppercase tracking-wide mr-1">Plan:</span>
-            {battleState.enemyHand.map((action, i) => (
-              <React.Fragment key={i}>
-                <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-red-950/40">
-                  <span className="text-xs">{action.icon}</span>
-                  <span className="text-red-100 text-[10px] font-medium">{action.name}</span>
-                  <span className="text-red-300/60 text-[9px]">{action.damage ? `${action.damage}dmg` : action.effect === "block" ? "🛡" : action.effect === "heal_self" ? "✚" : ""}</span>
-                </span>
-                {i < battleState.enemyHand.length - 1 && <span className="text-red-300/30 text-[9px]">→</span>}
-              </React.Fragment>
-            ))}
+          <div className="mb-1 flex items-center gap-1 justify-center flex-wrap max-w-[95%]">
+            {battleState.enemyHand.map((action, i) => {
+              const actionType = getActionType(action);
+              const intentInfo = INTENT_TYPE_MAP[actionType];
+              const isCurrent = currentIntentIdx === i;
+              const isResolved = currentIntentIdx > i;
+              return (
+                <React.Fragment key={i}>
+                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md border transition-all duration-200 ${
+                    isCurrent ? `${intentInfo.border} bg-amber-500/20 scale-110 shadow-md shadow-amber-400/20` :
+                    isResolved ? "border-slate-700/20 opacity-25" :
+                    `${intentInfo.border} bg-slate-900/40`
+                  }`}>
+                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm" />
+                    <span className={`${intentInfo.color} text-[9px] font-medium`}>{action.name}</span>
+                    {action.damage ? <span className="text-red-300/70 text-[8px] font-bold">{action.damage}</span> : null}
+                  </div>
+                  {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
 
@@ -276,20 +461,25 @@ export default function BattleScreen() {
           <div className="flex items-center justify-center gap-2 mt-0.5">
             <p className="text-red-200 text-[11px]">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
             {battleState.enemyBlock > 0 && (
-              <p className="text-blue-300 text-[11px]">🛡️{battleState.enemyBlock}</p>
+              <span className="text-blue-300 text-[11px] flex items-center gap-0.5">
+                <Shield className="w-3 h-3 inline" />{battleState.enemyBlock}
+              </span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Combat Log — collapsed, one latest message */}
+      {/* Combat Log */}
       <div className="flex-shrink-0 px-3 py-1">
         <button
           onClick={() => setShowLog(!showLog)}
           className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] uppercase tracking-wide hover:bg-slate-900/70 transition"
         >
-          <span className="truncate">📜 {battleState.log[battleState.log.length - 1] || "Battle log"}</span>
-          <span className="flex-shrink-0 ml-1">{showLog ? "▲" : "▼"}</span>
+          <span className="truncate flex items-center gap-1">
+            <span className="text-amber-300/40">Log:</span>
+            {battleState.log[battleState.log.length - 1] || "Battle log"}
+          </span>
+          {showLog ? <ChevronUp className="w-3 h-3 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 flex-shrink-0" />}
         </button>
         {showLog && (
           <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 mt-1 max-h-16 overflow-y-auto">
@@ -301,6 +491,22 @@ export default function BattleScreen() {
           </div>
         )}
       </div>
+
+      {/* Floating combat text */}
+      {floatingText && (
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
+          <span
+            className="text-4xl font-serif font-bold animate-fade-in"
+            style={{
+              color: floatingText.color,
+              textShadow: `0 0 20px ${floatingText.color}`,
+              transform: floatingText.pos === "top" ? "translateY(-150px)" : "translateY(100px)",
+            }}
+          >
+            {floatingText.text}
+          </span>
+        </div>
+      )}
 
       {/* Player stats — compact single row */}
       <div className="flex-shrink-0 px-3 py-1.5 border-t border-amber-500/10 flex items-center justify-between gap-2" style={{ background: "rgba(15,10,5,0.6)" }}>
@@ -316,7 +522,7 @@ export default function BattleScreen() {
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">❤️</span>
+              <Heart className="w-3 h-3 text-red-400 flex-shrink-0" />
               <div className="w-16 h-3 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
               </div>
@@ -324,32 +530,39 @@ export default function BattleScreen() {
             </div>
             <div className="flex items-center gap-2 mt-0.5 text-[10px]">
               {battleState.playerBlock > 0 && (
-                <span className="text-blue-300">🛡️{battleState.playerBlock}</span>
+                <span className="text-blue-300 flex items-center gap-0.5">
+                  <Shield className="w-3 h-3 inline" />{battleState.playerBlock}
+                </span>
               )}
               {battleState.thorns > 0 && (
-                <span className="text-orange-300">🗡️{battleState.thorns}</span>
+                <span className="text-orange-300 flex items-center gap-0.5">
+                  <SwordsIcon className="w-3 h-3 inline" />{battleState.thorns}
+                </span>
               )}
               {battleState.dots > 0 && (
-                <span className="text-purple-300">☠️{battleState.dots}</span>
+                <span className="text-purple-300 flex items-center gap-0.5">
+                  <Skull className="w-3 h-3 inline" />{battleState.dots}
+                </span>
               )}
-              <span className="text-amber-100/50">🃏{battleState.deck.length} 🗑{battleState.discard.length}</span>
+              <span className="text-amber-100/40">Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
             </div>
           </div>
         </div>
 
-        {/* Faith + End Turn together */}
+        {/* Faith + End Turn */}
         <div className="flex items-center gap-2 flex-shrink-0">
           {hero.id === "noah" && !covenantShieldUsed && (
             <button
               onClick={handleCovenantShield}
               disabled={isEnemyTurn}
-              className="px-2 py-1 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 text-[10px] font-bold hover:bg-amber-500/20 transition disabled:opacity-40"
+              className="px-2 py-1 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition disabled:opacity-40"
+              title="Covenant Shield"
             >
-              🌈
+              <Shield className="w-3 h-3" />
             </button>
           )}
           <div className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-amber-900/20 border border-amber-400/30">
-            <span className="text-sm">✨</span>
+            <Sparkles className="w-3 h-3 text-yellow-200" />
             <span className="text-yellow-200 text-sm font-bold">{battleState.energy}</span>
             <span className="text-yellow-100/50 text-[9px]">/{battleState.maxEnergy}</span>
           </div>
@@ -363,9 +576,9 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Bottom: hand */}
+      {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div className="flex-1 flex items-end overflow-hidden px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] min-h-0">
+        <div className={`flex-1 flex items-end overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}>
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}
@@ -392,7 +605,7 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Selected card preview — fixed overlay above hand */}
+      {/* Selected card preview — compact bar, hand stays visible */}
       {selectedCard !== null && battleState.hand[selectedCard] && (() => {
         const selCard = getCardById(battleState.hand[selectedCard]);
         if (!selCard) return null;
@@ -409,13 +622,15 @@ export default function BattleScreen() {
         );
       })()}
 
-      {/* Battle end overlay — wait for click */}
+      {/* Battle end overlay */}
       {battleEnd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
           <div className="text-center">
             {battleEnd === "victory" ? (
               <>
-                <div className="text-8xl mb-4 animate-bounce">⚔️</div>
+                <div className="mb-4 flex justify-center">
+                  <img src={VICTORY_ART.crest} alt="Victory" className="w-20 h-20 object-cover rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 animate-bounce" />
+                </div>
                 <h2 className="text-5xl font-serif text-amber-200 mb-6">Victory!</h2>
                 <button
                   onClick={() => setPhase("reward")}
@@ -426,7 +641,9 @@ export default function BattleScreen() {
               </>
             ) : (
               <>
-                <div className="text-8xl mb-4 opacity-50">💀</div>
+                <div className="mb-4 flex justify-center">
+                  <Skull className="w-20 h-20 text-red-400/50" />
+                </div>
                 <h2 className="text-5xl font-serif text-red-300 mb-6">Defeated</h2>
                 <button
                   onClick={() => setPhase("defeat")}
@@ -465,7 +682,10 @@ export default function BattleScreen() {
                 onClick={toggleMusic}
                 className="w-full flex items-center justify-between p-3 rounded-lg border border-amber-500/20 bg-slate-900/40"
               >
-                <span className="text-amber-100">🎵 Music</span>
+                <span className="text-amber-100 flex items-center gap-2">
+                  <Volume2 className="w-4 h-4 text-amber-300/70" />
+                  Music
+                </span>
                 <span className={profile.settings.music ? "text-emerald-300" : "text-slate-500"}>
                   {profile.settings.music ? "ON" : "OFF"}
                 </span>
@@ -474,7 +694,10 @@ export default function BattleScreen() {
                 onClick={toggleSfx}
                 className="w-full flex items-center justify-between p-3 rounded-lg border border-amber-500/20 bg-slate-900/40"
               >
-                <span className="text-amber-100">🔊 Sound Effects</span>
+                <span className="text-amber-100 flex items-center gap-2">
+                  <Volume2 className="w-4 h-4 text-amber-300/70" />
+                  Sound Effects
+                </span>
                 <span className={profile.settings.sfx ? "text-emerald-300" : "text-slate-500"}>
                   {profile.settings.sfx ? "ON" : "OFF"}
                 </span>

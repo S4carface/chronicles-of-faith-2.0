@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { Volume2, VolumeX, RotateCcw } from "lucide-react";
+import * as Sound from "@/game/soundManager";
+import { useGame } from "@/game/GameContext";
+import { HOME_ART } from "@/data/art";
 
 export default function StoryNarration({ text, onComplete, skipable = true }) {
+  const { profile } = useGame();
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
+  const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
+  const narratedRef = useRef(false);
 
   useEffect(() => {
     setDisplayed("");
@@ -17,10 +24,21 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
         setDone(true);
       }
     }, 35);
-    return () => clearInterval(interval);
+
+    // Start voice narration
+    if (narrationOn && !narratedRef.current) {
+      narratedRef.current = true;
+      Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100);
+    }
+
+    return () => {
+      clearInterval(interval);
+      Sound.stopNarration();
+    };
   }, [text]);
 
   const handleContinue = () => {
+    Sound.stopNarration();
     if (onComplete) onComplete();
   };
 
@@ -28,6 +46,20 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
     if (!skipable) return;
     setDisplayed(text);
     setDone(true);
+  };
+
+  const replayNarration = () => {
+    Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100);
+  };
+
+  const toggleNarration = () => {
+    if (narrationOn) {
+      Sound.stopNarration();
+      setNarrationOn(false);
+    } else {
+      setNarrationOn(true);
+      replayNarration();
+    }
   };
 
   return (
@@ -53,8 +85,29 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
           />
         ))}
       </div>
+
+      {/* Narration controls */}
+      <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 flex gap-2 z-10">
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleNarration(); }}
+          className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+        >
+          {narrationOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        </button>
+        {narrationOn && (
+          <button
+            onClick={(e) => { e.stopPropagation(); replayNarration(); }}
+            className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       <div className="relative max-w-2xl px-8 text-center">
-        <div className="text-6xl mb-6 opacity-80">📖</div>
+        <div className="flex justify-center mb-6">
+          <img src={HOME_ART.cross} alt="" className="w-14 h-14 object-cover rounded-full border-2 border-amber-400/30 opacity-80 animate-icon-float" />
+        </div>
         <p className="text-2xl md:text-3xl font-serif text-amber-100 leading-relaxed min-h-[6rem]">
           {displayed}
           {!done && <span className="animate-pulse">▊</span>}

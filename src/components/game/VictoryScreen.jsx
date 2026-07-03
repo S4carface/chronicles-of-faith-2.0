@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import { base44 } from "@/api/base44Client";
 import * as Sound from "@/game/soundManager";
+import { VICTORY_ART } from "@/data/art";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
@@ -29,15 +30,12 @@ export default function VictoryScreen() {
 
     if (finalScore >= 500) unlockAchievement("low_score_champion");
 
-    // Save ALL cards collected during the run to the collection
     addCardsToCollection(run.deck);
 
-    // Save gold earned during the run to profile
     if (run.gold > 0) {
       saveProfile({ gold: (profile.gold || 0) + run.gold });
     }
 
-    // Track daily challenge completion
     if (run.isDaily) {
       const todayStr = new Date().toISOString().slice(0, 10);
       const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -79,17 +77,23 @@ export default function VictoryScreen() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.15) 0%, rgba(26,39,68,0.98) 50%, rgba(8,12,24,1) 100%)" }}>
       {/* Celebration particles */}
       {Array.from({ length: 40 }).map((_, i) => (
-        <div key={i} className="absolute pointer-events-none" style={{
+        <div key={i} className="absolute pointer-events-none rounded-full" style={{
+          width: `${3 + Math.random() * 4}px`,
+          height: `${3 + Math.random() * 4}px`,
           left: `${Math.random() * 100}%`,
           top: `${Math.random() * 100}%`,
-          fontSize: `${10 + Math.random() * 20}px`,
+          background: `rgba(201,168,76,${0.3 + Math.random() * 0.4})`,
+          boxShadow: `0 0 ${4 + Math.random() * 6}px rgba(201,168,76,0.4)`,
           animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
           animationDelay: `${Math.random() * 3}s`,
-        }}>✨</div>
+        }} />
       ))}
 
       <div className="relative text-center max-w-lg">
-        <div className="text-8xl mb-4">🕊️</div>
+        {/* Victory crest */}
+        <div className="mb-4 flex justify-center">
+          <img src={VICTORY_ART.crest} alt="Victory" className="w-24 h-24 object-cover rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 animate-icon-float" />
+        </div>
         <h1 className="text-5xl font-serif text-amber-200 mb-3">Genesis Complete!</h1>
         <p className="text-amber-100/70 text-lg mb-6 font-serif italic">
           "Thus the heavens and the earth were completed in all their vast array." — Genesis 2:1
@@ -110,7 +114,7 @@ export default function VictoryScreen() {
 
         {/* Lesson Learned */}
         <div className="rounded-xl border-2 border-amber-500/20 p-5 mb-6 text-center" style={{ background: "rgba(15,26,48,0.6)" }}>
-          <h3 className="text-lg font-serif text-amber-300 mb-3">📖 Lesson Learned</h3>
+          <h3 className="text-lg font-serif text-amber-300 mb-3">Lesson Learned</h3>
           <p className="text-amber-100/80 text-sm mb-3 leading-relaxed">
             From Creation to the Flood, from Abraham's faith to Joseph's forgiveness,
             Genesis reveals God's faithfulness through every trial and promise.
@@ -125,13 +129,13 @@ export default function VictoryScreen() {
 
         {run.hero.id !== "noah" && (
           <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 p-4 mb-6">
-            <p className="text-amber-200 font-serif">🌈 Noah Unlocked!</p>
+            <p className="text-amber-200 font-serif">Noah Unlocked!</p>
             <p className="text-amber-100/50 text-xs mt-1">Play as Noah in your next run with the Covenant Shield ability.</p>
           </div>
         )}
 
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-900/15 p-3 mb-6">
-          <p className="text-emerald-300/80 text-sm">🃏 {run.deck.length} cards saved to your collection</p>
+          <p className="text-emerald-300/80 text-sm">{run.deck.length} cards saved to your collection</p>
         </div>
 
         {!submitted ? (
@@ -154,7 +158,7 @@ export default function VictoryScreen() {
             </button>
           </div>
         ) : (
-          <p className="text-emerald-300 text-sm mb-6">✓ Score submitted to the leaderboard!</p>
+          <p className="text-emerald-300 text-sm mb-6">Score submitted to the leaderboard!</p>
         )}
 
         <button

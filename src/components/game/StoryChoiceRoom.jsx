@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
@@ -7,19 +8,41 @@ import { STORY_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function StoryChoiceRoom() {
-  const { run, completeRoom, updateRun } = useGame();
+  const { run, completeRoom, updateRun, profile } = useGame();
   const node = run.currentNode;
   const story = node?.storyChoice;
   const [chosen, setChosen] = useState(null);
   const [resultText, setResultText] = useState("");
+  const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
+  const narratedRef = useRef(false);
 
   useEffect(() => {
-    Sound.playMusic("divine");
+    Sound.playMusic("story");
+    if (narrationOn && !narratedRef.current && story?.narration) {
+      narratedRef.current = true;
+      Sound.speakNarration(story.narration + " " + story.prompt, (profile.settings.narrationVolume ?? 50) / 100);
+    }
+    return () => Sound.stopNarration();
   }, []);
 
   if (!story) return null;
 
+  const replayNarration = () => {
+    Sound.speakNarration(story.narration + " " + story.prompt, (profile.settings.narrationVolume ?? 50) / 100);
+  };
+
+  const toggleNarration = () => {
+    if (narrationOn) {
+      Sound.stopNarration();
+      setNarrationOn(false);
+    } else {
+      setNarrationOn(true);
+      replayNarration();
+    }
+  };
+
   const handleChoose = (choiceKey) => {
+    Sound.stopNarration();
     const choice = choiceKey === "a" ? story.choice_a : story.choice_b;
     Sound.sfx.click();
     setChosen(choiceKey);
@@ -53,6 +76,7 @@ export default function StoryChoiceRoom() {
   };
 
   const handleContinue = () => {
+    Sound.stopNarration();
     Sound.sfx.click();
     const choice = chosen === "a" ? story.choice_a : story.choice_b;
     if (choice.effect.type === "miracle_card") {
@@ -63,7 +87,25 @@ export default function StoryChoiceRoom() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A1A2E 0%, #0A0A15 100%)" }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative" style={{ background: "radial-gradient(ellipse at center, #1A1A2E 0%, #0A0A15 100%)" }}>
+      {/* Narration controls */}
+      <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 flex gap-2 z-10">
+        <button
+          onClick={toggleNarration}
+          className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+        >
+          {narrationOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        </button>
+        {narrationOn && (
+          <button
+            onClick={replayNarration}
+            className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
       <div className="text-center mb-8 max-w-2xl">
         <div className="mb-4 flex justify-center">
           <img src={STORY_ART[story.id] || PLACEHOLDER_ART} alt={story.id} className="w-24 h-24 object-cover rounded-xl border-2 border-amber-400/30" />

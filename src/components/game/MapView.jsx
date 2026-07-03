@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ROOM_LABELS, ROOM_INFO } from "@/data/genesisRooms";
 import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
+import * as Sound from "@/game/soundManager";
 
 export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp }) {
   const [previewNode, setPreviewNode] = useState(null);
   const availableNodes = currentNode ? currentNode.connections : [map[0][0].id];
   const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
+
+  useEffect(() => {
+    Sound.playMusic("map");
+  }, []);
 
   const hpRatio = playerHp && maxHp ? playerHp / maxHp : 1;
   const isLowHp = hpRatio < 0.4;

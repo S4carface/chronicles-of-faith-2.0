@@ -373,3 +373,202 @@ export function checkBattleEnd(state) {
   if (state.playerHp <= 0) return "defeat";
   return null;
 }
+
+// Break enemy turn into individual steps for step-by-step animation
+export function getEnemyTurnSteps(state) {
+  const steps = [];
+  const log = [...state.log];
+  let playerHp = state.playerHp;
+  let playerBlock = state.playerBlock;
+  let enemyHp = state.enemy.currentHp;
+  let enemyBlock = state.enemyBlock || 0;
+  let thorns = state.thorns;
+  let skipDraw = state.skipDraw;
+  let blockScripture = false;
+  let dots = state.dots;
+
+  // Covenant Shield — negate entire turn
+  if (state.shieldActive) {
+    log.push(`Your Covenant Shield negated the enemy's turn!`);
+    let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
+    if (allCards.length === 0) allCards = [...state.enemy.attacks];
+    const newDeck = shuffle(allCards);
+    const newHand = newDeck.splice(0, 3);
+    const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+    if (newIntent) {
+      log.push(`${state.enemy.name} prepares: ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage} DMG)` : ""}`);
+    }
+    const newState = {
+      ...state,
+      enemyIntent: newIntent,
+      enemyHand: newHand,
+      enemyDeck: newDeck,
+      enemyBlock: state.enemyBlock || 0,
+      enemyEnergy: state.enemyMaxEnergy || 3,
+      playerHp,
+      playerBlock: state.playerBlock,
+      enemy: { ...state.enemy, currentHp: enemyHp },
+      log,
+      turn: "player",
+      turnNumber: state.turnNumber + 1,
+      energy: state.maxEnergy,
+      shieldActive: false,
+      thorns: 0,
+    };
+    const drawCount = Math.max(0, 5 - skipDraw);
+    const withDraw = drawCards(newState, drawCount);
+    steps.push({ type: "shield", state: { ...withDraw, skipDraw: 0 } });
+    return steps;
+  }
+
+  // Normal enemy turn — collect intermediate states
+  let energy = state.enemyMaxEnergy || 3;
+  const hand = [...(state.enemyHand || [])];
+  let deck = [...(state.enemyDeck || [])];
+  const discard = [];
+  let handIdx = 0;
+
+  while (energy > 0 && hand.length > 0) {
+    const action = hand.shift();
+    const originalHandIdx = handIdx;
+    handIdx++;
+    const cost = action.cost || 1;
+    if (cost > energy) {
+      discard.push(action);
+      continue;
+    }
+    energy -= cost;
+
+    const stepLog = [...log];
+
+    if (action.damage > 0) {
+      let damage = action.damage;
+      if (playerBlock > 0) {
+        const absorbed = Math.min(playerBlock, damage);
+        playerBlock -= absorbed;
+        damage -= absorbed;
+        if (absorbed > 0) stepLog.push(`Blocked ${absorbed} damage`);
+      }
+      if (damage > 0) {
+        playerHp = Math.max(0, playerHp - damage);
+      }
+      stepLog.push(`${state.enemy.name} used ${action.name} — ${action.damage} damage!`);
+      if (thorns > 0) {
+        enemyHp = Math.max(0, enemyHp - thorns);
+        stepLog.push(`Counter Attack — ${state.enemy.name} took ${thorns} damage!`);
+        thorns = 0;
+      }
+      if (action.effect === "heal_self") {
+        const healAmt = state.enemy.isBoss ? 6 : 4;
+        enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
+        stepLog.push(`${state.enemy.name} healed ${healAmt} HP!`);
+      }
+    } else if (action.effect === "block") {
+      const blockVal = action.blockValue || 5;
+      enemyBlock += blockVal;
+      stepLog.push(`${state.enemy.name} used ${action.name} — gained ${blockVal} Block!`);
+    } else if (action.effect === "heal_self") {
+      const healAmt = state.enemy.isBoss ? 6 : 4;
+      enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
+      stepLog.push(`${state.enemy.name} used ${action.name} — healed ${healAmt} HP!`);
+    } else {
+      stepLog.push(`${state.enemy.name} used ${action.name}!`);
+    }
+
+    if (action.effect === "skip_draw") {
+      skipDraw = 1;
+      stepLog.push(action.description || "Draw 1 fewer card next turn");
+    }
+    if (action.effect === "block_scripture") {
+      blockScripture = true;
+      stepLog.push("Scripture cards are blocked next turn!");
+    }
+    if (action.effect === "dot") {
+      dots = 3;
+      stepLog.push("You are cursed — taking 2 damage per turn!");
+    }
+
+    discard.push(action);
+
+    steps.push({
+      type: "action",
+      action,
+      handIndex: originalHandIdx,
+      state: {
+        ...state,
+        enemyBlock,
+        enemyEnergy: energy,
+        playerHp,
+        playerBlock,
+        enemy: { ...state.enemy, currentHp: enemyHp },
+        log: stepLog,
+        thorns,
+        skipDraw,
+        blockScripture,
+        dots,
+      },
+    });
+
+    log.length = 0;
+    log.push(...stepLog);
+  }
+
+  // DOT step
+  if (dots > 0) {
+    const dotLog = [...log];
+    playerHp = Math.max(0, playerHp - 2);
+    dots -= 1;
+    dotLog.push(`Curse — 2 damage! (${dots} turns left)`);
+
+    steps.push({
+      type: "dot",
+      state: {
+        ...state,
+        playerHp,
+        dots,
+        log: dotLog,
+      },
+    });
+
+    log.length = 0;
+    log.push(...dotLog);
+  }
+
+  // End step — build new hand, draw player cards
+  let allCards = [...deck, ...discard];
+  if (allCards.length === 0) allCards = [...state.enemy.attacks];
+  const newDeck = shuffle(allCards);
+  const newHand = newDeck.splice(0, 3);
+  const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+  const endLog = [...log];
+  if (newIntent) {
+    const label = newIntent.damage ? ` (${newIntent.damage} DMG)` : newIntent.effect === "block" ? " (Block)" : newIntent.effect === "heal_self" ? " (Heal)" : "";
+    endLog.push(`${state.enemy.name} prepares: ${newIntent.name}${label}`);
+  }
+
+  const newState = {
+    ...state,
+    enemyIntent: newIntent,
+    enemyHand: newHand,
+    enemyDeck: newDeck,
+    enemyBlock,
+    enemyEnergy: state.enemyMaxEnergy || 3,
+    playerHp,
+    playerBlock,
+    enemy: { ...state.enemy, currentHp: enemyHp },
+    turn: "player",
+    turnNumber: state.turnNumber + 1,
+    energy: state.maxEnergy,
+    skipDraw,
+    blockScripture,
+    dots,
+    log: endLog,
+    thorns,
+  };
+
+  const drawCount = Math.max(0, 5 - skipDraw);
+  const withDraw = drawCards(newState, drawCount);
+  steps.push({ type: "end", state: { ...withDraw, skipDraw: 0 } });
+
+  return steps;
+}

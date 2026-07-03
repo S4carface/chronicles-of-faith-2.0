@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Skull } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
@@ -27,7 +28,9 @@ export default function DefeatScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, rgba(139,26,26,0.2) 0%, rgba(8,12,24,0.98) 50%)" }}>
       <div className="text-center max-w-lg">
-        <div className="text-8xl mb-4 opacity-60">💀</div>
+        <div className="mb-4 flex justify-center">
+          <Skull className="w-20 h-20 text-red-400/60" />
+        </div>
         <h1 className="text-4xl font-serif text-red-300 mb-4">You Have Fallen</h1>
         <p className="text-amber-100/70 text-lg mb-8 font-serif italic">
           "For all have sinned and fall short of the glory of God." — Romans 3:23
@@ -39,7 +42,7 @@ export default function DefeatScreen() {
         </div>
 
         <div className="rounded-lg border border-emerald-400/20 bg-emerald-900/10 p-3 mb-6">
-          <p className="text-emerald-300/60 text-xs">🃏 Cards found during this run have been saved to your collection</p>
+          <p className="text-emerald-300/60 text-xs">Cards found during this run have been saved to your collection</p>
         </div>
 
         <p className="text-amber-100/60 text-sm mb-6">

@@ -3,7 +3,7 @@ import { useGame } from "@/game/GameContext";
 import { getCardById, CARDS } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { pickN } from "@/game/mapGenerator";
-import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
+import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -70,7 +70,9 @@ export default function RewardScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "linear-gradient(180deg, #1A2744 0%, #0A0F1E 100%)" }}>
       <div className="text-center mb-8">
-        <div className="text-6xl mb-3">🎁</div>
+        <div className="mb-3 flex justify-center">
+          <img src={VICTORY_ART.crest} alt="Reward" className="w-12 h-12 object-cover rounded-full border border-amber-400/40 animate-icon-float" />
+        </div>
         <h2 className="text-3xl font-serif text-amber-200">Choose Your Reward</h2>
         <p className="text-amber-100/50 text-sm mt-2">Tap a card to read its details, then confirm your choice</p>
       </div>

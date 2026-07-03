@@ -21,7 +21,7 @@ function loadProfile() {
     unlockedHeroes: ["adam"],
     collectedCards: [...new Set(HEROES[0].starterDeck)],
     achievements: [],
-    settings: { music: true, sfx: true },
+    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step" },
     dailyStreak: 0,
     lastDailyDate: null,
     playerName: "",
@@ -44,6 +44,9 @@ export function GameProvider({ children }) {
   useEffect(() => {
     Sound.setMusicEnabled(profile.settings.music);
     Sound.setSfxEnabled(profile.settings.sfx);
+    Sound.setMusicVolume((profile.settings.musicVolume ?? 50) / 100);
+    Sound.setSfxVolume((profile.settings.sfxVolume ?? 50) / 100);
+    Sound.setNarrationVolume((profile.settings.narrationVolume ?? 50) / 100);
   }, [profile.settings]);
 
   const saveProfile = useCallback((updates) => {

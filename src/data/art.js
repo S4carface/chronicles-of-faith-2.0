@@ -62,6 +62,17 @@ export const MENU_ART = {
   settings: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/a314c8781_generated_image.png",
 };
 
+export const INTENT_ART = {
+  attack: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/87ab77bf4_generated_image.png",
+  block: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/09ced5a1b_generated_image.png",
+  heal: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/c393c9aea_generated_image.png",
+  curse: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/e78dd71e3_generated_image.png",
+};
+
+export const VICTORY_ART = {
+  crest: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/f57a721c8_generated_image.png",
+};
+
 export const BLESSING_ART = {
   covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",
   manna: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/8a9223f41_generated_image.png",

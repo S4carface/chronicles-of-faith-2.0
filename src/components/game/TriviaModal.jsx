@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useGame } from "@/game/GameContext";
 import { getQuestionForRoomDepth } from "@/data/trivia";
+import { UI_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 export default function TriviaModal({ onComplete }) {
@@ -43,7 +44,9 @@ export default function TriviaModal({ onComplete }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
       <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">📖</div>
+          <div className="flex justify-center mb-3">
+            <img src={UI_ART.trivia} alt="Test Your Knowledge" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/40 shadow-lg shadow-amber-500/20 animate-icon-float" />
+          </div>
           <h2 className="text-2xl font-serif text-amber-200">Test Your Knowledge</h2>
           <div className="flex items-center justify-center gap-2 mt-2">
             <span className="text-amber-100/50 text-sm">Difficulty:</span>

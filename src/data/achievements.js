@@ -1,7 +1,7 @@
 export const ACHIEVEMENTS = [
   { id: "first_victory", name: "In the Beginning", icon: "star", description: "Complete your first Genesis run", verse: "Genesis 1:1" },
   { id: "righteous_run", name: "Righteous Run", icon: "cross", description: "Complete Genesis without losing any HP in a battle", verse: "Proverbs 4:12" },
-  { id: "serpent_slayer", name: "Serpent Slayer", icon: "sword", description: "Defeat the Serpent on your first try", verse: "Genesis 3:15" },
+  { id: "serpent_slayer", name: "Serpent Slayer", icon: "sword", art: "serpent", description: "Defeat the Serpent on your first try", verse: "Genesis 3:15" },
   { id: "scholar", name: "Scholar of the Word", icon: "book-open", description: "Answer 5 trivia questions correctly in one run", verse: "2 Timothy 3:16" },
   { id: "daily_devotion", name: "Daily Devotion", icon: "calendar", description: "Complete 3 daily challenges", verse: "Lamentations 3:23" },
   { id: "collector", name: "Collector of Faith", icon: "layers", description: "Unlock 15 different cards", verse: "Matthew 6:20" },

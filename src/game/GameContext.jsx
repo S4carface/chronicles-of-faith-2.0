@@ -34,7 +34,7 @@ function loadProfile() {
     unlockedHeroes: ["adam"],
     collectedCards: [...new Set(HEROES[0].starterDeck)],
     achievements: [],
-    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step" },
+    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default" },
     dailyStreak: 0,
     lastDailyDate: null,
     playerName: "",

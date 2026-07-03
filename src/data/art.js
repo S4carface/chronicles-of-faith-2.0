@@ -29,6 +29,11 @@ export const CARD_ART = {
   rainbow_covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",
   pillar_fire: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/99823a34d_generated_image.png",
   the_flood: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/085e2c3a0_generated_image.png",
+  rams_horn: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/b67e416bb_generated_image.png",
+  wisdom: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d08c007fb_generated_image.png",
+  parting_waters: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/de5e6fbc4_generated_image.png",
+  living_water: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/5e061de0d_generated_image.png",
+  lions_den: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d7f693bd4_generated_image.png",
 };
 
 export const ROOM_ART = {
@@ -71,6 +76,10 @@ export const INTENT_ART = {
 
 export const VICTORY_ART = {
   crest: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/f57a721c8_generated_image.png",
+};
+
+export const UI_ART = {
+  trivia: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/674a33d82_generated_image.png",
 };
 
 export const BLESSING_ART = {

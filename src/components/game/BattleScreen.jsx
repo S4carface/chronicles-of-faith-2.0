@@ -21,6 +21,20 @@ function getActionType(action) {
   return "attack";
 }
 
+function getIntentAmountText(action, enemy) {
+  const parts = [];
+  if (action.damage > 0) parts.push(`${action.damage} DMG`);
+  if (action.effect === "block") parts.push(`+${action.blockValue || 5} Block`);
+  if (action.effect === "heal_self") parts.push(`+${enemy?.isBoss ? 6 : 4} HP`);
+  if (action.effect === "dot") parts.push("Curse");
+  if (action.effect === "skip_draw") parts.push("−1 Draw");
+  if (action.effect === "block_scripture") parts.push("Silence");
+  if (action.effect === "drain") parts.push("Drain Faith");
+  if (action.effect === "discard") parts.push("Discard");
+  if (action.effect === "random_card") parts.push("Confuse");
+  return parts.join(" · ");
+}
+
 const INTENT_TYPE_MAP = {
   attack: { art: INTENT_ART.attack, label: "Strike", color: "text-red-300", border: "border-red-500/40" },
   block: { art: INTENT_ART.block, label: "Shield", color: "text-blue-300", border: "border-blue-500/40" },
@@ -139,6 +153,19 @@ export default function BattleScreen() {
       setTimeout(() => setPlayerFlash(false), 500);
     } else if (card.type === "defense") {
       Sound.sfx.defense();
+    }
+
+    // Scripture sub-sounds: draw, gain faith, heal
+    if (card.type === "scripture") {
+      if (["wisdom", "jacobs_ladder", "doves_peace", "manna_heaven"].includes(card.id)) {
+        setTimeout(() => Sound.sfx.drawCard(), 250);
+      }
+      if (["song_praise", "coat_colors"].includes(card.id)) {
+        setTimeout(() => Sound.sfx.gainFaith(), 250);
+      }
+      if (["prayer", "bread_life", "living_water", "burning_bush", "doves_peace", "manna_heaven"].includes(card.id)) {
+        setTimeout(() => Sound.sfx.heal(), 350);
+      }
     }
 
     const end = checkBattleEnd(newState);
@@ -436,9 +463,14 @@ export default function BattleScreen() {
                     isResolved ? "border-slate-700/20 opacity-25" :
                     `${intentInfo.border} bg-slate-900/40`
                   }`}>
-                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm" />
-                    <span className={`${intentInfo.color} text-[9px] font-medium`}>{action.name}</span>
-                    {action.damage ? <span className="text-red-300/70 text-[8px] font-bold">{action.damage}</span> : null}
+                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 object-cover rounded-sm flex-shrink-0" />
+                    <span className={`${intentInfo.color} text-[9px] font-medium leading-none`}>{action.name}</span>
+                    {(() => {
+                      const amt = getIntentAmountText(action, enemy);
+                      if (!amt) return null;
+                      const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
+                      return <span className={`text-[8px] font-bold leading-none ${amtColor}`}>{amt}</span>;
+                    })()}
                   </div>
                   {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
                 </React.Fragment>

@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon } from "lucide-react";
+import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
@@ -140,6 +140,31 @@ export default function Settings() {
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.narrationVolume ?? 50}%</span>
               </div>
             )}
+            {profile.settings.narration && (
+              <div className="mt-3">
+                <p className="text-amber-100/50 text-[10px] mb-2">Narrator Voice</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { value: "default", label: "Default" },
+                    { value: "male", label: "Warm Male" },
+                    { value: "female", label: "Warm Female" },
+                    { value: "system", label: "System" },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { saveProfile({ settings: { ...profile.settings, narrationVoice: opt.value } }); Sound.sfx.click(); }}
+                      className={`px-1 py-1.5 rounded-lg border text-[10px] font-medium transition ${
+                        (profile.settings.narrationVoice || "default") === opt.value
+                          ? "border-amber-400/60 bg-amber-600/20 text-amber-100"
+                          : "border-amber-500/15 bg-slate-900/40 text-amber-100/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -190,6 +215,28 @@ export default function Settings() {
               maxLength={20}
               className="w-full px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
             />
+          </div>
+        </div>
+
+        {/* === TUTORIAL SECTION === */}
+        <div className="space-y-3">
+          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Tutorial</h2>
+          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-amber-300/70" />
+                <div>
+                  <span className="font-serif text-amber-100 text-sm">Show Tutorial</span>
+                  <p className="text-amber-100/40 text-[10px]">Display the battle tutorial on your next run</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { saveProfile({ tutorialSeen: !profile.tutorialSeen }); Sound.sfx.click(); }}
+                className={`w-14 h-7 rounded-full transition relative ${!profile.tutorialSeen ? "bg-amber-500/40" : "bg-slate-700"}`}
+              >
+                <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-amber-200 transition-transform ${!profile.tutorialSeen ? "translate-x-7" : "translate-x-0.5"}`} />
+              </button>
+            </div>
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, Cross, Sword, BookOpen, Calendar, Layers, Footprints, Route, Heart, CloudRain, Waves, Building2, Sparkles, Wand2, Trophy, ShieldCheck, Lock, Check } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
+import { ENEMY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 const ICON_MAP = {
@@ -44,13 +45,15 @@ export default function Achievements() {
                   : "border-slate-600/40 bg-slate-900/50"
               }`}
             >
-              <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border ${
+              <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border overflow-hidden ${
                 isUnlocked
                   ? "border-amber-400/40 bg-amber-500/10"
                   : "border-slate-600/30 bg-slate-800/50"
               }`}>
                 {isUnlocked
-                  ? <Icon className="w-6 h-6 text-amber-300" />
+                  ? (achievement.art && ENEMY_ART[achievement.art]
+                    ? <img src={ENEMY_ART[achievement.art]} alt={achievement.name} className="w-full h-full object-cover" />
+                    : <Icon className="w-6 h-6 text-amber-300" />)
                   : <Lock className="w-5 h-5 text-slate-400" />
                 }
               </div>

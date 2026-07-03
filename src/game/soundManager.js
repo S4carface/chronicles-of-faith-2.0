@@ -157,6 +157,18 @@ export const sfx = {
   },
   enemyWindUp: () => playTone(90, 0.25, "sawtooth", 0.05),
 
+  // Draw card — parchment/page flip sound
+  drawCard: () => {
+    playTone(2000, 0.04, "sawtooth", 0.04);
+    setTimeout(() => playTone(1500, 0.06, "sawtooth", 0.03), 30);
+    setTimeout(() => playTone(1000, 0.08, "triangle", 0.04), 60);
+  },
+  // Gain Faith — bright sparkle/chime
+  gainFaith: () => {
+    playTone(880, 0.08, "sine", 0.08);
+    setTimeout(() => playTone(1320, 0.12, "sine", 0.08), 60);
+  },
+
   // Results
   victory: () => {
     [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.25, "triangle", 0.16), i * 130));
@@ -353,7 +365,66 @@ export function playMusic(theme) {
 }
 
 // === VOICE NARRATION via SpeechSynthesis API ===
-export function speakNarration(text, volume) {
+
+// Convert Bible references to natural spoken format
+// "Genesis 3:1" → "Genesis chapter 3, verse 1"
+// "1 Samuel 17:40" → "First Samuel chapter 17, verse 40"
+// "Genesis 4:5-7" → "Genesis chapter 4, verses 5 through 7"
+const BOOK_ABBREVS = {
+  "1 Thess": "First Thessalonians",
+  "2 Thess": "Second Thessalonians",
+  "1 Tim": "First Timothy",
+  "2 Tim": "Second Timothy",
+  "1 Cor": "First Corinthians",
+  "2 Cor": "Second Corinthians",
+  "1 Pet": "First Peter",
+  "2 Pet": "Second Peter",
+  "1 John": "First John",
+  "2 John": "Second John",
+  "3 John": "Third John",
+};
+
+const NUMBER_PREFIX = { "1": "First", "2": "Second", "3": "Third" };
+
+export function verbalizeScriptureReference(text) {
+  const refRegex = /(?:(\d)\s+)?([A-Z][a-zA-Z]+)\s+(\d+):(\d+)(?:[-–](\d+))?/g;
+  return text.replace(refRegex, (match, bookNum, bookName, chapter, verse1, verse2) => {
+    let spokenName = bookName;
+    if (bookNum) {
+      const key = `${bookNum} ${bookName}`;
+      if (BOOK_ABBREVS[key]) {
+        spokenName = BOOK_ABBREVS[key];
+      } else {
+        spokenName = `${NUMBER_PREFIX[bookNum] || ""} ${bookName}`.trim();
+      }
+    }
+    const verseText = verse2
+      ? `verses ${verse1} through ${verse2}`
+      : `verse ${verse1}`;
+    return `${spokenName} chapter ${chapter}, ${verseText}`;
+  });
+}
+
+function pickVoice(preference) {
+  if (!window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices || voices.length === 0) return null;
+
+  const enVoices = voices.filter(v => v.lang && v.lang.startsWith("en"));
+  const useVoices = enVoices.length > 0 ? enVoices : voices;
+
+  if (preference === "male") {
+    const male = useVoices.find(v => /male|david|daniel|alex|george|fred|thomas|james|oliver|arthur|google uk english male/i.test(v.name));
+    if (male) return male;
+  }
+  if (preference === "female") {
+    const female = useVoices.find(v => /female|samantha|victoria|karen|moira|tessa|kate|serena|fiona|google uk english female|google us english/i.test(v.name));
+    if (female) return female;
+  }
+  return useVoices[0];
+}
+
+export function speakNarration(text, volume, voicePreference) {
   if (!window.speechSynthesis) return;
   stopNarration();
   const vol = volume !== undefined ? volume : narrationVol;
@@ -361,10 +432,17 @@ export function speakNarration(text, volume) {
 
   duckMusic();
 
-  const utterance = new SpeechSynthesisUtterance(text);
+  const spokenText = verbalizeScriptureReference(text);
+  const utterance = new SpeechSynthesisUtterance(spokenText);
   utterance.volume = vol;
   utterance.rate = 0.85;
   utterance.pitch = 1;
+
+  const voice = pickVoice(voicePreference);
+  if (voice) {
+    utterance.voice = voice;
+  }
+
   utterance.onend = () => unDuckMusic();
   utterance.onerror = () => unDuckMusic();
   window.speechSynthesis.speak(utterance);

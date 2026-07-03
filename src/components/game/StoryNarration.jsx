@@ -28,7 +28,7 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
     // Start voice narration
     if (narrationOn && !narratedRef.current) {
       narratedRef.current = true;
-      Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100);
+      Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
     }
 
     return () => {
@@ -49,7 +49,7 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
   };
 
   const replayNarration = () => {
-    Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100);
+    Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
   };
 
   const toggleNarration = () => {

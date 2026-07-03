@@ -90,7 +90,12 @@ module.exports = {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'fade-in': 'fadeIn 0.4s ease-out',
-  			'slide-down': 'slideDown 0.4s ease-out'
+  			'slide-down': 'slideDown 0.4s ease-out',
+  			'shake': 'shake 0.4s ease-in-out',
+  			'attack-lunge': 'attackLunge 0.5s ease-out',
+  			'enemy-lunge': 'enemyLunge 0.5s ease-out',
+  			'damage-flash': 'damageFlash 0.3s ease-in-out',
+  			'heal-pulse': 'healPulse 0.5s ease-in-out'
   		},
   		keyframes: {
   			'fade-in': {

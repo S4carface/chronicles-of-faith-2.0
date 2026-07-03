@@ -64,7 +64,7 @@ export const STARTER_DECK_ADAM = [
 ];
 
 export const STARTER_DECK_NOAH = [
-  "faith_shield", "faith_shield", "faith_shield",
-  "rainbow_covenant", "rainbow_covenant", "prayer", "bread_life",
-  "doves_peace", "doves_peace", "armor_god",
+  "sling_stone", "sling_stone", "faith_shield", "faith_shield",
+  "rainbow_covenant", "prayer", "bread_life",
+  "doves_peace", "righteous_strike", "rams_horn",
 ];

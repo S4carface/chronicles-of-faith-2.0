@@ -1,9 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
 export default function DefeatScreen() {
-  const { run, endRun } = useGame();
+  const { run, endRun, addCardsToCollection } = useGame();
+  const navigate = useNavigate();
+
+  // Save cards collected during the run even on defeat
+  useEffect(() => {
+    if (run.deck) {
+      addCardsToCollection(run.deck);
+    }
+  }, []);
+
+  const handleReturnToMenu = () => {
+    Sound.sfx.click();
+    endRun();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, rgba(139,26,26,0.2) 0%, rgba(8,12,24,0.98) 50%)" }}>
@@ -19,15 +34,19 @@ export default function DefeatScreen() {
           <p className="text-amber-100/60 text-sm mt-1">Trivia Correct: <span className="text-amber-200 font-bold">{run.triviaCorrect}</span></p>
         </div>
 
+        <div className="rounded-lg border border-emerald-400/20 bg-emerald-900/10 p-3 mb-6">
+          <p className="text-emerald-300/60 text-xs">🃏 Cards found during this run have been saved to your collection</p>
+        </div>
+
         <p className="text-amber-100/40 text-sm mb-6">
           Every run is different. The path branches, enemies vary, and blessings await those who persevere. Rise again and walk the path of faith.
         </p>
 
         <button
-          onClick={endRun}
+          onClick={handleReturnToMenu}
           className="px-8 py-3 rounded-lg border-2 border-amber-400/40 bg-amber-900/20 text-amber-200 font-serif text-lg hover:bg-amber-800/30 transition"
         >
-          Try Again
+          Return to Menu
         </button>
       </div>
     </div>

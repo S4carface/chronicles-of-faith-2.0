@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import { DAILY_THEMES } from "@/data/genesisRooms";
 import * as Sound from "@/game/soundManager";
@@ -12,6 +12,7 @@ function getTodayTheme() {
 
 export default function DailyChallenge() {
   const { profile, startRun, Sound: Snd } = useGame();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const theme = getTodayTheme();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -24,13 +25,14 @@ export default function DailyChallenge() {
     Sound.sfx.click();
     setTimeout(() => {
       startRun(profile.unlockedHeroes.includes("noah") ? "noah" : "adam", true);
+      navigate("/play");
     }, 300);
   };
 
   return (
     <div className="min-h-screen p-6 flex flex-col items-center justify-center" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
       <div className="absolute top-6 left-6">
-        <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
+        <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</button>
       </div>
 
       <div className="text-center max-w-md">
@@ -61,13 +63,12 @@ export default function DailyChallenge() {
           <div className="text-center">
             <p className="text-emerald-300 mb-4">✓ You've completed today's challenge!</p>
             <p className="text-amber-100/40 text-xs mb-6">Come back tomorrow for a new adventure.</p>
-            <Link
-              to="/leaderboard"
-              onClick={() => Sound.sfx.click()}
+            <button
+              onClick={() => { Sound.sfx.click(); navigate("/leaderboard"); }}
               className="inline-block px-8 py-3 rounded-lg border-2 border-amber-400/40 bg-amber-900/20 text-amber-200 font-serif hover:bg-amber-800/30 transition"
             >
               View Leaderboard →
-            </Link>
+            </button>
           </div>
         ) : (
           <button

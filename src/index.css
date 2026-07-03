@@ -60,6 +60,36 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
+  }
+
+  @keyframes attackLunge {
+    0% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(-25px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  @keyframes enemyLunge {
+    0% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(45px) scale(1.15); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  @keyframes damageFlash {
+    0%, 100% { filter: brightness(1) saturate(1); }
+    50% { filter: brightness(1.8) saturate(2) hue-rotate(-15deg); }
+  }
+
+  @keyframes healPulse {
+    0%, 100% { filter: brightness(1); transform: scale(1); }
+    50% { filter: brightness(1.4); transform: scale(1.05); }
+  }
+
   .font-serif { font-family: var(--font-heading); }
 
   body {

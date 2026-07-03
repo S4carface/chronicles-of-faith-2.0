@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
-import { getCardById, CARDS } from "@/data/cards";
+import { getCardById } from "@/data/cards";
 import { pick } from "@/game/mapGenerator";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import Card from "@/components/game/Card";
 import * as Sound from "@/game/soundManager";
 
 export default function TreasureRoom() {
-  const { run, completeRoom, setPhase } = useGame();
+  const { run, completeRoom } = useGame();
   const node = run.currentNode;
   const rewardCardId = node?.treasureReward || pick(Math.random, TREASURE_REWARDS);
   const card = getCardById(rewardCardId);
@@ -20,9 +20,11 @@ export default function TreasureRoom() {
   const handleClaim = () => {
     Sound.sfx.reward();
     setClaimed(true);
-    setTimeout(() => {
-      completeRoom(node.id, { cardId: rewardCardId });
-    }, 1500);
+  };
+
+  const handleContinue = () => {
+    Sound.sfx.click();
+    completeRoom(node.id, { cardId: rewardCardId });
   };
 
   if (!card) return null;
@@ -46,13 +48,21 @@ export default function TreasureRoom() {
         <p className="text-amber-300/60 text-xs">"{card.verse}"</p>
       </div>
 
-      <button
-        onClick={handleClaim}
-        disabled={claimed}
-        className="mt-8 px-8 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-lg hover:bg-amber-600/40 transition disabled:opacity-50"
-      >
-        {claimed ? "Claimed! ✨" : "Claim Treasure"}
-      </button>
+      {!claimed ? (
+        <button
+          onClick={handleClaim}
+          className="mt-8 px-8 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-lg hover:bg-amber-600/40 transition"
+        >
+          Claim Treasure
+        </button>
+      ) : (
+        <button
+          onClick={handleContinue}
+          className="mt-8 px-8 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition animate-fade-in"
+        >
+          Continue →
+        </button>
+      )}
     </div>
   );
 }

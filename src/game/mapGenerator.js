@@ -66,18 +66,28 @@ export function generateMap(seed) {
     layers.push(nodes);
   }
 
-  // Connect layers — each node connects to 1-2 nodes in the next layer
+  // Connect layers — each node connects to 2+ nodes in the next layer for real branching
   for (let layer = 0; layer < numLayers - 1; layer++) {
     const current = layers[layer];
     const next = layers[layer + 1];
 
     for (const node of current) {
-      // Connect to nearest node(s) in next layer
-      const numConnections = rng() < 0.3 && next.length > 1 ? 2 : 1;
-      const available = next.map((_, i) => i).sort((a, b) =>
-        Math.abs(a - node.index) - Math.abs(b - node.index)
-      );
-      const chosen = available.slice(0, numConnections);
+      // Each node connects to at least 2 nodes (or all if only 2 in next layer)
+      const minConnections = Math.min(next.length, Math.max(2, Math.ceil(next.length * 0.8)));
+      // Sort by proximity but add randomization for variety
+      const available = next.map((_, i) => i).sort((a, b) => {
+        const distA = Math.abs(a - node.index);
+        const distB = Math.abs(b - node.index);
+        return distA - distB;
+      });
+      // Sometimes shuffle for more varied paths
+      if (rng() < 0.35 && next.length > 2) {
+        for (let i = available.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [available[i], available[j]] = [available[j], available[i]];
+        }
+      }
+      const chosen = available.slice(0, minConnections);
       node.connections = chosen.map(i => `${layer + 1}-${i}`);
     }
   }

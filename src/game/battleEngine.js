@@ -1,9 +1,15 @@
 // Battle engine logic — turn-based card combat
 
+function pickEnemyAttack(enemy) {
+  return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
+}
+
 export function createBattleState(enemy, playerHp, deck, startingBlock = 0, extraDraw = 0) {
   const shuffled = shuffle([...deck]);
+  const intent = pickEnemyAttack(enemy);
   return {
     enemy: { ...enemy, currentHp: enemy.hp, maxHp: enemy.hp },
+    enemyIntent: intent,
     playerHp,
     maxPlayerHp: playerHp,
     playerBlock: startingBlock,
@@ -14,7 +20,7 @@ export function createBattleState(enemy, playerHp, deck, startingBlock = 0, extr
     discard: [],
     turn: "player",
     turnNumber: 1,
-    log: [`Battle with ${enemy.name} begins!`],
+    log: [`Battle with ${enemy.name} begins!`, `⚠️ ${enemy.name} prepares: ${intent.name} (${intent.damage} DMG)`],
     enemyAttackMultiplier: 1,
     blockScripture: false,
     buffAttack: 0,
@@ -66,7 +72,6 @@ export function playCard(state, handIndex, card) {
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
-  let enemyHeal = 0;
   let buffAttack = state.buffAttack;
   let freeCards = state.freeCardsRemaining;
   let blockScripture = state.blockScripture;
@@ -81,52 +86,49 @@ export function playCard(state, handIndex, card) {
       let dmg = card.value + buffAttack;
       if (state.enemyAttackMultiplier > 1) dmg = Math.floor(dmg * 2);
       enemyHp = Math.max(0, enemyHp - dmg);
-      log.push(`Played ${card.name} — ${dmg} damage!`);
+      log.push(`You played ${card.name} — ${dmg} damage!`);
       if (buffAttack > 0) { buffAttack = 0; }
       break;
     }
     case "defense": {
       playerBlock += card.value;
-      log.push(`Played ${card.name} — ${card.value} block!`);
-      if (card.id === "lions_den") {
-        // reflect handled in enemy turn via thorns
-      }
+      log.push(`You played ${card.name} — ${card.value} block!`);
       break;
     }
     case "scripture": {
       if (card.id === "prayer" || card.id === "bread_life" || card.id === "living_water" || card.id === "burning_bush") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
-        log.push(`Played ${card.name} — healed ${card.value}!`);
+        log.push(`You played ${card.name} — healed ${card.value}!`);
         if (card.id === "burning_bush") {
           enemyHp = Math.max(0, enemyHp - 5);
           log.push("Burning Bush deals 5 damage!");
         }
       } else if (card.id === "song_praise") {
         newEnergy += 2;
-        log.push("Played Song of Praise — gained 2 Faith!");
+        log.push("You played Song of Praise — gained 2 Faith!");
       } else if (card.id === "wisdom") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
-        log.push("Played Wisdom — drew 2 cards!");
+        log.push("You played Wisdom — drew 2 cards!");
         return { ...drawn, energy: newEnergy, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture };
       } else if (card.id === "doves_peace") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
-        log.push(`Played Dove's Peace — healed ${card.value}!`);
+        log.push(`You played Dove's Peace — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 1);
         return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture };
       } else if (card.id === "manna_heaven") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + card.value);
-        log.push(`Played Manna from Heaven — healed ${card.value}!`);
+        log.push(`You played Manna from Heaven — healed ${card.value}!`);
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 2);
         return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture };
       } else if (card.id === "coat_colors") {
         newEnergy += 3;
-        log.push("Played Coat of Many Colors — gained 3 Faith!");
+        log.push("You played Coat of Many Colors — gained 3 Faith!");
       } else if (card.id === "jacobs_ladder") {
         const drawn = drawCards({ ...state, hand: newHand, deck: state.deck, discard: newDiscard }, 3);
-        log.push("Played Jacob's Ladder — drew 3 cards!");
+        log.push("You played Jacob's Ladder — drew 3 cards!");
         return { ...drawn, energy: newEnergy, playerHp, playerBlock, enemyHp, discard: [...drawn.discard, card.id], log, buffAttack, freeCardsRemaining: freeCards, blockScripture };
       } else if (card.id === "righteous_aim") {
-        log.push("Played Righteous Aim — next attack deals DOUBLE!");
+        log.push("You played Righteous Aim — next attack deals DOUBLE!");
         return { ...state, hand: newHand, energy: newEnergy, enemyAttackMultiplier: 2, discard: newDiscard, log, buffAttack, freeCardsRemaining: freeCards, blockScripture };
       }
       break;
@@ -135,7 +137,7 @@ export function playCard(state, handIndex, card) {
       let dmg = card.value;
       if (state.enemyAttackMultiplier > 1) dmg = Math.floor(dmg * 2);
       enemyHp = Math.max(0, enemyHp - dmg);
-      log.push(`Played ${card.name} — ${dmg} holy damage!`);
+      log.push(`You played ${card.name} — ${dmg} holy damage!`);
       if (card.id === "angel_lord") {
         playerHp = Math.min(state.maxPlayerHp, playerHp + 10);
         log.push("Angel of the Lord heals you 10 HP!");
@@ -163,7 +165,7 @@ export function playCard(state, handIndex, card) {
 }
 
 export function endPlayerTurn(state) {
-  const log = [...state.log, "Player turn ends."];
+  const log = [...state.log, "— Your turn ends —"];
   return { ...state, turn: "enemy", playerBlock: 0, enemyAttackMultiplier: 1, log };
 }
 
@@ -172,23 +174,26 @@ export function enemyTurn(state) {
   let playerHp = state.playerHp;
   let playerBlock = state.playerBlock;
   let enemyHp = state.enemy.currentHp;
-  const attack = state.enemy.attacks[Math.floor(Math.random() * state.enemy.attacks.length)];
+  const attack = state.enemyIntent || pickEnemyAttack(state.enemy);
 
   let damage = attack.damage;
   if (state.shieldActive) {
     log.push(`${state.enemy.name} used ${attack.name} but your shield negated it!`);
-    return { ...state, playerHp, playerBlock, enemy: { ...state.enemy, currentHp: enemyHp }, log, turn: "player", turnNumber: state.turnNumber + 1, shieldActive: false };
+    const newIntent = pickEnemyAttack(state.enemy);
+    log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name} (${newIntent.damage} DMG)`);
+    return { ...state, enemyIntent: newIntent, playerHp, playerBlock, enemy: { ...state.enemy, currentHp: enemyHp }, log, turn: "player", turnNumber: state.turnNumber + 1, shieldActive: false };
   }
 
   if (playerBlock > 0) {
     const absorbed = Math.min(playerBlock, damage);
     playerBlock -= absorbed;
     damage -= absorbed;
+    if (absorbed > 0) log.push(`🛡️ Blocked ${absorbed} damage`);
   }
   if (damage > 0) {
     playerHp = Math.max(0, playerHp - damage);
   }
-  log.push(`${state.enemy.name} used ${attack.name} — ${attack.damage} damage!`);
+  log.push(`💥 ${state.enemy.name} used ${attack.name} — ${attack.damage} damage!`);
 
   if (attack.effect === "heal_self") {
     const healAmt = state.enemy.isBoss ? 6 : 4;
@@ -197,29 +202,37 @@ export function enemyTurn(state) {
   }
 
   let skipDraw = state.skipDraw;
-  if (attack.effect === "skip_draw") skipDraw = 1;
+  if (attack.effect === "skip_draw") {
+    skipDraw = 1;
+    log.push(`⚠️ ${attack.description}`);
+  }
 
   let blockScripture = false;
   if (attack.effect === "block_scripture") {
     blockScripture = true;
-    log.push("Scripture cards are blocked next turn!");
+    log.push("⚠️ Scripture cards are blocked next turn!");
   }
 
   let dots = state.dots;
   if (attack.effect === "dot") {
     dots = 3;
-    log.push("You are cursed — taking 2 damage per turn!");
+    log.push("☠️ You are cursed — taking 2 damage per turn!");
   }
 
   // DOT damage to player at start of their turn
   if (dots > 0) {
     playerHp = Math.max(0, playerHp - 2);
     dots -= 1;
-    log.push(`Cursed — 2 damage! (${dots} turns left)`);
+    log.push(`☠️ Curse — 2 damage! (${dots} turns left)`);
   }
+
+  // Compute next enemy intent for telegraphing
+  const newIntent = pickEnemyAttack(state.enemy);
+  log.push(`⚠️ ${state.enemy.name} prepares: ${newIntent.name} (${newIntent.damage} DMG)`);
 
   const newState = {
     ...state,
+    enemyIntent: newIntent,
     playerHp,
     playerBlock,
     enemy: { ...state.enemy, currentHp: enemyHp },

@@ -6,6 +6,7 @@ let sfxGain = null;
 let musicEnabled = true;
 let sfxEnabled = true;
 let currentMusicNodes = [];
+let musicTimeoutId = null;
 
 function getCtx() {
   if (!audioCtx) {
@@ -49,7 +50,8 @@ function playTone(freq, duration, type = "sine", vol = 0.3, target = null) {
 export const sfx = {
   cardPlay: () => playTone(440, 0.15, "triangle"),
   attack: () => { playTone(200, 0.1, "sawtooth", 0.2); setTimeout(() => playTone(150, 0.1, "sawtooth", 0.2), 50); },
-  enemyAttack: () => { playTone(120, 0.2, "square", 0.15); },
+  enemyAttack: () => { playTone(120, 0.2, "square", 0.15); setTimeout(() => playTone(80, 0.15, "sawtooth", 0.12), 100); },
+  enemyWindUp: () => { playTone(90, 0.3, "sawtooth", 0.08); },
   heal: () => { playTone(523, 0.15, "sine", 0.2); setTimeout(() => playTone(659, 0.15, "sine", 0.2), 80); },
   shield: () => playTone(300, 0.2, "triangle", 0.15),
   miracle: () => { for (let i = 0; i < 4; i++) setTimeout(() => playTone(523 + i * 100, 0.2, "sine", 0.15), i * 60); },
@@ -67,6 +69,10 @@ export const sfx = {
 export function stopMusic() {
   currentMusicNodes.forEach(n => { try { n.stop(); } catch (e) {} });
   currentMusicNodes = [];
+  if (musicTimeoutId) {
+    clearTimeout(musicTimeoutId);
+    musicTimeoutId = null;
+  }
 }
 
 export function playMusic(theme) {
@@ -74,13 +80,32 @@ export function playMusic(theme) {
   stopMusic();
   const ctx = getCtx();
 
+  // Extended melodies with more notes for variety
   const themes = {
-    menu: { notes: [262, 330, 392, 523], type: "sine", vol: 0.08, interval: 500 },
-    eden: { notes: [294, 370, 440, 494], type: "sine", vol: 0.06, interval: 600 },
-    battle: { notes: [196, 247, 294, 196], type: "triangle", vol: 0.07, interval: 350 },
-    boss: { notes: [131, 165, 196, 165], type: "sawtooth", vol: 0.05, interval: 300 },
-    victory: { notes: [523, 659, 784, 1047], type: "triangle", vol: 0.1, interval: 400 },
-    divine: { notes: [523, 659, 784, 880, 1047], type: "sine", vol: 0.08, interval: 400 },
+    menu: { 
+      notes: [262, 330, 392, 523, 392, 330, 262, 196, 262, 330, 392, 523, 659, 523, 392, 330], 
+      type: "sine", vol: 0.07, interval: 450 
+    },
+    eden: { 
+      notes: [294, 370, 440, 494, 440, 370, 294, 247, 294, 370, 440, 494, 587, 494, 440, 370], 
+      type: "sine", vol: 0.06, interval: 500 
+    },
+    battle: { 
+      notes: [196, 247, 294, 196, 165, 196, 247, 294, 349, 294, 247, 196, 165, 196, 247, 294], 
+      type: "triangle", vol: 0.06, interval: 320 
+    },
+    boss: { 
+      notes: [131, 165, 196, 165, 131, 165, 196, 247, 196, 165, 131, 98, 131, 165, 196, 247], 
+      type: "sawtooth", vol: 0.04, interval: 280 
+    },
+    victory: { 
+      notes: [523, 659, 784, 1047, 784, 659, 523, 659, 784, 1047, 1319, 1047, 784, 659, 523, 392], 
+      type: "triangle", vol: 0.09, interval: 380 
+    },
+    divine: { 
+      notes: [523, 659, 784, 880, 1047, 880, 784, 659, 523, 587, 659, 784, 880, 1047, 880, 784], 
+      type: "sine", vol: 0.07, interval: 420 
+    },
   };
 
   const t = themes[theme] || themes.menu;
@@ -94,15 +119,15 @@ export function playMusic(theme) {
     osc.type = t.type;
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(t.vol, ctx.currentTime + 0.1);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + t.interval / 1000 * 0.8);
+    gain.gain.linearRampToValueAtTime(t.vol, ctx.currentTime + 0.08);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + t.interval / 1000 * 0.85);
     osc.connect(gain);
     gain.connect(musicGain);
     osc.start();
     osc.stop(ctx.currentTime + t.interval / 1000);
     currentMusicNodes.push(osc);
     noteIdx++;
-    setTimeout(playNextNote, t.interval);
+    musicTimeoutId = setTimeout(playNextNote, t.interval);
   }
 
   playNextNote();

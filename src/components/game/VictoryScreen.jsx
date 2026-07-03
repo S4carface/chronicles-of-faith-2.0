@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import { base44 } from "@/api/base44Client";
 import * as Sound from "@/game/soundManager";
 
 export default function VictoryScreen() {
-  const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
+  const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
+  const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [playerName, setPlayerName] = useState(profile.playerName || "");
@@ -23,6 +25,9 @@ export default function VictoryScreen() {
 
     if (finalScore >= 500) unlockAchievement("low_score_champion");
 
+    // Save ALL cards collected during the run to the collection
+    addCardsToCollection(run.deck);
+
     // Track daily challenge completion
     if (run.isDaily) {
       const todayStr = new Date().toISOString().slice(0, 10);
@@ -30,11 +35,6 @@ export default function VictoryScreen() {
       const newStreak = profile.lastDailyDate === yesterdayStr ? profile.dailyStreak + 1 : 1;
       saveProfile({ lastDailyDate: todayStr, dailyStreak: newStreak });
       if (newStreak >= 3) unlockAchievement("daily_devotion");
-    }
-
-    // Track walking with god
-    if (profile.unlockedHeroes.includes("noah") && run.hero.id === "adam") {
-      // They've now played as both (noah was unlocked = they played as adam first, then will play noah)
     }
   }, []);
 
@@ -55,9 +55,15 @@ export default function VictoryScreen() {
       });
       setSubmitted(true);
     } catch (e) {
-      setSubmitted(true); // still let them continue
+      setSubmitted(true);
     }
     setSubmitting(false);
+  };
+
+  const handleReturnToMenu = () => {
+    Sound.sfx.click();
+    endRun();
+    navigate("/");
   };
 
   return (
@@ -98,6 +104,10 @@ export default function VictoryScreen() {
           </div>
         )}
 
+        <div className="rounded-lg border border-emerald-400/30 bg-emerald-900/15 p-3 mb-6">
+          <p className="text-emerald-300/80 text-sm">🃏 {run.deck.length} cards saved to your collection</p>
+        </div>
+
         {!submitted ? (
           <div className="mb-6">
             <p className="text-amber-100/60 text-sm mb-3">Submit your score to the leaderboard:</p>
@@ -122,7 +132,7 @@ export default function VictoryScreen() {
         )}
 
         <button
-          onClick={endRun}
+          onClick={handleReturnToMenu}
           className="px-8 py-3 rounded-lg border-2 border-amber-400/40 bg-amber-900/20 text-amber-200 font-serif text-lg hover:bg-amber-800/30 transition"
         >
           Return to Menu

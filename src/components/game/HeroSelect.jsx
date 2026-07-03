@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import { HEROES } from "@/data/heroes";
 import { getCardById } from "@/data/cards";
@@ -6,8 +7,8 @@ import * as Sound from "@/game/soundManager";
 
 export default function HeroSelect() {
   const { profile, startRun } = useGame();
+  const navigate = useNavigate();
   const [selectedHero, setSelectedHero] = useState("adam");
-  const [showDeck, setShowDeck] = useState(false);
 
   const hero = HEROES.find(h => h.id === selectedHero);
 
@@ -18,6 +19,10 @@ export default function HeroSelect() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
+      <div className="absolute top-6 left-6">
+        <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</button>
+      </div>
+
       <div className="text-center mb-8">
         <h1 className="text-4xl font-serif text-amber-200 mb-2">Choose Your Hero</h1>
         <p className="text-amber-100/50 text-sm">Each hero walks a different path of faith</p>
@@ -26,6 +31,7 @@ export default function HeroSelect() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mb-8">
         {HEROES.map((h) => {
           const unlocked = profile.unlockedHeroes.includes(h.id);
+          const hasAttackCards = h.starterDeck.some(id => getCardById(id)?.type === "attack");
           return (
             <button
               key={h.id}
@@ -51,13 +57,27 @@ export default function HeroSelect() {
                   <div className="text-xs text-emerald-300/70 bg-emerald-900/20 rounded-lg p-2">
                     ⚡ {h.ability}
                   </div>
-                  <p className="text-amber-100/40 text-xs mt-2">❤️ {h.maxHp} HP</p>
+                  <div className="flex items-center justify-center gap-3 mt-2 text-xs">
+                    <span className="text-amber-100/40">❤️ {h.maxHp} HP</span>
+                    <span className="text-amber-100/40">🃏 {h.starterDeck.length} cards</span>
+                    {hasAttackCards ? (
+                      <span className="text-red-300/50">⚔️ Has attacks</span>
+                    ) : (
+                      <span className="text-red-400/80">⚠️ No attack cards!</span>
+                    )}
+                  </div>
                 </>
               )}
             </button>
           );
         })}
       </div>
+
+      {hero && profile.unlockedHeroes.includes(selectedHero) && !hero.starterDeck.some(id => getCardById(id)?.type === "attack") && (
+        <div className="mb-4 px-4 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm text-center max-w-md">
+          ⚠️ Warning: This hero's deck has no attack cards. You won't be able to damage enemies in battle!
+        </div>
+      )}
 
       {hero && profile.unlockedHeroes.includes(selectedHero) && (
         <button

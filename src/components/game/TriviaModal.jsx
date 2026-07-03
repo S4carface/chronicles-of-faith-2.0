@@ -1,12 +1,15 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useMemo } from "react";
 import { useGame } from "@/game/GameContext";
 import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import * as Sound from "@/game/soundManager";
 
 export default function TriviaModal({ onComplete }) {
-  const { run, updateRun, unlockAchievement } = useGame();
-  const question = TRIVIA_QUESTIONS[run.triviaTotal % TRIVIA_QUESTIONS.length];
+  const { run, updateRun } = useGame();
+  // Fix glitch: compute question ONCE via useMemo, not from live run.triviaTotal on every render
+  const question = useMemo(
+    () => TRIVIA_QUESTIONS[run.triviaTotal % TRIVIA_QUESTIONS.length],
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+  );
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
 
@@ -22,17 +25,17 @@ export default function TriviaModal({ onComplete }) {
       Sound.sfx.trivia_wrong();
       updateRun({ triviaTotal: run.triviaTotal + 1 });
     }
+  };
 
-    setTimeout(() => {
-      if (correct) {
-        // award a random common card as bonus
-        const bonusCards = ["prayer", "faith_shield", "sling_stone", "bread_life", "wisdom", "doves_peace", "living_water"];
-        const reward = bonusCards[Math.floor(Math.random() * bonusCards.length)];
-        onComplete({ cardId: reward, correct: true });
-      } else {
-        onComplete({ correct: false });
-      }
-    }, 2000);
+  const handleContinue = () => {
+    const correct = selected === question.answer;
+    if (correct) {
+      const bonusCards = ["prayer", "faith_shield", "sling_stone", "bread_life", "wisdom", "doves_peace", "living_water"];
+      const reward = bonusCards[Math.floor(Math.random() * bonusCards.length)];
+      onComplete({ cardId: reward, correct: true });
+    } else {
+      onComplete({ correct: false });
+    }
   };
 
   return (
@@ -77,6 +80,12 @@ export default function TriviaModal({ onComplete }) {
               {selected === question.answer ? "✓ Correct!" : "✗ Not quite..."}
             </p>
             <p className="text-amber-100/40 text-sm mt-1 italic">{question.verse}</p>
+            <button
+              onClick={handleContinue}
+              className="mt-4 px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
+            >
+              Continue →
+            </button>
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ export default function RestRoom() {
   const { run, completeRoom, updateRun } = useGame();
   const node = run.currentNode;
   const [chosen, setChosen] = useState(null);
+  const [resultText, setResultText] = useState("");
 
   useEffect(() => {
     Sound.playMusic("divine");
@@ -16,14 +17,19 @@ export default function RestRoom() {
     setChosen("heal");
     const healAmount = Math.floor(run.maxHp * 0.3);
     updateRun({ playerHp: Math.min(run.maxHp, run.playerHp + healAmount) });
-    setTimeout(() => completeRoom(node.id), 1500);
+    setResultText(`Restored ${healAmount} HP. Your spirit is renewed.`);
   };
 
   const handlePray = () => {
     Sound.sfx.divine();
     setChosen("pray");
     updateRun({ buffAttack: run.buffAttack + 5 });
-    setTimeout(() => completeRoom(node.id), 1500);
+    setResultText("You feel divine strength. +5 attack power next battle.");
+  };
+
+  const handleContinue = () => {
+    Sound.sfx.click();
+    completeRoom(node.id);
   };
 
   return (
@@ -67,6 +73,18 @@ export default function RestRoom() {
           <p className="text-amber-100/50 text-xs mt-1">+5 attack power for your next battle</p>
         </button>
       </div>
+
+      {chosen && resultText && (
+        <div className="mt-8 text-center animate-fade-in">
+          <p className="text-amber-200 text-lg font-serif mb-6">{resultText}</p>
+          <button
+            onClick={handleContinue}
+            className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition"
+          >
+            Continue →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

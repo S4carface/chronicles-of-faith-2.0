@@ -34,9 +34,7 @@ export default function StoryChoiceRoom() {
     } else if (choice.effect.type === "block") {
       updateRun({ buffAttack: run.buffAttack + choice.effect.value });
     } else if (choice.effect.type === "miracle_card") {
-      // Give a legendary card
-      completeRoom(node.id, { cardId: "angel_lord" });
-      return;
+      updateRun({ deck: [...run.deck, "angel_lord"] });
     } else if (choice.effect.type === "card_upgrade") {
       updateRun({ nextCardRare: true });
     }
@@ -51,10 +49,16 @@ export default function StoryChoiceRoom() {
 
     // Record story choice
     updateRun({ storyChoices: [...run.storyChoices, { id: story.id, choice: choiceKey }] });
+  };
 
-    setTimeout(() => {
+  const handleContinue = () => {
+    Sound.sfx.click();
+    const choice = chosen === "a" ? story.choice_a : story.choice_b;
+    if (choice.effect.type === "miracle_card") {
+      completeRoom(node.id, { cardId: "angel_lord" });
+    } else {
       completeRoom(node.id);
-    }, 2500);
+    }
   };
 
   return (
@@ -91,7 +95,13 @@ export default function StoryChoiceRoom() {
 
       {chosen && resultText && (
         <div className="mt-8 text-center animate-fade-in">
-          <p className="text-amber-200 text-lg font-serif">{resultText}</p>
+          <p className="text-amber-200 text-lg font-serif mb-6">{resultText}</p>
+          <button
+            onClick={handleContinue}
+            className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition"
+          >
+            Continue →
+          </button>
         </div>
       )}
     </div>

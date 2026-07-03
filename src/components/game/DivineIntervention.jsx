@@ -7,6 +7,7 @@ export default function DivineIntervention() {
   const node = run.currentNode;
   const blessings = node?.divineBlessings || [];
   const [chosen, setChosen] = useState(null);
+  const [resultText, setResultText] = useState("");
 
   useEffect(() => {
     Sound.playMusic("divine");
@@ -24,20 +25,25 @@ export default function DivineIntervention() {
     // Apply blessing effects
     if (blessing.effect.type === "heal") {
       updateRun({ playerHp: Math.min(run.maxHp, run.playerHp + blessing.effect.value) });
+      setResultText(`Restored ${blessing.effect.value} HP!`);
     } else if (blessing.effect.type === "buff_attack") {
       updateRun({ buffAttack: blessing.effect.value });
+      setResultText(`+${blessing.effect.value} attack power next battle!`);
     } else if (blessing.effect.type === "draw") {
       updateRun({ extraDraw: blessing.effect.value });
+      setResultText(`Will draw ${blessing.effect.value} extra cards next battle!`);
     } else if (blessing.effect.type === "shield") {
       updateRun({ shieldActive: true });
+      setResultText("All damage negated for your next battle's first turn!");
     } else if (blessing.effect.type === "free_cards") {
-      // handled at battle start via freeCardsRemaining
       updateRun({ freeCardsNext: blessing.effect.value });
+      setResultText(`Next ${blessing.effect.value} cards will cost 0 Faith!`);
     }
+  };
 
-    setTimeout(() => {
-      completeRoom(node.id);
-    }, 1200);
+  const handleContinue = () => {
+    Sound.sfx.click();
+    completeRoom(node.id);
   };
 
   return (
@@ -89,6 +95,18 @@ export default function DivineIntervention() {
           </button>
         ))}
       </div>
+
+      {chosen && resultText && (
+        <div className="relative mt-8 text-center animate-fade-in">
+          <p className="text-yellow-200 text-lg font-serif mb-6">{resultText}</p>
+          <button
+            onClick={handleContinue}
+            className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition"
+          >
+            Continue →
+          </button>
+        </div>
+      )}
     </div>
   );
 }

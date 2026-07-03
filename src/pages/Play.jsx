@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import MapView from "@/components/game/MapView";
 import BattleScreen from "@/components/game/BattleScreen";
@@ -13,7 +14,8 @@ import RestRoom from "@/components/game/RestRoom";
 import HeroSelect from "@/components/game/HeroSelect";
 
 export default function Play() {
-  const { run, selectNode, endRun, updateRun } = useGame();
+  const { run, selectNode, endRun } = useGame();
+  const navigate = useNavigate();
   const [introShown, setIntroShown] = useState(false);
 
   // No active run — show hero selection
@@ -21,12 +23,15 @@ export default function Play() {
     return <HeroSelect />;
   }
 
-  // Opening narration
+  // Opening narration — auto-select first room on continue (player doesn't choose first room)
   if (run.phase === "map" && run.roomsCleared === 0 && !run.currentNode && !introShown) {
     return (
       <StoryNarration
         text={run.narrationText}
-        onComplete={() => setIntroShown(true)}
+        onComplete={() => {
+          setIntroShown(true);
+          selectNode(run.map[0][0].id);
+        }}
       />
     );
   }
@@ -38,7 +43,7 @@ export default function Play() {
         map={run.map}
         currentNode={run.currentNode}
         onSelectNode={selectNode}
-        onExit={endRun}
+        onExit={() => { endRun(); navigate("/"); }}
       />
     );
   }
@@ -85,14 +90,13 @@ export default function Play() {
 
   // Mystery room resolves to its real type
   if (run.phase === "mystery") {
-    // mysteryType was set during generation; phase was already updated in context
     return null;
   }
 
   // Fallback
   return (
     <div className="min-h-screen flex items-center justify-center text-amber-200">
-      <button onClick={endRun} className="px-6 py-3 border border-amber-400/40 rounded-lg">
+      <button onClick={() => { endRun(); navigate("/"); }} className="px-6 py-3 border border-amber-400/40 rounded-lg">
         Return to Menu
       </button>
     </div>

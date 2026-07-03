@@ -3,25 +3,28 @@ import { cn } from "@/utils";
 
 const RARITY_STYLES = {
   common: {
-    border: "border-slate-400/60",
-    glow: "shadow-md",
-    bg: "from-slate-700 to-slate-800",
-    label: "text-slate-300",
-    badge: "bg-slate-600/50",
+    border: "border-sky-400/60",
+    glow: "shadow-md shadow-sky-500/10",
+    bg: "from-sky-800/50 to-slate-800",
+    label: "text-sky-200",
+    badge: "bg-sky-600/40",
+    accent: "sky",
   },
   rare: {
-    border: "border-amber-400/70",
-    glow: "shadow-lg shadow-amber-500/20",
-    bg: "from-amber-900/40 to-slate-800",
-    label: "text-amber-300",
-    badge: "bg-amber-600/40",
+    border: "border-emerald-400/70",
+    glow: "shadow-lg shadow-emerald-500/25",
+    bg: "from-emerald-800/40 to-slate-800",
+    label: "text-emerald-200",
+    badge: "bg-emerald-600/40",
+    accent: "emerald",
   },
   legendary: {
-    border: "border-yellow-300/80",
-    glow: "shadow-xl shadow-yellow-400/40",
-    bg: "from-yellow-800/30 via-amber-800/20 to-slate-800",
-    label: "text-yellow-200",
-    badge: "bg-yellow-500/30",
+    border: "border-amber-300/80",
+    glow: "shadow-xl shadow-amber-400/40",
+    bg: "from-amber-700/30 via-yellow-700/20 to-slate-800",
+    label: "text-amber-100",
+    badge: "bg-amber-500/30",
+    accent: "amber",
   },
 };
 

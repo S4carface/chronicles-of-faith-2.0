@@ -33,7 +33,6 @@ export default function RewardScreen() {
   const handleTriviaComplete = (result) => {
     setShowTrivia(false);
     if (result && result.cardId) {
-      // trivia bonus card
       updateRun({ deck: [...run.deck, result.cardId] });
     }
     setShowRewards(true);
@@ -43,9 +42,11 @@ export default function RewardScreen() {
     Sound.sfx.reward();
     setSelectedReward(cardId);
     updateRun({ deck: [...run.deck, cardId] });
-    setTimeout(() => {
-      completeRoom(run.currentNode.id);
-    }, 1200);
+  };
+
+  const handleContinue = () => {
+    Sound.sfx.click();
+    completeRoom(run.currentNode.id);
   };
 
   const handleSkip = () => {
@@ -85,12 +86,21 @@ export default function RewardScreen() {
         })}
       </div>
 
-      <button
-        onClick={handleSkip}
-        className="text-amber-100/40 hover:text-amber-200/70 text-sm transition"
-      >
-        Skip reward →
-      </button>
+      {selectedReward ? (
+        <button
+          onClick={handleContinue}
+          className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition animate-fade-in"
+        >
+          Continue →
+        </button>
+      ) : (
+        <button
+          onClick={handleSkip}
+          className="text-amber-100/40 hover:text-amber-200/70 text-sm transition"
+        >
+          Skip reward →
+        </button>
+      )}
     </div>
   );
 }

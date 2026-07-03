@@ -15,26 +15,28 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
       } else {
         clearInterval(interval);
         setDone(true);
-        if (onComplete) setTimeout(onComplete, 800);
       }
     }, 35);
     return () => clearInterval(interval);
   }, [text]);
 
+  const handleContinue = () => {
+    if (onComplete) onComplete();
+  };
+
   const skip = () => {
     if (!skipable) return;
     setDisplayed(text);
     setDone(true);
-    if (onComplete) setTimeout(onComplete, 600);
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center"
       onClick={skip}
       style={{ background: "radial-gradient(ellipse at center, rgba(26,39,68,0.95) 0%, rgba(8,12,24,0.98) 100%)" }}
     >
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
             key={i}
@@ -55,10 +57,15 @@ export default function StoryNarration({ text, onComplete, skipable = true }) {
         <div className="text-6xl mb-6 opacity-80">📖</div>
         <p className="text-2xl md:text-3xl font-serif text-amber-100 leading-relaxed min-h-[6rem]">
           {displayed}
-          <span className="animate-pulse">▊</span>
+          {!done && <span className="animate-pulse">▊</span>}
         </p>
         {done && (
-          <p className="text-amber-400/60 text-sm mt-8 animate-pulse">Tap to continue...</p>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleContinue(); }}
+            className="mt-8 px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg hover:bg-amber-600/40 transition animate-fade-in"
+          >
+            Continue →
+          </button>
         )}
       </div>
     </div>

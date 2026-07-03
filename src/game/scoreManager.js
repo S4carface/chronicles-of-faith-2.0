@@ -1,96 +1,137 @@
 import { base44 } from "@/api/base44Client";
 
-const PENDING_KEY = "chronicles_pending_scores";
-const DEVICE_ID_KEY = "cof_device_id";
-const LB_CACHE_KEY = "chronicles_lb_cache";
+const PLAYER_ID_KEY = "cof_player_id";
 
-export function getDeviceId() {
+/**
+ * Get or create a stable playerId stored in localStorage.
+ * No login required — this identifies the browser/device.
+ */
+export function getPlayerId() {
   try {
-    let id = localStorage.getItem(DEVICE_ID_KEY);
+    let id = localStorage.getItem(PLAYER_ID_KEY);
     if (!id) {
-      id = "dev-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
-      localStorage.setItem(DEVICE_ID_KEY, id);
+      id = "p-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
+      localStorage.setItem(PLAYER_ID_KEY, id);
     }
     return id;
   } catch {
-    return "dev-unknown";
+    return "p-unknown";
   }
-}
-
-export function getPendingScores() {
-  try {
-    const raw = localStorage.getItem(PENDING_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function savePending(scores) {
-  try {
-    localStorage.setItem(PENDING_KEY, JSON.stringify(scores));
-  } catch {}
 }
 
 /**
- * Submit a score to the online Score entity.
- * On failure, stores the score locally for later retry.
- * Returns { success: boolean, error?: string }
+ * Deduplicate scores by playerId (fallback to playerName),
+ * keeping only the highest score per player.
  */
-export async function submitScore(scoreData) {
+export function deduplicateByPlayer(scores) {
+  const byPlayer = new Map();
+  for (const s of scores) {
+    const key = s.playerId || s.playerName;
+    const existing = byPlayer.get(key);
+    if (!existing || s.score > existing.score) {
+      byPlayer.set(key, s);
+    }
+  }
+  return Array.from(byPlayer.values()).sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Submit a score to the cloud LeaderboardScore entity.
+ * Deduplicates by playerId + mode + dailyChallengeId — only the best score is kept.
+ * If the new score is lower than the existing best, the previous score is kept.
+ * Returns { success: boolean, action?: string, error?: string }
+ */
+export async function submitBestScore(scoreData) {
+  const playerId = getPlayerId();
   const payload = {
-    ...scoreData,
-    deviceId: getDeviceId(),
-    completedAt: scoreData.completedAt || new Date().toISOString(),
+    playerName: scoreData.playerName,
+    playerId,
+    score: scoreData.score,
+    mode: scoreData.mode || "story",
+    chapter: scoreData.chapter || "Genesis",
+    hero: scoreData.hero || "Adam",
+    difficulty: scoreData.difficulty || "normal",
+    roomsCleared: scoreData.roomsCleared || 0,
+    battlesWon: scoreData.battlesWon || 0,
+    triviaCorrect: scoreData.triviaCorrect || 0,
+    result: scoreData.result || "completed",
+    dailyChallengeId: scoreData.dailyChallengeId || null,
   };
+
   try {
-    await base44.entities.Score.create(payload);
-    return { success: true };
+    // Query for existing score by same player for same category
+    const query = { playerId, mode: payload.mode };
+    if (payload.mode === "daily") {
+      query.dailyChallengeId = payload.dailyChallengeId;
+    }
+    const existing = await base44.entities.LeaderboardScore.filter(query, "-score", 1);
+
+    if (existing && existing.length > 0) {
+      const prev = existing[0];
+      if (payload.score > prev.score) {
+        await base44.entities.LeaderboardScore.update(prev.id, {
+          score: payload.score,
+          playerName: payload.playerName,
+          chapter: payload.chapter,
+          hero: payload.hero,
+          difficulty: payload.difficulty,
+          roomsCleared: payload.roomsCleared,
+          battlesWon: payload.battlesWon,
+          triviaCorrect: payload.triviaCorrect,
+          result: payload.result,
+        });
+        return { success: true, action: "updated" };
+      }
+      return { success: true, action: "kept_previous" };
+    }
+
+    await base44.entities.LeaderboardScore.create(payload);
+    return { success: true, action: "created" };
   } catch (e) {
-    const pending = getPendingScores();
-    pending.push({ ...payload, _queuedAt: Date.now() });
-    savePending(pending);
     return { success: false, error: e?.message || "Network error" };
   }
 }
 
 /**
- * Attempt to submit any pending scores that failed previously.
- * Returns { retried, succeeded }
+ * Fetch leaderboard scores from cloud, deduplicated by player.
+ * tab: "all" | "weekly" | "daily"
  */
-export async function retryPendingScores() {
-  const pending = getPendingScores();
-  if (pending.length === 0) return { retried: 0, succeeded: 0 };
-  let succeeded = 0;
-  const stillPending = [];
-  for (const score of pending) {
-    try {
-      await base44.entities.Score.create(score);
-      succeeded++;
-    } catch {
-      stillPending.push(score);
+export async function fetchLeaderboard(tab) {
+  let results;
+  if (tab === "daily") {
+    const today = new Date().toISOString().slice(0, 10);
+    results = await base44.entities.LeaderboardScore.filter(
+      { mode: "daily", dailyChallengeId: today },
+      "-score",
+      100
+    );
+  } else {
+    results = await base44.entities.LeaderboardScore.filter(
+      { mode: "story" },
+      "-score",
+      100
+    );
+    if (tab === "weekly") {
+      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      results = (results || []).filter(
+        (e) => new Date(e.created_date).getTime() > weekAgo
+      );
     }
   }
-  savePending(stillPending);
-  return { retried: pending.length, succeeded };
+  return deduplicateByPlayer(results || []);
 }
 
-/** Cache leaderboard results for fast initial load. */
-export function cacheLeaderboard(tab, data) {
-  try {
-    const raw = localStorage.getItem(LB_CACHE_KEY);
-    const cache = raw ? JSON.parse(raw) : {};
-    cache[tab] = { data, timestamp: Date.now() };
-    localStorage.setItem(LB_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
-}
-
-export function getCachedLeaderboard(tab) {
-  try {
-    const raw = localStorage.getItem(LB_CACHE_KEY);
-    const cache = raw ? JSON.parse(raw) : {};
-    return cache[tab]?.data || null;
-  } catch {
-    return null;
-  }
+/**
+ * Get a player's rank on the daily leaderboard for a given challenge date.
+ */
+export async function getDailyRank(dailyChallengeId) {
+  const playerId = getPlayerId();
+  const scores = await base44.entities.LeaderboardScore.filter(
+    { mode: "daily", dailyChallengeId },
+    "-score",
+    100
+  );
+  const deduped = deduplicateByPlayer(scores || []);
+  const idx = deduped.findIndex((s) => s.playerId === playerId);
+  return idx >= 0 ? idx + 1 : null;
 }

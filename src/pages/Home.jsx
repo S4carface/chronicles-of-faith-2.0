@@ -22,7 +22,7 @@ export default function Home() {
     if (run && getSavedRoute() === "/play") {
       setShowResume(true);
     }
-    if (!profile.playerName && !localStorage.getItem("namePromptSeen")) {
+    if (!profile.playerName) {
       setShowNamePrompt(true);
     }
   }, []);
@@ -43,7 +43,6 @@ export default function Home() {
 
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
-    localStorage.setItem("namePromptSeen", "true");
     if (pendingAction === "run") {
       setPendingAction(null);
       if (run) {
@@ -70,7 +69,7 @@ export default function Home() {
     { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
     { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "One daily battle", status: "New today" },
-    { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Top scores", status: null },
+    { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
     { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
     { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
   ];
@@ -109,7 +108,7 @@ export default function Home() {
         onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
         className="flex items-center gap-1.5 text-amber-100/60 hover:text-amber-200 transition text-sm mb-3"
       >
-        <span>Player: {profile.playerName || "Anonymous Warrior"}</span>
+        <span>Playing as: {profile.playerName || "— set name —"}</span>
         <Pencil className="w-3 h-3" />
       </button>
 
@@ -206,13 +205,13 @@ export default function Home() {
       </p>
 
       {showNamePrompt && (
-        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => { setShowNamePrompt(false); localStorage.setItem("namePromptSeen", "true"); }} />
+        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} forceName={pendingAction === "run"} />
       )}
 
       {showResume && (
         <ResumeModal
           onResume={() => { setShowResume(false); navigate("/play"); }}
-          onAbandon={() => { setShowResume(false); endRun(); if (!profile.playerName && !localStorage.getItem("namePromptSeen")) setShowNamePrompt(true); }}
+          onAbandon={() => { setShowResume(false); endRun(); if (!profile.playerName) setShowNamePrompt(true); }}
         />
       )}
     </div>

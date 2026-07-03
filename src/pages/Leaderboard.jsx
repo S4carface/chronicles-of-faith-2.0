@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
-import { getCachedLeaderboard, cacheLeaderboard, retryPendingScores } from "@/game/scoreManager";
+import { fetchLeaderboard } from "@/game/scoreManager";
 import * as Sound from "@/game/soundManager";
 
 const RANK_STYLES = [
@@ -29,42 +28,13 @@ export default function Leaderboard() {
   const loadLeaderboard = useCallback(async (tab) => {
     setLoading(true);
     setLoadError(false);
-
-    // Show cached data immediately for fast load
-    const cached = getCachedLeaderboard(tab);
-    if (cached) setEntries(cached);
-
+    setEntries([]);
     try {
-      let results;
-      if (tab === "daily") {
-        const today = new Date().toISOString().slice(0, 10);
-        results = await base44.entities.Score.filter(
-          { mode: "daily", challengeDate: today },
-          "-score",
-          50
-        );
-      } else {
-        results = await base44.entities.Score.filter(
-          { mode: "story" },
-          "-score",
-          50
-        );
-        if (tab === "weekly") {
-          const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-          results = (results || []).filter(
-            (e) => new Date(e.created_date).getTime() > weekAgo
-          );
-        }
-      }
-      const data = results || [];
+      const data = await fetchLeaderboard(tab);
       setEntries(data);
-      cacheLeaderboard(tab, data);
-    } catch (e) {
-      // Keep cached data if available, otherwise show error
-      if (!cached) {
-        setEntries([]);
-        setLoadError(true);
-      }
+    } catch {
+      setEntries([]);
+      setLoadError(true);
     }
     setLoading(false);
   }, []);
@@ -76,7 +46,6 @@ export default function Leaderboard() {
 
   const handleRefresh = () => {
     Sound.sfx.click();
-    retryPendingScores();
     loadLeaderboard(filter);
   };
 
@@ -97,7 +66,6 @@ export default function Leaderboard() {
         </button>
       </div>
 
-      {/* Online indicator */}
       <div className="flex items-center justify-center gap-1.5 mb-4 text-amber-100/40 text-xs">
         <Globe className="w-3.5 h-3.5 text-emerald-400/60" />
         <span>Scores are shared online across players.</span>
@@ -124,14 +92,14 @@ export default function Leaderboard() {
       </div>
 
       <div className="max-w-2xl mx-auto rounded-xl border-2 border-amber-500/15 overflow-hidden" style={{ background: "rgba(15,26,48,0.5)" }}>
-        {loading && entries.length === 0 && (
+        {loading && (
           <div className="p-12 text-center text-amber-100/60">
             <div className="w-8 h-8 border-4 border-amber-200/20 border-t-amber-400 rounded-full animate-spin mx-auto mb-4" />
-            Loading scores...
+            Loading leaderboard...
           </div>
         )}
 
-        {loadError && entries.length === 0 && (
+        {loadError && !loading && (
           <div className="p-12 text-center text-amber-100/60">
             <WifiOff className="w-10 h-10 mx-auto mb-3 text-amber-300/40" />
             <p className="mb-2">Could not load leaderboard.</p>
@@ -139,10 +107,10 @@ export default function Leaderboard() {
           </div>
         )}
 
-        {!loading && entries.length === 0 && !loadError && (
+        {!loading && !loadError && entries.length === 0 && (
           <div className="p-12 text-center text-amber-100/60">
             <ScrollText className="w-10 h-10 mx-auto mb-3 text-amber-300/40" />
-            <p>No scores yet. Be the first!</p>
+            <p>No scores yet. Be the first.</p>
           </div>
         )}
 
@@ -150,7 +118,6 @@ export default function Leaderboard() {
           <div className="divide-y divide-amber-500/5">
             {entries.map((entry, idx) => {
               const rank = RANK_STYLES[idx] || null;
-              const isDaily = entry.mode === "daily";
               return (
                 <div
                   key={entry.id}
@@ -169,17 +136,14 @@ export default function Leaderboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-serif text-amber-100 truncate">{entry.playerName}</div>
-                    <div className="text-amber-100/60 text-xs flex items-center gap-1">
-                      {isDaily ? (
-                        <span className="text-amber-300/60 flex items-center gap-0.5">
-                          <Calendar className="w-3 h-3" />
-                          Daily • {entry.heroName}
-                        </span>
-                      ) : (
-                        <span>
-                          {entry.heroName} • {entry.roomsCleared} rooms • {entry.triviaCorrect} trivia
-                        </span>
-                      )}
+                    <div className="text-amber-100/60 text-xs flex items-center gap-1.5 flex-wrap">
+                      <span className="text-amber-300/70">{entry.hero}</span>
+                      <span className="text-amber-100/30">·</span>
+                      <span className="capitalize text-amber-100/50">{entry.difficulty}</span>
+                      <span className="text-amber-100/30">·</span>
+                      <span>{entry.roomsCleared} rooms</span>
+                      <span className="text-amber-100/30">·</span>
+                      <span>{entry.triviaCorrect} trivia</span>
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-amber-200 font-serif">{entry.score}</div>
@@ -189,10 +153,6 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
-
-      {loading && entries.length > 0 && (
-        <p className="text-center text-amber-100/30 text-xs mt-4">Refreshing...</p>
-      )}
     </div>
   );
 }

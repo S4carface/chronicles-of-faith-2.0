@@ -4,7 +4,7 @@ import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
-import { submitScore } from "@/game/scoreManager";
+import { submitBestScore } from "@/game/scoreManager";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
@@ -58,16 +58,17 @@ export default function VictoryScreen() {
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(false);
-    const result = await submitScore({
+    const result = await submitBestScore({
       playerName: name || "Anonymous Warrior",
       score: scoreToSubmit,
       mode: "story",
-      heroName: run.hero?.name || "Adam",
-      chapterName: "Genesis",
+      hero: run.hero?.name || "Adam",
+      chapter: "Genesis",
       roomsCleared: run.roomsCleared,
+      battlesWon: run.roomsCleared,
       triviaCorrect: run.triviaCorrect,
       difficulty: run.difficulty || "normal",
-      goldEarned: run.gold || 0,
+      result: "victory",
     });
     if (result.success) {
       setSubmitted(true);
@@ -160,16 +161,14 @@ export default function VictoryScreen() {
         {showNamePrompt && (
           <PlayerNamePrompt
             onSave={handleNameSaved}
-            onCancel={() => setShowNamePrompt(false)}
-            title="Choose Your Name"
-            subtitle="Enter your name to submit your score to the leaderboard."
+            forceName
           />
         )}
 
         {!showNamePrompt && (
           submitError ? (
             <div className="mb-6">
-              <p className="text-red-300 text-sm mb-3">Could not submit score. Check your connection and try again.</p>
+              <p className="text-red-300 text-sm mb-3">Score could not be saved. Check your connection and try again.</p>
               <button
                 onClick={handleRetry}
                 disabled={submitting}
@@ -177,11 +176,10 @@ export default function VictoryScreen() {
               >
                 {submitting ? "Retrying..." : "Retry Submission"}
               </button>
-              <p className="text-amber-100/40 text-xs mt-2">Your score is saved locally and will be submitted when you reconnect.</p>
             </div>
           ) : submitted
-            ? <p className="text-emerald-300 text-sm mb-6">Score submitted to the leaderboard!</p>
-            : <p className="text-amber-100/60 text-sm mb-6">Submitting score to leaderboard...</p>
+            ? <p className="text-emerald-300 text-sm mb-6">Score saved to leaderboard.</p>
+            : <p className="text-amber-100/60 text-sm mb-6">Saving score to leaderboard...</p>
         )}
 
         <button

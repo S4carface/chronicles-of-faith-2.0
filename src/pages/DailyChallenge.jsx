@@ -214,7 +214,7 @@ export default function DailyChallenge() {
       )}
 
       {showNamePrompt && (
-        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />
+        <PlayerNamePrompt onSave={handleNameSaved} forceName />
       )}
     </div>
   );

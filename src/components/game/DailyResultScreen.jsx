@@ -4,6 +4,7 @@ import { Trophy, Skull, Heart, Clock, Swords, BookOpen, Coins, Flame, BarChart3 
 import { useGame } from "@/game/GameContext";
 import { base44 } from "@/api/base44Client";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import { submitScore } from "@/game/scoreManager";
 import * as Sound from "@/game/soundManager";
 
 function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
@@ -24,6 +25,8 @@ export default function DailyResultScreen() {
   const [streakUpdated, setStreakUpdated] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [rank, setRank] = useState(null);
+  const [submitError, setSubmitError] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const calculatedScore = useRef(0);
 
   const result = run?.dailyResult;
@@ -69,44 +72,46 @@ export default function DailyResultScreen() {
   };
 
   const submitLeaderboard = async (playerName, score, result, triviaCorrect, todayStr, heroId) => {
-    try {
-      const existing = await base44.entities.LeaderboardEntry.filter({
-        run_seed: todayStr,
-        player_name: playerName,
-        is_daily: true,
-      }, "-score", 1);
+    const submitResult = await submitScore({
+      playerName: playerName,
+      score: score,
+      mode: "daily",
+      challengeDate: todayStr,
+      heroName: run.hero?.name || "Adam",
+      chapterName: dailyConfig?.theme?.title || "Daily Challenge",
+      roomsCleared: result.result === "victory" ? 1 : 0,
+      triviaCorrect: triviaCorrect ? 1 : 0,
+      difficulty: dailyConfig?.difficulty || "normal",
+      goldEarned: isVictory && streakUpdated ? (dailyConfig?.reward?.gold || 0) : 0,
+    });
 
-      if (existing.length > 0) {
-        if (score > existing[0].score) {
-          await base44.entities.LeaderboardEntry.update(existing[0].id, {
-            score,
-            rooms_cleared: result.result === "victory" ? 1 : 0,
-            trivia_correct: triviaCorrect ? 1 : 0,
-            damage_taken: result.maxPlayerHp - result.playerHp,
-          });
-        }
-      } else {
-        await base44.entities.LeaderboardEntry.create({
-          player_name: playerName,
-          score,
-          rooms_cleared: result.result === "victory" ? 1 : 0,
-          trivia_correct: triviaCorrect ? 1 : 0,
-          hero_used: heroId,
-          is_daily: true,
-          damage_taken: result.maxPlayerHp - result.playerHp,
-          run_seed: todayStr,
-        });
-      }
-
-      const allDaily = await base44.entities.LeaderboardEntry.filter({
-        is_daily: true,
-        run_seed: todayStr,
-      }, "-score", 50);
-      const playerRank = allDaily.findIndex(e => e.player_name === playerName) + 1;
-      setRank(playerRank > 0 ? playerRank : null);
-    } catch (e) {
-      // Silent fail — leaderboard is secondary
+    if (submitResult.success) {
+      setScoreSubmitted(true);
+      // Fetch rank
+      try {
+        const allDaily = await base44.entities.Score.filter({
+          mode: "daily",
+          challengeDate: todayStr,
+        }, "-score", 50);
+        const playerRank = allDaily.findIndex(e => e.playerName === playerName) + 1;
+        setRank(playerRank > 0 ? playerRank : null);
+      } catch {}
+    } else {
+      setSubmitError(true);
     }
+  };
+
+  const handleRetry = () => {
+    setSubmitError(false);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    submitLeaderboard(
+      profile.playerName || "Anonymous Warrior",
+      calculatedScore.current,
+      result,
+      run.dailyTriviaCorrect,
+      todayStr,
+      run.hero?.id || "adam"
+    );
   };
 
   if (!result) {
@@ -218,6 +223,23 @@ export default function DailyResultScreen() {
             </div>
           )}
         </div>
+
+        {submitError && (
+          <div className="mb-4 p-4 rounded-lg border border-red-400/40 bg-red-900/20 text-center">
+            <p className="text-red-300 text-sm mb-2">Could not submit score. Check your connection and try again.</p>
+            <button
+              onClick={handleRetry}
+              className="px-6 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 text-sm font-bold hover:bg-amber-600/40 transition"
+            >
+              Retry Submission
+            </button>
+            <p className="text-amber-100/40 text-xs mt-2">Your score is saved locally and will be submitted when you reconnect.</p>
+          </div>
+        )}
+
+        {scoreSubmitted && !submitError && (
+          <p className="text-emerald-300 text-sm mb-4 text-center">Score submitted to the leaderboard!</p>
+        )}
 
         <div className="flex flex-col gap-3">
           <button

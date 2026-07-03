@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
-import { base44 } from "@/api/base44Client";
 import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import { submitScore } from "@/game/scoreManager";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardsToCollection } = useGame();
@@ -13,6 +13,7 @@ export default function VictoryScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
   const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
@@ -47,36 +48,42 @@ export default function VictoryScreen() {
 
     // Auto-submit score — prompt for name if missing
     if (profile.playerName) {
-      submitScore(profile.playerName, finalScore);
+      submitScoreToCloud(profile.playerName, finalScore);
     } else {
       setShowNamePrompt(true);
     }
   }, []);
 
-  const submitScore = async (name, scoreToSubmit) => {
+  const submitScoreToCloud = async (name, scoreToSubmit) => {
     if (submitting) return;
     setSubmitting(true);
-    try {
-      await base44.entities.LeaderboardEntry.create({
-        player_name: name || "Anonymous Warrior",
-        score: scoreToSubmit,
-        rooms_cleared: run.roomsCleared,
-        trivia_correct: run.triviaCorrect,
-        hero_used: run.hero.id,
-        is_daily: run.isDaily,
-        damage_taken: run.maxHp - run.playerHp,
-        run_seed: run.seed,
-      });
+    setSubmitError(false);
+    const result = await submitScore({
+      playerName: name || "Anonymous Warrior",
+      score: scoreToSubmit,
+      mode: "story",
+      heroName: run.hero?.name || "Adam",
+      chapterName: "Genesis",
+      roomsCleared: run.roomsCleared,
+      triviaCorrect: run.triviaCorrect,
+      difficulty: run.difficulty || "normal",
+      goldEarned: run.gold || 0,
+    });
+    if (result.success) {
       setSubmitted(true);
-    } catch (e) {
-      setSubmitted(true);
+    } else {
+      setSubmitError(true);
     }
     setSubmitting(false);
   };
 
+  const handleRetry = () => {
+    submitScoreToCloud(profile.playerName, score);
+  };
+
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
-    submitScore(name, score);
+    submitScoreToCloud(name, score);
   };
 
   const handleReturnToMenu = () => {
@@ -160,7 +167,19 @@ export default function VictoryScreen() {
         )}
 
         {!showNamePrompt && (
-          submitted
+          submitError ? (
+            <div className="mb-6">
+              <p className="text-red-300 text-sm mb-3">Could not submit score. Check your connection and try again.</p>
+              <button
+                onClick={handleRetry}
+                disabled={submitting}
+                className="px-6 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 text-sm font-bold hover:bg-amber-600/40 transition disabled:opacity-40"
+              >
+                {submitting ? "Retrying..." : "Retry Submission"}
+              </button>
+              <p className="text-amber-100/40 text-xs mt-2">Your score is saved locally and will be submitted when you reconnect.</p>
+            </div>
+          ) : submitted
             ? <p className="text-emerald-300 text-sm mb-6">Score submitted to the leaderboard!</p>
             : <p className="text-amber-100/60 text-sm mb-6">Submitting score to leaderboard...</p>
         )}

@@ -1,0 +1,57 @@
+{
+  "name": "Score",
+  "type": "object",
+  "properties": {
+    "playerName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "score": {
+      "type": "number"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "story",
+        "daily"
+      ],
+      "default": "story"
+    },
+    "challengeDate": {
+      "type": "string"
+    },
+    "heroName": {
+      "type": "string"
+    },
+    "chapterName": {
+      "type": "string"
+    },
+    "roomsCleared": {
+      "type": "number",
+      "default": 0
+    },
+    "triviaCorrect": {
+      "type": "number",
+      "default": 0
+    },
+    "difficulty": {
+      "type": "string"
+    },
+    "goldEarned": {
+      "type": "number",
+      "default": 0
+    },
+    "completedAt": {
+      "type": "string"
+    },
+    "deviceId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "playerName",
+    "score",
+    "mode",
+    "heroName"
+  ]
+}

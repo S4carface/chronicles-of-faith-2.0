@@ -45,6 +45,8 @@ function loadProfile() {
       if (parsed.devotionReadDate === undefined) parsed.devotionReadDate = null;
       // Migrate Genesis completion flag
       if (parsed.genesisCompleted === undefined) parsed.genesisCompleted = false;
+      // Migrate leaderboard name-prompt-seen flag
+      if (parsed.leaderboardNamePromptSeen === undefined) parsed.leaderboardNamePromptSeen = false;
       return parsed;
     }
   } catch (e) {}
@@ -67,6 +69,7 @@ function loadProfile() {
     gold: 0,
     tutorialSeen: false,
     genesisCompleted: false,
+    leaderboardNamePromptSeen: false,
   };
 }
 

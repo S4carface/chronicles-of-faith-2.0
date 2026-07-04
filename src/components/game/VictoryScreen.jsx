@@ -236,7 +236,7 @@ export default function VictoryScreen() {
           <PlayerNamePrompt
             onSave={handleNameSaved}
             endOfRun
-            title="Add Your Name"
+            title="Save Your Name"
             subtitle="Add your name to this score so it appears on the leaderboard."
           />
         )}

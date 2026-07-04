@@ -21,7 +21,7 @@ const TABS = [
 ];
 
 export default function Leaderboard() {
-  const { Sound: Snd, profile } = useGame();
+  const { Sound: Snd, profile, saveProfile } = useGame();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -30,8 +30,11 @@ export default function Leaderboard() {
 
   useEffect(() => {
     Snd.playMusic("menu");
-    if (needsPlayerName(profile.playerName)) {
+    // Auto-prompt only the first time a guest opens the Leaderboard.
+    // After that, show a soft banner instead of a blocking modal.
+    if (needsPlayerName(profile.playerName) && !profile.leaderboardNamePromptSeen) {
       setShowNamePrompt(true);
+      saveProfile({ leaderboardNamePromptSeen: true });
     }
   }, []);
 
@@ -97,6 +100,24 @@ export default function Leaderboard() {
         <Globe className="w-3.5 h-3.5 text-emerald-400/60" />
         <span>Scores are shared online across players.</span>
       </div>
+
+      {/* Soft invite banner for guests who skipped the auto-prompt */}
+      {needsPlayerName(profile.playerName) && !showNamePrompt && (
+        <div className="max-w-2xl mx-auto mb-4 p-3 rounded-lg border border-amber-400/30 bg-amber-900/10 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <Pencil className="w-3.5 h-3.5 text-amber-300/60 flex-shrink-0" />
+            <span className="text-amber-100/60 text-xs lg:text-sm truncate">
+              Playing as Anonymous Pilgrim — add your name to claim your scores.
+            </span>
+          </div>
+          <button
+            onClick={handleChangeName}
+            className="flex-shrink-0 px-3 py-1.5 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition"
+          >
+            Add Name
+          </button>
+        </div>
+      )}
 
       <div className="flex justify-center gap-2 mb-6">
         {TABS.map((f) => {

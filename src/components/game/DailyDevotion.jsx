@@ -1,11 +1,36 @@
-import React from "react";
-import { BookOpen, Heart, Sun, ArrowDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { BookOpen, Heart, Sun, Volume2, Square } from "lucide-react";
 import { getDailyReflection } from "@/data/dailyReflections";
 import { recordVerseRead } from "@/game/playerStats";
+import { speakNarration, stopNarration } from "@/game/soundManager";
 import * as Sound from "@/game/soundManager";
 
-export default function DailyDevotion({ onSkipToBattle }) {
+export default function DailyDevotion() {
   const reflection = getDailyReflection();
+  const [reading, setReading] = useState(false);
+
+  // Stop narration if component unmounts
+  useEffect(() => {
+    return () => { stopNarration(); };
+  }, []);
+
+  const handleReadAloud = () => {
+    if (reading) {
+      stopNarration();
+      setReading(false);
+      return;
+    }
+    const fullText = `${reflection.verse}. ${reflection.reference}. Reflection. ${reflection.reflection} Prayer. ${reflection.prayer}`;
+    speakNarration(fullText);
+    setReading(true);
+    // Reset state after speech ends — poll since onend is inside soundManager
+    const checkEnd = setInterval(() => {
+      if (!window.speechSynthesis || (!window.speechSynthesis.speaking && !window.speechSynthesis.pending)) {
+        setReading(false);
+        clearInterval(checkEnd);
+      }
+    }, 500);
+  };
 
   return (
     <div className="w-full mb-4 lg:mb-6 rounded-xl border-2 border-amber-400/20 p-4 lg:p-6 animate-fade-in" style={{ background: "rgba(15,26,48,0.6)" }}>
@@ -15,10 +40,15 @@ export default function DailyDevotion({ onSkipToBattle }) {
           <h3 className="font-serif text-amber-200 text-base lg:text-lg">Daily Devotion</h3>
         </div>
         <button
-          onClick={() => { Sound.sfx.click(); onSkipToBattle?.(); }}
-          className="flex items-center gap-1 text-amber-300/50 hover:text-amber-200 text-[10px] lg:text-xs transition"
+          onClick={() => { handleReadAloud(); Sound.sfx.click(); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] lg:text-xs transition ${
+            reading
+              ? "border-amber-400/50 bg-amber-600/20 text-amber-100 hover:bg-amber-600/30"
+              : "border-amber-500/30 bg-amber-900/10 text-amber-200/70 hover:bg-amber-900/20"
+          }`}
         >
-          Skip to Battle <ArrowDown className="w-3 h-3" />
+          {reading ? <Square className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+          {reading ? "Stop" : "Read Aloud"}
         </button>
       </div>
 

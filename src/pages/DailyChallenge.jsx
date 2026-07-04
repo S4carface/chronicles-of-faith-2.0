@@ -14,7 +14,6 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const battleRef = useRef(null);
   const devotionTracked = useRef(false);
 
   const daily = getDailyChallenge();
@@ -37,10 +36,6 @@ export default function DailyChallenge() {
       recordDevotionRead(newStreak);
     }
   }, []);
-
-  const handleSkipToBattle = () => {
-    battleRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
 
   const beginDaily = () => {
     setLoading(true);
@@ -110,20 +105,24 @@ export default function DailyChallenge() {
         <p className="text-amber-100/50 text-xs lg:text-sm mb-4 lg:mb-6 italic">{daily.theme.verse}</p>
 
         {/* ===== SECTION 1: DAILY DEVOTION ===== */}
-        <DailyDevotion onSkipToBattle={handleSkipToBattle} />
+        <DailyDevotion />
+
+        {/* Divider */}
+        <div className="w-full max-w-xs mx-auto my-4 lg:my-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-500/30" />
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
+          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-500/30" />
+        </div>
 
         {/* ===== SECTION 2: DAILY BATTLE ===== */}
-        <div ref={battleRef} className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6 scroll-mt-4" style={{ background: "rgba(15,26,48,0.6)" }}>
-          <div className="flex items-center justify-center gap-2 mb-4">
+        <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6" style={{ background: "rgba(15,26,48,0.6)" }}>
+          <div className="flex items-center justify-center gap-2 mb-3">
             <Swords className="w-4 h-4 text-amber-300/60" />
             <h3 className="font-serif text-amber-200 text-base lg:text-lg">Daily Battle</h3>
           </div>
 
-          <p className="text-amber-100/70 text-sm lg:text-base mb-2">
-            One daily battle. Same challenge for everyone.
-          </p>
-          <p className="text-amber-100/40 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">
-            Daily Battle is one attempt. Leaving before finishing may end the attempt.
+          <p className="text-amber-100/50 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">
+            One shared battle per day — same for everyone.
           </p>
 
           {/* Difficulty display */}
@@ -219,7 +218,7 @@ export default function DailyChallenge() {
           className="inline-flex items-center gap-2 px-8 py-3 lg:px-12 lg:py-4 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg lg:text-2xl hover:bg-amber-600/40 transition active:scale-95 disabled:opacity-50"
         >
           <Swords className="w-5 h-5" />
-          {loading ? "Starting..." : hasActiveDaily ? "Continue Daily Battle" : "Begin Daily Battle"}
+          {loading ? "Starting..." : hasActiveDaily ? "Continue Daily Battle" : "Start Daily Battle"}
         </button>
 
         <p className="text-amber-100/40 text-[10px] lg:text-xs mt-6 lg:mt-8 font-serif italic">

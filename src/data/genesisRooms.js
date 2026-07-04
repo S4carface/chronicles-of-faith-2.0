@@ -135,9 +135,9 @@ export const TREASURE_REWARDS = [
 export const DIVINE_BLESSINGS = [
   { id: "manna", name: "Manna from Heaven", icon: "🌾", description: "Restore 15 HP immediately.", effect: { type: "heal", value: 15 } },
   { id: "covenant", name: "Covenant of Grace", icon: "🌈", description: "Next 3 cards cost 0 Faith.", effect: { type: "free_cards", value: 3 } },
-  { id: "strength", name: "Divine Strength", icon: "💪", description: "Your next attack deals +10 damage.", effect: { type: "buff_attack", value: 10 } },
-  { id: "wisdom", name: "Gift of Wisdom", icon: "🦉", description: "Draw 3 extra cards at the start of your next battle.", effect: { type: "draw", value: 3 } },
-  { id: "angel", name: "Angel's Protection", icon: "👼", description: "Negate all damage for your next battle's first turn.", effect: { type: "shield", value: 999 } },
+  { id: "strength", name: "Divine Strength", icon: "💪", description: "Next attack deals +10 damage.", effect: { type: "buff_attack", value: 10 } },
+  { id: "wisdom", name: "Gift of Wisdom", icon: "🦉", description: "Draw 3 extra cards next battle.", effect: { type: "draw", value: 3 } },
+  { id: "angel", name: "Angel's Protection", icon: "👼", description: "Negate all damage next battle's first turn.", effect: { type: "shield", value: 999 } },
 ];
 
 export const DAILY_THEMES = [

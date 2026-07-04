@@ -30,6 +30,7 @@ export default function VictoryScreen() {
 
   useEffect(() => {
     Sound.playMusic("victory");
+    Sound.sfx.victory();
     // Debug-safe check: read trivia stats directly from the active run state
     const triviaCorrect = run.triviaCorrect || 0;
     const triviaAttempted = run.triviaAttempted || 0;

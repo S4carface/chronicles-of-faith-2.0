@@ -16,6 +16,8 @@ export default function DefeatScreen() {
 
   // Save cards collected during the run even on defeat
   useEffect(() => {
+    Sound.playMusic("defeat");
+    Sound.sfx.defeat();
     if (run.deck) {
       addCardsToCollection(run.deck);
     }

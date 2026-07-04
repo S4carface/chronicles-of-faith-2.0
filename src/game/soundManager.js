@@ -57,6 +57,38 @@ function notifyUnlockListeners() {
   });
 }
 
+// Global first-tap listener: unlocks audio on ANY user interaction (touch/click/keydown).
+// Mobile browsers require a user gesture before AudioContext can start.
+let globalListenerRegistered = false;
+export function initGlobalUnlockListener() {
+  if (globalListenerRegistered) return;
+  globalListenerRegistered = true;
+
+  const handler = () => {
+    const wasLocked = !audioUnlocked;
+    unlockAudio();
+    if (wasLocked && audioUnlocked) {
+      // Start pending music only if Music is enabled in Settings
+      if (musicEnabled && pendingMusicTheme) {
+        const theme = pendingMusicTheme;
+        pendingMusicTheme = null;
+        _startMusic(theme);
+      }
+    }
+    // Remove after first successful unlock
+    if (audioUnlocked) {
+      document.removeEventListener("touchstart", handler, true);
+      document.removeEventListener("click", handler, true);
+      document.removeEventListener("keydown", handler, true);
+    }
+  };
+
+  // capture: true so we catch the gesture before any app handler can stopPropagation
+  document.addEventListener("touchstart", handler, true);
+  document.addEventListener("click", handler, true);
+  document.addEventListener("keydown", handler, true);
+}
+
 // Attempt to unlock/resume audio from a user gesture.
 // Returns true if audio is now playable.
 export function unlockAudio() {

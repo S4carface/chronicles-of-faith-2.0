@@ -8,6 +8,8 @@ export default function AudioUnlockButton() {
   const [needsUnlock, setNeedsUnlock] = useState(Sound.needsUnlockPrompt());
 
   useEffect(() => {
+    // Register the global first-tap listener on mount (once, app-wide)
+    Sound.initGlobalUnlockListener();
     const unsub = Sound.subscribeUnlock(() => {
       setNeedsUnlock(Sound.needsUnlockPrompt());
     });
@@ -26,10 +28,10 @@ export default function AudioUnlockButton() {
   return (
     <button
       onClick={handleTap}
-      className="fixed bottom-4 right-4 z-[70] flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-amber-400/50 bg-slate-900/90 text-amber-200 text-sm font-medium shadow-lg shadow-amber-500/20 animate-fade-in hover:bg-slate-800 transition active:scale-95"
-      style={{ backdropFilter: "blur(8px)" }}
+      className="fixed bottom-4 right-4 z-[70] flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-amber-400/60 bg-slate-900/95 text-amber-200 text-sm font-medium shadow-lg shadow-amber-500/30 animate-fade-in hover:bg-slate-800 transition active:scale-95"
+      style={{ backdropFilter: "blur(8px)", animation: "iconFloat 2s ease-in-out infinite, fadeIn 0.4s ease-out" }}
     >
-      <Volume2 className="w-4 h-4 animate-icon-float" />
+      <Volume2 className="w-4 h-4" style={{ animation: "iconFloat 2s ease-in-out infinite" }} />
       Tap to enable sound
     </button>
   );

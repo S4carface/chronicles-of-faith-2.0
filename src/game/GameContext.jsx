@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { HEROES, HERO_MAP } from "@/data/heroes";
 import { CARDS, CARD_MAP, getCardById } from "@/data/cards";
-import { ENEMIES, ENEMY_POOL, BOSSES } from "@/data/enemies";
+import { ENEMIES, ENEMY_POOL } from "@/data/enemies";
 import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
+import { BOSS_MODIFIER_IDS } from "@/data/bossModifiers";
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
 import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
@@ -253,7 +254,8 @@ export function GameProvider({ children }) {
           node.enemyId = enemyId;
         }
         if (node.type === ROOM_TYPES.BOSS) {
-          node.enemyId = pick(enemyRng, BOSSES);
+          node.enemyId = "babel_tower";
+          node.bossModifier = pick(enemyRng, BOSS_MODIFIER_IDS);
         }
         if (node.type === ROOM_TYPES.TREASURE) {
           node.treasureReward = pick(enemyRng, TREASURE_REWARDS);
@@ -308,6 +310,7 @@ export function GameProvider({ children }) {
       shieldActive: false,
       extraDraw: 0,
       nextCardRare: false,
+      bossModifier: map[map.length - 1][0].bossModifier || null,
     });
 
     recordRunStarted();

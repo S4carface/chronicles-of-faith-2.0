@@ -17,6 +17,7 @@ import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import { recordBattleWon, recordBattleLost, recordCardPlayed, recordDamage, recordBlock, recordHealing } from "@/game/playerStats";
+import { applyBossModifier } from "@/data/bossModifiers";
 
 function getActionType(action) {
   if (!action) return "attack";
@@ -52,7 +53,8 @@ export default function BattleScreen() {
   const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
-  const enemy = run.dailyEnemy || ENEMIES[run.pendingEnemyId];
+  const baseEnemy = run.dailyEnemy || ENEMIES[run.pendingEnemyId];
+  const enemy = (run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
   const [battleState, setBattleState] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [battleEnd, setBattleEnd] = useState(null);
@@ -139,6 +141,9 @@ export default function BattleScreen() {
       if (run.dailyMaxEnergy) { state.maxEnergy = run.dailyMaxEnergy; state.energy = run.dailyMaxEnergy; }
       if (run.dailyEnemyStartBlock) state.enemyBlock = run.dailyEnemyStartBlock;
       if (run.dailyPlayerStartBlock) state.playerBlock = run.dailyPlayerStartBlock;
+    }
+    if (run.bossModifier && enemy.startBlock) {
+      state.enemyBlock = (state.enemyBlock || 0) + enemy.startBlock;
     }
     setBattleState(state);
   }, []);
@@ -672,6 +677,14 @@ export default function BattleScreen() {
           <h2 className="text-lg lg:text-3xl font-serif text-red-200 leading-tight">{enemy.name}</h2>
           {enemy.isBoss && (
             <span className="inline-block text-red-400 text-[9px] lg:text-xs font-bold tracking-widest px-2 py-0.5 rounded-full border border-red-500/30 bg-red-900/30 mt-0.5">BOSS</span>
+          )}
+          {enemy.bossModifier && (
+            <div className="mt-1">
+              <span className="inline-block text-purple-300 text-[10px] lg:text-sm font-serif font-semibold tracking-wide px-2.5 py-0.5 rounded-full border border-purple-500/30 bg-purple-900/20">
+                {enemy.bossModifier.icon} {enemy.bossModifier.name}
+              </span>
+              <p className="text-purple-200/40 text-[8px] lg:text-[10px] italic mt-0.5">{enemy.bossModifier.description}</p>
+            </div>
           )}
         </div>
 

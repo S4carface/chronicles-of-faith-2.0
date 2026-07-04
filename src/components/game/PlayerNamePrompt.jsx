@@ -41,9 +41,7 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
         </div>
         <h2 className="text-xl font-serif text-amber-200 text-center mb-2">Choose Your Player Name</h2>
         <p className="text-amber-100/50 text-sm text-center mb-6">
-          {endOfRun
-            ? "Choose a player name so your score can appear on the leaderboard."
-            : "Choose a family-friendly name for the leaderboard. 3–18 characters."}
+          Choose a respectful name for the leaderboard. 3–18 characters.
         </p>
         <input
           type="text"

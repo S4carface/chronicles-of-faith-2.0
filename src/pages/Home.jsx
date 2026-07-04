@@ -10,7 +10,7 @@ import CinematicIntro from "@/components/game/CinematicIntro";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
-import { sanitizePlayerName } from "@/game/nameValidator";
+import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
@@ -118,12 +118,22 @@ export default function Home() {
         <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
       </div>
 
-      {/* Player name row */}
+      {/* Player name row — subtle guest-mode indicator or name display */}
       <button
         onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-        className="flex items-center gap-1.5 text-amber-100/60 hover:text-amber-200 transition text-sm mb-3"
+        className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm mb-3"
       >
-        <span>Playing as: {sanitizePlayerName(profile.playerName) || "— set name —"}</span>
+        {needsPlayerName(profile.playerName) ? (
+          <>
+            <span className="text-amber-100/40">Guest Mode</span>
+            <span className="text-amber-100/25">·</span>
+            <span className="text-amber-300/60">Set name for leaderboard</span>
+          </>
+        ) : (
+          <>
+            <span>Playing as: {sanitizePlayerName(profile.playerName)}</span>
+          </>
+        )}
         <Pencil className="w-3 h-3" />
       </button>
 

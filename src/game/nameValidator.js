@@ -68,47 +68,57 @@ const PROFANITY_BLOCKS = [
 
 const ALL_BLOCKS = [...RELIGIOUS_BLOCKS, ...PROFANITY_BLOCKS];
 
-// Pre-compute vowel-stripped versions of 4+ char blocked terms
+// Pre-compute vowel-stripped versions of 4+ char blocked terms, separated by category
 // (for missing-vowel detection: "fck" matches stripped "fuck" → "fck")
-const VOWEL_STRIPPED_UNIQUE = [...new Set(
-  ALL_BLOCKS
+const RELIGIOUS_VOWEL_STRIPPED = [...new Set(
+  RELIGIOUS_BLOCKS
+    .filter(t => t.length >= 4)
+    .map(t => stripVowels(t))
+    .filter(t => t.length >= 3)
+)];
+const PROFANITY_VOWEL_STRIPPED = [...new Set(
+  PROFANITY_BLOCKS
     .filter(t => t.length >= 4)
     .map(t => stripVowels(t))
     .filter(t => t.length >= 3)
 )];
 
-// Generate normalization variants to catch bypasses:
-// - Direct (no collapse) — checked against ALL terms
-// - Collapse 3+ consecutive to 2 (catches "assshole" → "asshole") — checked against ALL terms
-// - Collapse 2+ consecutive to 1 (catches "shiiit" → "shit", "ffuuck" → "fuck") — 4+ char terms ONLY
-//   (avoids false positives like "good" → "god" for short 3-char terms)
-// Each variant is also vowel-stripped for missing-vowel detection
-function containsBlocked(normalized) {
-  if (!normalized) return false;
-
+// Check a set of terms against normalization variants (direct, collapse 3+→2, collapse 2+→1)
+function checkTerms(normalized, terms) {
   const direct = normalized;
   const collapse3to2 = normalized.replace(/(.)\1{2,}/g, "$1$1");
   const collapseAll = normalized.replace(/(.)\1+/g, "$1");
 
-  // All terms: check against direct and 3+→2 collapse (safe — no "good"→"god" issue)
-  for (const term of ALL_BLOCKS) {
+  for (const term of terms) {
     if (direct.includes(term) || collapse3to2.includes(term)) return true;
   }
-
-  // 4+ char terms: also check aggressive 2+→1 collapse (catches "shiiit"→"shit")
-  for (const term of ALL_BLOCKS) {
+  for (const term of terms) {
     if (term.length >= 4 && collapseAll.includes(term)) return true;
   }
+  return false;
+}
 
-  // Vowel-stripped matching (catches "fck", "sht", "f*ck" after normalization)
-  const noVowelVariants = [stripVowels(direct), stripVowels(collapse3to2), stripVowels(collapseAll)];
-  for (const term of VOWEL_STRIPPED_UNIQUE) {
-    for (const v of noVowelVariants) {
+// Check vowel-stripped variants against vowel-stripped blocked terms
+function checkVowelStripped(normalized, strippedTerms) {
+  const variants = [
+    stripVowels(normalized),
+    stripVowels(normalized.replace(/(.)\1{2,}/g, "$1$1")),
+    stripVowels(normalized.replace(/(.)\1+/g, "$1")),
+  ];
+  for (const term of strippedTerms) {
+    for (const v of variants) {
       if (v.includes(term)) return true;
     }
   }
-
   return false;
+}
+
+// Returns "sacred" | "profane" | null — sacred checked first so "jesus" → sacred, not profane
+function findBlockedType(normalized) {
+  if (!normalized) return null;
+  if (checkTerms(normalized, RELIGIOUS_BLOCKS) || checkVowelStripped(normalized, RELIGIOUS_VOWEL_STRIPPED)) return "sacred";
+  if (checkTerms(normalized, PROFANITY_BLOCKS) || checkVowelStripped(normalized, PROFANITY_VOWEL_STRIPPED)) return "profane";
+  return null;
 }
 
 // --- Spam detection ---
@@ -127,47 +137,53 @@ function isSpam(raw) {
 // Allow letters, numbers, spaces, hyphens, underscores, and apostrophes only
 const ALLOWED_CHARS = /^[a-zA-Z0-9 \-']+$/;
 
-const ERROR_MESSAGE = "Please choose a family-friendly name.";
+const SACRED_TITLE_ERROR = "Please choose a name that does not use sacred titles.";
+const RESPECTFUL_NAME_ERROR = "Please choose a respectful player name.";
+const LENGTH_ERROR = "Name must be 3–18 characters.";
 
 // --- Main validation ---
 // Returns { valid, error, name }
 export function validatePlayerName(raw) {
   if (!raw || typeof raw !== "string") {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: LENGTH_ERROR };
   }
 
   let name = raw.trim().replace(/\s+/g, " ");
 
   if (name.length < 3 || name.length > 18) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: LENGTH_ERROR };
   }
 
   if (!ALLOWED_CHARS.test(name)) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 
   // No emojis (defensive — regex above strips them, but be explicit)
   // eslint-disable-next-line no-control-regex
   const emojiRegex = /[\u{1F000}-\u{1FAFF}]|[\u{2600}-\u{27BF}]|[\u{1F1E6}-\u{1F1FF}]|[\u{2190}-\u{2BFF}]|[\u{FE00}-\u{FE0F}]/u;
   if (emojiRegex.test(name)) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 
   // Entirely numbers / punctuation not allowed
   if (!/[a-zA-Z]/.test(name)) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 
   if (isSpam(name)) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 
   const normalized = normalizeName(name);
   if (!normalized || normalized.length < 3) {
-    return { valid: false, error: ERROR_MESSAGE };
+    return { valid: false, error: LENGTH_ERROR };
   }
-  if (containsBlocked(normalized)) {
-    return { valid: false, error: ERROR_MESSAGE };
+  const blockedType = findBlockedType(normalized);
+  if (blockedType === "sacred") {
+    return { valid: false, error: SACRED_TITLE_ERROR };
+  }
+  if (blockedType === "profane") {
+    return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 
   return { valid: true, name };

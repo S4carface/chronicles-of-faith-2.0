@@ -282,7 +282,8 @@ export default function BattleScreen() {
     }
     if (blockGained > 0) {
       setShieldGlow(true);
-      setTimeout(() => setShieldGlow(false), 800);
+      setFloatingText({ text: `Blocked ${blockGained}`, color: "#60a5fa", pos: "bottom" });
+      setTimeout(() => { setShieldGlow(false); setFloatingText(null); }, 800);
     }
     if (healed > 0) {
       setHealGlow(true);
@@ -552,7 +553,12 @@ export default function BattleScreen() {
           } else if (actionType === "curse") {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
-            setFloatingText({ text: step.action.effect === "dot" ? "Cursed!" : "Hex!", color: "#c084fc", pos: "bottom" });
+            const curseText = step.action.effect === "dot" ? "Cursed!" :
+              step.action.effect === "drain" ? "Faith drained" :
+              step.action.effect === "skip_draw" ? "Draw reduced" :
+              step.action.effect === "block_scripture" ? "Silenced" :
+              step.action.effect === "discard" ? "Cards discarded" : "Confused";
+            setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
           setBattleState(step.state);
@@ -806,13 +812,13 @@ export default function BattleScreen() {
                     }`}
                   >
                     <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 lg:w-6 lg:h-6 object-cover rounded-sm flex-shrink-0" />
-                    <span className={`${intentInfo.color} text-[9px] lg:text-sm font-medium leading-none`}>{action.name}</span>
+                    <span className={`${intentInfo.color} text-[9px] lg:text-base font-medium leading-none`}>{action.name}</span>
                     {(() => {
                       if (hideIntentValues) return null;
                       const amt = getIntentAmountText(action, enemy);
                       if (!amt) return null;
                       const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
-                      return <span className={`text-[8px] lg:text-sm font-bold leading-none ${amtColor}`}>{amt}</span>;
+                      return <span className={`text-[8px] lg:text-base font-bold leading-none ${amtColor}`}>{amt}</span>;
                     })()}
                   </button>
                   {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
@@ -853,9 +859,9 @@ export default function BattleScreen() {
             />
           </div>
           <div className="flex items-center justify-center gap-2 mt-0.5">
-            <p className="text-red-200 text-[11px] lg:text-base">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
+            <p className="text-red-200 text-[11px] lg:text-lg">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
             {battleState.enemyBlock > 0 && (
-              <span className="text-blue-300 text-[11px] lg:text-base flex items-center gap-0.5">
+              <span className="text-blue-300 text-[11px] lg:text-lg flex items-center gap-0.5">
                 <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.enemyBlock}
               </span>
             )}
@@ -863,25 +869,17 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Combat Log — collapsed by default, shows latest result only */}
-      <div className="flex-shrink-0 px-3 py-0.5 lg:py-1">
+      {/* Combat Log — minimal pill when collapsed, expandable for full log */}
+      <div className="flex-shrink-0 flex flex-col items-center py-0.5 lg:py-1">
         <button
           onClick={() => setShowLog(!showLog)}
-          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/10 bg-slate-900/40 text-amber-100/60 text-[10px] lg:text-xs hover:bg-slate-900/60 transition active:scale-[0.99]"
+          className="flex items-center gap-1.5 px-3 py-0.5 rounded-full border border-amber-500/10 bg-slate-900/30 text-amber-300/35 text-[9px] lg:text-[10px] uppercase tracking-wide hover:bg-slate-900/50 hover:text-amber-300/60 transition active:scale-[0.98]"
         >
-          <span className="truncate flex items-center gap-1 normal-case tracking-normal">
-            {showLog
-              ? <span className="text-amber-300/50 uppercase tracking-wide text-[9px]">Battle Log</span>
-              : <span className="text-amber-100/70">{simplifyLogEntry(battleState.log[battleState.log.length - 1]) || "Battle log"}</span>
-            }
-          </span>
-          <span className="flex items-center gap-1 text-amber-300/40 text-[9px] uppercase tracking-wide flex-shrink-0">
-            {showLog ? "Hide" : "Details"}
-            {showLog ? <ChevronUp className="w-3 h-3 lg:w-4 lg:h-4" /> : <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />}
-          </span>
+          {showLog ? "Hide Log" : "Log"}
+          {showLog ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         </button>
         {showLog && (
-          <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-3 mt-1 max-h-20 lg:max-h-40 overflow-y-auto">
+          <div className="w-full rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-3 mt-1 max-h-20 lg:max-h-40 overflow-y-auto">
             {battleState.log.slice(-10).map((entry, i) => (
               <p key={i} className="text-amber-100/70 text-[11px] lg:text-sm leading-snug">
                 {simplifyLogEntry(entry) || entry}
@@ -963,7 +961,7 @@ export default function BattleScreen() {
               <div className="absolute inset-0 -m-1 rounded-full border-2 border-blue-400/80 pointer-events-none" style={{ boxShadow: "0 0 20px rgba(96,165,250,0.7)" }} />
             )}
             {heroArt ? (
-              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" style={{ transform: "scale(1.03)" }} />
+              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/40" style={{ transform: "scale(1.03)", background: "#0A0F1E" }} />
             ) : (
               <span className="text-2xl lg:text-4xl">{hero.icon}</span>
             )}
@@ -980,7 +978,7 @@ export default function BattleScreen() {
               <div className="w-16 lg:w-36 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
               </div>
-              <span className="text-emerald-200 text-[11px] lg:text-base font-bold flex-shrink-0">{battleState.playerHp}/{battleState.maxPlayerHp}</span>
+              <span className="text-emerald-200 text-[11px] lg:text-lg font-bold flex-shrink-0">{battleState.playerHp}/{battleState.maxPlayerHp}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5 text-[10px] lg:text-sm">
               {battleState.playerBlock > 0 && (
@@ -1017,27 +1015,31 @@ export default function BattleScreen() {
           )}
           <div className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
             <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
-            <span className="text-yellow-200 text-sm lg:text-xl font-bold">{battleState.energy}</span>
-            <span className="text-yellow-100/50 text-[9px] lg:text-xs">/{battleState.maxEnergy}</span>
+            <span className="text-yellow-200 text-sm lg:text-2xl font-bold">{battleState.energy}</span>
+            <span className="text-yellow-100/50 text-[9px] lg:text-sm">/{battleState.maxEnergy}</span>
             {faithParticle && (
               <span className="absolute -top-3 left-1/2 text-yellow-200 text-sm pointer-events-none" style={{ animation: "faithParticle 0.8s ease-out" }}>✨</span>
             )}
           </div>
-          {selectedCard !== null && (
-            <span className="hidden lg:block text-amber-300/50 text-[10px] italic mr-2 max-w-[120px] text-right leading-tight">
-              Confirm your card or cancel before ending your turn.
-            </span>
-          )}
+          {selectedCard !== null && (() => {
+            const sc = getCardById(battleState.hand[selectedCard]);
+            const scPlayable = sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
+            return scPlayable ? (
+              <span className="text-emerald-300/60 text-[9px] lg:text-[10px] italic mr-1 lg:mr-2 max-w-[70px] lg:max-w-[120px] text-right leading-tight">
+                Play card ↑
+              </span>
+            ) : null;
+          })()}
           <button
             onClick={handleEndTurnClick}
             disabled={isEnemyTurn}
-            className={`px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 font-bold text-xs lg:text-base transition-all whitespace-nowrap active:scale-[0.94] ${
+            className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
               selectedCard !== null && (() => {
                 const sc = getCardById(battleState.hand[selectedCard]);
                 return sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
               })()
-                ? "border-amber-500/20 bg-amber-900/10 text-amber-100/40 hover:bg-amber-900/20"
-                : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 active:bg-amber-600/50"
+                ? "px-2.5 py-1 lg:px-4 lg:py-2 text-[10px] lg:text-sm border-amber-500/10 bg-amber-900/5 text-amber-100/25 hover:bg-amber-900/10"
+                : "px-3 py-1.5 lg:px-6 lg:py-2.5 text-xs lg:text-lg border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 active:bg-amber-600/50"
             } disabled:opacity-40 disabled:active:scale-100`}
           >
             End Turn →
@@ -1047,7 +1049,7 @@ export default function BattleScreen() {
 
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div className={`flex-1 flex items-end justify-center overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}>
+        <div className={`flex-1 flex items-end justify-center overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))]"}`}>
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}

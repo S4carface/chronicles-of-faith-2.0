@@ -30,37 +30,36 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
     <>
       {/* Mobile: bottom sheet */}
       <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
-        <div className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-start gap-3 mb-3">
+        <div className="px-3 pt-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center gap-2.5 mb-2">
             <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
-              <div className="relative w-12 h-12 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
-                <span className="absolute top-0 left-0 w-4 h-4 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[8px] font-bold z-10">{card.cost}</span>
-                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+              <div className="relative w-10 h-10 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
+                <span className="absolute top-0 left-0 w-3.5 h-3.5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[7px] font-bold z-10">{card.cost}</span>
+                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-lg flex items-center justify-center w-full h-full">{card.icon}</span>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-serif text-amber-100 text-base leading-tight">{card.name}</h4>
+              <h4 className="font-serif text-amber-100 text-sm leading-tight truncate">{card.name}</h4>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={cn("text-[10px] font-semibold uppercase flex items-center gap-0.5", typeInfo.color)}>
-                  <TypeIcon className="w-3 h-3" />{typeInfo.text}
+                <span className={cn("text-[9px] font-semibold uppercase flex items-center gap-0.5", typeInfo.color)}>
+                  <TypeIcon className="w-2.5 h-2.5" />{typeInfo.text}
                 </span>
-                <span className="text-amber-300/40 text-[10px]">·</span>
-                <span className="flex items-center gap-0.5 text-amber-300/60 text-[10px]"><Sparkles className="w-3 h-3" />{card.cost} Faith</span>
+                <span className="text-amber-300/40 text-[9px]">·</span>
+                <span className="flex items-center gap-0.5 text-amber-300/60 text-[9px]"><Sparkles className="w-2.5 h-2.5" />{card.cost} Faith</span>
               </div>
             </div>
-            <button onClick={onCancel} className="flex-shrink-0 w-8 h-8 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60">
-              <X className="w-4 h-4" />
+            <button onClick={onCancel} className="flex-shrink-0 w-7 h-7 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60 active:scale-90">
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="rounded-lg border border-amber-500/15 bg-slate-900/40 px-3 py-2 mb-2">
-            <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
+          <div className="rounded-md border border-amber-500/15 bg-slate-900/40 px-2.5 py-1.5 mb-2">
+            <p className="text-amber-100 text-xs leading-snug">{effectText}</p>
           </div>
-          <p className="text-amber-300/40 text-[10px] italic mb-2 text-center">{card.verse}</p>
-          <div className="flex gap-3">
-            <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
-            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
+          <div className="flex gap-2.5">
+            <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>
+            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 active:scale-95">Play Card</button>
           </div>
-          {blocked && <p className="text-red-300 text-[10px] mt-2 text-center">Scripture cards are blocked this turn</p>}
+          {blocked && <p className="text-red-300 text-[10px] mt-1.5 text-center">Scripture cards are blocked this turn</p>}
         </div>
       </div>
 

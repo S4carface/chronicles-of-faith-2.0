@@ -66,29 +66,61 @@ export function initGlobalUnlockListener() {
   if (globalListenerRegistered) return;
   globalListenerRegistered = true;
 
+  // Gesture handler — stays registered for the app's lifetime so it can
+  // resume audio after the browser suspends the AudioContext (mobile
+  // background/lock). Returns immediately when audio is already running.
   const handler = () => {
-    const wasLocked = !audioUnlocked;
+    if (audioUnlocked && ctxIsRunning()) return;
     unlockAudio();
-    if (wasLocked && audioUnlocked) {
-      // Start pending music only if Music is enabled in Settings
-      if (musicEnabled && pendingMusicTheme) {
-        const theme = pendingMusicTheme;
-        pendingMusicTheme = null;
-        _startMusic(theme);
-      }
-    }
-    // Remove after first successful unlock
-    if (audioUnlocked) {
-      document.removeEventListener("touchstart", handler, true);
-      document.removeEventListener("click", handler, true);
-      document.removeEventListener("keydown", handler, true);
+    if (audioUnlocked && musicEnabled && pendingMusicTheme) {
+      const theme = pendingMusicTheme;
+      pendingMusicTheme = null;
+      _startMusic(theme);
     }
   };
 
-  // capture: true so we catch the gesture before any app handler can stopPropagation
   document.addEventListener("touchstart", handler, true);
   document.addEventListener("click", handler, true);
   document.addEventListener("keydown", handler, true);
+
+  // Visibility handler — when the page returns to foreground, the
+  // AudioContext is often "suspended" (especially iOS Safari). Try to
+  // resume directly; if that fails (needs gesture), the gesture handler
+  // above will resume on the next tap.
+  const visHandler = () => {
+    if (document.visibilityState !== "visible") {
+      // Going hidden — preserve theme so we can restart on return
+      if (musicTheme) pendingMusicTheme = pendingMusicTheme || musicTheme;
+      return;
+    }
+    const ctx = getCtx();
+    if (!ctx) return;
+
+    if (ctx.state === "suspended") {
+      // Attempt direct resume (works on desktop + some mobile browsers)
+      audioUnlocked = false;
+      const p = ctx.resume();
+      if (p && typeof p.then === "function") {
+        p.then(() => {
+          if (ctx.state !== "running") return;
+          audioUnlocked = true;
+          notifyUnlockListeners();
+          if (musicEnabled && (pendingMusicTheme || musicTheme)) {
+            const theme = pendingMusicTheme || musicTheme;
+            pendingMusicTheme = null;
+            _startMusic(theme);
+          }
+        }).catch(() => {});
+      }
+    } else if (ctx.state === "running") {
+      audioUnlocked = true;
+      // Music may have stopped while suspended — restart if needed
+      if (musicEnabled && musicTheme && !musicTimeoutId) {
+        _startMusic(musicTheme);
+      }
+    }
+  };
+  document.addEventListener("visibilitychange", visHandler);
 }
 
 // Attempt to unlock/resume audio from a user gesture.

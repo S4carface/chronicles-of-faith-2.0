@@ -73,6 +73,13 @@ const PROFANITY_BLOCKS = [
   // profanity bypass spellings (fuk, fck, fk, fuq, phuck, etc.)
   "fuk", "fck", "fk", "fuq", "phuck", "phuk", "fuxk", "fux",
   "dumbass", "dumbazz", "bich", "b1tch",
+  // suck variants + body parts + phrases (user-requested expansion)
+  "suk", "suck", "sux", "succ", "suc", "sucka",
+  "lick", "balls", "nuts", "ass", "buttplug",
+  "killyourself", "kys",
+  // phrase blocks (normalized — spaces/punctuation stripped by normalizeName)
+  "sukmy", "suckmy", "sukme", "suckme",
+  "sukballs", "suckballs", "myballs", "deeznuts",
 ];
 
 const ALL_BLOCKS = [...RELIGIOUS_BLOCKS, ...PROFANITY_BLOCKS];

@@ -5,7 +5,8 @@
 const STORY_RUN_KEY = "chronicles_of_faith_saved_story_run";
 const OLD_RUN_KEY = "chronicles_of_faith_run_v1";
 
-const TERMINAL_PHASES = ["victory", "defeat", "dailyResult"];
+const TERMINAL_PHASES = ["victory", "dailyResult"];
+// "defeat" is terminal (non-restorable) only for Hard mode; Easy/Normal allow retry.
 
 /**
  * Validate that a saved run object has the essential fields to be restorable.
@@ -15,6 +16,8 @@ export function validateSavedRun(saveData) {
   if (!saveData || typeof saveData !== "object") return false;
   if (saveData.isDaily) return false; // Never restore daily runs
   if (TERMINAL_PHASES.includes(saveData.phase)) return false;
+  // Hard defeat is terminal — run is lost. Easy/Normal defeat is restorable (retry available).
+  if (saveData.phase === "defeat" && saveData.difficulty === "hard") return false;
   if (!saveData.hero) return false;
   if (!saveData.phase) return false;
   if (typeof saveData.playerHp !== "number") return false;

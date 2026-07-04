@@ -195,6 +195,12 @@ export default function Leaderboard() {
                       <span>{entry.roomsCleared} rooms</span>
                       <span className="text-amber-100/30">·</span>
                       <span>{entry.triviaCorrect} trivia</span>
+                      {entry.retriesUsed > 0 && (
+                        <>
+                          <span className="text-amber-100/30">·</span>
+                          <span className="text-amber-100/50">{entry.retriesUsed} {entry.retriesUsed === 1 ? "retry" : "retries"}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-amber-200 font-serif">{entry.score}</div>

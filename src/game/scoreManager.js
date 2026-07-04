@@ -59,6 +59,8 @@ export async function submitBestScore(scoreData) {
     triviaCorrect: scoreData.triviaCorrect || 0,
     result: scoreData.result || "completed",
     dailyChallengeId: scoreData.dailyChallengeId || null,
+    retriesUsed: scoreData.retriesUsed || 0,
+    scorePenalty: scoreData.scorePenalty || 0,
   };
 
   try {
@@ -82,6 +84,8 @@ export async function submitBestScore(scoreData) {
           battlesWon: payload.battlesWon,
           triviaCorrect: payload.triviaCorrect,
           result: payload.result,
+          retriesUsed: payload.retriesUsed,
+          scorePenalty: payload.scorePenalty,
         });
         return { success: true, action: "updated" };
       }

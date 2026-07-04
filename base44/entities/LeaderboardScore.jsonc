@@ -52,6 +52,14 @@
     },
     "dailyChallengeId": {
       "type": "string"
+    },
+    "retriesUsed": {
+      "type": "number",
+      "default": 0
+    },
+    "scorePenalty": {
+      "type": "number",
+      "default": 0
     }
   },
   "required": [

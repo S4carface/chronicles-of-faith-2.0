@@ -105,9 +105,19 @@ export function GameProvider({ children }) {
       if (run.phase === "victory") {
         return;
       }
-      if (["defeat", "dailyResult"].includes(run.phase)) {
+      if (run.phase === "dailyResult") {
         clearStoryRun();
         setSavedStoryExists(false);
+      } else if (run.phase === "defeat") {
+        // Hard mode: true roguelike — clear save on defeat.
+        // Easy/Normal: persist the run so the player can retry or end it.
+        if (run.difficulty === "hard") {
+          clearStoryRun();
+          setSavedStoryExists(false);
+        } else {
+          saveStoryRun(run);
+          setSavedStoryExists(true);
+        }
       } else {
         saveStoryRun(run);
         setSavedStoryExists(true);
@@ -339,6 +349,9 @@ export function GameProvider({ children }) {
       extraDraw: 0,
       nextCardRare: false,
       bossModifier: map[map.length - 1][0].bossModifier || null,
+      battleCheckpoint: null,
+      battleRetries: 0,
+      checkpointRetries: 0,
     });
 
     recordRunStarted();
@@ -373,6 +386,19 @@ export function GameProvider({ children }) {
         updates.pendingEnemyId = node.enemyId;
         updates.phase = "battle";
         updates.currentBattleState = null;
+        // Snapshot room-start state for checkpoint retries (Normal mode)
+        updates.battleCheckpoint = {
+          playerHp: prev.playerHp,
+          maxHp: prev.maxHp,
+          deck: [...prev.deck],
+          gold: prev.gold,
+          roomsCleared: prev.roomsCleared,
+          buffAttack: prev.buffAttack,
+          shieldActive: prev.shieldActive,
+          extraDraw: prev.extraDraw,
+          battlesWithoutDamage: prev.battlesWithoutDamage,
+          neverLostHp: prev.neverLostHp,
+        };
       }
 
       return { ...prev, ...updates };
@@ -559,6 +585,63 @@ export function GameProvider({ children }) {
     Sound.playMusic("menu");
   }, [run]);
 
+  // Easy mode: retry the same battle with generous HP (75% max).
+  // Small score penalty (-5%) per retry. Run persists.
+  const retryBattle = useCallback(() => {
+    setRun(prev => {
+      if (!prev || prev.isDaily) return prev;
+      const restoreHp = Math.max(1, Math.ceil(prev.maxHp * 0.75));
+      return {
+        ...prev,
+        playerHp: restoreHp,
+        phase: "battle",
+        currentBattleState: null,
+        battleRetries: (prev.battleRetries || 0) + 1,
+        neverLostHp: false,
+      };
+    });
+    Sound.sfx.click();
+  }, []);
+
+  // Normal mode: retry from checkpoint (room-start state) with 50% HP.
+  // Larger score penalty (-15%) per retry. Run persists.
+  const retryFromCheckpoint = useCallback(() => {
+    setRun(prev => {
+      if (!prev || prev.isDaily) return prev;
+      const cp = prev.battleCheckpoint;
+      const maxHp = cp?.maxHp || prev.maxHp;
+      const restoreHp = Math.max(1, Math.ceil(maxHp * 0.50));
+      if (!cp) {
+        // Fallback: no checkpoint saved (old run) — just restore HP
+        return {
+          ...prev,
+          playerHp: restoreHp,
+          phase: "battle",
+          currentBattleState: null,
+          checkpointRetries: (prev.checkpointRetries || 0) + 1,
+          neverLostHp: false,
+        };
+      }
+      return {
+        ...prev,
+        playerHp: restoreHp,
+        maxHp: cp.maxHp || prev.maxHp,
+        deck: [...cp.deck],
+        gold: cp.gold,
+        roomsCleared: cp.roomsCleared,
+        buffAttack: cp.buffAttack || 0,
+        shieldActive: cp.shieldActive || false,
+        extraDraw: cp.extraDraw || 0,
+        battlesWithoutDamage: cp.battlesWithoutDamage || 0,
+        neverLostHp: false,
+        phase: "battle",
+        currentBattleState: null,
+        checkpointRetries: (prev.checkpointRetries || 0) + 1,
+      };
+    });
+    Sound.sfx.click();
+  }, []);
+
   const value = {
     profile,
     saveProfile,
@@ -572,6 +655,8 @@ export function GameProvider({ children }) {
     saveBattleState,
     endRun,
     saveAndExit,
+    retryBattle,
+    retryFromCheckpoint,
     resumeStoryRun,
     savedStoryExists,
     storySaveError,

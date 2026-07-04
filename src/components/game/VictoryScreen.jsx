@@ -28,6 +28,10 @@ export default function VictoryScreen() {
   // Fallback to "easy" if difficulty is missing — defensive only; root cause is fixed in startRun.
   const completedDifficulty = run.difficulty || "easy";
   const multiplier = difficultyMultipliers[completedDifficulty] || 1.0;
+  const checkpointRetries = run.checkpointRetries || 0;
+  const battleRetries = run.battleRetries || 0;
+  const totalRetries = checkpointRetries + battleRetries;
+  const penaltyPercent = Math.min(0.95, checkpointRetries * 0.15 + battleRetries * 0.05);
 
   useEffect(() => {
     Sound.playMusic("victory");
@@ -46,7 +50,7 @@ export default function VictoryScreen() {
       run.gold * 2 +
       (run.hero.id === "noah" ? 100 : 0)
     );
-    const finalScore = Math.floor(baseScore * multiplier);
+    const finalScore = Math.floor(baseScore * multiplier * (1 - penaltyPercent));
     setScore(finalScore);
 
     if (finalScore >= 500) unlockAchievement("low_score_champion");
@@ -108,6 +112,8 @@ export default function VictoryScreen() {
       triviaCorrect: run.triviaCorrect,
       difficulty: completedDifficulty,
       result: "victory",
+      retriesUsed: totalRetries,
+      scorePenalty: penaltyPercent,
     });
     if (result.success) {
       setSubmitted(true);
@@ -186,6 +192,12 @@ export default function VictoryScreen() {
             <div className="text-amber-100/60">Gold: <span className="text-amber-200 font-bold">{run.gold}</span></div>
             <div className="text-amber-100/60">Difficulty: <span className="text-amber-200 font-bold capitalize">{completedDifficulty}</span></div>
             <div className="text-amber-100/60">Multiplier: <span className="text-amber-200 font-bold">{multiplier}x</span></div>
+            {totalRetries > 0 && (
+              <>
+                <div className="text-amber-100/60">{checkpointRetries > 0 ? "Checkpoints" : "Retries"} Used: <span className="text-amber-200 font-bold">{totalRetries}</span></div>
+                <div className="text-amber-100/60">Score Penalty: <span className="text-red-300 font-bold">-{Math.round(penaltyPercent * 100)}%</span></div>
+              </>
+            )}
           </div>
         </div>
 

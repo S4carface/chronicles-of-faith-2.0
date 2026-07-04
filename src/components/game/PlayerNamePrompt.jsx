@@ -4,7 +4,7 @@ import * as Sound from "@/game/soundManager";
 import { HOME_ART } from "@/data/art";
 import { validatePlayerName, generateSafeName, needsPlayerName } from "@/game/nameValidator";
 
-export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun }) {
+export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun, title, subtitle }) {
   const { profile, saveProfile } = useGame();
   const [name, setName] = useState(needsPlayerName(profile.playerName) ? "" : profile.playerName);
   const [error, setError] = useState("");
@@ -39,9 +39,9 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
         <div className="flex justify-center mb-4">
           <img src={HOME_ART.cross} alt="" className="w-10 h-10 object-cover rounded-full border-2 border-amber-400/30" />
         </div>
-        <h2 className="text-xl font-serif text-amber-200 text-center mb-2">Choose Your Player Name</h2>
+        <h2 className="text-xl font-serif text-amber-200 text-center mb-2">{title || "Save Your Name"}</h2>
         <p className="text-amber-100/50 text-sm text-center mb-6">
-          Choose a respectful name for the leaderboard. 3–18 characters.
+          {subtitle || "Choose a respectful name so your score can appear on the leaderboard."}
         </p>
         <input
           type="text"
@@ -75,7 +75,7 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
               onClick={handleContinueWithout}
               className="w-full px-6 py-2 rounded-lg border border-amber-400/20 bg-slate-800/40 text-amber-100/60 text-sm hover:bg-slate-800/60 transition"
             >
-              Continue as Guest
+              {forceName ? "Skip for Now" : "Cancel"}
             </button>
           ) : (
             !forceName && (

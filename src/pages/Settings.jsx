@@ -311,7 +311,7 @@ export default function Settings() {
                 onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
               >
-                <Pencil className="w-3.5 h-3.5" /> Edit
+                <Pencil className="w-3.5 h-3.5" /> Change Name
               </button>
             </div>
           </div>
@@ -442,6 +442,7 @@ export default function Settings() {
         <PlayerNamePrompt
           onSave={() => setShowNamePrompt(false)}
           onCancel={() => setShowNamePrompt(false)}
+          endOfRun
         />
       )}
 

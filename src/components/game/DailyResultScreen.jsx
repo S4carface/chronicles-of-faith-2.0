@@ -58,24 +58,22 @@ export default function DailyResultScreen() {
     }
     syncStatsToCloud();
 
-    const playerName = profile.playerName;
-    if (needsPlayerName(playerName)) {
-      setShowNamePrompt(true);
-      return;
-    }
-
+    // Always submit the score (as Anonymous Pilgrim if no name set).
+    const playerName = needsPlayerName(profile.playerName) ? "Anonymous Pilgrim" : profile.playerName;
     submitted.current = true;
     submitLeaderboard(playerName, score, result, triviaCorrect, todayStr, run.hero?.id || "adam");
+    if (needsPlayerName(profile.playerName)) {
+      setShowNamePrompt(true);
+    }
   }, []);
 
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
     if (!name) {
-      // "Continue Without Leaderboard" — skip submission
-      submitted.current = true;
+      // Score already saved as Anonymous Pilgrim
       return;
     }
-    submitted.current = true;
+    // Re-submit with the new name to update the existing record
     const todayStr = new Date().toISOString().slice(0, 10);
     submitLeaderboard(name, calculatedScore.current, result, run.dailyTriviaCorrect, todayStr, run.hero?.id || "adam");
   };
@@ -265,8 +263,9 @@ export default function DailyResultScreen() {
       {showNamePrompt && (
         <PlayerNamePrompt
           onSave={handleNameSaved}
-          forceName
           endOfRun
+          title="Add Your Name"
+          subtitle="Add your name to this score so it appears on the leaderboard."
         />
       )}
     </div>

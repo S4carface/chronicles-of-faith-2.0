@@ -137,9 +137,7 @@ export default function Home() {
       >
         {needsPlayerName(profile.playerName) ? (
           <>
-            <span className="text-amber-100/40">Guest Mode</span>
-            <span className="text-amber-100/25">·</span>
-            <span className="text-amber-300/60">Set name for leaderboard</span>
+            <span className="text-amber-100/40">Playing as Guest Pilgrim</span>
           </>
         ) : (
           <>

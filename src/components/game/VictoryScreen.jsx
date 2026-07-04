@@ -80,10 +80,11 @@ export default function VictoryScreen() {
       setShowCelebration(true);
     }
 
-    // Auto-submit score — prompt for name if missing/invalid
-    if (!needsPlayerName(profile.playerName)) {
-      submitScoreToCloud(profile.playerName, finalScore);
-    } else {
+    // Always submit the score (as Anonymous Pilgrim if no name set).
+    // If the player has no name, offer to add one after submission.
+    const submitName = needsPlayerName(profile.playerName) ? "Anonymous Pilgrim" : profile.playerName;
+    submitScoreToCloud(submitName, finalScore);
+    if (needsPlayerName(profile.playerName)) {
       setShowNamePrompt(true);
     }
 
@@ -126,9 +127,10 @@ export default function VictoryScreen() {
   const handleNameSaved = (name) => {
     setShowNamePrompt(false);
     if (name) {
+      // Re-submit with the new name to update the existing record
       submitScoreToCloud(name, score);
     }
-    // If name is null, "Continue Without Leaderboard" — don't submit
+    // If name is null, score already saved as Anonymous Pilgrim
   };
 
   const handleAccountDismiss = () => {
@@ -233,8 +235,9 @@ export default function VictoryScreen() {
         {showNamePrompt && (
           <PlayerNamePrompt
             onSave={handleNameSaved}
-            forceName
             endOfRun
+            title="Add Your Name"
+            subtitle="Add your name to this score so it appears on the leaderboard."
           />
         )}
 

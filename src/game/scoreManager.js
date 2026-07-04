@@ -85,6 +85,13 @@ export async function submitBestScore(scoreData) {
         });
         return { success: true, action: "updated" };
       }
+      // Same score but name changed (e.g. player adds a name to an Anonymous score)
+      if (payload.score === prev.score && safeName !== "Anonymous Pilgrim" && prev.playerName !== safeName) {
+        await base44.entities.LeaderboardScore.update(prev.id, {
+          playerName: payload.playerName,
+        });
+        return { success: true, action: "named" };
+      }
       return { success: true, action: "kept_previous" };
     }
 

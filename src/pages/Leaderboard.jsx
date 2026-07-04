@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff } from "lucide-react";
+import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
 import { fetchLeaderboard, getPlayerId } from "@/game/scoreManager";
@@ -34,6 +34,11 @@ export default function Leaderboard() {
       setShowNamePrompt(true);
     }
   }, []);
+
+  const handleChangeName = () => {
+    Sound.sfx.click();
+    setShowNamePrompt(true);
+  };
 
   const loadLeaderboard = useCallback(async (tab) => {
     setLoading(true);
@@ -69,13 +74,23 @@ export default function Leaderboard() {
           <img src={VICTORY_ART.crest} alt="" className="w-7 h-7 object-cover rounded-full border-2 border-amber-400/50" />
           <h1 className="text-3xl font-serif text-amber-200">Leaderboard</h1>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="w-9 h-9 rounded-lg border border-amber-400/30 bg-amber-900/20 flex items-center justify-center text-amber-200 hover:bg-amber-800/30 transition"
-          title="Refresh"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleChangeName}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition"
+            title="Change Name"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Change Name</span>
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="w-9 h-9 rounded-lg border border-amber-400/30 bg-amber-900/20 flex items-center justify-center text-amber-200 hover:bg-amber-800/30 transition"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-1.5 mb-4 text-amber-100/40 text-xs">
@@ -177,6 +192,7 @@ export default function Leaderboard() {
         <PlayerNamePrompt
           onSave={() => setShowNamePrompt(false)}
           onCancel={() => setShowNamePrompt(false)}
+          endOfRun
         />
       )}
     </div>

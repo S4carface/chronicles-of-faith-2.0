@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { Lock } from "lucide-react";
 import { cn } from "@/utils";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 
@@ -65,7 +66,7 @@ export function getCardEffectText(card) {
   }
 }
 
-export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand }) {
+export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand, blocked }) {
   const artUrl = CARD_ART[card.id];
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
@@ -123,8 +124,13 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       </div>
 
       {/* Card artwork */}
-      <div className={cn("mt-7 mb-1 overflow-hidden rounded", small ? "h-14" : "h-20")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+      <div className={cn("mt-7 mb-1 overflow-hidden rounded relative", small ? "h-14" : "h-20")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
+        {blocked && (
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(15,26,48,0.55)" }}>
+            <Lock className={cn("text-red-300/80", small ? "w-4 h-4" : "w-6 h-6")} />
+          </div>
+        )}
       </div>
 
       {/* Card name */}

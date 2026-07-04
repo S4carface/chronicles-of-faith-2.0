@@ -1,4 +1,5 @@
 // Returns a plain-language explanation for an enemy intent action.
+// Uses consistent debuff names matching statusExplanations.js.
 export function getIntentExplanation(action, enemy) {
   if (!action) return null;
 
@@ -24,16 +25,16 @@ export function getIntentExplanation(action, enemy) {
     parts.push("You draw 1 fewer card next turn.");
   }
   if (action.effect === "block_scripture") {
-    parts.push("You cannot play Scripture cards next turn.");
+    parts.push("Confused Tongues: Scripture cards are blocked next turn.");
   }
   if (action.effect === "drain") {
-    parts.push("You lose 1 Faith next turn.");
+    parts.push("Faith Drain: You lose 1 Faith next turn.");
   }
   if (action.effect === "discard") {
-    parts.push("Forces you to discard 1 card.");
+    parts.push("Discard: Forces you to discard 1 card.");
   }
   if (action.effect === "random_card") {
-    parts.push("Forces you to play a random card.");
+    parts.push("Confusion: Forces you to play a random card.");
   }
   if (action.effect === "recoil") {
     parts.push("Enemy takes 3 recoil damage.");

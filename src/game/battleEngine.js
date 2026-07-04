@@ -325,11 +325,11 @@ export function enemyTurn(state) {
     }
     if (action.effect === "block_scripture") {
       blockScripture = true;
-      log.push("⚠️ Scripture blocked next turn");
+      log.push("⚠️ Confused Tongues — Scripture blocked next turn");
     }
     if (action.effect === "dot") {
       dots = 3;
-      log.push("☠️ Cursed — 2 dmg/turn");
+      log.push("☠️ Curse — 2 dmg/turn");
     }
 
     discard.push(action);
@@ -339,7 +339,7 @@ export function enemyTurn(state) {
   if (dots > 0) {
     playerHp = Math.max(0, playerHp - 2);
     dots -= 1;
-    log.push(`☠️ Curse — 2 dmg (${dots} left)`);
+    log.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
   }
 
   // Build new enemy hand from remaining deck + discard
@@ -492,11 +492,11 @@ export function getEnemyTurnSteps(state) {
     }
     if (action.effect === "block_scripture") {
       blockScripture = true;
-      stepLog.push("⚠️ Scripture blocked next turn");
+      stepLog.push("⚠️ Confused Tongues — Scripture blocked next turn");
     }
     if (action.effect === "dot") {
       dots = 3;
-      stepLog.push("☠️ Cursed — 2 dmg/turn");
+      stepLog.push("☠️ Curse — 2 dmg/turn");
     }
 
     discard.push(action);
@@ -530,7 +530,7 @@ export function getEnemyTurnSteps(state) {
     const dotLog = [...log];
     playerHp = Math.max(0, playerHp - 2);
     dots -= 1;
-    dotLog.push(`☠️ Curse — 2 dmg (${dots} left)`);
+    dotLog.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
 
     steps.push({
       type: "dot",

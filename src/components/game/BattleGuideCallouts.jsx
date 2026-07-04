@@ -6,19 +6,25 @@ const CALLOUTS = [
   {
     id: "intent",
     title: "Enemy Moves",
-    text: "Enemy moves are shown here. Plan your turn around them.",
+    text: "Enemy moves are shown here. Tap any move for details. Plan your turn around them.",
     position: "top",
   },
   {
     id: "faith",
     title: "Faith Energy",
-    text: "Faith is your energy. It refills each turn.",
+    text: "Faith is your energy. It refills each turn. If a card is dim, you may not have enough Faith.",
     position: "bottom-right",
   },
   {
     id: "cards",
     title: "Play Cards",
-    text: "Tap a card, then press Play Card.",
+    text: "Tap a card, then press Play Card. If a Scripture card shows a lock, it's blocked by Confused Tongues.",
+    position: "bottom",
+  },
+  {
+    id: "status",
+    title: "Status Icons",
+    text: "Tap any status icon (Shield, Counter, Skull, Silence) to learn what it does. Curse deals damage each turn. Confused Tongues blocks Scripture cards.",
     position: "bottom",
   },
   {

@@ -1,6 +1,7 @@
 import React from "react";
 import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART } from "@/data/art";
+import { getCardPlayabilityReason } from "@/game/statusExplanations";
 import { cn } from "@/utils";
 import { Sparkles, X, Swords, Shield, BookOpen, Wand2 } from "lucide-react";
 
@@ -17,14 +18,17 @@ const RARITY_BORDER = {
   legendary: "border-amber-300/80",
 };
 
-export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCancel }) {
+export default function CardPreviewPanel({ card, playable, blocked, battleState, onPlay, onCancel }) {
   if (!card) return null;
   const typeInfo = TYPE_INFO[card.type] || TYPE_INFO.attack;
   const effectText = getCardEffectText(card);
-  const canPlay = playable && !blocked;
   const artUrl = CARD_ART[card.id];
   const rarityBorder = RARITY_BORDER[card.rarity] || RARITY_BORDER.common;
   const TypeIcon = typeInfo.icon;
+
+  // Derive the exact reason this card can't be played (silence vs. faith)
+  const blockReason = blocked ? getCardPlayabilityReason(card, battleState) : null;
+  const canPlay = playable && !blocked;
 
   return (
     <>
@@ -59,7 +63,12 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
             <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>
             <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 active:scale-95">Play Card</button>
           </div>
-          {blocked && <p className="text-red-300 text-[10px] mt-1.5 text-center">Scripture cards are blocked this turn</p>}
+          {blocked && blockReason && (
+            <div className="mt-1.5 px-2.5 py-1.5 rounded-md border border-red-500/30 bg-red-900/20 text-center">
+              <p className="text-red-300 text-[10px] font-bold uppercase tracking-wide">🔒 {blockReason.label}</p>
+              <p className="text-red-200/70 text-[9px] mt-0.5 leading-snug">{blockReason.text}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -101,8 +110,15 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
              <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
              <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
             </div>
-          {blocked && <p className="text-red-300 text-xs pb-3 text-center">Scripture cards are blocked this turn</p>}
-        </div>
+          {blocked && blockReason && (
+            <div className="px-4 pb-4">
+              <div className="px-3 py-2 rounded-lg border border-red-500/30 bg-red-900/20 text-center">
+                <p className="text-red-300 text-xs font-bold uppercase tracking-wide">🔒 {blockReason.label}</p>
+                <p className="text-red-200/70 text-[11px] mt-0.5 leading-snug">{blockReason.text}</p>
+              </div>
+            </div>
+          )}
+          </div>
       </div>
     </>
   );

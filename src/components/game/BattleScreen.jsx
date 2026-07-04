@@ -11,6 +11,7 @@ import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
+import { getStatusExplanation } from "@/game/statusExplanations";
 import BattleHelper from "@/components/game/BattleHelper";
 import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
 import GuidedBattleTutorial, { TUTORIAL_TOTAL_STEPS } from "@/components/game/GuidedBattleTutorial";
@@ -73,9 +74,10 @@ function simplifyLogEntry(entry) {
   s = s.replace(/^✨\s.*?\s.*?healed\s(\d+)$/, `Enemy healed $1 HP`);
   s = s.replace(/^✨\s\+(\d+)\s*HP.*$/, `Enemy healed $1 HP`);
   s = s.replace(/^☠️\sCurse.*$/, `Curse dealt damage`);
+  s = s.replace(/^⚠️\sConfused\sTongues.*$/, `Confused Tongues — Scripture blocked`);
   s = s.replace(/^⚠️\s.*?\sreadies\s(.*)$/, `Enemy will attack next.`);
   s = s.replace(/^⚠️\s.*?\sprepares.*$/, `Enemy will attack next.`);
-  s = s.replace(/^⚠️\sScripture\sblocked.*$/, `Scripture blocked next turn`);
+  s = s.replace(/^⚠️\sScripture\sblocked.*$/, `Confused Tongues — Scripture blocked`);
   s = s.replace(/^—\sTurn ends—$/, `Turn ended`);
   s = s.replace(/^🌈\sCovenant.*$/, `Covenant Shield activated`);
   // Battle start
@@ -115,6 +117,7 @@ export default function BattleScreen() {
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
   const [intentExplain, setIntentExplain] = useState(null);
+  const [statusExplain, setStatusExplain] = useState(null);
   const [endTurnConfirm, setEndTurnConfirm] = useState(null);
   const [undoData, setUndoData] = useState(null);
   const undoTimeoutRef = useRef(null);
@@ -554,10 +557,10 @@ export default function BattleScreen() {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
             const curseText = step.action.effect === "dot" ? "Cursed!" :
-              step.action.effect === "drain" ? "Faith drained" :
-              step.action.effect === "skip_draw" ? "Draw reduced" :
-              step.action.effect === "block_scripture" ? "Silenced" :
-              step.action.effect === "discard" ? "Cards discarded" : "Confused";
+              step.action.effect === "drain" ? "Faith Drain!" :
+              step.action.effect === "skip_draw" ? "Draw Reduced" :
+              step.action.effect === "block_scripture" ? "Confused Tongues!" :
+              step.action.effect === "discard" ? "Discard!" : "Confusion!";
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
@@ -618,7 +621,7 @@ export default function BattleScreen() {
       if (step.type === "dot") {
         Sound.sfx.enemyCurse();
         setPlayerShake(true);
-        setFloatingText({ text: "-2 Curse", color: "#c084fc", pos: "bottom" });
+        setFloatingText({ text: "Curse dealt 2 damage", color: "#c084fc", pos: "bottom" });
         setBattleState(step.state);
         setTimeout(() => {
           clearTransient();
@@ -986,19 +989,37 @@ export default function BattleScreen() {
             </div>
             <div className="flex items-center gap-2 mt-0.5 text-[10px] lg:text-sm">
               {battleState.playerBlock > 0 && (
-                <span className="text-blue-300 flex items-center gap-0.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("block", battleState.playerBlock)); Sound.sfx.click(); }}
+                  className="text-blue-300 flex items-center gap-0.5 hover:text-blue-200 transition active:scale-90"
+                >
                   <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.playerBlock}
-                </span>
+                </button>
               )}
               {battleState.counter > 0 && (
-                <span className="text-amber-300 flex items-center gap-0.5 font-bold" title={`Counter: enemy takes ${battleState.counter} damage on each attack (cap 12)`}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("counter", battleState.counter)); Sound.sfx.click(); }}
+                  className="text-amber-300 flex items-center gap-0.5 font-bold hover:text-amber-200 transition active:scale-90"
+                >
                   <Zap className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.counter}
-                </span>
+                </button>
               )}
               {battleState.dots > 0 && (
-                <span className="text-purple-300 flex items-center gap-0.5">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("curse", battleState.dots)); Sound.sfx.click(); }}
+                  className="text-purple-300 flex items-center gap-0.5 hover:text-purple-200 transition active:scale-90"
+                >
                   <Skull className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.dots}
-                </span>
+                </button>
+              )}
+              {battleState.blockScripture && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("silence")); Sound.sfx.click(); }}
+                  className="text-purple-300 flex items-center gap-0.5 hover:text-purple-200 transition active:scale-90 animate-pulse"
+                  title="Confused Tongues — Scripture blocked"
+                >
+                  <span className="text-[9px] lg:text-xs font-bold">🔇</span>
+                </button>
               )}
               <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
             </div>
@@ -1070,6 +1091,7 @@ export default function BattleScreen() {
                   inHand
                   small={!isDesktop}
                   playable={playable && !blocked && !isEnemyTurn}
+                  blocked={blocked}
                   selected={selectedCard === idx}
                   onClick={() => handleSelectCard(idx)}
                   onLongPress={() => setLongPressCard(card)}
@@ -1091,6 +1113,7 @@ export default function BattleScreen() {
             card={selCard}
             playable={playable && !isEnemyTurn}
             blocked={blocked}
+            battleState={battleState}
             onPlay={() => handlePlayCard(selectedCard)}
             onCancel={() => { Sound.sfx.click(); setSelectedCard(null); }}
           />
@@ -1158,6 +1181,23 @@ export default function BattleScreen() {
             <p className="text-amber-100/80 text-xs leading-relaxed">
               {getIntentExplanation(intentExplain, enemy)}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Status explanation popover — tap any status icon */}
+      {statusExplain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.85)" }} onClick={() => setStatusExplain(null)}>
+          <div
+            className="max-w-xs w-full rounded-xl border-2 border-purple-500/50 p-4 animate-fade-in"
+            style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-serif text-purple-200">{statusExplain.name}</h3>
+              <button onClick={() => setStatusExplain(null)} className="text-amber-100/40 hover:text-amber-200 text-sm">✕</button>
+            </div>
+            <p className="text-amber-100/80 text-xs leading-relaxed">{statusExplain.text}</p>
           </div>
         </div>
       )}

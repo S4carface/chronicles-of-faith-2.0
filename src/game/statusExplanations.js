@@ -61,6 +61,13 @@ export function getCardPlayabilityReason(card, battleState) {
   const hasFreePlay = battleState.freeCardsRemaining > 0;
   const canAfford = hasFreePlay || battleState.energy >= card.cost;
   if (!canAfford) {
+    if (battleState.energy === 0) {
+      return {
+        reason: "faith",
+        label: "No Faith left",
+        text: "No Faith left. End your turn to refill.",
+      };
+    }
     return {
       reason: "faith",
       label: "Not enough Faith",

@@ -43,6 +43,8 @@ function loadProfile() {
       // Migrate devotion tracking fields
       if (parsed.devotionStreak === undefined) parsed.devotionStreak = 0;
       if (parsed.devotionReadDate === undefined) parsed.devotionReadDate = null;
+      // Migrate Genesis completion flag
+      if (parsed.genesisCompleted === undefined) parsed.genesisCompleted = false;
       return parsed;
     }
   } catch (e) {}
@@ -64,6 +66,7 @@ function loadProfile() {
     difficulty: "normal",
     gold: 0,
     tutorialSeen: false,
+    genesisCompleted: false,
   };
 }
 

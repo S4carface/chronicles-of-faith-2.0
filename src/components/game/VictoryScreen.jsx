@@ -10,9 +10,11 @@ import { submitBestScore } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
 import { getCurrentUser } from "@/game/cloudSync";
+import { generateFirstCompletionReward } from "@/game/deckRules";
+import { getCardById } from "@/data/cards";
 
 export default function VictoryScreen() {
-  const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
+  const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection } = useGame();
   const { navigateToLogin } = useAuth();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
@@ -21,6 +23,7 @@ export default function VictoryScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
+  const [firstCompletionCard, setFirstCompletionCard] = useState(null);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
   const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
@@ -61,6 +64,16 @@ export default function VictoryScreen() {
     // Record lifetime stats (story run won)
     recordRunWon(finalScore, run.gold || 0);
     syncStatsToCloud();
+
+    // First Genesis completion: guarantee a strong rare card (never legendary)
+    if (!profile.genesisCompleted) {
+      const rewardId = generateFirstCompletionReward(Math.random);
+      if (rewardId) {
+        addCardToCollection(rewardId);
+        setFirstCompletionCard(rewardId);
+      }
+      saveProfile({ genesisCompleted: true });
+    }
 
     // Auto-submit score — prompt for name if missing/invalid
     if (!needsPlayerName(profile.playerName)) {
@@ -188,6 +201,19 @@ export default function VictoryScreen() {
           <div className="rounded-lg border border-amber-400/40 bg-amber-500/10 p-4 mb-6">
             <p className="text-amber-200 font-serif">Noah Unlocked!</p>
             <p className="text-amber-100/50 text-xs mt-1">Play as Noah in your next run with the Covenant Shield ability.</p>
+          </div>
+        )}
+
+        {firstCompletionCard && (
+          <div className="rounded-xl border-2 border-emerald-400/50 bg-emerald-900/20 p-5 mb-6 text-center animate-fade-in">
+            <h3 className="text-lg font-serif text-emerald-300 mb-2">First Completion Reward!</h3>
+            <p className="text-amber-100/70 text-sm mb-3">You earned a guaranteed Rare card for your first Genesis victory:</p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-400/40 bg-emerald-900/30">
+              <span className="text-2xl">{getCardById(firstCompletionCard)?.icon}</span>
+              <span className="font-serif text-emerald-200">{getCardById(firstCompletionCard)?.name}</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-300/70 px-1.5 py-0.5 rounded bg-emerald-900/40">Rare</span>
+            </div>
+            <p className="text-amber-100/50 text-xs mt-2">Added to your collection.</p>
           </div>
         )}
 

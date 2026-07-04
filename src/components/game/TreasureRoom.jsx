@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
-import { generateTreasureCard, RUN_DECK_MAX } from "@/game/deckRules";
+import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import DeckFullModal from "@/components/game/DeckFullModal";
 
 export default function TreasureRoom() {
-  const { run, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
+  const { run, profile, updateRun, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
   const node = run.currentNode;
   const [claimed, setClaimed] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -31,6 +31,12 @@ export default function TreasureRoom() {
 
   const handleContinue = () => {
     Sound.sfx.click();
+    const collection = profile.cardCollection || {};
+    const alreadyOwned = (collection[rewardCardId] || 0) > 1; // >1 because we just added one in claim
+    if (alreadyOwned) {
+      const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
+      updateRun({ gold: (run.gold || 0) + goldBonus });
+    }
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(rewardCardId);
       completeRoom(node.id);
@@ -57,6 +63,11 @@ export default function TreasureRoom() {
 
   if (!card) return null;
 
+  const collection = profile.cardCollection || {};
+  const alreadyOwned = (collection[rewardCardId] || 0) > 0;
+  const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
+  const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
       <div className="text-center mb-8">
@@ -69,6 +80,15 @@ export default function TreasureRoom() {
         </p>
       </div>
 
+      {/* Rarity label */}
+      <div className="mb-3 text-center">
+        <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
+          card.rarity === "legendary" ? "border-amber-400/50 bg-amber-900/20 text-amber-300" :
+          card.rarity === "rare" ? "border-emerald-400/50 bg-emerald-900/20 text-emerald-300" :
+          "border-sky-400/50 bg-sky-900/20 text-sky-300"
+        }`}>{rarityLabel}</span>
+      </div>
+
       <div className={claimed ? "animate-pulse" : ""} onClick={() => { Sound.sfx.click(); setShowDetail(true); }} style={{ cursor: "pointer" }}>
         <Card card={card} />
       </div>
@@ -76,6 +96,12 @@ export default function TreasureRoom() {
       <div className="mt-6 text-center max-w-sm">
         <p className="text-amber-100/70 text-sm italic mb-2">{card.description}</p>
         <p className="text-amber-300/60 text-xs">"{card.verse}"</p>
+        {alreadyOwned && (
+          <div className="mt-3 p-2 rounded-lg border border-amber-500/20 bg-amber-900/10">
+            <p className="text-amber-200/70 text-[11px] font-semibold">⚠ Already Owned</p>
+            <p className="text-amber-100/50 text-[10px]">Claiming this duplicate grants +{goldBonus} gold bonus.</p>
+          </div>
+        )}
       </div>
 
       {showDetail && (

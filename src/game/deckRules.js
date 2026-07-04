@@ -21,10 +21,17 @@ export const HEALING_CARD_IDS = new Set([
 ]);
 
 export const REWARD_ODDS = {
-  normal: { common: 0.80, rare: 0.18, legendary: 0.02 },
-  treasure: { common: 0.65, rare: 0.30, legendary: 0.05 },
-  boss: { common: 0.50, rare: 0.40, legendary: 0.10 },
-  daily: { common: 0.70, rare: 0.27, legendary: 0.03 },
+  normal: { common: 0.88, rare: 0.12, legendary: 0 },
+  treasure: { common: 0.72, rare: 0.27, legendary: 0.01 },
+  boss: { common: 0.50, rare: 0.45, legendary: 0.05 },
+  daily: { common: 0.82, rare: 0.18, legendary: 0 },
+};
+
+// Gold bonus when claiming a duplicate reward card
+export const DUPLICATE_GOLD_BONUS = {
+  common: 5,
+  rare: 15,
+  legendary: 40,
 };
 
 export const STARTER_DECK = [
@@ -168,4 +175,14 @@ export function generateTreasureCard(rng) {
   const pool = CARDS.filter(c => c.rarity === rarity);
   if (pool.length === 0) return null;
   return pool[Math.floor(rng() * pool.length)].id;
+}
+
+/**
+ * Generate a guaranteed rare card for first Genesis completion.
+ * Never returns a legendary — only strong rares.
+ */
+export function generateFirstCompletionReward(rng) {
+  const rarePool = CARDS.filter(c => c.rarity === "rare");
+  if (rarePool.length === 0) return null;
+  return rarePool[Math.floor(rng() * rarePool.length)].id;
 }

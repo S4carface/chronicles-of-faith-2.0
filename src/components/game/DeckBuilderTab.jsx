@@ -27,9 +27,14 @@ export default function DeckBuilderTab() {
   return (
     <div>
       {/* Explanation */}
-      <p className="max-w-2xl mx-auto mb-4 text-center text-amber-100/50 text-xs lg:text-sm italic">
-        These are the cards you bring into battle.
-      </p>
+      <div className="max-w-2xl mx-auto mb-4 text-center">
+        <p className="text-amber-100/50 text-xs lg:text-sm italic mb-1">
+          These are the cards you bring into battle.
+        </p>
+        <p className="text-amber-100/40 text-[10px] lg:text-xs">
+          Max 2 copies of Common · Max 1 copy of Rare or Legendary per deck
+        </p>
+      </div>
 
       {/* Deck count + validation */}
       <div className="max-w-2xl mx-auto mb-4 text-center">

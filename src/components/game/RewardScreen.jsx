@@ -4,7 +4,7 @@ import { getCardById, CARDS } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { ROOM_TYPES } from "@/data/genesisRooms";
 import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART } from "@/data/art";
-import { generateRewardCards, RUN_DECK_MAX, canAddToDeck, getMaxCopies } from "@/game/deckRules";
+import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, canAddToDeck, getMaxCopies, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -42,8 +42,18 @@ export default function RewardScreen() {
 
   const collection = profile.cardCollection || {};
 
-  // Generate 3 reward cards based on room type drop rates
-  const [rewards] = useState(() => generateRewardCards(Math.random, roomType));
+  // First Genesis completion guarantees a strong rare card
+  const isFirstCompletion = isBoss && !profile.genesisCompleted;
+  const [rewards] = useState(() => {
+    if (isFirstCompletion) {
+      const guaranteed = generateFirstCompletionReward(Math.random);
+      const others = generateRewardCards(Math.random, "boss");
+      // Replace first slot with guaranteed rare, no duplicates
+      const set = new Set([guaranteed, ...others]);
+      return [...set].slice(0, 3);
+    }
+    return generateRewardCards(Math.random, roomType);
+  });
 
   useEffect(() => {
     if (showNarration) Sound.playMusic("victory");
@@ -71,6 +81,13 @@ export default function RewardScreen() {
 
   const handleSelectReward = (cardId) => {
     Sound.sfx.reward();
+    const card = getCardById(cardId);
+    const alreadyOwned = (collection[cardId] || 0) > 0;
+    // Duplicate reward: grant gold bonus instead of another copy
+    if (alreadyOwned) {
+      const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
+      updateRun({ gold: (run.gold || 0) + goldBonus });
+    }
     addCardToCollection(cardId);
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(cardId);
@@ -173,23 +190,30 @@ export default function RewardScreen() {
 
 function RewardCardDisplay({ card, ownedCount, onClick }) {
   const alreadyOwned = ownedCount > 0;
+  const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
+  const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
 
   return (
     <div onClick={onClick} className="transform hover:scale-105 transition cursor-pointer">
       <div className={`w-32 h-48 sm:w-36 sm:h-52 rounded-lg border-2 ${RARITY_BORDER[card.rarity]} ${RARITY_GLOW[card.rarity]} overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between`}>
         <div className="flex items-center justify-between w-full">
-          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${alreadyOwned ? "text-emerald-300 bg-emerald-900/30" : "text-amber-200 bg-amber-900/30"}`}>
-            {alreadyOwned ? "Already Owned" : "New Card"}
+          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${alreadyOwned ? "text-amber-200 bg-amber-900/40" : "text-emerald-300 bg-emerald-900/30"}`}>
+            {alreadyOwned ? `Already Owned` : "New Card"}
           </span>
           <span className="text-xs text-amber-300/60">{card.cost} ✨</span>
         </div>
         <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-14 h-14 object-cover rounded-lg animate-fade-in" />
         <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
-        <div className="text-[8px] text-amber-300/50 uppercase font-bold">{card.rarity}</div>
+        <div className={`text-[8px] uppercase font-bold tracking-wide ${
+          card.rarity === "legendary" ? "text-amber-300" : card.rarity === "rare" ? "text-emerald-300" : "text-sky-300"
+        }`}>{rarityLabel}</div>
         <div className="text-[7px] text-amber-100/50 text-center leading-tight">{getCardEffectText(card)}</div>
       </div>
       {alreadyOwned && (
-        <p className="text-emerald-300/60 text-[9px] text-center mt-1">Owned: {ownedCount}</p>
+        <div className="text-center mt-1">
+          <p className="text-amber-200/70 text-[9px] font-semibold">+{goldBonus} gold bonus</p>
+          <p className="text-amber-100/40 text-[8px]">Duplicate reward</p>
+        </div>
       )}
     </div>
   );

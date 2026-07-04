@@ -3,9 +3,9 @@ import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 
 const RARITY_INFO = {
-  common: { label: "Common", color: "text-sky-200", dropRate: "70%", border: "border-sky-400/60" },
-  rare: { label: "Rare", color: "text-emerald-200", dropRate: "25%", border: "border-emerald-400/70" },
-  legendary: { label: "Legendary", color: "text-amber-100", dropRate: "5%", border: "border-amber-300/80" },
+  common: { label: "Common", color: "text-sky-200", dropRate: "Common", border: "border-sky-400/60" },
+  rare: { label: "Rare", color: "text-emerald-200", dropRate: "Uncommon", border: "border-emerald-400/70" },
+  legendary: { label: "Legendary", color: "text-amber-100", dropRate: "Very Rare", border: "border-amber-300/80" },
 };
 
 export default function CardDetailModal({ card, owned, onClose, onSelect, selectLabel, justCollected }) {

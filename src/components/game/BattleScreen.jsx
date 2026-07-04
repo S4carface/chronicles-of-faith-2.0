@@ -733,8 +733,9 @@ export default function BattleScreen() {
             } ${enemyShake ? "animate-shake" : ""} ${enemyFlash ? "animate-damage-flash" : ""}`}
           >
             {enemyArt ? (
-              <div className="w-24 h-24 lg:w-40 lg:h-40 rounded-lg border-2 border-red-900/60 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A0A0A 0%, #2A1212 100%)" }}>
-                <img src={enemyArt} alt={enemy.name} className="w-full h-full object-cover" />
+              <div className="w-24 h-24 lg:w-40 lg:h-40 rounded-lg overflow-hidden relative" style={{ background: "#0A0F1E", border: "2px solid rgba(201,168,76,0.45)", boxShadow: "0 0 20px rgba(201,168,76,0.15), inset 0 0 30px rgba(8,12,24,0.8)" }}>
+                <img src={enemyArt} alt={enemy.name} className="w-full h-full object-cover block" style={{ transform: "scale(1.06)", filter: "contrast(1.05) saturate(0.95)" }} />
+                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, rgba(8,12,24,0.5) 100%)" }} />
               </div>
             ) : (
               <span className="text-5xl">{enemy.icon}</span>

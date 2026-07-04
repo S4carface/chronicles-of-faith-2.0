@@ -1221,7 +1221,10 @@ export default function BattleScreen() {
       {showPause && !showAbandonConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(8,12,24,0.95)" }}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-            <h2 className="text-2xl font-serif text-amber-200 text-center mb-6">Paused</h2>
+            <h2 className="text-2xl font-serif text-amber-200 text-center mb-1">Paused</h2>
+            <p className="text-amber-100/50 text-xs text-center uppercase tracking-wider mb-6">
+              Current Run: <span className="text-amber-200/80 capitalize">{run.difficulty || "Easy"}</span>
+            </p>
 
             <div className="space-y-4">
               <button

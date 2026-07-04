@@ -168,7 +168,10 @@ export default function VictoryScreen() {
             <img src={VICTORY_ART.crest} alt="Victory" className="art-portrait" />
           </div>
         </div>
-        <h1 className="text-5xl font-serif text-amber-200 mb-3">Genesis Complete!</h1>
+        <h1 className="text-5xl font-serif text-amber-200 mb-1">Genesis Complete!</h1>
+        <p className="text-amber-100/50 text-xs uppercase tracking-wider mb-3">
+          Current Run: <span className="text-amber-200/80 capitalize">{completedDifficulty}</span>
+        </p>
         <p className="text-amber-100/70 text-lg mb-6 font-serif italic">
           "Thus the heavens and the earth were completed in all their vast array." — Genesis 2:1
         </p>

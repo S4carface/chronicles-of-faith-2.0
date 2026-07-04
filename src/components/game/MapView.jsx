@@ -7,7 +7,7 @@ import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
 import RoomTooltip from "@/components/game/RoomTooltip";
 import * as Sound from "@/game/soundManager";
 
-export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp }) {
+export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp, difficulty }) {
   const [previewNode, setPreviewNode] = useState(null);
   const availableNodes = currentNode ? currentNode.connections : [map[0][0].id];
   const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
@@ -52,6 +52,9 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
           <h2 className="text-lg font-serif text-amber-200">Path of Genesis</h2>
           <p className="text-amber-100/60 text-xs">
             {fogOfWar ? "The path ahead is hidden — tap the info icon for room details" : "All rooms visible"}
+          </p>
+          <p className="text-amber-100/50 text-[10px] uppercase tracking-wider mt-0.5">
+            Current Run: <span className="text-amber-200/80 capitalize">{difficulty || "Easy"}</span>
           </p>
         </div>
         <button

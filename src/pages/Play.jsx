@@ -50,6 +50,7 @@ export default function Play() {
         fogOfWar={run.fogOfWar}
         playerHp={run.playerHp}
         maxHp={run.maxHp}
+        difficulty={run.difficulty}
       />
     );
   }

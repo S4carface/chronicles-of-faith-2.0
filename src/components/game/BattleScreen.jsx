@@ -1128,35 +1128,46 @@ export default function BattleScreen() {
             </div>
 
             <div className="mt-6 space-y-3">
+              {/* Primary */}
               <button
                 onClick={() => { setShowPause(false); Sound.sfx.click(); }}
                 className="w-full px-6 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
               >
                 Resume Battle
               </button>
+
+              {/* Secondary */}
               {!run.isDaily && (
-                <button
-                  onClick={handleSaveAndExit}
-                  className="w-full px-6 py-3 rounded-lg border-2 border-emerald-400/50 bg-emerald-600/20 text-emerald-100 font-bold hover:bg-emerald-600/40 transition"
-                >
-                  Save &amp; Exit to Menu
-                </button>
+                <div>
+                  <button
+                    onClick={handleSaveAndExit}
+                    className="w-full px-6 py-3 rounded-lg border-2 border-emerald-400/50 bg-emerald-600/20 text-emerald-100 font-bold hover:bg-emerald-600/40 transition"
+                  >
+                    Save &amp; Exit to Menu
+                  </button>
+                  <p className="text-amber-100/40 text-[10px] text-center mt-1.5">
+                    You can continue this Story Mode run later.
+                  </p>
+                </div>
               )}
-              {!run.isDaily ? (
-                <p className="text-amber-100/40 text-[10px] text-center -mt-2">
-                  Your Story Mode run is saved automatically. Come back anytime.
-                </p>
-              ) : (
-                <p className="text-amber-100/40 text-[10px] text-center -mt-2">
+              {run.isDaily && (
+                <p className="text-amber-100/40 text-[10px] text-center">
                   Daily Battles cannot be resumed once abandoned.
                 </p>
               )}
-              <button
-                onClick={() => { setShowAbandonConfirm(true); Sound.sfx.click(); }}
-                className="w-full px-6 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm hover:bg-red-800/30 transition"
-              >
-                {run.isDaily ? "Abandon Daily Battle" : "Abandon Run — Delete Progress"}
-              </button>
+
+              {/* Destructive — visually separated, below */}
+              <div className="pt-5 mt-3 border-t border-amber-500/10">
+                <button
+                  onClick={() => { setShowAbandonConfirm(true); Sound.sfx.click(); }}
+                  className="w-full px-6 py-2 rounded-lg border border-red-400/30 bg-red-900/10 text-red-300/80 text-sm hover:bg-red-900/20 hover:text-red-200 transition"
+                >
+                  {run.isDaily ? "Abandon Daily Battle" : "Abandon Run — Delete Progress"}
+                </button>
+                <p className="text-red-300/30 text-[10px] text-center mt-1.5">
+                  {run.isDaily ? "This ends today's Daily Battle." : "This deletes the saved run."}
+                </p>
+              </div>
             </div>
           </div>
         </div>

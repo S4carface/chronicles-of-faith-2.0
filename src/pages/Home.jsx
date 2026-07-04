@@ -81,7 +81,7 @@ export default function Home() {
     { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Verse, prayer, and one shared battle.", status: "New today" },
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
-    { label: "Scripture Mastery", art: MENU_ART.progress, path: "/mastery", desc: "Track your Bible learning progress", status: null },
+    { label: "Faith Progress", art: MENU_ART.progress, path: "/faith-progress", desc: "Track your Bible learning progress", status: null },
     { label: "My Journey", art: MENU_ART.progress, path: "/journey", desc: "Stats, streaks, and Bible learning", status: null },
   ];
   const secondaryItems = [

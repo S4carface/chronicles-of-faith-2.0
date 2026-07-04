@@ -94,15 +94,19 @@ export default function TriviaModal({ onComplete }) {
 
         {answered && (
           <div className="mt-6 text-center">
-            <p className={`text-lg font-serif ${selected === question.answer ? "text-emerald-300" : "text-red-300"}`}>
-              {selected === question.answer ? "✓ Correct! Well done." : "✗ Not quite."}
+            <p className={`text-lg font-serif ${selected === question.answer ? "text-emerald-300" : "text-amber-300"}`}>
+              {selected === question.answer ? "✓ Correct! Well done." : "Not quite — let's learn!"}
             </p>
-            <p className="text-amber-100/70 text-sm mt-1">
-              {selected === question.answer
-                ? "Your answer is correct."
-                : `The correct answer is: ${question.options[question.answer]}`}
-            </p>
-            <p className="text-amber-100/60 text-xs mt-1 italic">{question.verse}</p>
+            {selected === question.answer ? (
+              <p className="text-amber-100/80 text-sm mt-2 leading-relaxed">{question.explanation}</p>
+            ) : (
+              <p className="text-amber-100/80 text-sm mt-2 leading-relaxed">
+                The correct answer is{" "}
+                <span className="text-emerald-300 font-semibold">{question.options[question.answer]}</span>.{" "}
+                {question.explanation}
+              </p>
+            )}
+            <p className="text-amber-100/60 text-xs mt-2 italic">📖 {question.verse}</p>
             <button
               onClick={handleContinue}
               className="mt-4 px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"

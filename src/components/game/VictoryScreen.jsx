@@ -12,6 +12,7 @@ import { needsPlayerName } from "@/game/nameValidator";
 import { getCurrentUser } from "@/game/cloudSync";
 import { generateFirstCompletionReward } from "@/game/deckRules";
 import { getCardById } from "@/data/cards";
+import GenesisCompletionCelebration from "@/components/game/GenesisCompletionCelebration";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection, queueUnlock } = useGame();
@@ -24,6 +25,7 @@ export default function VictoryScreen() {
   const [submitError, setSubmitError] = useState(false);
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [firstCompletionCard, setFirstCompletionCard] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
   const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
@@ -75,6 +77,7 @@ export default function VictoryScreen() {
       }
       saveProfile({ genesisCompleted: true });
       queueUnlock({ type: 'chapter', name: 'Genesis' });
+      setShowCelebration(true);
     }
 
     // Auto-submit score — prompt for name if missing/invalid
@@ -144,6 +147,10 @@ export default function VictoryScreen() {
     endRun();
     navigate("/");
   };
+
+  const nextUnlockLabel = firstCompletionCard
+    ? `${getCardById(firstCompletionCard)?.name || "Rare Card"} — First Completion Reward`
+    : (run.hero.id !== "noah" ? "Noah — Covenant Shield Hero" : null);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.15) 0%, rgba(26,39,68,0.98) 50%, rgba(8,12,24,1) 100%)" }}>
@@ -260,6 +267,23 @@ export default function VictoryScreen() {
         <AccountPrompt
           onDismiss={handleAccountDismiss}
           onSignIn={handleAccountSignIn}
+        />
+      )}
+
+      {showCelebration && (
+        <GenesisCompletionCelebration
+          score={score}
+          stats={{
+            roomsCleared: run.roomsCleared,
+            triviaCorrect: run.triviaCorrect || 0,
+            triviaAttempted: run.triviaAttempted || 0,
+            playerHp: run.playerHp,
+            maxHp: run.maxHp,
+            gold: run.gold,
+            difficulty: (run.difficulty || "normal"),
+          }}
+          nextUnlock={nextUnlockLabel}
+          onComplete={() => setShowCelebration(false)}
         />
       )}
     </div>

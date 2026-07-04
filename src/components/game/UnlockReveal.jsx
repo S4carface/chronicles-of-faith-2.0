@@ -5,6 +5,7 @@ import { HERO_MAP } from "@/data/heroes";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { CARD_ART, HERO_ART, VICTORY_ART, PLACEHOLDER_ART, ENEMY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+import CardReveal from "@/components/game/CardReveal";
 
 const RARITY_STYLES = {
   common: { label: "Common", color: "text-sky-300", border: "border-sky-400/50", glow: "rgba(56,189,248,0.4)" },
@@ -113,7 +114,14 @@ export default function UnlockReveal() {
     };
   }, [current, content, dismissUnlock]);
 
-  if (!current || !content) return null;
+  if (!current) return null;
+
+  // Card unlocks use the dedicated richer reveal
+  if (current.type === "card") {
+    return <CardReveal unlock={current} onDismiss={dismissUnlock} />;
+  }
+
+  if (!content) return null;
 
   return (
     <div

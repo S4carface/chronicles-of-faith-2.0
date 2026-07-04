@@ -105,7 +105,8 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         style.bg,
         "bg-gradient-to-b",
         playable && "hover:scale-105 active:scale-95",
-        selected && "ring-2 ring-amber-300 scale-105 shadow-xl shadow-amber-400/50 z-10",
+        selected && playable && "ring-4 ring-amber-300 scale-110 shadow-2xl shadow-amber-400/60 z-20 brightness-110",
+        selected && !playable && "ring-4 ring-amber-400/40 scale-105 z-10",
         !playable && onClick && "opacity-60",
         small ? "w-20 h-36" : "w-36 h-52",
         inHand && "flex-shrink-0"

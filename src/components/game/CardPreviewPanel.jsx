@@ -56,10 +56,9 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
             <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
           </div>
           <p className="text-amber-300/40 text-[10px] italic mb-2 text-center">{card.verse}</p>
-          <p className="text-amber-300/50 text-[10px] mb-2 text-center leading-tight">Confirm your selected card or cancel before ending your turn.</p>
           <div className="flex gap-3">
-            <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel Selection</button>
-            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play This Card</button>
+            <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
+            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
           </div>
           {blocked && <p className="text-red-300 text-[10px] mt-2 text-center">Scripture cards are blocked this turn</p>}
         </div>
@@ -98,11 +97,10 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
               <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
             </div>
             <p className="text-amber-300/40 text-[11px] italic text-center mb-2">{card.verse}</p>
-            <p className="text-amber-300/50 text-[10px] text-center leading-tight mb-2">Confirm your selected card or cancel before ending your turn.</p>
             </div>
-            <div className="px-4 pb-4 flex gap-3">
-             <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel Selection</button>
-             <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play This Card</button>
+             <div className="px-4 pb-4 flex gap-3">
+             <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
+             <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
             </div>
           {blocked && <p className="text-red-300 text-xs pb-3 text-center">Scripture cards are blocked this turn</p>}
         </div>

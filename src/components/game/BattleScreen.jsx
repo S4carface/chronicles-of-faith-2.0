@@ -289,10 +289,14 @@ export default function BattleScreen() {
     const isEasyOrGuided = profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips;
     const isHardOrExpert = profile.difficulty === "hard" || gLevel === "expert";
 
-    // Warning 1: card is selected (all modes)
+    // Warning 1: a playable card is selected (all modes)
     if (selectedCard !== null) {
-      setEndTurnConfirm({ type: "selected" });
-      return;
+      const selCard = getCardById(battleState.hand[selectedCard]);
+      const isPlayable = selCard && (battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost) && !(battleState.blockScripture && selCard.type === "scripture");
+      if (isPlayable) {
+        setEndTurnConfirm({ type: "selected" });
+        return;
+      }
     }
 
     // Warning 2: playable cards while enemy about to attack (Easy/Guided only)
@@ -903,7 +907,10 @@ export default function BattleScreen() {
             onClick={handleEndTurnClick}
             disabled={isEnemyTurn}
             className={`px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 font-bold text-xs lg:text-base transition-all whitespace-nowrap active:scale-[0.94] ${
-              selectedCard !== null
+              selectedCard !== null && (() => {
+                const sc = getCardById(battleState.hand[selectedCard]);
+                return sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
+              })()
                 ? "border-amber-500/20 bg-amber-900/10 text-amber-100/40 hover:bg-amber-900/20"
                 : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 active:bg-amber-600/50"
             } disabled:opacity-40 disabled:active:scale-100`}

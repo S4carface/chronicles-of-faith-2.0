@@ -47,7 +47,7 @@ export default function CloudSaveComingSoon({ onClose }) {
           onClick={handleClose}
           className="w-full px-6 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition active:scale-[0.98]"
         >
-          Continue as Guest
+          Got It
         </button>
       </div>
     </div>

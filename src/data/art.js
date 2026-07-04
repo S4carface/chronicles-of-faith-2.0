@@ -85,4 +85,7 @@ export const UI_ART = {
 export const BLESSING_ART = {
   covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",
   manna: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/8a9223f41_generated_image.png",
+  angel: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9bc542f79_generated_image.png",
+  wisdom: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/e1f484ea6_generated_image.png",
+  strength: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/02322c604_generated_image.png",
 };

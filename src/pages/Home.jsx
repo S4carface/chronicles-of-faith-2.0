@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Swords, Pencil } from "lucide-react";
+import { Swords, Pencil, Sun } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
@@ -87,8 +87,10 @@ export default function Home() {
 
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
+  const devotionPrayedToday = profile.devotionReadDate === new Date().toISOString().slice(0, 10);
   const primaryItems = [
-    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Verse, prayer, and one shared battle.", status: "New today" },
+    { label: "Daily Battle", art: MENU_ART.daily, path: "/daily", desc: "One shared battle. Compete for the best score.", status: "New today" },
+    { label: "Daily Prayer", art: HOME_ART.cross, path: "/daily-prayer", desc: "A short scripture and prayer for today.", status: devotionPrayedToday ? "✓ Prayed" : null },
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
     { label: "Faith Progress", art: MENU_ART.progress, path: "/faith-progress", desc: "Track your Bible learning progress", status: null },

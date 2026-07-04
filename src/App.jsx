@@ -16,6 +16,7 @@ import Play from "./pages/Play";
 import Collection from "./pages/Collection";
 import ProgressMap from "./pages/ProgressMap";
 import DailyChallenge from "./pages/DailyChallenge";
+import DailyPrayer from "./pages/DailyPrayer";
 import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
         <Route path="/collection" element={<Collection />} />
         <Route path="/progress" element={<ProgressMap />} />
         <Route path="/daily" element={<DailyChallenge />} />
+        <Route path="/daily-prayer" element={<DailyPrayer />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/settings" element={<Settings />} />

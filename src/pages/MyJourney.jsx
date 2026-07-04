@@ -105,7 +105,7 @@ export default function MyJourney() {
   const journeyEmpty = stats.runsPlayed === 0;
   const battleEmpty = stats.battlesWon === 0 && stats.battlesLost === 0;
   const bibleEmpty = stats.triviaAnswered === 0 && stats.versesRead === 0;
-  const dailyEmpty = (profile.dailyStreak || 0) === 0 && stats.dailyChallengesCompleted === 0;
+  const dailyEmpty = (profile.dailyStreak || 0) === 0 && (profile.devotionStreak || 0) === 0 && stats.dailyChallengesCompleted === 0;
   const masteryEmpty = totalCardPlays === 0;
 
   return (
@@ -219,18 +219,14 @@ export default function MyJourney() {
           )}
         </CollapsibleSection>
 
-        {/* 4. Daily Challenge */}
-        <CollapsibleSection icon={Flame} title="Daily Challenge">
-          {dailyEmpty ? (
-            <EmptyState text="Complete your first Daily Challenge to track your streak." />
-          ) : (
-            <div className="grid grid-cols-2 gap-2 lg:gap-3">
-              <StatTile icon={Flame} label="Current Streak" value={profile.dailyStreak || 0} accent="bg-orange-900/30" />
-              <StatTile icon={Crown} label="Best Streak" value={stats.bestDailyStreak} accent="bg-orange-900/30" />
-              <StatTile icon={Trophy} label="Challenges Done" value={stats.dailyChallengesCompleted} accent="bg-emerald-900/30" />
-              <StatTile icon={Target} label="Best Daily Score" value={stats.bestDailyScore} accent="bg-amber-700/30" />
-            </div>
-          )}
+        {/* 4. Daily Streaks */}
+        <CollapsibleSection icon={Flame} title="Daily Streaks" defaultOpen={true}>
+          <div className="grid grid-cols-2 gap-2 lg:gap-3">
+            <StatTile icon={Swords} label="Battle Streak" value={profile.dailyStreak || 0} accent="bg-orange-900/30" />
+            <StatTile icon={Crown} label="Best Battle Streak" value={stats.bestDailyStreak} accent="bg-orange-900/30" />
+            <StatTile icon={Flame} label="Prayer Streak" value={profile.devotionStreak || 0} accent="bg-amber-700/30" />
+            <StatTile icon={Crown} label="Best Prayer Streak" value={stats.bestDevotionStreak || 0} accent="bg-amber-700/30" />
+          </div>
         </CollapsibleSection>
 
         {/* 5. Card Mastery */}

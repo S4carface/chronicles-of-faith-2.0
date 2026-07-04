@@ -1,41 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Swords, Check, Flame, Crown, Coins, Sparkles, Sun } from "lucide-react";
+import { Swords, Check, Flame, Crown, Coins, Sparkles } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import { validateDeck } from "@/game/deckRules";
-import DailyDevotion from "@/components/game/DailyDevotion";
-import { recordVerseRead, recordDevotionRead } from "@/game/playerStats";
 import * as Sound from "@/game/soundManager";
 
 export default function DailyChallenge() {
-  const { profile, saveProfile, run, startDailyBattle, Sound: Snd } = useGame();
+  const { profile, run, startDailyBattle, Sound: Snd } = useGame();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const devotionTracked = useRef(false);
 
   const daily = getDailyChallenge();
   const todayStr = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const battleCompletedToday = profile.lastDailyDate === todayStr;
-  const devotionReadToday = profile.devotionReadDate === todayStr;
   const hasActiveDaily = run?.isDaily && run.phase === "battle";
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
-
-  // Mark devotion as read when the page loads (devotion is visible by default)
-  useEffect(() => {
-    if (devotionTracked.current) return;
-    devotionTracked.current = true;
-    recordVerseRead();
-    if (!devotionReadToday) {
-      const newStreak = profile.devotionReadDate === yesterday ? (profile.devotionStreak || 0) + 1 : 1;
-      saveProfile({ devotionReadDate: todayStr, devotionStreak: newStreak });
-      recordDevotionRead(newStreak);
-    }
-  }, []);
 
   const beginDaily = () => {
     setLoading(true);
@@ -100,21 +83,11 @@ export default function DailyChallenge() {
           </div>
         </div>
 
-        <p className="text-amber-300/60 text-xs lg:text-sm uppercase tracking-widest mb-2">Daily Challenge</p>
+        <p className="text-amber-300/60 text-xs lg:text-sm uppercase tracking-widest mb-2">Daily Battle</p>
         <h1 className="font-serif text-amber-200 mb-2" style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)" }}>{daily.theme.title}</h1>
         <p className="text-amber-100/50 text-xs lg:text-sm mb-4 lg:mb-6 italic">{daily.theme.verse}</p>
 
-        {/* ===== SECTION 1: DAILY DEVOTION ===== */}
-        <DailyDevotion />
-
-        {/* Divider */}
-        <div className="w-full max-w-xs mx-auto my-4 lg:my-6 flex items-center gap-3">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-amber-500/30" />
-          <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-amber-500/30" />
-        </div>
-
-        {/* ===== SECTION 2: DAILY BATTLE ===== */}
+        {/* ===== DAILY BATTLE ===== */}
         <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6" style={{ background: "rgba(15,26,48,0.6)" }}>
           <div className="flex items-center justify-center gap-2 mb-3">
             <Swords className="w-4 h-4 text-amber-300/60" />
@@ -193,16 +166,6 @@ export default function DailyChallenge() {
               <p className="text-amber-100/50 text-[10px] lg:text-xs">Today's Status</p>
             </div>
           </div>
-        </div>
-
-        {/* Devotion status indicator */}
-        <div className="mb-4 flex items-center justify-center gap-2 text-[10px] lg:text-xs">
-          <Sun className="w-3 h-3 text-amber-300/50" />
-          <span className={devotionReadToday ? "text-emerald-300/70" : "text-amber-100/40"}>
-            Devotion {devotionReadToday ? "✓ Read Today" : "Not Read Today"}
-          </span>
-          <span className="text-amber-100/30">·</span>
-          <span className="text-amber-100/40">Devotion Streak: {profile.devotionStreak || 0}</span>
         </div>
 
         {battleCompletedToday && !hasActiveDaily && (

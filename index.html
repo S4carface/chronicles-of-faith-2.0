@@ -9,7 +9,27 @@
     <title>Chronicles of Faith — Biblical Roguelike</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="initial-loader" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at center,#1A2744 0%,#0A0F1E 80%);font-family:Georgia,'Times New Roman',serif;color:#F5F0E8;z-index:9999;">
+        <div style="position:relative;margin-bottom:1.5rem;">
+          <div style="position:absolute;inset:0;border-radius:50%;filter:blur(32px;background:rgba(201,168,76,0.15);"></div>
+          <div style="position:relative;width:80px;height:80px;border-radius:50%;border:2px solid rgba(201,168,76,0.4);overflow:hidden;background:linear-gradient(135deg,rgba(26,39,68,0.8) 0%,rgba(15,26,48,0.8) 100%);display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:2.5rem;line-height:1;">✝️</span>
+          </div>
+        </div>
+        <h1 style="font-size:clamp(1.5rem,4vw,2rem);letter-spacing:0.05em;color:#E8D4A0;margin:0 0 0.25rem;text-shadow:0 0 30px rgba(201,168,76,0.3);">Chronicles of Faith</h1>
+        <div style="width:80px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);margin:0 0 1rem;"></div>
+        <p style="font-size:0.75rem;font-style:italic;color:rgba(245,240,232,0.5);text-align:center;max-width:18rem;margin:0 0 0.5rem;">"The Lord is my shepherd, I lack nothing."</p>
+        <p style="font-size:0.625rem;color:rgba(201,168,76,0.4);margin:0 0 1.5rem;">— Psalm 23:1</p>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <div style="width:16px;height:16px;border:2px solid rgba(201,168,76,0.3);border-top-color:#C9A84C;border-radius:50%;animation:cof-spin 0.9s linear infinite;"></div>
+          <p style="font-size:0.875rem;color:rgba(245,240,232,0.6);margin:0;">Preparing the next chapter...</p>
+        </div>
+      </div>
+      <style>
+        @keyframes cof-spin { to { transform:rotate(360deg); } }
+      </style>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

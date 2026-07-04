@@ -15,16 +15,16 @@ const SCRIPTURES = [
 ];
 
 const TIPS = [
-  "Tip: Defense cards are strongest before the enemy attacks.",
+  "Tip: Faith refills each turn.",
+  "Tip: Block before heavy enemy attacks.",
+  "Tip: Scripture cards can heal, draw, or strengthen your hand.",
   "Tip: Enemy intent shows what your opponent plans to do next.",
-  "Tip: Scripture cards can heal, draw, or restore Faith.",
   "Tip: Attack cards damage enemies. Miracle cards deal holy damage.",
   "Tip: Treasure rooms give rewards. Story Choices shape your journey.",
   "Tip: Divine Intervention can save a difficult run.",
   "Tip: Keep your HP high before boss battles.",
   "Tip: Tap an enemy intent chip to see what it does.",
   "Tip: Daily Challenge gives the same battle to all players each day.",
-  "Tip: Faith energy is spent to play cards each turn.",
 ];
 
 export default function LoadingScreen({ message }) {

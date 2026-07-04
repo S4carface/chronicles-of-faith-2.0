@@ -1115,16 +1115,20 @@ export default function BattleScreen() {
               >
                 Resume Battle
               </button>
-              {!run.isDaily && (
+              {!run.isDaily ? (
                 <p className="text-amber-100/40 text-[10px] text-center -mt-2">
                   Your Story Mode run is saved automatically.
+                </p>
+              ) : (
+                <p className="text-amber-100/40 text-[10px] text-center -mt-2">
+                  Daily Battles cannot be resumed once abandoned.
                 </p>
               )}
               <button
                 onClick={() => { setShowAbandonConfirm(true); Sound.sfx.click(); }}
                 className="w-full px-6 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm hover:bg-red-800/30 transition"
               >
-                Abandon Run & Return to Menu
+                {run.isDaily ? "Abandon Daily Battle & Return to Menu" : "Abandon Run & Return to Menu"}
               </button>
             </div>
           </div>
@@ -1136,7 +1140,14 @@ export default function BattleScreen() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-red-500/30 p-6 animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
             <h2 className="text-lg font-serif text-red-200 text-center mb-3">Abandon this run?</h2>
-            <p className="text-amber-100/60 text-sm text-center mb-6">Your saved progress will be deleted.</p>
+            {run.isDaily ? (
+              <>
+                <p className="text-amber-100/60 text-sm text-center mb-2">This <span className="text-amber-300 font-semibold">Daily Battle</span> attempt will be lost.</p>
+                <p className="text-red-300/70 text-xs text-center mb-6">You cannot retry today's Daily Battle once abandoned.</p>
+              </>
+            ) : (
+              <p className="text-amber-100/60 text-sm text-center mb-6">Your saved progress will be deleted.</p>
+            )}
             <div className="flex gap-3">
               <button
                 onClick={() => { setShowAbandonConfirm(false); Sound.sfx.click(); }}
@@ -1148,7 +1159,7 @@ export default function BattleScreen() {
                 onClick={handleAbandon}
                 className="flex-1 px-4 py-2 rounded-lg border-2 border-red-400/50 bg-red-900/30 text-red-100 text-sm font-bold hover:bg-red-800/40 transition"
               >
-                Abandon Run
+                {run.isDaily ? "Abandon Battle" : "Abandon Run"}
               </button>
             </div>
           </div>

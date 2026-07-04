@@ -167,19 +167,27 @@ export default function Home() {
 
       {/* Continue Saved Run — shown when no active run in memory but a story save exists */}
       {!run && savedStoryExists && savedRunInfo && (
-        <button
-          onClick={handleResumeSavedRun}
-          className="relative w-full max-w-md lg:max-w-[600px] mb-3 px-8 py-4 lg:py-5 rounded-xl border-2 border-emerald-400/60 text-emerald-100 font-serif font-bold text-center hover:bg-emerald-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-emerald-500/20 animate-fade-in"
-          style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.25) 0%, rgba(10,60,30,0.2) 100%)" }}
-        >
-          <span className="flex items-center justify-center gap-2">
-            <Swords className="w-5 h-5" />
-            Continue Saved Run
-          </span>
-          <span className="block text-emerald-200/60 text-xs font-body font-normal mt-1">
-            Resume your Genesis run from Stage {savedRunInfo.stage}
-          </span>
-        </button>
+        <div className="relative w-full max-w-md lg:max-w-[600px] mb-3 animate-fade-in">
+          <button
+            onClick={handleResumeSavedRun}
+            className="relative w-full px-8 py-4 lg:py-5 rounded-xl border-2 border-emerald-400/60 text-emerald-100 font-serif font-bold text-center hover:bg-emerald-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-emerald-500/20"
+            style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.25) 0%, rgba(10,60,30,0.2) 100%)" }}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <Swords className="w-5 h-5" />
+              Continue Genesis Run
+            </span>
+            <span className="block text-emerald-200/60 text-xs font-body font-normal mt-1">
+              Resume your Genesis run from Stage {savedRunInfo.stage}
+            </span>
+          </button>
+          <button
+            onClick={() => { Sound.sfx.click(); setShowConfirm(true); }}
+            className="relative w-full mt-2 px-8 py-2.5 rounded-xl border border-amber-400/30 text-amber-100/70 font-serif text-sm text-center hover:bg-amber-900/20 transition"
+          >
+            Start New Run
+          </button>
+        </div>
       )}
 
       {/* Story save corruption notice */}

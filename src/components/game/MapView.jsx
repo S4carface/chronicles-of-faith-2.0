@@ -98,7 +98,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             )}
                             style={{ filter: "blur(1px)", opacity: 0.4 }}
                           >
-                            <img src={PLACEHOLDER_ART} alt="" className="w-8 h-8 lg:w-12 lg:h-12 art-portrait rounded opacity-30" />
+                            <img src={PLACEHOLDER_ART} alt="" className="art-portrait opacity-30" />
                           </div>
                           <span className="text-[9px] mt-1.5 h-6" />
                         </div>
@@ -113,20 +113,21 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                         className="flex flex-col items-center w-20 lg:w-28"
                       >
                         <div
+                          style={{ background: "#0F1A30" }}
                           className={cn(
                             "relative flex items-center justify-center rounded-xl border-2 overflow-hidden transition-all duration-300",
                             isBoss ? "w-16 h-16 lg:w-24 lg:h-24" : "w-14 h-14 lg:w-20 lg:h-20",
                             isCurrent && "ring-2 ring-amber-300 scale-110 shadow-lg shadow-amber-400/40",
-                            isAvailable && !isCleared && "border-amber-400/70 bg-amber-500/15 hover:scale-110 hover:bg-amber-500/25 cursor-pointer animate-sacred-glow",
-                            isCleared && "border-emerald-600/40 bg-emerald-900/20 opacity-50",
-                            !isAvailable && !isCleared && "border-slate-600/40 bg-slate-800/40 opacity-40 cursor-not-allowed",
-                            isBoss && isAvailable && !isCleared && "border-red-400/70 bg-red-500/15 shadow-lg shadow-red-500/30"
+                            isAvailable && !isCleared && "border-amber-400/70 hover:scale-110 cursor-pointer animate-sacred-glow",
+                            isCleared && "border-emerald-600/40 opacity-50",
+                            !isAvailable && !isCleared && "border-slate-600/40 opacity-40 cursor-not-allowed",
+                            isBoss && isAvailable && !isCleared && "border-red-400/70 shadow-lg shadow-red-500/30"
                           )}
                         >
                           {isCleared && !isBoss ? (
                             <span className="text-emerald-400 text-lg lg:text-2xl font-bold">✓</span>
                           ) : (
-                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="w-10 h-10 lg:w-14 lg:h-14 art-portrait" />
+                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="art-portrait" />
                           )}
                           {recommendation && isAvailable && !isCleared && (
                             <span className={cn(

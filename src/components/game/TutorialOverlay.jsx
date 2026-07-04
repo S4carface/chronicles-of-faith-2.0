@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { Swords, Shield, Eye, Sword, Heart, Coins } from "lucide-react";
+import { Swords, Shield, Eye, Sword, Heart, Coins, Lightbulb } from "lucide-react";
 
 const STEPS = [
+  {
+    icon: "lightbulb",
+    title: "How Battles Work",
+    text: "Each turn you draw cards. Cards cost Faith. Faith refills each turn. Watch the enemy's next moves and choose whether to attack, defend, heal, or prepare.",
+  },
   {
     icon: "swords",
     title: "Battle Basics",
@@ -41,6 +46,7 @@ const ICON_MAP = {
   sword: Sword,
   heart: Heart,
   coins: Coins,
+  lightbulb: Lightbulb,
 };
 
 export default function TutorialOverlay({ onComplete }) {

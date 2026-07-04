@@ -58,7 +58,7 @@ export default function DailyReflection({ onStartBattle, buttonText, loading }) 
       <div className="mb-5">
         <div className="flex items-center gap-1.5 mb-1.5">
           <Heart className="w-3.5 h-3.5 text-amber-300/50" />
-          <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide">Prayer</p>
+          <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide">Devotion</p>
         </div>
         <p className="text-amber-100/60 text-sm lg:text-base italic leading-relaxed">
           {reflection.prayer}

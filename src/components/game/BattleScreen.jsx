@@ -12,6 +12,7 @@ import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
 import TutorialOverlay from "@/components/game/TutorialOverlay";
+import BattleHelper from "@/components/game/BattleHelper";
 import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -78,6 +79,13 @@ export default function BattleScreen() {
   const [endTurnConfirm, setEndTurnConfirm] = useState(null);
   const [undoData, setUndoData] = useState(null);
   const undoTimeoutRef = useRef(null);
+  const [enemyDamageFloat, setEnemyDamageFloat] = useState(null);
+  const [shieldGlow, setShieldGlow] = useState(false);
+  const [healGlow, setHealGlow] = useState(false);
+  const [healFloat, setHealFloat] = useState(null);
+  const [faithParticle, setFaithParticle] = useState(false);
+  const [reshuffleAnim, setReshuffleAnim] = useState(false);
+  const [deckMessage, setDeckMessage] = useState(null);
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -186,6 +194,31 @@ export default function BattleScreen() {
     if (blockGained > 0) recordBlock(blockGained);
     const healed = Math.max(0, (newState.playerHp) - (battleState.playerHp));
     if (healed > 0) recordHealing(healed);
+
+    // Visual feedback for card actions
+    if (dmgDealt > 0) {
+      setEnemyDamageFloat({ amount: dmgDealt, key: Date.now() });
+      setTimeout(() => setEnemyDamageFloat(null), 800);
+    }
+    if (blockGained > 0) {
+      setShieldGlow(true);
+      setTimeout(() => setShieldGlow(false), 800);
+    }
+    if (healed > 0) {
+      setHealGlow(true);
+      setHealFloat({ amount: healed, key: Date.now() });
+      setTimeout(() => { setHealGlow(false); setHealFloat(null); }, 800);
+    }
+    if (card.type === "scripture" && ["song_praise", "coat_colors"].includes(card.id)) {
+      setFaithParticle(true);
+      setTimeout(() => setFaithParticle(false), 800);
+    }
+    if (newState.reshuffled) {
+      setReshuffleAnim(true);
+      setDeckMessage("Deck renewed — discard pile reshuffled.");
+      setTimeout(() => setReshuffleAnim(false), 1000);
+      setTimeout(() => setDeckMessage(null), 2000);
+    }
 
     // Type-specific sounds and animations
     if (card.type === "attack") {
@@ -495,6 +528,12 @@ export default function BattleScreen() {
 
       // End step — draw new hand, return to player
       if (step.type === "end") {
+        if (step.state.reshuffled) {
+          setReshuffleAnim(true);
+          setDeckMessage("Deck renewed — discard pile reshuffled.");
+          setTimeout(() => setReshuffleAnim(false), 1000);
+          setTimeout(() => setDeckMessage(null), 2500);
+        }
         setBattleState(step.state);
         setCurrentIntentIdx(-1);
         setAnimating(false);
@@ -609,7 +648,7 @@ export default function BattleScreen() {
       <div className="flex items-center justify-end px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
         <button
           onClick={() => { setShowPause(true); Sound.sfx.click(); }}
-          className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+          className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
         >
           <Pause className="w-4 h-4" />
         </button>
@@ -676,6 +715,12 @@ export default function BattleScreen() {
               <span className="text-5xl">{enemy.icon}</span>
             )}
           </div>
+          {/* Enemy damage float — red number from player attacks */}
+          {enemyDamageFloat && (
+            <span key={enemyDamageFloat.key} className="absolute top-4 left-1/2 -translate-x-1/2 text-2xl lg:text-4xl font-serif font-bold pointer-events-none animate-fade-in z-20" style={{ color: "#f87171", textShadow: "0 0 15px rgba(248,113,113,0.8)" }}>
+              -{enemyDamageFloat.amount}
+            </span>
+          )}
           {/* Enemy HP bar */}
           <div className="w-36 lg:w-56 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
             <div
@@ -698,7 +743,7 @@ export default function BattleScreen() {
       <div className="flex-shrink-0 px-3 py-1 lg:py-2">
         <button
           onClick={() => setShowLog(!showLog)}
-          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] lg:text-xs uppercase tracking-wide hover:bg-slate-900/70 transition"
+          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] lg:text-xs uppercase tracking-wide hover:bg-slate-900/70 transition active:scale-[0.99]"
         >
           <span className="truncate flex items-center gap-1">
             <span className="text-amber-300/40">Log:</span>
@@ -713,6 +758,27 @@ export default function BattleScreen() {
                 {entry}
               </p>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Battle helper — contextual advice below the log */}
+      <div className="flex-shrink-0">
+        {!battleEnd && !isEnemyTurn && (
+          <BattleHelper battleState={battleState} selectedCard={selectedCard} enemy={enemy} />
+        )}
+        {/* Deck status messages */}
+        {deckMessage && (
+          <div className="flex items-center justify-center gap-2 px-3 py-1 animate-fade-in">
+            {reshuffleAnim && (
+              <span className="text-amber-300 text-sm" style={{ animation: "cardSwirl 0.9s ease-in-out", display: "inline-block" }}>🃏</span>
+            )}
+            <span className="text-emerald-300/80 text-[10px] lg:text-xs italic">{deckMessage}</span>
+          </div>
+        )}
+        {!deckMessage && battleState.deck.length === 0 && battleState.discard.length === 0 && battleState.hand.length === 0 && !battleEnd && (
+          <div className="flex items-center justify-center px-3 py-1">
+            <span className="text-amber-300/60 text-[10px] lg:text-xs italic">No cards left. End your turn or finish the battle with your remaining options.</span>
           </div>
         )}
       </div>
@@ -759,14 +825,24 @@ export default function BattleScreen() {
         <div className="flex items-center gap-2 min-w-0">
           <div
             className={`relative transition-transform flex-shrink-0 ${playerShake ? "animate-shake" : ""} ${playerFlash ? "animate-heal-pulse" : ""} ${playerAttackAnim ? "animate-attack-lunge" : ""}`}
+            style={shieldGlow ? { animation: "shieldGlow 0.6s ease-in-out", borderRadius: "50%" } : healGlow ? { animation: "healGlow 0.6s ease-in-out", borderRadius: "50%" } : {}}
           >
             {counterFlash && (
               <div className="absolute inset-0 -m-1 rounded-full border-2 border-amber-300/80 animate-ping pointer-events-none" style={{ boxShadow: "0 0 20px rgba(251,191,36,0.6)" }} />
+            )}
+            {shieldGlow && (
+              <div className="absolute inset-0 -m-1 rounded-full border-2 border-blue-400/80 pointer-events-none" style={{ boxShadow: "0 0 20px rgba(96,165,250,0.7)" }} />
             )}
             {heroArt ? (
               <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" />
             ) : (
               <span className="text-2xl lg:text-4xl">{hero.icon}</span>
+            )}
+            {/* Heal float — green +HP number */}
+            {healFloat && (
+              <span key={healFloat.key} className="absolute -top-2 left-1/2 -translate-x-1/2 text-lg lg:text-2xl font-serif font-bold pointer-events-none animate-fade-in z-20" style={{ color: "#34d399", textShadow: "0 0 12px rgba(52,211,153,0.8)" }}>
+                +{healFloat.amount}
+              </span>
             )}
           </div>
           <div className="min-w-0">
@@ -793,7 +869,7 @@ export default function BattleScreen() {
                   <Skull className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.dots}
                 </span>
               )}
-              <span className="text-amber-100/40">Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
+              <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
             </div>
           </div>
         </div>
@@ -804,16 +880,19 @@ export default function BattleScreen() {
             <button
               onClick={handleCovenantShield}
               disabled={isEnemyTurn}
-              className="px-2 py-1 lg:px-3 lg:py-2 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition disabled:opacity-40"
+              className="px-2 py-1 lg:px-3 lg:py-2 rounded-lg border-2 border-amber-400/60 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20 transition active:scale-90 disabled:opacity-40 disabled:active:scale-100"
               title="Covenant Shield"
             >
               <Shield className="w-3 h-3 lg:w-5 lg:h-5" />
             </button>
           )}
-          <div className="flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
+          <div className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
             <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
             <span className="text-yellow-200 text-sm lg:text-xl font-bold">{battleState.energy}</span>
             <span className="text-yellow-100/50 text-[9px] lg:text-xs">/{battleState.maxEnergy}</span>
+            {faithParticle && (
+              <span className="absolute -top-3 left-1/2 text-yellow-200 text-sm pointer-events-none" style={{ animation: "faithParticle 0.8s ease-out" }}>✨</span>
+            )}
           </div>
           {selectedCard !== null && (
             <span className="hidden lg:block text-amber-300/50 text-[10px] italic mr-2 max-w-[120px] text-right leading-tight">
@@ -823,11 +902,11 @@ export default function BattleScreen() {
           <button
             onClick={handleEndTurnClick}
             disabled={isEnemyTurn}
-            className={`px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 font-bold text-xs lg:text-base transition whitespace-nowrap ${
+            className={`px-3 py-1.5 lg:px-6 lg:py-2.5 rounded-lg border-2 font-bold text-xs lg:text-base transition-all whitespace-nowrap active:scale-[0.94] ${
               selectedCard !== null
                 ? "border-amber-500/20 bg-amber-900/10 text-amber-100/40 hover:bg-amber-900/20"
-                : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
-            } disabled:opacity-40`}
+                : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 active:bg-amber-600/50"
+            } disabled:opacity-40 disabled:active:scale-100`}
           >
             End Turn →
           </button>
@@ -892,7 +971,7 @@ export default function BattleScreen() {
                 <h2 className="text-5xl font-serif text-amber-200 mb-6">Victory!</h2>
                 <button
                   onClick={() => setPhase("reward")}
-                  className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl hover:bg-amber-600/40 transition"
+                  className="px-10 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-xl hover:bg-amber-600/40 transition active:scale-95"
                 >
                   Continue →
                 </button>
@@ -905,7 +984,7 @@ export default function BattleScreen() {
                 <h2 className="text-5xl font-serif text-red-300 mb-6">Defeated</h2>
                 <button
                   onClick={() => setPhase("defeat")}
-                  className="px-10 py-3 rounded-lg border-2 border-red-400/60 bg-red-900/30 text-red-100 font-serif text-xl hover:bg-red-800/40 transition"
+                  className="px-10 py-3 rounded-lg border-2 border-red-400/60 bg-red-900/30 text-red-100 font-serif text-xl hover:bg-red-800/40 transition active:scale-95"
                 >
                   Continue →
                 </button>

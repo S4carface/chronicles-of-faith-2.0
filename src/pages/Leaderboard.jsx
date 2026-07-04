@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
-import { fetchLeaderboard } from "@/game/scoreManager";
+import { fetchLeaderboard, getPlayerId } from "@/game/scoreManager";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import * as Sound from "@/game/soundManager";
@@ -57,6 +57,9 @@ export default function Leaderboard() {
     Sound.sfx.click();
     loadLeaderboard(filter);
   };
+
+  const playerId = getPlayerId();
+  const hasMyScore = entries.some(e => e.playerId === playerId);
 
   return (
     <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
@@ -119,7 +122,8 @@ export default function Leaderboard() {
         {!loading && !loadError && entries.length === 0 && (
           <div className="p-12 text-center text-amber-100/60">
             <ScrollText className="w-10 h-10 mx-auto mb-3 text-amber-300/40" />
-            <p>No scores yet. Be the first.</p>
+            <p className="mb-1">No scores yet.</p>
+            <p className="text-xs text-amber-100/40">Complete Genesis or Daily Battle to appear here.</p>
           </div>
         )}
 
@@ -162,6 +166,12 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
+
+      {!loading && !loadError && entries.length > 0 && !hasMyScore && (
+        <div className="max-w-2xl mx-auto mt-4 p-4 rounded-lg border border-amber-500/20 bg-amber-900/10 text-center">
+          <p className="text-amber-100/60 text-sm">No score yet. Complete Genesis or Daily Battle to appear here.</p>
+        </div>
+      )}
 
       {showNamePrompt && (
         <PlayerNamePrompt

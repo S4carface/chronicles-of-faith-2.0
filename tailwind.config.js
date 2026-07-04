@@ -96,7 +96,11 @@ module.exports = {
   			'enemy-lunge': 'enemyLunge 0.5s ease-out',
   			'damage-flash': 'damageFlash 0.3s ease-in-out',
   			'heal-pulse': 'healPulse 0.5s ease-in-out',
-  			'icon-float': 'iconFloat 3s ease-in-out infinite'
+  			'icon-float': 'iconFloat 3s ease-in-out infinite',
+  			'shield-glow': 'shieldGlow 0.6s ease-in-out',
+  			'heal-glow': 'healGlow 0.6s ease-in-out',
+  			'faith-particle': 'faithParticle 0.8s ease-out',
+  			'card-swirl': 'cardSwirl 0.9s ease-in-out'
   		},
   		keyframes: {
   			'fade-in': {

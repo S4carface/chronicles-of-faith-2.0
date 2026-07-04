@@ -191,6 +191,11 @@ export default function Home() {
         </span>
       </button>
 
+      {/* Score guidance */}
+      <p className="text-amber-100/30 text-[10px] text-center -mt-4 mb-4 max-w-md">
+        Finish Genesis or complete the Daily Battle to post a score.
+      </p>
+
       {/* Confirmation dialog */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>

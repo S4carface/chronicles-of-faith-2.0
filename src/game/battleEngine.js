@@ -64,16 +64,18 @@ export function drawCards(state, count) {
   const newHand = [...state.hand];
   const newDeck = [...state.deck];
   const newDiscard = [...state.discard];
+  let reshuffled = false;
 
   for (let i = 0; i < count; i++) {
     if (newDeck.length === 0) {
       if (newDiscard.length === 0) break;
       newDeck.push(...shuffle(newDiscard.splice(0)));
+      reshuffled = true;
     }
     newHand.push(newDeck.shift());
   }
 
-  return { ...state, hand: newHand, deck: newDeck, discard: newDiscard };
+  return { ...state, hand: newHand, deck: newDeck, discard: newDiscard, reshuffled };
 }
 
 export function playCard(state, handIndex, card) {

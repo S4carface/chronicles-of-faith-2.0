@@ -18,7 +18,7 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
         {isSelected ? (
           <>
             <p className="text-center text-amber-100 text-sm leading-relaxed mb-5">
-              You have a card selected. Did you mean to play it?
+              You selected a card but have not played it. End turn anyway?
             </p>
             <div className="space-y-2.5">
               <button

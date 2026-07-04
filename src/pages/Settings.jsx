@@ -5,15 +5,17 @@ import { useGame } from "@/game/GameContext";
 import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
 
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
-  const { isAuthenticated, user, navigateToLogin } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [showCloudModal, setShowCloudModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null);
 
@@ -27,7 +29,7 @@ export default function Settings() {
 
   const handleSignIn = () => {
     Sound.sfx.click();
-    navigateToLogin();
+    setShowCloudModal(true);
   };
 
   const handleSyncNow = async () => {
@@ -428,6 +430,10 @@ export default function Settings() {
           onSave={() => setShowNamePrompt(false)}
           onCancel={() => setShowNamePrompt(false)}
         />
+      )}
+
+      {showCloudModal && (
+        <CloudSaveComingSoon onClose={() => setShowCloudModal(false)} />
       )}
     </div>
   );

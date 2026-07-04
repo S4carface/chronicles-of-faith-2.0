@@ -23,12 +23,16 @@ export default function Home() {
     if (!savedStoryExists) return null;
     const saved = loadStoryRun();
     if (!saved) return null;
+    const nodeType = saved.currentNode?.type;
+    const roomType = nodeType === "mystery" ? saved.currentNode?.mysteryType : nodeType;
+    const roomLabels = { battle: "Battle", treasure: "Treasure", divine: "Divine Encounter", story: "Story Choice", mystery: "Mystery", boss: "Boss Battle", rest: "Campfire" };
     return {
       stage: (saved.roomsCleared || 0) + 1,
       difficulty: saved.difficulty || "normal",
       playerHp: saved.playerHp || 0,
       maxHp: saved.maxHp || 0,
       heroName: saved.hero?.name || "Adam",
+      roomLabel: roomLabels[roomType] || "Exploring",
     };
   }, [savedStoryExists]);
 
@@ -181,10 +185,10 @@ export default function Home() {
           >
             <span className="flex items-center justify-center gap-2">
               <Swords className="w-5 h-5" />
-              Continue Saved Run
+              Continue Genesis Run
             </span>
             <span className="block text-emerald-200/60 text-xs font-body font-normal mt-1">
-              Genesis • {savedRunInfo.difficulty ? savedRunInfo.difficulty.charAt(0).toUpperCase() + savedRunInfo.difficulty.slice(1) : "Normal"} • Stage {savedRunInfo.stage} • HP {savedRunInfo.playerHp}/{savedRunInfo.maxHp}
+              {savedRunInfo.heroName} • {savedRunInfo.difficulty ? savedRunInfo.difficulty.charAt(0).toUpperCase() + savedRunInfo.difficulty.slice(1) : "Normal"} • Stage {savedRunInfo.stage} • HP {savedRunInfo.playerHp}/{savedRunInfo.maxHp} • {savedRunInfo.roomLabel}
             </span>
           </button>
           <button
@@ -226,8 +230,8 @@ export default function Home() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Saved Run Found</h2>
-            <p className="text-amber-100/60 text-sm text-center mb-6">Starting a new run will replace your saved run. Continue?</p>
+            <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Start a New Run?</h2>
+            <p className="text-amber-100/60 text-sm text-center mb-6">This will replace your saved Genesis run.</p>
             <div className="space-y-3">
               <button
                 onClick={handleContinueSaved}

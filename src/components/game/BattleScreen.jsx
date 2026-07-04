@@ -155,6 +155,11 @@ export default function BattleScreen() {
         }
       } else {
         setBattleState(saved);
+        // Detect if the battle already ended (resume after reload during victory/defeat overlay)
+        const endResult = checkBattleEnd(saved);
+        if (endResult) {
+          setBattleEnd(endResult);
+        }
       }
       return;
     }
@@ -1222,8 +1227,8 @@ export default function BattleScreen() {
               </>
             ) : (
               <>
-                <p className="text-amber-100/60 text-sm text-center mb-2">This will delete your current run.</p>
-                <p className="text-red-300/70 text-xs text-center mb-6">Are you sure?</p>
+                <p className="text-amber-100/60 text-sm text-center mb-2">Your current progress will be lost.</p>
+                <p className="text-red-300/70 text-xs text-center mb-6">Are you sure you want to abandon this run?</p>
               </>
             )}
             <div className="flex gap-3">

@@ -89,14 +89,20 @@ export function GameProvider({ children }) {
     }
   }, []);
 
-  // Autosave story runs (never daily) — clears save on terminal phases
+  // Autosave story runs (never daily) — saves on every state change.
+  // Victory: keep the last non-terminal save so the player can resume if they
+  // reload during the victory screen. The save is cleared by endRun() after the
+  // player returns to menu (score submission happens in VictoryScreen).
+  // Defeat/dailyResult: clear immediately — the run is lost and the screen is shown.
   useEffect(() => {
     if (run) {
       if (run.isDaily) {
-        // Daily Challenge: never save or clear story save
         return;
       }
-      if (["victory", "defeat", "dailyResult"].includes(run.phase)) {
+      if (run.phase === "victory") {
+        return;
+      }
+      if (["defeat", "dailyResult"].includes(run.phase)) {
         clearStoryRun();
         setSavedStoryExists(false);
       } else {
@@ -104,7 +110,6 @@ export function GameProvider({ children }) {
         setSavedStoryExists(true);
       }
     }
-    // When run is null, don't touch the save — endRun handles explicit clearing
   }, [run]);
 
   // Flush state to localStorage when app goes to background (save/resume reliability)

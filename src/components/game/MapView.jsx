@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ROOM_LABELS, ROOM_INFO } from "@/data/genesisRooms";
-import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
+import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
 import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
@@ -127,7 +127,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                           {isCleared && !isBoss ? (
                             <span className="text-emerald-400 text-lg lg:text-2xl font-bold">✓</span>
                           ) : (
-                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="art-portrait" />
+                            <img src={getNodeArt(node)} alt={ROOM_LABELS[node.type]} className="art-portrait" />
                           )}
                           {recommendation && isAvailable && !isCleared && (
                             <span className={cn(

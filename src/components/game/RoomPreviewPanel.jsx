@@ -1,12 +1,12 @@
 import React from "react";
 import { ROOM_INFO } from "@/data/genesisRooms";
-import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
+import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
 import { cn } from "@/utils";
 
 export default function RoomPreviewPanel({ node, recommendation, onEnter, onCancel }) {
   if (!node) return null;
   const info = ROOM_INFO[node.type] || ROOM_INFO.mystery;
-  const artUrl = ROOM_ART[node.type] || PLACEHOLDER_ART;
+  const artUrl = getNodeArt(node);
   const isBoss = node.type === "boss";
 
   return (

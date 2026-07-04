@@ -12,7 +12,7 @@ export const ENEMY_ART = {
   cain_wrath: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/ff44e8d9e_generated_image.png",
   pride_babel: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/987a73b87_generated_image.png",
   pharaoh: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d6522f2a5_generated_image.png",
-  babel_tower: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/987a73b87_generated_image.png",
+  babel_tower: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/95eb0cbf4_generated_image.png",
   the_flood: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/085e2c3a0_generated_image.png",
 };
 
@@ -42,7 +42,7 @@ export const ROOM_ART = {
   divine: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/6350d0d14_generated_image.png",
   story: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/6350d0d14_generated_image.png",
   mystery: PLACEHOLDER_ART,
-  boss: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/085e2c3a0_generated_image.png",
+  boss: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/95eb0cbf4_generated_image.png",
   rest: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/659a6450f_generated_image.png",
 };
 
@@ -81,6 +81,20 @@ export const VICTORY_ART = {
 export const UI_ART = {
   trivia: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/674a33d82_generated_image.png",
 };
+
+// Derive the correct artwork for a map node from its actual data.
+// Battle/boss nodes use the enemy's art; mystery nodes stay hidden;
+// everything else uses the room-type art. This is the single source of truth.
+export function getNodeArt(node) {
+  if (!node) return PLACEHOLDER_ART;
+  if (node.type === "battle" || node.type === "boss") {
+    if (node.enemyId && ENEMY_ART[node.enemyId]) return ENEMY_ART[node.enemyId];
+    return ROOM_ART.battle;
+  }
+  // Mystery nodes never reveal their real content on the map
+  if (node.type === "mystery") return ROOM_ART.mystery;
+  return ROOM_ART[node.type] || PLACEHOLDER_ART;
+}
 
 export const BLESSING_ART = {
   covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",

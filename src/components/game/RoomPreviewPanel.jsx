@@ -17,8 +17,8 @@ export default function RoomPreviewPanel({ node, recommendation, onEnter, onCanc
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 mb-3">
-          <div className={cn("rounded-lg border-2 overflow-hidden flex-shrink-0", isBoss ? "border-red-400/60" : "border-amber-400/40")}>
-            <img src={artUrl} alt={info.title} className="w-12 h-12 object-cover" />
+          <div className={cn("w-12 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0", isBoss ? "border-red-400/60" : "border-amber-400/40")} style={{ background: "#0F1A30" }}>
+            <img src={artUrl} alt={info.title} className="art-portrait" />
           </div>
           <div>
             <h3 className={cn("text-lg font-serif", isBoss ? "text-red-200" : "text-amber-200")}>{info.title}</h3>

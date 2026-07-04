@@ -60,7 +60,7 @@ export default function LoadingScreen({ message }) {
       <div className="relative mb-6">
         <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(201,168,76,0.15)" }} />
         <div className="relative w-20 h-20 rounded-full border-2 border-amber-400/40 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}>
-          <img src={HOME_ART.cross} alt="Chronicles of Faith" className="w-full h-full object-cover animate-icon-float" />
+          <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait animate-icon-float" />
         </div>
       </div>
 

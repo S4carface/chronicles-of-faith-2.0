@@ -79,7 +79,9 @@ export default function DailyChallenge() {
         <div className="mb-4 flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 rounded-full blur-xl" style={{ background: "rgba(201,168,76,0.2)" }} />
-            <img src={MENU_ART.daily} alt="Daily Challenge" className="relative w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/40 animate-icon-float" />
+            <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 animate-icon-float" style={{ background: "#0F1A30" }}>
+              <img src={MENU_ART.daily} alt="Daily Challenge" className="art-portrait" />
+            </div>
           </div>
         </div>
 

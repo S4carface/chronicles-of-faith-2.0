@@ -89,7 +89,9 @@ export default function DailyPrayer() {
         <div className="mb-4 flex justify-center">
           <div className="relative">
             <div className="absolute inset-0 rounded-full blur-xl" style={{ background: "rgba(251,191,36,0.15)" }} />
-            <img src={HOME_ART.cross} alt="Daily Prayer" className="relative w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/40 animate-icon-float" />
+            <div className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 animate-icon-float" style={{ background: "#0F1A30" }}>
+              <img src={HOME_ART.cross} alt="Daily Prayer" className="art-portrait" />
+            </div>
           </div>
         </div>
 

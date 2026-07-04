@@ -139,7 +139,8 @@
     object-fit: cover;
     object-position: center;
     display: block;
-    transform: scale(1.2);
+    transform: scale(1.25);
+    will-change: transform;
   }
 
   body {

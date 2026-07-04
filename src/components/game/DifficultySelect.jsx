@@ -37,7 +37,9 @@ export default function DifficultySelect() {
                   : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:opacity-100 hover:border-amber-400/40"
               }`}
             >
-              <img src={artMap[key]} alt={preset.label} className="w-6 h-6 object-cover rounded-full" />
+              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0" style={{ background: "#0F1A30" }}>
+                <img src={artMap[key]} alt={preset.label} className="art-portrait" />
+              </div>
               <span className={`font-serif text-sm font-semibold ${isActive ? "text-amber-100" : "text-amber-100/60"}`}>
                 {preset.label}
               </span>
@@ -48,7 +50,9 @@ export default function DifficultySelect() {
 
       {/* Selected difficulty info panel */}
       <div className="mt-3 flex items-center gap-3 px-4 py-2.5 rounded-xl border border-amber-500/15 bg-slate-900/40">
-        <img src={artMap[current]} alt={currentPreset.label} className="w-7 h-7 object-cover rounded-full border border-amber-400/30 flex-shrink-0" />
+        <div className="w-7 h-7 rounded-full overflow-hidden border border-amber-400/30 flex-shrink-0" style={{ background: "#0F1A30" }}>
+          <img src={artMap[current]} alt={currentPreset.label} className="art-portrait" />
+        </div>
         <div className="min-w-0">
           <span className="text-amber-200 font-serif text-sm font-bold">{currentPreset.label}</span>
           <span className="text-amber-100/50 text-xs ml-2">{currentPreset.desc}</span>

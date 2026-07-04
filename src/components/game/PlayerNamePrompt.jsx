@@ -37,7 +37,9 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
       <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6 animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="flex justify-center mb-4">
-          <img src={HOME_ART.cross} alt="" className="w-10 h-10 object-cover rounded-full border-2 border-amber-400/30" />
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400/30" style={{ background: "#0F1A30" }}>
+            <img src={HOME_ART.cross} alt="" className="art-portrait" />
+          </div>
         </div>
         <h2 className="text-xl font-serif text-amber-200 text-center mb-2">{title || "Save Your Name"}</h2>
         <p className="text-amber-100/50 text-sm text-center mb-6">

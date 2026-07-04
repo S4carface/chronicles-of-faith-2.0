@@ -123,7 +123,9 @@ export default function CinematicIntro({ onComplete }) {
         <div className="max-w-2xl text-center">
           {/* Logo */}
           <div className={`flex justify-center mb-4 transition-all duration-[2000ms] ${step >= 4 ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}>
-            <img src={HOME_ART.cross} alt="Chronicles of Faith" className="w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30" />
+            <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl shadow-amber-400/30" style={{ background: "#0F1A30" }}>
+              <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait" />
+            </div>
           </div>
 
           {/* Title */}

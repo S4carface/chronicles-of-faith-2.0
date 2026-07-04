@@ -811,7 +811,9 @@ export default function BattleScreen() {
                       `${intentInfo.border} bg-slate-900/40 hover:bg-slate-800/60`
                     }`}
                   >
-                    <img src={intentInfo.art} alt={intentInfo.label} className="w-4 h-4 lg:w-6 lg:h-6 object-cover rounded-sm flex-shrink-0" />
+                    <span className="w-4 h-4 lg:w-6 lg:h-6 rounded-sm overflow-hidden flex-shrink-0" style={{ background: "#0F1A30" }}>
+                      <img src={intentInfo.art} alt={intentInfo.label} className="art-portrait" />
+                    </span>
                     <span className={`${intentInfo.color} text-[9px] lg:text-base font-medium leading-none`}>{action.name}</span>
                     {(() => {
                       if (hideIntentValues) return null;

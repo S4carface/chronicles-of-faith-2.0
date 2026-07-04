@@ -122,7 +122,9 @@ export default function MyJourney() {
 
       <div className="w-full max-w-2xl text-center mb-5">
         <div className="flex justify-center mb-2">
-          <img src={MENU_ART.progress} alt="My Journey" className="w-14 h-14 object-cover rounded-full border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" />
+          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" style={{ background: "#0F1A30" }}>
+            <img src={MENU_ART.progress} alt="My Journey" className="art-portrait" />
+          </div>
         </div>
         <h1 className="font-serif text-amber-200 tracking-wide" style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
           My Journey

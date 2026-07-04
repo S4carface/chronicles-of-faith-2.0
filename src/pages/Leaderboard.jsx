@@ -74,7 +74,9 @@ export default function Leaderboard() {
       <div className="flex items-center justify-between mb-8">
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="flex items-center gap-2">
-          <img src={VICTORY_ART.crest} alt="" className="w-7 h-7 object-cover rounded-full border-2 border-amber-400/50" />
+          <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
+            <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
+          </div>
           <h1 className="text-3xl font-serif text-amber-200">Leaderboard</h1>
         </div>
         <div className="flex items-center gap-2">

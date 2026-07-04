@@ -124,7 +124,9 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
       {mode === "summary" && (
         <div className="relative max-w-2xl lg:max-w-[700px] px-8 lg:px-12 text-center animate-fade-in">
           <div className="flex justify-center mb-6">
-            <img src={HOME_ART.cross} alt="" className="w-14 h-14 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/30 opacity-80 animate-icon-float" />
+            <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/30 opacity-80 animate-icon-float" style={{ background: "#0F1A30" }}>
+              <img src={HOME_ART.cross} alt="" className="art-portrait" />
+            </div>
           </div>
 
           {/* Quick Summary — the digestible one-liner */}
@@ -172,7 +174,9 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
       {mode === "full" && (
         <div className="relative max-w-2xl lg:max-w-[900px] px-8 lg:px-12 text-center">
           <div className="flex justify-center mb-6">
-            <img src={HOME_ART.cross} alt="" className="w-14 h-14 lg:w-20 lg:h-20 object-cover rounded-full border-2 border-amber-400/30 opacity-80 animate-icon-float" />
+            <div className="w-14 h-14 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/30 opacity-80 animate-icon-float" style={{ background: "#0F1A30" }}>
+              <img src={HOME_ART.cross} alt="" className="art-portrait" />
+            </div>
           </div>
 
           {/* Quick Summary stays visible above full text */}

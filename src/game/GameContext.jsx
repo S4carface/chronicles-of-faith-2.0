@@ -343,7 +343,7 @@ export function GameProvider({ children }) {
 
     recordRunStarted();
     Sound.playMusic("eden");
-  }, [profile.unlockedHeroes, profile.activeDeck]);
+  }, [profile.unlockedHeroes, profile.activeDeck, profile.difficulty]);
 
   const selectNode = useCallback((nodeId) => {
     setRun(prev => {
@@ -524,7 +524,7 @@ export function GameProvider({ children }) {
       return false;
     }
     const { savedAt, ...runData } = saved;
-    setRun({ ...runData, runStartTime: Date.now() });
+    setRun({ ...runData, runStartTime: Date.now(), difficulty: runData.difficulty || "easy" });
     setSavedStoryExists(true);
     setStorySaveError(false);
     return true;

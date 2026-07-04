@@ -2,15 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Skull } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import { recordGoldEarned, recordRunProgress, syncStatsToCloud } from "@/game/playerStats";
 import AccountPrompt from "@/components/game/AccountPrompt";
-import { getCurrentUser } from "@/game/cloudSync";
 
 export default function DefeatScreen() {
   const { run, endRun, addCardsToCollection, saveProfile, profile } = useGame();
-  const { navigateToLogin } = useAuth();
   const navigate = useNavigate();
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
 
@@ -30,23 +27,15 @@ export default function DefeatScreen() {
     recordRunProgress(run.roomsCleared || 0);
     syncStatsToCloud();
 
-    // Gentle account prompt for guests
+    // Local-save notice for players who haven't seen it yet
     if (!profile.accountPromptSeen) {
-      getCurrentUser().then((u) => {
-        if (!u) setTimeout(() => setShowAccountPrompt(true), 1500);
-      });
+      setTimeout(() => setShowAccountPrompt(true), 1500);
     }
   }, []);
 
   const handleAccountDismiss = () => {
     setShowAccountPrompt(false);
     saveProfile({ accountPromptSeen: true });
-  };
-
-  const handleAccountSignIn = () => {
-    setShowAccountPrompt(false);
-    saveProfile({ accountPromptSeen: true });
-    navigateToLogin();
   };
 
   const handleReturnToMenu = () => {
@@ -90,7 +79,6 @@ export default function DefeatScreen() {
       {showAccountPrompt && (
         <AccountPrompt
           onDismiss={handleAccountDismiss}
-          onSignIn={handleAccountSignIn}
         />
       )}
     </div>

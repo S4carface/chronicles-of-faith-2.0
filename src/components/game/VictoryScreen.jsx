@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
-import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
@@ -9,14 +8,12 @@ import AccountPrompt from "@/components/game/AccountPrompt";
 import { submitBestScore } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
-import { getCurrentUser } from "@/game/cloudSync";
 import { generateFirstCompletionReward } from "@/game/deckRules";
 import { getCardById } from "@/data/cards";
 import GenesisCompletionCelebration from "@/components/game/GenesisCompletionCelebration";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection, queueUnlock } = useGame();
-  const { navigateToLogin } = useAuth();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -28,7 +25,9 @@ export default function VictoryScreen() {
   const [showCelebration, setShowCelebration] = useState(false);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
-  const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
+  // Fallback to "easy" if difficulty is missing — defensive only; root cause is fixed in startRun.
+  const completedDifficulty = run.difficulty || "easy";
+  const multiplier = difficultyMultipliers[completedDifficulty] || 1.0;
 
   useEffect(() => {
     Sound.playMusic("victory");
@@ -65,7 +64,7 @@ export default function VictoryScreen() {
     }
 
     // Record lifetime stats (story run won)
-    recordRunWon(finalScore, run.gold || 0, run.difficulty || "normal", run.roomsCleared || 0);
+    recordRunWon(finalScore, run.gold || 0, completedDifficulty, run.roomsCleared || 0);
     syncStatsToCloud();
 
     // First Genesis completion: guarantee a strong rare card (never legendary)
@@ -88,11 +87,9 @@ export default function VictoryScreen() {
       setShowNamePrompt(true);
     }
 
-    // Gentle account prompt for guests (after a delay)
+    // Local-save notice for players who haven't seen it yet
     if (!profile.accountPromptSeen) {
-      getCurrentUser().then((u) => {
-        if (!u) setTimeout(() => setShowAccountPrompt(true), 2000);
-      });
+      setTimeout(() => setShowAccountPrompt(true), 2000);
     }
   }, []);
 
@@ -109,7 +106,7 @@ export default function VictoryScreen() {
       roomsCleared: run.roomsCleared,
       battlesWon: run.roomsCleared,
       triviaCorrect: run.triviaCorrect,
-      difficulty: run.difficulty || "normal",
+      difficulty: completedDifficulty,
       result: "victory",
     });
     if (result.success) {
@@ -136,12 +133,6 @@ export default function VictoryScreen() {
   const handleAccountDismiss = () => {
     setShowAccountPrompt(false);
     saveProfile({ accountPromptSeen: true });
-  };
-
-  const handleAccountSignIn = () => {
-    setShowAccountPrompt(false);
-    saveProfile({ accountPromptSeen: true });
-    navigateToLogin();
   };
 
   const handleReturnToMenu = () => {
@@ -190,7 +181,7 @@ export default function VictoryScreen() {
             <div className="text-amber-100/60">Trivia Correct: <span className="text-amber-200 font-bold">{run.triviaCorrect || 0} / {run.triviaAttempted || 0}</span></div>
             <div className="text-amber-100/60">HP Remaining: <span className="text-amber-200 font-bold">{run.playerHp}/{run.maxHp}</span></div>
             <div className="text-amber-100/60">Gold: <span className="text-amber-200 font-bold">{run.gold}</span></div>
-            <div className="text-amber-100/60">Difficulty: <span className="text-amber-200 font-bold capitalize">{run.difficulty || "normal"}</span></div>
+            <div className="text-amber-100/60">Difficulty: <span className="text-amber-200 font-bold capitalize">{completedDifficulty}</span></div>
             <div className="text-amber-100/60">Multiplier: <span className="text-amber-200 font-bold">{multiplier}x</span></div>
           </div>
         </div>
@@ -271,7 +262,6 @@ export default function VictoryScreen() {
       {showAccountPrompt && (
         <AccountPrompt
           onDismiss={handleAccountDismiss}
-          onSignIn={handleAccountSignIn}
         />
       )}
 
@@ -285,7 +275,7 @@ export default function VictoryScreen() {
             playerHp: run.playerHp,
             maxHp: run.maxHp,
             gold: run.gold,
-            difficulty: (run.difficulty || "normal"),
+            difficulty: completedDifficulty,
           }}
           nextUnlock={nextUnlockLabel}
           onComplete={() => setShowCelebration(false)}

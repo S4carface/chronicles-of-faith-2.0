@@ -1,30 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, Check, X } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 import { recordTriviaAnswered } from "@/game/playerStats";
+
+const ANSWER_BUTTON_STYLE = {
+  WebkitTapHighlightColor: "transparent",
+  touchAction: "manipulation",
+};
 
 export default function DailyTrivia() {
   const { run, updateRun, setPhase } = useGame();
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
   const trivia = run?.dailyConfig?.trivia;
+  const guardRef = useRef(true);
 
   useEffect(() => {
     if (!trivia) setPhase("dailyResult");
   }, [trivia]);
 
-  // Clear any lingering focus from the previous screen so the trivia opens neutral
+  // Clear any lingering focus from the previous screen and ignore the
+  // opening tap for 250ms so the carryover click cannot register as an answer.
   useEffect(() => {
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       document.activeElement.blur();
     }
+    const timer = setTimeout(() => { guardRef.current = false; }, 250);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!trivia) return null;
 
   const handleSelect = (e, idx) => {
-    if (answered) return;
+    if (answered || guardRef.current) return;
     if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
@@ -59,8 +68,9 @@ export default function DailyTrivia() {
               <button
                 key={idx}
                 onClick={(e) => handleSelect(e, idx)}
-                disabled={answered}
-                className={`w-full px-4 py-3 rounded-lg border-2 text-left text-sm lg:text-base transition flex items-center justify-between focus:outline-none ${cls}`}
+                disabled={answered || guardRef.current}
+                style={ANSWER_BUTTON_STYLE}
+                className={`w-full px-4 py-3 rounded-lg border-2 text-left text-sm lg:text-base transition flex items-center justify-between focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${cls}`}
               >
                 <span>{opt}</span>
                 {answered && isCorrect && <Check className="w-4 h-4 flex-shrink-0" />}

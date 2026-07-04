@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useGame } from "@/game/GameContext";
 import { getQuestionForRoomDepth } from "@/data/trivia";
 import { UI_ART } from "@/data/art";
@@ -18,6 +18,11 @@ function pickReward() {
   return REWARD_TYPES[Math.floor(Math.random() * REWARD_TYPES.length)];
 }
 
+const ANSWER_BUTTON_STYLE = {
+  WebkitTapHighlightColor: "transparent",
+  touchAction: "manipulation",
+};
+
 export default function TriviaModal({ onComplete }) {
   const { run, updateRun } = useGame();
   // Compute question ONCE based on room depth (difficulty scaling)
@@ -25,23 +30,28 @@ export default function TriviaModal({ onComplete }) {
     () => getQuestionForRoomDepth(run.roomsCleared),
     [] // eslint-disable-line react-hooks/exhaustive-deps
   );
-  const [selected, setSelected] = useState(null);
-  const [answered, setAnswered] = useState(false);
+  // Explicit neutral state — no answer is selected, highlighted, or active on open.
+  const [selected, setSelected] = useState(null);      // selectedIndex = null
+  const [answered, setAnswered] = useState(false);      // hasAnswered = false
   const [reward, setReward] = useState(null);
+  const guardRef = useRef(true);
 
   // Clear any lingering focus from the previous screen's Continue button
-  // so the trivia opens completely neutral — no pre-highlighted answer.
+  // and ignore the opening tap for 250ms so the carryover click cannot
+  // register as an answer.
   useEffect(() => {
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       document.activeElement.blur();
     }
+    const timer = setTimeout(() => { guardRef.current = false; }, 250);
+    return () => clearTimeout(timer);
   }, []);
 
   const difficultyLabels = { 1: "Easy", 2: "Medium", 3: "Hard" };
   const difficultyColors = { 1: "text-emerald-300", 2: "text-amber-300", 3: "text-red-300" };
 
   const handleAnswer = (e, idx) => {
-    if (answered) return;
+    if (answered || guardRef.current) return;
     if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
@@ -89,7 +99,11 @@ export default function TriviaModal({ onComplete }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(8,12,24,0.95)" }}
+      onPointerDown={(e) => { if (guardRef.current) e.stopPropagation(); }}
+    >
       <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
@@ -115,8 +129,9 @@ export default function TriviaModal({ onComplete }) {
               <button
                 key={idx}
                 onClick={(e) => handleAnswer(e, idx)}
-                disabled={answered}
-                className={`px-4 py-3 rounded-lg border-2 text-left transition-all font-medium focus:outline-none ${
+                disabled={answered || guardRef.current}
+                style={ANSWER_BUTTON_STYLE}
+                className={`px-4 py-3 rounded-lg border-2 text-left font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
                   !answered
                     ? "border-amber-500/20 hover:border-amber-400/60 hover:bg-amber-500/10 text-amber-50"
                     : isCorrect
@@ -164,8 +179,9 @@ export default function TriviaModal({ onComplete }) {
 
             <div className="mt-4">
               <button
-                onClick={(e) => { e.currentTarget.blur(); handleContinue(); }}
-                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition focus:outline-none"
+                onClick={(e) => { e.stopPropagation(); e.currentTarget.blur(); handleContinue(); }}
+                style={ANSWER_BUTTON_STYLE}
+                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
               >
                 Continue →
               </button>

@@ -8,7 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import { GameProvider } from "@/game/GameContext";
-import AchievementBanner from "@/components/game/AchievementBanner";
+import UnlockReveal from "@/components/game/UnlockReveal";
 import LoadingScreen from "@/components/LoadingScreen";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import Home from "./pages/Home";
@@ -46,7 +46,7 @@ const AuthenticatedApp = () => {
   return (
     <GameProvider>
       <AudioUnlockButton />
-      <AchievementBanner />
+      <UnlockReveal />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Play />} />

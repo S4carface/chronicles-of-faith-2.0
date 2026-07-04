@@ -14,7 +14,7 @@ import { generateFirstCompletionReward } from "@/game/deckRules";
 import { getCardById } from "@/data/cards";
 
 export default function VictoryScreen() {
-  const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection } = useGame();
+  const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection, queueUnlock } = useGame();
   const { navigateToLogin } = useAuth();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
@@ -74,6 +74,7 @@ export default function VictoryScreen() {
         setFirstCompletionCard(rewardId);
       }
       saveProfile({ genesisCompleted: true });
+      queueUnlock({ type: 'chapter', name: 'Genesis' });
     }
 
     // Auto-submit score — prompt for name if missing/invalid

@@ -350,6 +350,11 @@ export const sfx = {
   achievement: () => {
     [659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playTone(f, 0.2, "triangle", 0.12), i * 90));
   },
+  unlockReveal: () => {
+    unlockAudio();
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.3, "sine", 0.1), i * 100));
+    setTimeout(() => playTone(1319, 0.5, "sine", 0.06), 400);
+  },
   trivia_correct: () => {
     [523, 659, 784].forEach((f, i) => setTimeout(() => playTone(f, 0.12, "sine", 0.12), i * 70));
   },

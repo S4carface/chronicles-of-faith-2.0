@@ -75,7 +75,7 @@ export function GameProvider({ children }) {
   const [run, setRun] = useState(null);
   const [savedStoryExists, setSavedStoryExists] = useState(() => hasSavedStoryRun());
   const [storySaveError, setStorySaveError] = useState(false);
-  const [achievementQueue, setAchievementQueue] = useState([]);
+  const [unlockQueue, setUnlockQueue] = useState([]);
   const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
@@ -144,14 +144,18 @@ export function GameProvider({ children }) {
   const unlockAchievement = useCallback((id) => {
     setProfile(prev => {
       if (prev.achievements.includes(id)) return prev;
-      setAchievementQueue(q => [...q, id]);
+      setUnlockQueue(q => [...q, { type: 'achievement', id }]);
       if (prev.settings.sfx) Sound.sfx.achievement();
       return { ...prev, achievements: [...prev.achievements, id] };
     });
   }, []);
 
-  const dismissAchievement = useCallback(() => {
-    setAchievementQueue(q => q.slice(1));
+  const dismissUnlock = useCallback(() => {
+    setUnlockQueue(q => q.slice(1));
+  }, []);
+
+  const queueUnlock = useCallback((unlock) => {
+    setUnlockQueue(q => [...q, unlock]);
   }, []);
 
   const triggerIntroReplay = useCallback(() => {
@@ -180,7 +184,11 @@ export function GameProvider({ children }) {
   const addCardToCollection = useCallback((cardId) => {
     setProfile(prev => {
       const newCollection = { ...(prev.cardCollection || {}) };
+      const wasNew = !newCollection[cardId];
       newCollection[cardId] = (newCollection[cardId] || 0) + 1;
+      if (wasNew) {
+        setUnlockQueue(q => [...q, { type: 'card', cardId }]);
+      }
       return {
         ...prev,
         cardCollection: newCollection,
@@ -392,6 +400,7 @@ export function GameProvider({ children }) {
           setProfile(p => {
             if (p.unlockedHeroes.includes("noah")) return p;
             unlockAchievement("noah_unlocked");
+            setUnlockQueue(q => [...q, { type: 'hero', heroId: 'noah' }]);
             return { ...p, unlockedHeroes: [...p.unlockedHeroes, "noah"] };
           });
         }
@@ -538,8 +547,9 @@ export function GameProvider({ children }) {
     removeCardFromDeck,
     addCardToRunDeck,
     replaceCardInRun,
-    achievementQueue,
-    dismissAchievement,
+    unlockQueue,
+    dismissUnlock,
+    queueUnlock,
     showIntro,
     triggerIntroReplay,
     handleIntroComplete,

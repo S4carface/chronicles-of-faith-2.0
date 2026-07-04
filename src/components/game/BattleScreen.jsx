@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2, Zap } from "lucide-react";
+import { Pause, Heart, Shield, Skull, Sparkles, Swords as SwordsIcon, ChevronUp, ChevronDown, Volume2, Zap, Check } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps, drawCards } from "@/game/battleEngine";
@@ -13,6 +13,7 @@ import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
 import BattleHelper from "@/components/game/BattleHelper";
 import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
+import GuidedBattleTutorial, { TUTORIAL_TOTAL_STEPS } from "@/components/game/GuidedBattleTutorial";
 import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -86,7 +87,9 @@ export default function BattleScreen() {
   const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun, saveAndExit } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
-  const baseEnemy = run.dailyEnemy || ENEMIES[run.pendingEnemyId];
+  const isTutorialBattle = !profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily;
+  const tutorialEnemy = isTutorialBattle ? { ...ENEMIES.serpent, hp: 12, attacks: [{ name: "Venomous Bite", damage: 5, icon: "🦷" }] } : null;
+  const baseEnemy = run.dailyEnemy || (isTutorialBattle ? tutorialEnemy : ENEMIES[run.pendingEnemyId]);
   const enemy = (run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
   const [battleState, setBattleState] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -107,7 +110,7 @@ export default function BattleScreen() {
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
-  const [showGuideCallouts, setShowGuideCallouts] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
+  const [showGuideCallouts, setShowGuideCallouts] = useState(false);
   const [showHelpTips, setShowHelpTips] = useState(false);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
@@ -122,6 +125,35 @@ export default function BattleScreen() {
   const [faithParticle, setFaithParticle] = useState(false);
   const [reshuffleAnim, setReshuffleAnim] = useState(false);
   const [deckMessage, setDeckMessage] = useState(null);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [tutorialActive, setTutorialActive] = useState(isTutorialBattle);
+  const [tutorialCompleteMsg, setTutorialCompleteMsg] = useState(false);
+  const tutorialStepRef = useRef(0);
+
+  const advanceTutorial = () => {
+    const next = tutorialStepRef.current + 1;
+    tutorialStepRef.current = next;
+    setTutorialStep(next);
+  };
+
+  const handleTutorialAcknowledge = () => {
+    Sound.sfx.click();
+    advanceTutorial();
+  };
+
+  const handleTutorialSkip = () => {
+    Sound.sfx.click();
+    setTutorialActive(false);
+    setTutorialCompleteMsg(false);
+    saveProfile({ tutorialSeen: true });
+  };
+
+  const handleTutorialDismiss = () => {
+    Sound.sfx.click();
+    setTutorialActive(false);
+    setTutorialCompleteMsg(false);
+    saveProfile({ tutorialSeen: true });
+  };
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -182,6 +214,11 @@ export default function BattleScreen() {
     }
     if (run.bossModifier && enemy.startBlock) {
       state.enemyBlock = (state.enemyBlock || 0) + enemy.startBlock;
+    }
+    if (isTutorialBattle) {
+      state.hand = ["sling_stone", "faith_shield", "prayer"];
+      state.deck = ["sling_stone", "faith_shield", "prayer", "sling_stone"];
+      state.discard = [];
     }
     setBattleState(state);
   }, []);
@@ -315,6 +352,12 @@ export default function BattleScreen() {
       setBattleEnd(end);
       handleBattleEnd(end, newState);
     }
+    if (tutorialActive && !end) {
+      const step = tutorialStepRef.current;
+      if ((step === 3 && card.type === "attack") || (step === 4 && card.type === "defense")) {
+        advanceTutorial();
+      }
+    }
     setSelectedCard(null);
   };
 
@@ -371,6 +414,10 @@ export default function BattleScreen() {
     const endedState = endPlayerTurn(battleState);
     setBattleState(endedState);
 
+    if (tutorialActive && tutorialStepRef.current === 5) {
+      advanceTutorial();
+    }
+
     // Undo window for Easy/Guided before enemy actions begin
     if (canUndo && !opts.bypassUndo) {
       setUndoData({ snapshot: preEndSnapshot, endedState, enemyAnim });
@@ -404,6 +451,9 @@ export default function BattleScreen() {
       setBattleState(enemyState);
       const end = checkBattleEnd(enemyState);
       if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
+      if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS && !end) {
+        setTimeout(() => setTutorialCompleteMsg(true), 300);
+      }
       return;
     }
 
@@ -427,6 +477,9 @@ export default function BattleScreen() {
         }, 400);
         const end = checkBattleEnd(enemyState);
         if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
+        if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS && !end) {
+          setTimeout(() => setTutorialCompleteMsg(true), 300);
+        }
         setAnimating(false);
       }, 800);
       return;
@@ -452,6 +505,9 @@ export default function BattleScreen() {
         clearTransient();
         setAnimating(false);
         setCurrentIntentIdx(-1);
+        if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS) {
+          setTimeout(() => setTutorialCompleteMsg(true), 300);
+        }
         return;
       }
 
@@ -1126,9 +1182,28 @@ export default function BattleScreen() {
         </div>
       )}
 
-      {/* First-battle guided callouts */}
-      {showGuideCallouts && !battleEnd && (
-        <BattleGuideCallouts onComplete={handleGuideComplete} />
+      {/* Guided first-battle tutorial */}
+      {tutorialActive && tutorialStep < TUTORIAL_TOTAL_STEPS && !battleEnd && !tutorialCompleteMsg && !isEnemyTurn && (
+        <GuidedBattleTutorial
+          step={tutorialStep}
+          onAcknowledge={handleTutorialAcknowledge}
+          onSkip={handleTutorialSkip}
+        />
+      )}
+
+      {/* Tutorial completion message */}
+      {tutorialCompleteMsg && !battleEnd && (
+        <div className="fixed inset-0 z-[58] flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.85)" }} onClick={handleTutorialDismiss}>
+          <div className="max-w-xs rounded-xl border-2 border-emerald-400/50 p-5 text-center animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
+            <div className="w-12 h-12 rounded-full border-2 border-emerald-400/50 bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+              <Check className="w-6 h-6 text-emerald-400" />
+            </div>
+            <p className="text-amber-100 text-sm mb-4">You learned the basics. Now continue Genesis.</p>
+            <button onClick={handleTutorialDismiss} className="px-6 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 font-bold text-sm hover:bg-amber-600/40 transition">
+              Continue
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Help tips overlay — reopened via "?" button */}

@@ -44,6 +44,12 @@ const RELIGIOUS_BLOCKS = [
   "allah", "messiah", "bible", "quran", "koran", "torah",
 ];
 
+// Reserved / official identity names — no impersonating admin, dev, or the game itself
+// NOTE: "baseaa" is the normalized form of "base44" (leet: 4→a)
+const RESERVED_BLOCKS = [
+  "admin", "moderator", "developer", "baseaa", "basefortyfour", "chroniclesoffaith",
+];
+
 // Profanity / sexual / hate / slurs / drugs / violent / vulgar abbreviations
 const PROFANITY_BLOCKS = [
   // profanity & vulgar
@@ -64,6 +70,9 @@ const PROFANITY_BLOCKS = [
   "terrorist", "terrorism", "torture", "behead", "slaughter", "murder",
   // vulgar abbreviations
   "stfu", "wtf", "lmao", "lmfao", "thot", "gtfo",
+  // profanity bypass spellings (fuk, fck, fk, fuq, phuck, etc.)
+  "fuk", "fck", "fk", "fuq", "phuck", "phuk", "fuxk", "fux",
+  "dumbass", "dumbazz", "bich", "b1tch",
 ];
 
 const ALL_BLOCKS = [...RELIGIOUS_BLOCKS, ...PROFANITY_BLOCKS];
@@ -113,11 +122,12 @@ function checkVowelStripped(normalized, strippedTerms) {
   return false;
 }
 
-// Returns "sacred" | "profane" | null — sacred checked first so "jesus" → sacred, not profane
+// Returns "blocked" | null — all categories use the same user-facing message
 function findBlockedType(normalized) {
   if (!normalized) return null;
-  if (checkTerms(normalized, RELIGIOUS_BLOCKS) || checkVowelStripped(normalized, RELIGIOUS_VOWEL_STRIPPED)) return "sacred";
-  if (checkTerms(normalized, PROFANITY_BLOCKS) || checkVowelStripped(normalized, PROFANITY_VOWEL_STRIPPED)) return "profane";
+  if (checkTerms(normalized, RESERVED_BLOCKS)) return "blocked";
+  if (checkTerms(normalized, RELIGIOUS_BLOCKS) || checkVowelStripped(normalized, RELIGIOUS_VOWEL_STRIPPED)) return "blocked";
+  if (checkTerms(normalized, PROFANITY_BLOCKS) || checkVowelStripped(normalized, PROFANITY_VOWEL_STRIPPED)) return "blocked";
   return null;
 }
 
@@ -134,12 +144,11 @@ function isSpam(raw) {
   return maxCount >= 4 && maxCount / noSpaces.length >= 0.7;
 }
 
-// Allow letters, numbers, spaces, hyphens, underscores, and apostrophes only
-const ALLOWED_CHARS = /^[a-zA-Z0-9 \-']+$/;
+// Allow letters, numbers, spaces, hyphens, and underscores only
+const ALLOWED_CHARS = /^[a-zA-Z0-9 _-]+$/;
 
-const SACRED_TITLE_ERROR = "Please choose a name that does not use sacred titles.";
-const RESPECTFUL_NAME_ERROR = "Please choose a respectful player name.";
-const LENGTH_ERROR = "Name must be 3–18 characters.";
+const RESPECTFUL_NAME_ERROR = "Please choose a respectful family-friendly name.";
+const LENGTH_ERROR = "Please choose a respectful family-friendly name.";
 
 // --- Main validation ---
 // Returns { valid, error, name }
@@ -179,10 +188,7 @@ export function validatePlayerName(raw) {
     return { valid: false, error: LENGTH_ERROR };
   }
   const blockedType = findBlockedType(normalized);
-  if (blockedType === "sacred") {
-    return { valid: false, error: SACRED_TITLE_ERROR };
-  }
-  if (blockedType === "profane") {
+  if (blockedType === "blocked") {
     return { valid: false, error: RESPECTFUL_NAME_ERROR };
   }
 

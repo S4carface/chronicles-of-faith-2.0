@@ -576,7 +576,7 @@ export default function BattleScreen() {
         Sound.sfx.defeat();
         Sound.playMusic("defeat");
       }
-      const cardsPlayed = state.log.filter(e => e.includes("You played")).length;
+      const cardsPlayed = state.log.filter(e => e.includes("—") && (e.includes("dmg") || e.includes("block") || e.includes("HP") || e.includes("Faith") || e.includes("drew"))).length;
       updateRun({
         dailyResult: {
           result,

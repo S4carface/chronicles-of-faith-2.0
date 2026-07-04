@@ -36,6 +36,7 @@ export default function RewardScreen() {
 
   const enemy = run.currentNode ? ENEMIES[run.pendingEnemyId] : null;
   const narrationText = enemy?.narration || "Your faith has carried you through another trial.";
+  const narrationSummary = enemy?.summary || "Your faith has carried you through another trial.";
 
   const isBoss = run.currentNode?.type === ROOM_TYPES.BOSS;
   const roomType = isBoss ? "boss" : "normal";
@@ -121,7 +122,7 @@ export default function RewardScreen() {
   };
 
   if (showNarration) {
-    return <StoryNarration text={narrationText} onComplete={handleNarrationComplete} />;
+    return <StoryNarration text={narrationText} summary={narrationSummary} onComplete={handleNarrationComplete} />;
   }
 
   if (showTrivia) {

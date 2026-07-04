@@ -307,6 +307,7 @@ export function GameProvider({ children }) {
       phase: "map", // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
       pendingReward: null,
       narrationText: "In the beginning, there was nothing... Then God said, 'Let there be light.' And there was light. — Genesis 1:1-3",
+      narrationSummary: "God creates light and begins bringing order from nothing.",
       pendingEnemyId: null,
       currentBattleState: null,
       buffAttack: 0,

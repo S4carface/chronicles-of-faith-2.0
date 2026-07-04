@@ -131,7 +131,13 @@ export default function StoryChoiceRoom() {
         <div className="mb-4 flex justify-center">
           <img src={STORY_ART[story.id] || PLACEHOLDER_ART} alt={story.id} className="w-24 h-24 object-cover rounded-xl border-2 border-amber-400/30" />
         </div>
-        <p className="text-amber-100/50 text-sm italic mb-4">{story.narration}</p>
+        {story.summary && (
+          <div className="mb-4 px-4 py-2 rounded-lg border border-amber-400/25 bg-amber-900/10 inline-block">
+            <p className="text-amber-300/50 text-[9px] uppercase tracking-widest mb-0.5">Quick Summary</p>
+            <p className="text-amber-100/70 text-sm font-serif">{story.summary}</p>
+          </div>
+        )}
+        <p className="text-amber-100/40 text-xs italic mb-4">{story.narration}</p>
         <h2 className="text-2xl md:text-3xl font-serif text-amber-100 leading-relaxed">{story.prompt}</h2>
       </div>
 

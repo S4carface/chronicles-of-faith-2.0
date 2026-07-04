@@ -6,6 +6,7 @@ export const ENEMIES = {
     name: "The Serpent",
     icon: "🐍",
     hp: 26,
+    summary: "The serpent tempts Eve with doubt in the Garden of Eden.",
     narration: "Now the serpent was more crafty than any of the wild animals the Lord God had made. He said to the woman, 'Did God really say...?' — Genesis 3:1",
     attacks: [
       { name: "Venomous Bite", damage: 5, icon: "🦷" },
@@ -18,6 +19,7 @@ export const ENEMIES = {
     name: "Cain's Wrath",
     icon: "😡",
     hp: 32,
+    summary: "Cain's jealousy leads to the first murder.",
     narration: "Cain was very angry, and his face was downcast. The Lord said, 'Sin is crouching at your door.' — Genesis 4:5-7",
     attacks: [
       { name: "Brother's Strike", damage: 7, icon: "👊" },
@@ -30,6 +32,7 @@ export const ENEMIES = {
     name: "Pride of Babel",
     icon: "🏰",
     hp: 38,
+    summary: "Humanity's pride drives them to build a tower to heaven.",
     narration: "They said, 'Come, let us build ourselves a city, with a tower that reaches to the heavens, so that we may make a name for ourselves.' — Genesis 11:4",
     attacks: [
       { name: "Boastful Pride", damage: 6, icon: "📢" },
@@ -42,6 +45,7 @@ export const ENEMIES = {
     name: "Pharaoh of Egypt",
     icon: "👑",
     hp: 42,
+    summary: "Joseph rises to power under Pharaoh in Egypt.",
     narration: "Pharaoh said to Joseph, 'See, I have set you over all the land of Egypt.' — Genesis 41:41",
     attacks: [
       { name: "Royal Decree", damage: 7, icon: "📜" },
@@ -56,6 +60,7 @@ export const ENEMIES = {
     icon: "🌊",
     hp: 55,
     isBoss: true,
+    summary: "God cleanses the earth with a great flood, sparing only Noah.",
     narration: "On that day all the springs of the great deep burst forth, and the floodgates of the heavens were opened. — Genesis 7:11",
     attacks: [
       { name: "Rising Waters", damage: 9, icon: "💧" },
@@ -70,6 +75,7 @@ export const ENEMIES = {
     icon: "🏯",
     hp: 60,
     isBoss: true,
+    summary: "God scatters the proud builders of Babel across the earth.",
     narration: "They built a tower to the heavens to make a name for themselves, but the Lord confused their language. — Genesis 11:4-7",
     attacks: [
       { name: "Prideful Build", damage: 8, icon: "🧱" },

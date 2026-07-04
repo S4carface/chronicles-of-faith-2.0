@@ -30,6 +30,7 @@ export default function Play() {
     return (
       <StoryNarration
         text={run.narrationText}
+        summary={run.narrationSummary}
         onComplete={() => {
           setIntroShown(true);
           selectNode(run.map[0][0].id);

@@ -24,6 +24,7 @@ let musicTheme = null;
 let pendingMusicTheme = null;
 let duckedGain = null;
 let audioUnlocked = false;
+let hasUserInteracted = false; // true once the player has ever unlocked audio via a gesture
 let unlockListeners = new Set();
 
 // Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
@@ -59,68 +60,105 @@ function notifyUnlockListeners() {
   });
 }
 
-// Global first-tap listener: unlocks audio on ANY user interaction (touch/click/keydown).
-// Mobile browsers require a user gesture before AudioContext can start.
+// Global gesture + lifecycle listener for mobile audio resume.
+// Stays registered for the app's lifetime so it can resume audio after
+// the browser suspends the AudioContext (mobile background/lock/tab switch).
 let globalListenerRegistered = false;
+
+// Centralized "try to resume audio after returning to foreground" logic.
+// Called from visibilitychange, pageshow, and focus events.
+function tryResumeAfterReturn() {
+  if (!hasUserInteracted) return; // respect autoplay rules — don't start audio before first gesture
+  const ctx = getCtx();
+  if (!ctx) return;
+
+  if (ctx.state === "suspended") {
+    // Attempt direct resume. On desktop and some mobile browsers this works
+    // without a gesture. On iOS Safari it usually fails silently — the
+    // gesture handler will catch the next tap to complete the resume, and
+    // notifyUnlockListeners() here will surface the "Tap to resume" button.
+    audioUnlocked = false;
+    notifyUnlockListeners(); // show the resume button in case gesture is needed
+    const p = ctx.resume();
+    if (p && typeof p.then === "function") {
+      p.then(() => {
+        if (ctx.state !== "running") return;
+        audioUnlocked = true;
+        notifyUnlockListeners();
+        restartMusicIfNeeded();
+      }).catch(() => {});
+    }
+  } else if (ctx.state === "running") {
+    audioUnlocked = true;
+    notifyUnlockListeners();
+    restartMusicIfNeeded();
+  }
+}
+
+// Restart the music loop if it should be playing but isn't
+function restartMusicIfNeeded() {
+  if (!musicEnabled) return;
+  const theme = pendingMusicTheme || musicTheme;
+  if (theme && !musicTimeoutId) {
+    pendingMusicTheme = null;
+    _startMusic(theme);
+  }
+}
+
+// Stop the music loop (clears the timeout) without losing the current theme.
+// Called when the page goes hidden so we can cleanly restart on return.
+function pauseMusicLoop() {
+  if (musicTimeoutId) {
+    clearTimeout(musicTimeoutId);
+    musicTimeoutId = null;
+  }
+  if (musicTheme) pendingMusicTheme = pendingMusicTheme || musicTheme;
+  // Also stop oscillators that are still ringing
+  currentMusicNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
+  currentMusicNodes = [];
+}
+
 export function initGlobalUnlockListener() {
   if (globalListenerRegistered) return;
   globalListenerRegistered = true;
 
-  // Gesture handler — stays registered for the app's lifetime so it can
-  // resume audio after the browser suspends the AudioContext (mobile
-  // background/lock). Returns immediately when audio is already running.
-  const handler = () => {
+  // Gesture handler — stays registered for the app's lifetime.
+  // Handles both first-time unlock and post-background resume.
+  const gestureHandler = () => {
     if (audioUnlocked && ctxIsRunning()) return;
     unlockAudio();
-    if (audioUnlocked && musicEnabled && pendingMusicTheme) {
-      const theme = pendingMusicTheme;
-      pendingMusicTheme = null;
-      _startMusic(theme);
+    if (audioUnlocked) {
+      hasUserInteracted = true;
+      restartMusicIfNeeded();
     }
   };
 
-  document.addEventListener("touchstart", handler, true);
-  document.addEventListener("click", handler, true);
-  document.addEventListener("keydown", handler, true);
+  document.addEventListener("touchstart", gestureHandler, true);
+  document.addEventListener("click", gestureHandler, true);
+  document.addEventListener("keydown", gestureHandler, true);
 
-  // Visibility handler — when the page returns to foreground, the
-  // AudioContext is often "suspended" (especially iOS Safari). Try to
-  // resume directly; if that fails (needs gesture), the gesture handler
-  // above will resume on the next tap.
-  const visHandler = () => {
-    if (document.visibilityState !== "visible") {
-      // Going hidden — preserve theme so we can restart on return
-      if (musicTheme) pendingMusicTheme = pendingMusicTheme || musicTheme;
-      return;
-    }
-    const ctx = getCtx();
-    if (!ctx) return;
+  // --- Lifecycle listeners for mobile background/foreground transitions ---
 
-    if (ctx.state === "suspended") {
-      // Attempt direct resume (works on desktop + some mobile browsers)
-      audioUnlocked = false;
-      const p = ctx.resume();
-      if (p && typeof p.then === "function") {
-        p.then(() => {
-          if (ctx.state !== "running") return;
-          audioUnlocked = true;
-          notifyUnlockListeners();
-          if (musicEnabled && (pendingMusicTheme || musicTheme)) {
-            const theme = pendingMusicTheme || musicTheme;
-            pendingMusicTheme = null;
-            _startMusic(theme);
-          }
-        }).catch(() => {});
-      }
-    } else if (ctx.state === "running") {
-      audioUnlocked = true;
-      // Music may have stopped while suspended — restart if needed
-      if (musicEnabled && musicTheme && !musicTimeoutId) {
-        _startMusic(musicTheme);
-      }
+  const onVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      tryResumeAfterReturn();
+    } else {
+      pauseMusicLoop();
     }
   };
-  document.addEventListener("visibilitychange", visHandler);
+  document.addEventListener("visibilitychange", onVisibilityChange);
+
+  // pageshow — fires when returning from BFCache (iOS Safari app switcher)
+  const onPageShow = (event) => {
+    tryResumeAfterReturn();
+  };
+  window.addEventListener("pageshow", onPageShow);
+
+  // focus — catches tab switches and some app-switcher returns
+  const onFocus = () => {
+    tryResumeAfterReturn();
+  };
+  window.addEventListener("focus", onFocus);
 }
 
 // Attempt to unlock/resume audio from a user gesture.
@@ -133,13 +171,11 @@ export function unlockAudio() {
     const p = ctx.resume();
     if (p && typeof p.then === "function") {
       p.then(() => {
-        audioUnlocked = true;
-        notifyUnlockListeners();
-        // Start pending music now that audio is alive
-        if (pendingMusicTheme && musicEnabled) {
-          const theme = pendingMusicTheme;
-          pendingMusicTheme = null;
-          _startMusic(theme);
+        if (ctx.state === "running") {
+          audioUnlocked = true;
+          hasUserInteracted = true;
+          notifyUnlockListeners();
+          restartMusicIfNeeded();
         }
       }).catch((e) => {
         console.warn("[Audio] resume() failed:", e);
@@ -148,15 +184,13 @@ export function unlockAudio() {
     // Optimistically set unlocked — some browsers resume synchronously
     if (ctx.state === "running") {
       audioUnlocked = true;
+      hasUserInteracted = true;
       notifyUnlockListeners();
-      if (pendingMusicTheme && musicEnabled) {
-        const theme = pendingMusicTheme;
-        pendingMusicTheme = null;
-        _startMusic(theme);
-      }
+      restartMusicIfNeeded();
     }
   } else if (ctx.state === "running") {
     audioUnlocked = true;
+    hasUserInteracted = true;
     notifyUnlockListeners();
   }
   return audioUnlocked;
@@ -166,11 +200,20 @@ export function isAudioUnlocked() {
   return audioUnlocked;
 }
 
-// UI uses this to decide whether to show a "Tap to enable sound" button
+// UI uses this to decide whether to show a "Tap to enable/resume sound" button.
+// Returns true when: music is enabled, but the AudioContext is not running
+// (either never unlocked, or suspended after returning from background).
 export function needsUnlockPrompt() {
   if (!musicEnabled) return false; // user turned music off — no need to prompt
   if (audioUnlocked && ctxIsRunning()) return false;
   return true;
+}
+
+// Returns true when the player has previously unlocked audio (first gesture done).
+// Used by the UI to choose between "Tap to enable sound" (first time) and
+// "Tap to resume sound" (returning from background).
+export function isResumeMode() {
+  return hasUserInteracted;
 }
 
 // Subscribe to audio unlock state changes (returns unsubscribe fn)

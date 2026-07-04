@@ -25,6 +25,8 @@ export default function AudioUnlockButton() {
     setNeedsUnlock(Sound.needsUnlockPrompt());
   };
 
+  const resumeMode = Sound.isResumeMode();
+
   return (
     <button
       onClick={handleTap}
@@ -32,7 +34,7 @@ export default function AudioUnlockButton() {
       style={{ backdropFilter: "blur(8px)", animation: "iconFloat 2s ease-in-out infinite, fadeIn 0.4s ease-out" }}
     >
       <Volume2 className="w-4 h-4" style={{ animation: "iconFloat 2s ease-in-out infinite" }} />
-      Tap to enable sound
+      {resumeMode ? "Tap to resume sound" : "Tap to enable sound"}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getQuestionForRoomDepth } from "@/data/trivia";
 import { UI_ART } from "@/data/art";
@@ -34,24 +34,21 @@ export default function TriviaModal({ onComplete }) {
   const [selected, setSelected] = useState(null);      // selectedIndex = null
   const [answered, setAnswered] = useState(false);      // hasAnswered = false
   const [reward, setReward] = useState(null);
-  const guardRef = useRef(true);
 
-  // Clear any lingering focus from the previous screen's Continue button
-  // and ignore the opening tap for 250ms so the carryover click cannot
-  // register as an answer.
+  // Clear any lingering focus from the previous screen's Continue button so
+  // the carryover click cannot register as an answer. No guard flag is
+  // applied to the disabled prop — buttons must remain tappable.
   useEffect(() => {
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       document.activeElement.blur();
     }
-    const timer = setTimeout(() => { guardRef.current = false; }, 250);
-    return () => clearTimeout(timer);
   }, []);
 
   const difficultyLabels = { 1: "Easy", 2: "Medium", 3: "Hard" };
   const difficultyColors = { 1: "text-emerald-300", 2: "text-amber-300", 3: "text-red-300" };
 
   const handleAnswer = (e, idx) => {
-    if (answered || guardRef.current) return;
+    if (answered) return;
     if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
@@ -102,7 +99,7 @@ export default function TriviaModal({ onComplete }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(8,12,24,0.95)" }}
-      onPointerDown={(e) => { if (guardRef.current) e.stopPropagation(); }}
+
     >
       <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="text-center mb-6">
@@ -129,7 +126,7 @@ export default function TriviaModal({ onComplete }) {
               <button
                 key={idx}
                 onClick={(e) => handleAnswer(e, idx)}
-                disabled={answered || guardRef.current}
+                disabled={answered}
                 style={ANSWER_BUTTON_STYLE}
                 className={`px-4 py-3 rounded-lg border-2 text-left font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${
                   !answered

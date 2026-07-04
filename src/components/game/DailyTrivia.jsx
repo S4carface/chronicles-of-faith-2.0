@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { BookOpen, Check, X } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
@@ -11,29 +11,29 @@ const ANSWER_BUTTON_STYLE = {
 
 export default function DailyTrivia() {
   const { run, updateRun, setPhase } = useGame();
+  // Reset trivia state every time the modal opens:
+  // no answer selected, not answered, not processing.
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
   const trivia = run?.dailyConfig?.trivia;
-  const guardRef = useRef(true);
 
   useEffect(() => {
     if (!trivia) setPhase("dailyResult");
   }, [trivia]);
 
-  // Clear any lingering focus from the previous screen and ignore the
-  // opening tap for 250ms so the carryover click cannot register as an answer.
+  // Clear lingering focus from the previous screen's Continue button so
+  // the carryover click cannot register as an answer. No guard flag is
+  // applied to the disabled prop — buttons must remain tappable.
   useEffect(() => {
     if (document.activeElement && typeof document.activeElement.blur === "function") {
       document.activeElement.blur();
     }
-    const timer = setTimeout(() => { guardRef.current = false; }, 250);
-    return () => clearTimeout(timer);
   }, []);
 
   if (!trivia) return null;
 
   const handleSelect = (e, idx) => {
-    if (answered || guardRef.current) return;
+    if (answered) return;
     if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
@@ -42,7 +42,12 @@ export default function DailyTrivia() {
     else Sound.sfx.click();
     updateRun({ dailyTriviaCorrect: correct });
     recordTriviaAnswered(correct);
-    setTimeout(() => setPhase("dailyResult"), 2000);
+  };
+
+  const handleContinue = () => {
+    Sound.sfx.click();
+    // Only now does the daily challenge complete and move to the result flow.
+    setPhase("dailyResult");
   };
 
   return (
@@ -68,7 +73,7 @@ export default function DailyTrivia() {
               <button
                 key={idx}
                 onClick={(e) => handleSelect(e, idx)}
-                disabled={answered || guardRef.current}
+                disabled={answered}
                 style={ANSWER_BUTTON_STYLE}
                 className={`w-full px-4 py-3 rounded-lg border-2 text-left text-sm lg:text-base transition flex items-center justify-between focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 ${cls}`}
               >
@@ -85,7 +90,26 @@ export default function DailyTrivia() {
             <p className={`text-sm lg:text-base font-serif ${selected === trivia.answer ? "text-emerald-300" : "text-red-300"}`}>
               {selected === trivia.answer ? "Correct! +100 bonus" : "Incorrect"}
             </p>
-            <p className="text-amber-100/50 text-xs mt-2 italic">{trivia.verse}</p>
+            <p className="text-amber-100/70 text-xs mt-2 leading-relaxed">
+              {selected === trivia.answer
+                ? trivia.explanation
+                : <>The correct answer is <span className="text-emerald-300 font-semibold">{trivia.options[trivia.answer]}</span>. {trivia.explanation}</>
+              }
+            </p>
+            {trivia.whyItMatters && (
+              <p className="text-amber-300/60 text-xs mt-2 italic font-serif">💡 {trivia.whyItMatters}</p>
+            )}
+            <p className="text-amber-100/50 text-xs mt-2 italic">📖 {trivia.verse}</p>
+
+            <div className="mt-4">
+              <button
+                onClick={handleContinue}
+                style={ANSWER_BUTTON_STYLE}
+                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50"
+              >
+                Continue →
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -69,10 +69,25 @@ let globalListenerRegistered = false;
 // Called from visibilitychange, pageshow, and focus events.
 function tryResumeAfterReturn() {
   if (!hasUserInteracted) return; // respect autoplay rules — don't start audio before first gesture
-  const ctx = getCtx();
+  let ctx = getCtx();
   if (!ctx) return;
 
-  if (ctx.state === "suspended") {
+  // If the AudioContext was closed (e.g. long time in background on iOS),
+  // discard it and create a fresh one.
+  if (ctx.state === "closed") {
+    audioCtx = null;
+    musicGain = null;
+    sfxGain = null;
+    ctx = getCtx();
+    if (!ctx) return;
+  }
+
+  // Clear any stale music state — the setTimeout may have been queued but
+  // never fired while the page was frozen, or oscillators may have died
+  // when the context was suspended. This ensures a clean restart.
+  pauseMusicLoop();
+
+  if (ctx.state === "suspended" || ctx.state === "interrupted") {
     // Attempt direct resume. On desktop and some mobile browsers this works
     // without a gesture. On iOS Safari it usually fails silently — the
     // gesture handler will catch the next tap to complete the resume, and
@@ -134,6 +149,7 @@ export function initGlobalUnlockListener() {
   };
 
   document.addEventListener("touchstart", gestureHandler, true);
+  document.addEventListener("pointerdown", gestureHandler, true);
   document.addEventListener("click", gestureHandler, true);
   document.addEventListener("keydown", gestureHandler, true);
 
@@ -159,6 +175,12 @@ export function initGlobalUnlockListener() {
     tryResumeAfterReturn();
   };
   window.addEventListener("focus", onFocus);
+
+  // blur — pause music cleanly when the window loses focus
+  const onBlur = () => {
+    pauseMusicLoop();
+  };
+  window.addEventListener("blur", onBlur);
 }
 
 // Attempt to unlock/resume audio from a user gesture.
@@ -204,7 +226,7 @@ export function isAudioUnlocked() {
 // Returns true when: music is enabled, but the AudioContext is not running
 // (either never unlocked, or suspended after returning from background).
 export function needsUnlockPrompt() {
-  if (!musicEnabled) return false; // user turned music off — no need to prompt
+  if (!musicEnabled && !sfxEnabled) return false; // both off — no need to prompt
   if (audioUnlocked && ctxIsRunning()) return false;
   return true;
 }
@@ -633,6 +655,10 @@ export function playMusic(theme) {
   if (!musicEnabled) return;
   // Ensure context exists
   getCtx();
+
+  // Don't restart if the same theme is already playing — prevents music
+  // restarting from the beginning on route changes within the same theme.
+  if (musicTheme === theme && musicTimeoutId !== null) return;
 
   if (!audioUnlocked || !ctxIsRunning()) {
     // Queue for when audio is unlocked

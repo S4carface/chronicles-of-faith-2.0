@@ -30,11 +30,11 @@ export default function AudioUnlockButton() {
   return (
     <button
       onClick={handleTap}
-      className="fixed bottom-4 right-4 z-[70] flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-amber-400/60 bg-slate-900/95 text-amber-200 text-sm font-medium shadow-lg shadow-amber-500/30 animate-fade-in hover:bg-slate-800 transition active:scale-95"
+      className="fixed top-[calc(0.5rem+env(safe-area-inset-top))] right-4 z-[70] flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-amber-400/60 bg-slate-900/95 text-amber-200 text-sm font-medium shadow-lg shadow-amber-500/30 animate-fade-in hover:bg-slate-800 transition active:scale-95"
       style={{ backdropFilter: "blur(8px)", animation: "iconFloat 2s ease-in-out infinite, fadeIn 0.4s ease-out" }}
     >
       <Volume2 className="w-4 h-4" style={{ animation: "iconFloat 2s ease-in-out infinite" }} />
-      {resumeMode ? "Tap to resume sound" : "Tap to enable sound"}
+      {resumeMode ? "Tap to Resume Sound" : "Tap to Enable Sound"}
     </button>
   );
 }

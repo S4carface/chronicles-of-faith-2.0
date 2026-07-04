@@ -5,6 +5,19 @@ import { UI_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import { recordTriviaAnswered } from "@/game/playerStats";
 
+// Reward types for correct trivia answers — keeps the game moving
+const REWARD_TYPES = [
+  { type: "gold", amount: 8, label: "+8 Gold", icon: "🪙", desc: "Bonus gold earned!" },
+  { type: "gold", amount: 12, label: "+12 Gold", icon: "🪙", desc: "Bonus gold earned!" },
+  { type: "heal", amount: 5, label: "+5 HP", icon: "💚", desc: "A small heal for your hero!" },
+  { type: "draw", amount: 1, label: "+1 Card Draw", icon: "🃏", desc: "Draw an extra card next battle!" },
+  { type: "faith", amount: 3, label: "+3 Bonus Gold", icon: "✨", desc: "Faith rewards diligence!" },
+];
+
+function pickReward() {
+  return REWARD_TYPES[Math.floor(Math.random() * REWARD_TYPES.length)];
+}
+
 export default function TriviaModal({ onComplete }) {
   const { run, updateRun } = useGame();
   // Compute question ONCE based on room depth (difficulty scaling)
@@ -14,6 +27,7 @@ export default function TriviaModal({ onComplete }) {
   );
   const [selected, setSelected] = useState(null);
   const [answered, setAnswered] = useState(false);
+  const [reward, setReward] = useState(null);
 
   const difficultyLabels = { 1: "Easy", 2: "Medium", 3: "Hard" };
   const difficultyColors = { 1: "text-emerald-300", 2: "text-amber-300", 3: "text-red-300" };
@@ -25,6 +39,7 @@ export default function TriviaModal({ onComplete }) {
     const correct = idx === question.answer;
     if (correct) {
       Sound.sfx.trivia_correct();
+      setReward(pickReward());
     } else {
       Sound.sfx.trivia_wrong();
     }
@@ -39,10 +54,26 @@ export default function TriviaModal({ onComplete }) {
       triviaCorrect: (prev.triviaCorrect || 0) + (correct ? 1 : 0),
       triviaWrong: (prev.triviaWrong || 0) + (correct ? 0 : 1),
     }));
+
     if (correct) {
+      // Apply gameplay reward to run state
+      if (reward) {
+        updateRun(prev => {
+          if (reward.type === "gold" || reward.type === "faith") {
+            return { gold: (prev.gold || 0) + reward.amount };
+          }
+          if (reward.type === "heal") {
+            return { playerHp: Math.min(prev.maxHp, (prev.playerHp || 0) + reward.amount) };
+          }
+          if (reward.type === "draw") {
+            return { extraDraw: (prev.extraDraw || 0) + reward.amount };
+          }
+          return prev;
+        });
+      }
       const bonusCards = ["prayer", "faith_shield", "sling_stone", "bread_life", "wisdom", "doves_peace", "living_water"];
-      const reward = bonusCards[Math.floor(Math.random() * bonusCards.length)];
-      onComplete({ cardId: reward, correct: true });
+      const cardReward = bonusCards[Math.floor(Math.random() * bonusCards.length)];
+      onComplete({ cardId: cardReward, correct: true });
     } else {
       onComplete({ correct: false });
     }
@@ -50,7 +81,7 @@ export default function TriviaModal({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
-      <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+      <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <img src={UI_ART.trivia} alt="Test Your Knowledge" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/40 shadow-lg shadow-amber-500/20 animate-icon-float" />
@@ -106,13 +137,30 @@ export default function TriviaModal({ onComplete }) {
                 {question.explanation}
               </p>
             )}
+            {question.whyItMatters && (
+              <p className="text-amber-300/70 text-xs mt-2 italic font-serif">💡 Why it matters: {question.whyItMatters}</p>
+            )}
             <p className="text-amber-100/60 text-xs mt-2 italic">📖 {question.verse}</p>
-            <button
-              onClick={handleContinue}
-              className="mt-4 px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
-            >
-              Continue →
-            </button>
+
+            {/* Reward banner for correct answers */}
+            {selected === question.answer && reward && (
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-500/15 animate-fade-in">
+                <span className="text-2xl">{reward.icon}</span>
+                <div className="text-left">
+                  <p className="text-amber-200 font-bold font-serif text-sm">{reward.label}</p>
+                  <p className="text-amber-100/60 text-[10px]">{reward.desc}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4">
+              <button
+                onClick={handleContinue}
+                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
+              >
+                Continue →
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -524,6 +524,18 @@ export function GameProvider({ children }) {
     Sound.playMusic("menu");
   }, [run]);
 
+  // Save the current story run and return to menu WITHOUT deleting the save.
+  // The in-memory run is cleared so Home shows the "Continue Saved Run" button.
+  const saveAndExit = useCallback(() => {
+    if (run && !run.isDaily && !["victory", "defeat", "dailyResult"].includes(run.phase)) {
+      saveStoryRun(run);
+      setSavedStoryExists(true);
+    }
+    setRun(null);
+    setStorySaveError(false);
+    Sound.playMusic("menu");
+  }, [run]);
+
   const value = {
     profile,
     saveProfile,
@@ -536,6 +548,7 @@ export function GameProvider({ children }) {
     updateRun,
     saveBattleState,
     endRun,
+    saveAndExit,
     resumeStoryRun,
     savedStoryExists,
     storySaveError,

@@ -58,7 +58,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
           onClick={onExit}
           className="text-amber-100/70 hover:text-amber-200 text-xs transition px-3 py-1.5 rounded-lg border border-amber-500/20"
         >
-          ← Abandon
+          ← Save &amp; Exit
         </button>
       </div>
 

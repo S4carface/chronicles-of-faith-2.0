@@ -16,7 +16,7 @@ import DailyTrivia from "@/components/game/DailyTrivia";
 import DailyResultScreen from "@/components/game/DailyResultScreen";
 
 export default function Play() {
-  const { run, selectNode, endRun } = useGame();
+  const { run, selectNode, endRun, saveAndExit } = useGame();
   const navigate = useNavigate();
   const [introShown, setIntroShown] = useState(false);
 
@@ -46,7 +46,7 @@ export default function Play() {
         map={run.map}
         currentNode={run.currentNode}
         onSelectNode={selectNode}
-        onExit={() => { endRun(); navigate("/"); }}
+        onExit={() => { saveAndExit(); navigate("/"); }}
         fogOfWar={run.fogOfWar}
         playerHp={run.playerHp}
         maxHp={run.maxHp}
@@ -117,8 +117,8 @@ export default function Play() {
   // Fallback
   return (
     <div className="min-h-screen flex items-center justify-center text-amber-200">
-      <button onClick={() => { endRun(); navigate("/"); }} className="px-6 py-3 border border-amber-400/40 rounded-lg">
-        Return to Menu
+      <button onClick={() => { saveAndExit(); navigate("/"); }} className="px-6 py-3 border border-amber-400/40 rounded-lg">
+        Save &amp; Exit to Menu
       </button>
     </div>
   );

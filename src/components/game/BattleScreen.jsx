@@ -50,7 +50,7 @@ const INTENT_TYPE_MAP = {
 };
 
 export default function BattleScreen() {
-  const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun } = useGame();
+  const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun, saveAndExit } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
   const baseEnemy = run.dailyEnemy || ENEMIES[run.pendingEnemyId];
@@ -643,6 +643,11 @@ export default function BattleScreen() {
     navigate("/");
   };
 
+  const handleSaveAndExit = () => {
+    saveAndExit();
+    navigate("/");
+  };
+
   if (!battleState) return <div className="min-h-screen flex items-center justify-center text-amber-200">Loading battle...</div>;
 
   const isEnemyTurn = battleState.turn === "enemy" || animating;
@@ -1129,9 +1134,17 @@ export default function BattleScreen() {
               >
                 Resume Battle
               </button>
+              {!run.isDaily && (
+                <button
+                  onClick={handleSaveAndExit}
+                  className="w-full px-6 py-3 rounded-lg border-2 border-emerald-400/50 bg-emerald-600/20 text-emerald-100 font-bold hover:bg-emerald-600/40 transition"
+                >
+                  Save &amp; Exit to Menu
+                </button>
+              )}
               {!run.isDaily ? (
                 <p className="text-amber-100/40 text-[10px] text-center -mt-2">
-                  Your Story Mode run is saved automatically.
+                  Your Story Mode run is saved automatically. Come back anytime.
                 </p>
               ) : (
                 <p className="text-amber-100/40 text-[10px] text-center -mt-2">
@@ -1142,7 +1155,7 @@ export default function BattleScreen() {
                 onClick={() => { setShowAbandonConfirm(true); Sound.sfx.click(); }}
                 className="w-full px-6 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm hover:bg-red-800/30 transition"
               >
-                {run.isDaily ? "Abandon Daily Battle & Return to Menu" : "Abandon Run & Return to Menu"}
+                {run.isDaily ? "Abandon Daily Battle" : "Abandon Run — Delete Progress"}
               </button>
             </div>
           </div>
@@ -1160,7 +1173,10 @@ export default function BattleScreen() {
                 <p className="text-red-300/70 text-xs text-center mb-6">You cannot retry today's Daily Battle once abandoned.</p>
               </>
             ) : (
-              <p className="text-amber-100/60 text-sm text-center mb-6">Your saved progress will be deleted.</p>
+              <>
+                <p className="text-amber-100/60 text-sm text-center mb-2">This will delete your current run.</p>
+                <p className="text-red-300/70 text-xs text-center mb-6">Are you sure?</p>
+              </>
             )}
             <div className="flex gap-3">
               <button

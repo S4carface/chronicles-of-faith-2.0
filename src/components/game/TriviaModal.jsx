@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getQuestionForRoomDepth } from "@/data/trivia";
 import { UI_ART } from "@/data/art";
@@ -29,11 +29,20 @@ export default function TriviaModal({ onComplete }) {
   const [answered, setAnswered] = useState(false);
   const [reward, setReward] = useState(null);
 
+  // Clear any lingering focus from the previous screen's Continue button
+  // so the trivia opens completely neutral — no pre-highlighted answer.
+  useEffect(() => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+  }, []);
+
   const difficultyLabels = { 1: "Easy", 2: "Medium", 3: "Hard" };
   const difficultyColors = { 1: "text-emerald-300", 2: "text-amber-300", 3: "text-red-300" };
 
-  const handleAnswer = (idx) => {
+  const handleAnswer = (e, idx) => {
     if (answered) return;
+    if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
     const correct = idx === question.answer;
@@ -105,9 +114,9 @@ export default function TriviaModal({ onComplete }) {
             return (
               <button
                 key={idx}
-                onClick={() => handleAnswer(idx)}
+                onClick={(e) => handleAnswer(e, idx)}
                 disabled={answered}
-                className={`px-4 py-3 rounded-lg border-2 text-left transition-all font-medium ${
+                className={`px-4 py-3 rounded-lg border-2 text-left transition-all font-medium focus:outline-none ${
                   !answered
                     ? "border-amber-500/20 hover:border-amber-400/60 hover:bg-amber-500/10 text-amber-50"
                     : isCorrect
@@ -155,8 +164,8 @@ export default function TriviaModal({ onComplete }) {
 
             <div className="mt-4">
               <button
-                onClick={handleContinue}
-                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
+                onClick={(e) => { e.currentTarget.blur(); handleContinue(); }}
+                className="px-8 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition focus:outline-none"
               >
                 Continue →
               </button>

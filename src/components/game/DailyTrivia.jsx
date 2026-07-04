@@ -14,10 +14,18 @@ export default function DailyTrivia() {
     if (!trivia) setPhase("dailyResult");
   }, [trivia]);
 
+  // Clear any lingering focus from the previous screen so the trivia opens neutral
+  useEffect(() => {
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+  }, []);
+
   if (!trivia) return null;
 
-  const handleSelect = (idx) => {
+  const handleSelect = (e, idx) => {
     if (answered) return;
+    if (e?.currentTarget?.blur) e.currentTarget.blur();
     setSelected(idx);
     setAnswered(true);
     const correct = idx === trivia.answer;
@@ -50,9 +58,9 @@ export default function DailyTrivia() {
             return (
               <button
                 key={idx}
-                onClick={() => handleSelect(idx)}
+                onClick={(e) => handleSelect(e, idx)}
                 disabled={answered}
-                className={`w-full px-4 py-3 rounded-lg border-2 text-left text-sm lg:text-base transition flex items-center justify-between ${cls}`}
+                className={`w-full px-4 py-3 rounded-lg border-2 text-left text-sm lg:text-base transition flex items-center justify-between focus:outline-none ${cls}`}
               >
                 <span>{opt}</span>
                 {answered && isCorrect && <Check className="w-4 h-4 flex-shrink-0" />}

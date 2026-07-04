@@ -3,10 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Swords, Check, Flame, Crown, Coins, Sparkles } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
-import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import { validateDeck } from "@/game/deckRules";
-import { needsPlayerName } from "@/game/nameValidator";
 import DailyReflection from "@/components/game/DailyReflection";
 import * as Sound from "@/game/soundManager";
 
@@ -15,7 +13,6 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showNamePrompt, setShowNamePrompt] = useState(false);
 
   const daily = getDailyChallenge();
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -34,10 +31,6 @@ export default function DailyChallenge() {
 
   const handleStart = () => {
     Sound.sfx.click();
-    if (needsPlayerName(profile.playerName)) {
-      setShowNamePrompt(true);
-      return;
-    }
     // Validate active deck before starting
     const deckCheck = validateDeck(profile.activeDeck);
     if (!deckCheck.valid) {
@@ -50,20 +43,6 @@ export default function DailyChallenge() {
     }
     if (hasActiveDaily) {
       navigate("/play");
-      return;
-    }
-    beginDaily();
-  };
-
-  const handleNameSaved = () => {
-    setShowNamePrompt(false);
-    const deckCheck = validateDeck(profile.activeDeck);
-    if (!deckCheck.valid) {
-      navigate("/collection");
-      return;
-    }
-    if (run && !run.isDaily) {
-      setShowConfirm(true);
       return;
     }
     beginDaily();
@@ -236,9 +215,6 @@ export default function DailyChallenge() {
         </div>
       )}
 
-      {showNamePrompt && (
-        <PlayerNamePrompt onSave={handleNameSaved} forceName />
-      )}
     </div>
   );
 }

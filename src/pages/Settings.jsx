@@ -1,16 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play, Pencil } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play, Pencil, Cloud, User, Film } from "lucide-react";
 import { useGame } from "@/game/GameContext";
+import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
+import { syncProfileToCloud } from "@/game/cloudSync";
 
 export default function Settings() {
-  const { profile, saveProfile, Sound: Snd } = useGame();
+  const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
+  const { isAuthenticated, user, navigateToLogin } = useAuth();
+  const navigate = useNavigate();
   const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
+
+  const handleReplayIntro = () => {
+    Sound.sfx.click();
+    triggerIntroReplay();
+    navigate("/");
+  };
+
+  const handleSignIn = () => {
+    Sound.sfx.click();
+    navigateToLogin();
+  };
+
+  const handleSyncNow = async () => {
+    Sound.sfx.click();
+    setSyncing(true);
+    setSyncResult(null);
+    const success = await syncProfileToCloud(profile);
+    setSyncResult(success ? "synced" : "error");
+    setSyncing(false);
+  };
 
   const toggleMusic = () => {
     const newVal = !profile.settings.music;
@@ -302,6 +328,80 @@ export default function Settings() {
                 <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-amber-200 transition-transform ${!profile.tutorialSeen ? "translate-x-7" : "translate-x-0.5"}`} />
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* === STORY SECTION === */}
+        <div className="space-y-3">
+          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Story</h2>
+          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Film className="w-4 h-4 text-amber-300/70" />
+                <div>
+                  <span className="font-serif text-amber-100 text-sm">Replay Opening Story</span>
+                  <p className="text-amber-100/40 text-[10px]">Watch the Genesis intro again</p>
+                </div>
+              </div>
+              <button
+                onClick={handleReplayIntro}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
+              >
+                <Play className="w-3.5 h-3.5" /> Replay
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* === ACCOUNT SECTION === */}
+        <div className="space-y-3">
+          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Account / Cloud Save</h2>
+          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
+            {isAuthenticated ? (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Cloud className="w-4 h-4 text-emerald-400/70" />
+                  <div>
+                    <p className="font-serif text-amber-100 text-sm">Signed In</p>
+                    <p className="text-amber-100/40 text-[10px]">{user?.email || "Account connected"}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSyncNow}
+                  disabled={syncing}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-emerald-400/40 bg-emerald-900/20 text-emerald-200 text-sm hover:bg-emerald-800/30 transition disabled:opacity-40"
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                  {syncing ? "Syncing..." : "Sync Now"}
+                </button>
+                {syncResult === "synced" && (
+                  <p className="text-emerald-300 text-xs text-center mt-2">Progress synced to cloud.</p>
+                )}
+                {syncResult === "error" && (
+                  <p className="text-red-300 text-xs text-center mt-2">Sync failed. Try again.</p>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <User className="w-4 h-4 text-amber-300/70" />
+                  <div>
+                    <p className="font-serif text-amber-100 text-sm">Playing as Guest</p>
+                    <p className="text-amber-100/40 text-[10px]">Progress saved on this device only</p>
+                  </div>
+                </div>
+                <p className="text-amber-100/50 text-[10px] mb-3">
+                  Save your cards, streaks, scores, and progress across devices.
+                </p>
+                <button
+                  onClick={handleSignIn}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 text-sm font-bold hover:bg-amber-600/40 transition"
+                >
+                  <Cloud className="w-3.5 h-3.5" />
+                  Sign In to Save Across Devices
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

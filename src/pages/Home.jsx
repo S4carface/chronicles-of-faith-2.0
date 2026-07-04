@@ -6,19 +6,19 @@ import DifficultySelect from "@/components/game/DifficultySelect";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import ResumeModal from "@/components/game/ResumeModal";
+import CinematicIntro from "@/components/game/CinematicIntro";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
-import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
+import { sanitizePlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
-  const { profile, run, endRun, Sound: Snd, savedStoryExists, resumeStoryRun, storySaveError } = useGame();
+  const { profile, run, endRun, Sound: Snd, savedStoryExists, resumeStoryRun, storySaveError, showIntro, handleIntroComplete } = useGame();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
   const [showResume, setShowResume] = useState(false);
   const savedRunInfo = useMemo(() => {
     if (!savedStoryExists) return null;
@@ -32,18 +32,10 @@ export default function Home() {
     if (run && getSavedRoute() === "/play") {
       setShowResume(true);
     }
-    if (needsPlayerName(profile.playerName)) {
-      setShowNamePrompt(true);
-    }
   }, []);
 
   const handleBeginRun = () => {
     Sound.sfx.click();
-    if (needsPlayerName(profile.playerName)) {
-      setPendingAction("run");
-      setShowNamePrompt(true);
-      return;
-    }
     // Validate active deck before starting
     const deckCheck = validateDeck(profile.activeDeck);
     if (!deckCheck.valid) {
@@ -57,19 +49,8 @@ export default function Home() {
     }
   };
 
-  const handleNameSaved = (name) => {
+  const handleNameSaved = () => {
     setShowNamePrompt(false);
-    if (pendingAction === "run") {
-      setPendingAction(null);
-      if (run || savedStoryExists) {
-        setShowConfirm(true);
-      } else {
-        navigate("/play");
-      }
-    } else if (pendingAction === "daily") {
-      setPendingAction(null);
-      navigate("/daily");
-    }
   };
 
   const handleConfirmNew = () => {
@@ -273,15 +254,19 @@ export default function Home() {
       </p>
 
       {showNamePrompt && (
-        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} forceName={pendingAction === "run"} />
+        <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />
       )}
 
       <AudioUnlockButton />
 
+      {showIntro && (
+        <CinematicIntro onComplete={handleIntroComplete} />
+      )}
+
       {showResume && (
         <ResumeModal
           onResume={() => { setShowResume(false); navigate("/play"); }}
-          onAbandon={() => { setShowResume(false); endRun(); if (needsPlayerName(profile.playerName)) setShowNamePrompt(true); }}
+          onAbandon={() => { setShowResume(false); endRun(); }}
         />
       )}
     </div>

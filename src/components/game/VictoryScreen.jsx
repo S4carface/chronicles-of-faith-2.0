@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
+import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import { VICTORY_ART } from "@/data/art";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
+import AccountPrompt from "@/components/game/AccountPrompt";
 import { submitBestScore } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
+import { getCurrentUser } from "@/game/cloudSync";
 
 export default function VictoryScreen() {
   const { run, endRun, profile, saveProfile, unlockAchievement } = useGame();
+  const { navigateToLogin } = useAuth();
   const navigate = useNavigate();
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
+  const [showAccountPrompt, setShowAccountPrompt] = useState(false);
 
   const difficultyMultipliers = { easy: 1.0, normal: 1.5, hard: 2.0 };
   const multiplier = difficultyMultipliers[run.difficulty] || 1.0;
@@ -63,6 +68,13 @@ export default function VictoryScreen() {
     } else {
       setShowNamePrompt(true);
     }
+
+    // Gentle account prompt for guests (after a delay)
+    if (!profile.accountPromptSeen) {
+      getCurrentUser().then((u) => {
+        if (!u) setTimeout(() => setShowAccountPrompt(true), 2000);
+      });
+    }
   }, []);
 
   const submitScoreToCloud = async (name, scoreToSubmit) => {
@@ -99,6 +111,17 @@ export default function VictoryScreen() {
       submitScoreToCloud(name, score);
     }
     // If name is null, "Continue Without Leaderboard" — don't submit
+  };
+
+  const handleAccountDismiss = () => {
+    setShowAccountPrompt(false);
+    saveProfile({ accountPromptSeen: true });
+  };
+
+  const handleAccountSignIn = () => {
+    setShowAccountPrompt(false);
+    saveProfile({ accountPromptSeen: true });
+    navigateToLogin();
   };
 
   const handleReturnToMenu = () => {
@@ -204,6 +227,13 @@ export default function VictoryScreen() {
           Return to Menu
         </button>
       </div>
+
+      {showAccountPrompt && (
+        <AccountPrompt
+          onDismiss={handleAccountDismiss}
+          onSignIn={handleAccountSignIn}
+        />
+      )}
     </div>
   );
 }

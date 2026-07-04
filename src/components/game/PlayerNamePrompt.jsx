@@ -42,7 +42,7 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
         <h2 className="text-xl font-serif text-amber-200 text-center mb-2">Choose Your Player Name</h2>
         <p className="text-amber-100/50 text-sm text-center mb-6">
           {endOfRun
-            ? "Choose a family-friendly name to appear on the leaderboard."
+            ? "Choose a player name so your score can appear on the leaderboard."
             : "Choose a family-friendly name for the leaderboard. 3–18 characters."}
         </p>
         <input
@@ -77,7 +77,7 @@ export default function PlayerNamePrompt({ onSave, onCancel, forceName, endOfRun
               onClick={handleContinueWithout}
               className="w-full px-6 py-2 rounded-lg border border-amber-400/20 bg-slate-800/40 text-amber-100/60 text-sm hover:bg-slate-800/60 transition"
             >
-              Continue Without Leaderboard
+              Continue as Guest
             </button>
           ) : (
             !forceName && (

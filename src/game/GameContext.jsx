@@ -52,6 +52,8 @@ function loadProfile() {
     dailyStreak: 0,
     lastDailyDate: null,
     playerName: "Anonymous Pilgrim",
+    introSeen: false,
+    accountPromptSeen: false,
     battlesUnscathed: 0,
     difficulty: "normal",
     gold: 0,
@@ -65,10 +67,18 @@ export function GameProvider({ children }) {
   const [savedStoryExists, setSavedStoryExists] = useState(() => hasSavedStoryRun());
   const [storySaveError, setStorySaveError] = useState(false);
   const [achievementQueue, setAchievementQueue] = useState([]);
+  const [showIntro, setShowIntro] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   }, [profile]);
+
+  // Show cinematic intro on first launch
+  useEffect(() => {
+    if (!profile.introSeen) {
+      setShowIntro(true);
+    }
+  }, []);
 
   // Autosave story runs (never daily) — clears save on terminal phases
   useEffect(() => {
@@ -134,6 +144,15 @@ export function GameProvider({ children }) {
   const dismissAchievement = useCallback(() => {
     setAchievementQueue(q => q.slice(1));
   }, []);
+
+  const triggerIntroReplay = useCallback(() => {
+    setShowIntro(true);
+  }, []);
+
+  const handleIntroComplete = useCallback(() => {
+    setShowIntro(false);
+    saveProfile({ introSeen: true });
+  }, [saveProfile]);
 
   const addCardsToCollection = useCallback((cardIds) => {
     setProfile(prev => {
@@ -495,6 +514,9 @@ export function GameProvider({ children }) {
     replaceCardInRun,
     achievementQueue,
     dismissAchievement,
+    showIntro,
+    triggerIntroReplay,
+    handleIntroComplete,
     Sound,
   };
 

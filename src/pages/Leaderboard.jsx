@@ -4,7 +4,8 @@ import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff } from "lucide-r
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
 import { fetchLeaderboard } from "@/game/scoreManager";
-import { sanitizePlayerName } from "@/game/nameValidator";
+import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
+import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import * as Sound from "@/game/soundManager";
 
 const RANK_STYLES = [
@@ -20,11 +21,19 @@ const TABS = [
 ];
 
 export default function Leaderboard() {
-  const { Sound: Snd } = useGame();
+  const { Sound: Snd, profile } = useGame();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [loadError, setLoadError] = useState(false);
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+
+  useEffect(() => {
+    Snd.playMusic("menu");
+    if (needsPlayerName(profile.playerName)) {
+      setShowNamePrompt(true);
+    }
+  }, []);
 
   const loadLeaderboard = useCallback(async (tab) => {
     setLoading(true);
@@ -41,7 +50,6 @@ export default function Leaderboard() {
   }, []);
 
   useEffect(() => {
-    Snd.playMusic("menu");
     loadLeaderboard(filter);
   }, [filter]);
 
@@ -154,6 +162,13 @@ export default function Leaderboard() {
           </div>
         )}
       </div>
+
+      {showNamePrompt && (
+        <PlayerNamePrompt
+          onSave={() => setShowNamePrompt(false)}
+          onCancel={() => setShowNamePrompt(false)}
+        />
+      )}
     </div>
   );
 }

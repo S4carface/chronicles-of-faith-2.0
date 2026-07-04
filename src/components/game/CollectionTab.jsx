@@ -3,21 +3,14 @@ import { useGame } from "@/game/GameContext";
 import { CARDS, getCardById } from "@/data/cards";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
-import { canAddToDeck, getMaxCopies } from "@/game/deckRules";
-import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
+import { canAddToDeck, getMaxCopies, DECK_SIZE } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 
-const RARITY_BORDER = {
-  common: "border-sky-400/60",
-  rare: "border-emerald-400/70",
-  legendary: "border-amber-300/80",
-};
-
 export default function CollectionTab() {
-  const { profile, addToActiveDeck } = useGame();
+  const { profile, addToActiveDeck, removeCardFromDeck } = useGame();
   const [filter, setFilter] = useState("all");
   const [detailCard, setDetailCard] = useState(null);
-  const [feedback, setFeedback] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const collection = profile.cardCollection || {};
   const activeDeck = profile.activeDeck || [];
@@ -31,22 +24,47 @@ export default function CollectionTab() {
     return ownedCards.filter(c => c.rarity === filter);
   }, [ownedCards, filter]);
 
+  const showToast = (text, type = "error") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 2500);
+  };
+
   const handleAdd = (cardId) => {
     const card = getCardById(cardId);
     const result = canAddToDeck(cardId, activeDeck, collection);
     if (result.canAdd) {
       Sound.sfx.cardPlay();
       addToActiveDeck(cardId);
-      setFeedback({ cardId, text: "Added to deck!", type: "success" });
     } else {
       Sound.sfx.click();
-      setFeedback({ cardId, text: result.reason, type: "error" });
+      // Override reason when deck is full
+      if (activeDeck.length >= DECK_SIZE) {
+        showToast("Deck is full. Remove a card first.", "error");
+      } else {
+        showToast(result.reason, "error");
+      }
     }
-    setTimeout(() => setFeedback(null), 2500);
+  };
+
+  const handleRemove = (cardId) => {
+    const inDeck = activeDeck.filter(id => id === cardId).length;
+    if (inDeck > 0) {
+      Sound.sfx.click();
+      removeCardFromDeck(cardId);
+    }
   };
 
   return (
     <div>
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in px-4 py-2 rounded-lg border-2 border-red-400/40 bg-red-900/80 backdrop-blur-sm shadow-lg">
+          <p className={`text-sm font-medium ${toast.type === "success" ? "text-emerald-200" : "text-red-200"}`}>
+            {toast.text}
+          </p>
+        </div>
+      )}
+
       {/* Filter */}
       <div className="flex justify-center gap-2 mb-4">
         {["all", "common", "rare", "legendary"].map(f => (
@@ -74,8 +92,6 @@ export default function CollectionTab() {
           const ownedCount = collection[card.id] || 0;
           const inDeck = activeDeck.filter(id => id === card.id).length;
           const maxCopies = getMaxCopies(card.rarity);
-          const addResult = canAddToDeck(card.id, activeDeck, collection);
-          const showFeedback = feedback?.cardId === card.id;
 
           return (
             <div key={card.id} className="flex flex-col items-center">
@@ -88,25 +104,32 @@ export default function CollectionTab() {
                   <span className="text-amber-200 text-[8px] font-bold">{ownedCount}</span>
                 </div>
               </div>
-              <div className="text-center mt-1 mb-1">
-                <span className="text-amber-100/40 text-[9px]">In deck: {inDeck}/{maxCopies}</span>
+
+              {/* Owned / In deck stats */}
+              <div className="flex justify-center gap-2 w-full mt-1 mb-1 text-[9px]">
+                <span className="text-amber-100/50">Owned: <span className="text-amber-200 font-bold">{ownedCount}</span></span>
+                <span className="text-amber-100/30">·</span>
+                <span className="text-amber-100/50">In deck: <span className={`font-bold ${inDeck >= maxCopies ? "text-amber-300" : "text-amber-200"}`}>{inDeck}</span>/{maxCopies}</span>
               </div>
-              <button
-                onClick={() => handleAdd(card.id)}
-                disabled={!addResult.canAdd}
-                className={`w-full text-[10px] font-bold py-1 px-2 rounded border transition ${
-                  addResult.canAdd
-                    ? "border-amber-400/50 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
-                    : "border-slate-700/30 bg-slate-900/40 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                {addResult.canAdd ? "+ Add to Deck" : "Limit Reached"}
-              </button>
-              {showFeedback && (
-                <p className={`text-[9px] mt-0.5 text-center leading-tight ${feedback.type === "success" ? "text-emerald-300" : "text-red-300"}`}>
-                  {feedback.text}
-                </p>
-              )}
+
+              {/* Add / Remove buttons — large enough for mobile */}
+              <div className="flex gap-1.5 w-full">
+                <button
+                  onClick={() => handleRemove(card.id)}
+                  disabled={inDeck === 0}
+                  className="flex-1 min-h-[36px] text-sm font-bold py-1.5 px-2 rounded-lg border border-red-400/30 bg-red-900/20 text-red-200 hover:bg-red-800/30 transition active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
+                  aria-label={`Remove ${card.name} from deck`}
+                >
+                  −
+                </button>
+                <button
+                  onClick={() => handleAdd(card.id)}
+                  className="flex-1 min-h-[36px] text-sm font-bold py-1.5 px-2 rounded-lg border border-amber-400/50 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 transition active:scale-95"
+                  aria-label={`Add ${card.name} to deck`}
+                >
+                  +
+                </button>
+              </div>
             </div>
           );
         })}

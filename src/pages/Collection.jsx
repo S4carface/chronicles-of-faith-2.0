@@ -36,6 +36,13 @@ export default function Collection() {
         </div>
       </div>
 
+      {/* Rule explanation */}
+      <div className="max-w-md mx-auto mb-4 px-4 py-2 rounded-lg border border-amber-500/15 bg-slate-900/30 text-center">
+        <p className="text-amber-100/50 text-xs lg:text-sm">
+          Build a 10-card deck. You can bring up to 2 copies of the same card.
+        </p>
+      </div>
+
       {/* Tabs */}
       <div className="flex justify-center gap-2 mb-6">
         <button

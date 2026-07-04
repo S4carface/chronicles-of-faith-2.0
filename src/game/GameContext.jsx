@@ -199,6 +199,15 @@ export function GameProvider({ children }) {
     }));
   }, []);
 
+  const removeCardFromDeck = useCallback((cardId) => {
+    setProfile(prev => {
+      const deck = prev.activeDeck || [];
+      const idx = deck.findIndex(id => id === cardId);
+      if (idx === -1) return prev;
+      return { ...prev, activeDeck: deck.filter((_, i) => i !== idx) };
+    });
+  }, []);
+
   const addCardToRunDeck = useCallback((cardId) => {
     setRun(prev => {
       if (!prev) return prev;
@@ -515,6 +524,7 @@ export function GameProvider({ children }) {
     addCardToCollection,
     addToActiveDeck,
     removeFromActiveDeck,
+    removeCardFromDeck,
     addCardToRunDeck,
     replaceCardInRun,
     achievementQueue,

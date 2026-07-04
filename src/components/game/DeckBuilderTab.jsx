@@ -26,13 +26,18 @@ export default function DeckBuilderTab() {
 
   return (
     <div>
+      {/* Explanation */}
+      <p className="max-w-2xl mx-auto mb-4 text-center text-amber-100/50 text-xs lg:text-sm italic">
+        These are the cards you bring into battle.
+      </p>
+
       {/* Deck count + validation */}
       <div className="max-w-2xl mx-auto mb-4 text-center">
         <p className="text-amber-100/70 text-sm font-serif">
-          Deck: <span className={`font-bold ${activeDeck.length === DECK_SIZE ? "text-emerald-300" : "text-amber-300"}`}>{activeDeck.length} / {DECK_SIZE}</span>
+          Active Deck: <span className={`font-bold ${activeDeck.length === DECK_SIZE ? "text-emerald-300" : "text-amber-300"}`}>{activeDeck.length} / {DECK_SIZE}</span>
         </p>
         {validation.valid ? (
-          <p className="text-emerald-300/80 text-xs mt-1">✓ Deck is valid — ready to start a run</p>
+          <p className="text-emerald-300/80 text-xs mt-1">✓ Deck is ready.</p>
         ) : (
           <div className="mt-2 p-2 rounded-lg border border-red-400/30 bg-red-900/15">
             <p className="text-red-300 text-xs font-bold">Your deck needs {DECK_SIZE} cards before you can start.</p>

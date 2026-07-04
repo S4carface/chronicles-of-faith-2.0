@@ -25,6 +25,8 @@ const DEFAULT_STATS = {
   dailyChallengesCompleted: 0,
   bestDailyStreak: 0,
   bestDailyScore: 0,
+  // Daily Devotion (separate from battle)
+  bestDevotionStreak: 0,
   // Gameplay / Card Mastery
   cardUsage: {},         // { cardId: count }
   totalDamageDealt: 0,
@@ -127,6 +129,14 @@ export function recordDailyCompleted(score = 0, streak = 0, gold = 0) {
     bestDailyScore: Math.max(s.bestDailyScore, score),
     bestDailyStreak: Math.max(s.bestDailyStreak, streak),
     totalGoldEarned: s.totalGoldEarned + gold,
+  }));
+}
+
+// ---- Daily Devotion (separate from battle) ----
+export function recordDevotionRead(streak = 0) {
+  mutate(s => ({
+    ...s,
+    bestDevotionStreak: Math.max(s.bestDevotionStreak || 0, streak),
   }));
 }
 

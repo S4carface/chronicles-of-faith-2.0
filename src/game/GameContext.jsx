@@ -39,6 +39,9 @@ function loadProfile() {
       parsed.collectedCards = Object.keys(parsed.cardCollection);
       // Sanitize any stored player name (old invalid names become "Anonymous Pilgrim")
       parsed.playerName = sanitizePlayerName(parsed.playerName);
+      // Migrate devotion tracking fields
+      if (parsed.devotionStreak === undefined) parsed.devotionStreak = 0;
+      if (parsed.devotionReadDate === undefined) parsed.devotionReadDate = null;
       return parsed;
     }
   } catch (e) {}
@@ -51,6 +54,8 @@ function loadProfile() {
     settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal" },
     dailyStreak: 0,
     lastDailyDate: null,
+    devotionStreak: 0,
+    devotionReadDate: null,
     playerName: "Anonymous Pilgrim",
     introSeen: false,
     accountPromptSeen: false,

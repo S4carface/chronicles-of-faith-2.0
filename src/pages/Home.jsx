@@ -83,7 +83,7 @@ export default function Home() {
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
     { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
-    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "One daily battle", status: "New today" },
+    { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Today's verse, prayer, and one shared battle", status: "New today" },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
     { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
     { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },

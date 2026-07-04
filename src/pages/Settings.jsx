@@ -394,19 +394,32 @@ export default function Settings() {
                 <div className="flex items-center gap-2 mb-3">
                   <User className="w-4 h-4 text-amber-300/70" />
                   <div>
-                    <p className="font-serif text-amber-100 text-sm">Playing as Guest</p>
-                    <p className="text-amber-100/40 text-[10px]">Progress saved on this device only</p>
+                    <p className="font-serif text-amber-100 text-sm">Playing locally</p>
+                    <p className="text-amber-100/40 text-[10px]">Progress saved on this device</p>
                   </div>
                 </div>
-                <p className="text-amber-100/50 text-[10px] mb-3">
-                  Save your cards, streaks, scores, and progress across devices.
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-amber-500/15 bg-slate-900/40">
+                    <span className="text-amber-100/50 text-[10px] uppercase tracking-wide">Leaderboard name</span>
+                    <span className="text-amber-100 text-xs font-medium">{sanitizePlayerName(profile.playerName)}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-amber-500/15 bg-slate-900/40">
+                    <span className="text-amber-100/50 text-[10px] uppercase tracking-wide">Local account</span>
+                    <span className="text-amber-100/60 text-xs font-medium">Guest device</span>
+                  </div>
+                </div>
+
+                <p className="text-amber-100/50 text-[10px] mb-3 leading-relaxed">
+                  Your progress is saved on this device. Leaderboard scores are shared online,
+                  but cards, streaks, and story progress are not synced across devices yet.
                 </p>
                 <button
                   onClick={handleSignIn}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 text-sm font-bold hover:bg-amber-600/40 transition"
                 >
                   <Cloud className="w-3.5 h-3.5" />
-                  Sign In to Save Across Devices
+                  Cloud Save Coming Soon
                 </button>
               </div>
             )}

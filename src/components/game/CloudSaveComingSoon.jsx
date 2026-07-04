@@ -38,8 +38,9 @@ export default function CloudSaveComingSoon({ onClose }) {
         </h2>
 
         <p className="text-amber-100/55 text-sm text-center leading-relaxed mb-6">
-          For now, your progress is saved on this device. Soon you'll be able to sign in
-          and save cards, streaks, scores, and progress across devices.
+          For now, your progress is saved on this device. Leaderboard scores are shared
+          online. Soon you'll be able to sign in and sync cards, streaks, scores, and story
+          progress across devices.
         </p>
 
         <button

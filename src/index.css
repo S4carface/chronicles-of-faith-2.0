@@ -131,14 +131,15 @@
 
   .font-serif { font-family: var(--font-heading); }
 
-  /* Shared art image fix: scales up slightly to crop baked-in white edges,
+  /* Shared art image fix: scales up to crop baked-in white edges/borders,
      clipped by parent's overflow-hidden. No transform on parent = animations work. */
   .art-portrait {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
     display: block;
-    transform: scale(1.1);
+    transform: scale(1.2);
   }
 
   body {

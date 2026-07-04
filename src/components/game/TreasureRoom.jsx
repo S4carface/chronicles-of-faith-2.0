@@ -73,7 +73,7 @@ export default function TreasureRoom() {
       <div className="text-center mb-8">
         <div className="mb-4 flex justify-center animate-bounce">
           <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/30" style={{ background: "#0F1A30" }}>
-            <img src={ROOM_ART.treasure || PLACEHOLDER_ART} alt="Treasure" className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} />
+            <img src={ROOM_ART.treasure || PLACEHOLDER_ART} alt="Treasure" className="art-portrait" />
           </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">A Gift from Above</h2>

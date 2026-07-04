@@ -38,7 +38,9 @@ export default function RestRoom() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, rgba(201,168,76,0.1) 0%, rgba(8,12,24,0.98) 60%)" }}>
       <div className="text-center mb-8">
         <div className="mb-4 flex justify-center">
-          <img src={ROOM_ART.rest || PLACEHOLDER_ART} alt="Rest" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/30" />
+          <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/30" style={{ background: "#0F1A30" }}>
+            <img src={ROOM_ART.rest || PLACEHOLDER_ART} alt="Rest" className="art-portrait" />
+          </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">A Moment of Rest</h2>
         <p className="text-amber-100/50 text-sm mt-2 max-w-md">

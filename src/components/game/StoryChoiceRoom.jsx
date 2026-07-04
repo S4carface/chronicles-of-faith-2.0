@@ -129,7 +129,9 @@ export default function StoryChoiceRoom() {
 
       <div className="text-center mb-8 max-w-2xl">
         <div className="mb-4 flex justify-center">
-          <img src={STORY_ART[story.id] || PLACEHOLDER_ART} alt={story.id} className="w-24 h-24 object-cover rounded-xl border-2 border-amber-400/30" />
+          <div className="w-24 h-24 rounded-xl overflow-hidden border-2 border-amber-400/30" style={{ background: "#0F1A30" }}>
+            <img src={STORY_ART[story.id] || PLACEHOLDER_ART} alt={story.id} className="art-portrait" />
+          </div>
         </div>
         {story.summary && (
           <div className="mb-4 px-4 py-2 rounded-lg border border-amber-400/25 bg-amber-900/10 inline-block">

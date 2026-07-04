@@ -104,7 +104,9 @@ export default function TriviaModal({ onComplete }) {
       <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
-            <img src={UI_ART.trivia} alt="Test Your Knowledge" className="w-16 h-16 object-cover rounded-xl border-2 border-amber-400/40 shadow-lg shadow-amber-500/20 animate-icon-float" />
+            <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/40 shadow-lg shadow-amber-500/20 animate-icon-float" style={{ background: "#0F1A30" }}>
+              <img src={UI_ART.trivia} alt="Test Your Knowledge" className="art-portrait" />
+            </div>
           </div>
           <h2 className="text-2xl font-serif text-amber-200">Test Your Knowledge</h2>
           <div className="flex items-center justify-center gap-2 mt-2">

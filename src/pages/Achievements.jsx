@@ -53,7 +53,7 @@ export default function Achievements() {
                 {isUnlocked
                   ? (() => {
                     const artUrl = achievement.art === "victory_crest" ? VICTORY_ART.crest : ENEMY_ART[achievement.art];
-                    if (artUrl) return <img src={artUrl} alt={achievement.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} />;
+                    if (artUrl) return <img src={artUrl} alt={achievement.name} className="art-portrait" />;
                     return <Icon className="w-6 h-6 text-amber-300" />;
                   })()
                   : <Lock className="w-5 h-5 text-slate-400" />

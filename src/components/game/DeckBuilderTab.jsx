@@ -73,7 +73,9 @@ export default function DeckBuilderTab() {
               <div key={idx} className="flex flex-col items-center">
                 <div className={`w-20 h-36 rounded-lg border-2 ${RARITY_BORDER[card.rarity] || "border-slate-600"} bg-gradient-to-b from-slate-800 to-slate-900 p-1.5 flex flex-col items-center justify-between overflow-hidden`}>
                   <div className="text-[8px] text-amber-300/60 w-full text-right">{card.cost} ✨</div>
-                  <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-12 h-12 object-cover rounded" />
+                  <div className="w-12 h-12 rounded overflow-hidden" style={{ background: "#0F1A30" }}>
+                    <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
+                  </div>
                   <div className="text-[9px] font-serif text-amber-100 text-center leading-tight">{card.name}</div>
                   <div className={`text-[7px] uppercase font-bold ${TYPE_COLORS[card.type] || "text-amber-300/50"}`}>{card.type}</div>
                 </div>

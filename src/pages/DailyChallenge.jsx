@@ -107,9 +107,9 @@ export default function DailyChallenge() {
 
           <div className="grid grid-cols-1 gap-3 text-left">
             <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden border border-red-900/50" style={{ background: "#0F1A30" }}>
                 {enemyArt ? (
-                  <img src={enemyArt} alt={daily.enemy.name} className="w-12 h-12 lg:w-14 lg:h-14 object-cover rounded-lg border border-red-900/50" />
+                  <img src={enemyArt} alt={daily.enemy.name} className="art-portrait" />
                 ) : (
                   <span className="text-3xl">{daily.enemy.icon}</span>
                 )}

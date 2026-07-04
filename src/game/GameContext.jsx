@@ -417,7 +417,11 @@ export function GameProvider({ children }) {
   }, []);
 
   const updateRun = useCallback((updates) => {
-    setRun(prev => prev ? { ...prev, ...updates } : prev);
+    setRun(prev => {
+      if (!prev) return prev;
+      const resolved = typeof updates === 'function' ? updates(prev) : updates;
+      return { ...prev, ...resolved };
+    });
   }, []);
 
   const saveBattleState = useCallback((battleState) => {

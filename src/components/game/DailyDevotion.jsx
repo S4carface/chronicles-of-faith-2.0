@@ -4,8 +4,10 @@ import { getDailyReflection } from "@/data/dailyReflections";
 import { recordVerseRead } from "@/game/playerStats";
 import { speakNarration, stopNarration } from "@/game/soundManager";
 import * as Sound from "@/game/soundManager";
+import { useGame } from "@/game/GameContext";
 
 export default function DailyDevotion() {
+  const { profile } = useGame();
   const reflection = getDailyReflection();
   const [reading, setReading] = useState(false);
 
@@ -21,7 +23,11 @@ export default function DailyDevotion() {
       return;
     }
     const fullText = `${reflection.verse}. ${reflection.reference}. Reflection. ${reflection.reflection} Prayer. ${reflection.prayer}`;
-    speakNarration(fullText);
+    speakNarration(
+      fullText,
+      (profile.settings.narrationVolume ?? 50) / 100,
+      profile.settings.narrationVoice
+    );
     setReading(true);
     // Reset state after speech ends — poll since onend is inside soundManager
     const checkEnd = setInterval(() => {

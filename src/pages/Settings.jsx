@@ -83,7 +83,13 @@ export default function Settings() {
 
   const previewVoice = () => {
     Sound.sfx.click();
-    Sound.speakNarration("The Lord is my shepherd, I lack nothing. Psalm chapter 23, verse 1.", (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
+    // Preview includes a raw scripture reference so the user hears how
+    // citations are verbalized: "Genesis 1:1-3" → "Genesis chapter 1, verses 1 through 3"
+    Sound.speakNarration(
+      "In the beginning, God created the heavens and the earth. Genesis 1:1-3.",
+      (profile.settings.narrationVolume ?? 50) / 100,
+      profile.settings.narrationVoice
+    );
   };
 
   return (
@@ -185,18 +191,17 @@ export default function Settings() {
               <>
                 <div className="mt-3">
                   <p className="text-amber-100/50 text-[10px] mb-2">Narrator Voice</p>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {[
-                      { value: "default", label: "Default" },
                       { value: "male", label: "Warm Male" },
                       { value: "female", label: "Warm Female" },
-                      { value: "system", label: "System" },
+                      { value: "system", label: "System Voice" },
                     ].map(opt => (
                       <button
                         key={opt.value}
                         onClick={() => { saveProfile({ settings: { ...profile.settings, narrationVoice: opt.value } }); Sound.sfx.click(); }}
                         className={`px-1 py-1.5 rounded-lg border text-[10px] font-medium transition ${
-                          (profile.settings.narrationVoice || "default") === opt.value
+                          (profile.settings.narrationVoice || "system") === opt.value
                             ? "border-amber-400/60 bg-amber-600/20 text-amber-100"
                             : "border-amber-500/15 bg-slate-900/40 text-amber-100/50"
                         }`}

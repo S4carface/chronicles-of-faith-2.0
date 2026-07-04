@@ -10,7 +10,7 @@ import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
 import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
-import { recordRunStarted } from "@/game/playerStats";
+import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
 import { sanitizePlayerName } from "@/game/nameValidator";
 
 const GameContext = createContext(null);
@@ -312,7 +312,8 @@ export function GameProvider({ children }) {
       neverLostHp: true,
       storyChoices: [],
       currentNode: null,
-      phase: "map", // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
+      phase: "map",
+      runStartTime: Date.now(), // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
       pendingReward: null,
       narrationText: "In the beginning, there was nothing... Then God said, 'Let there be light.' And there was light. — Genesis 1:1-3",
       narrationSummary: "God creates light and begins bringing order from nothing.",
@@ -494,6 +495,7 @@ export function GameProvider({ children }) {
       dailyPlayerStartBlock: dailyConfig.rule.playerStartBlock || 0,
       dailyResult: null,
       dailyTriviaCorrect: false,
+      runStartTime: Date.now(),
     });
 
     Sound.playMusic("battle");
@@ -507,7 +509,7 @@ export function GameProvider({ children }) {
       return false;
     }
     const { savedAt, ...runData } = saved;
-    setRun(runData);
+    setRun({ ...runData, runStartTime: Date.now() });
     setSavedStoryExists(true);
     setStorySaveError(false);
     return true;
@@ -515,6 +517,9 @@ export function GameProvider({ children }) {
 
   const endRun = useCallback(() => {
     const wasDaily = run?.isDaily;
+    if (run?.runStartTime) {
+      recordPlayTime((Date.now() - run.runStartTime) / 1000);
+    }
     setRun(null);
     if (!wasDaily) {
       clearStoryRun();
@@ -528,6 +533,9 @@ export function GameProvider({ children }) {
   // The in-memory run is cleared so Home shows the "Continue Saved Run" button.
   const saveAndExit = useCallback(() => {
     if (run && !run.isDaily && !["victory", "defeat", "dailyResult"].includes(run.phase)) {
+      if (run.runStartTime) {
+        recordPlayTime((Date.now() - run.runStartTime) / 1000);
+      }
       saveStoryRun(run);
       setSavedStoryExists(true);
     }

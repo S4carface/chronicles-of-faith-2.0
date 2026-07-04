@@ -2,11 +2,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Pencil, Compass, Swords, BookOpen, Flame, Layers,
-  Trophy, Skull, Crown, Coins, Target, Shield, Heart, Sparkles, Star,
+  Trophy, Skull, Crown, Coins, Target, Shield, Heart, Sparkles, Star, Clock, Award,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { CARD_MAP, getCardById } from "@/data/cards";
 import { getStats, syncStatsToCloud } from "@/game/playerStats";
+import { ACHIEVEMENTS } from "@/data/achievements";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import CollapsibleSection from "@/components/game/CollapsibleSection";
@@ -48,6 +49,14 @@ function SummaryTile({ icon: Icon, label, value, accent }) {
 }
 
 const FAVORITE_CARD_THRESHOLD = 5;
+
+function formatPlayTime(seconds) {
+  if (!seconds || seconds < 60) return "0m";
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
 
 export default function MyJourney() {
   const { profile, saveProfile } = useGame();
@@ -127,7 +136,7 @@ export default function MyJourney() {
           <SummaryTile icon={Target} label="Best Score" value={stats.bestScore} accent="bg-amber-700/30" />
           <SummaryTile icon={Crown} label="Genesis Done" value={genesisCompleted} accent="bg-amber-700/30" />
           <SummaryTile icon={Flame} label="Daily Streak" value={profile.dailyStreak || 0} accent="bg-orange-900/30" />
-          <SummaryTile icon={Layers} label="Cards Found" value={cardsCollected} />
+          <SummaryTile icon={Award} label="Achievements" value={`${profile.achievements.length}/${ACHIEVEMENTS.length}`} accent="bg-amber-700/30" />
         </div>
       </div>
 
@@ -171,6 +180,8 @@ export default function MyJourney() {
               <StatTile icon={Trophy} label="Runs Completed" value={stats.runsCompleted} accent="bg-emerald-900/30" />
               <StatTile icon={Crown} label="Runs Won" value={stats.runsWon} accent="bg-amber-700/30" />
               <StatTile icon={Star} label="Genesis Completed" value={genesisCompleted} accent="bg-amber-700/30" />
+              <StatTile icon={Clock} label="Play Time" value={formatPlayTime(stats.totalPlayTimeSeconds)} accent="bg-sky-900/30" />
+              <StatTile icon={Award} label="Achievements" value={`${profile.achievements.length}/${ACHIEVEMENTS.length}`} accent="bg-amber-700/30" />
             </div>
           )}
         </CollapsibleSection>

@@ -35,6 +35,7 @@ const DEFAULT_STATS = {
   totalDamageDealt: 0,
   totalBlockGained: 0,
   totalHealingDone: 0,
+  totalPlayTimeSeconds: 0,
 };
 
 export function loadStats() {
@@ -158,6 +159,11 @@ export function recordDevotionRead(streak = 0) {
     ...s,
     bestDevotionStreak: Math.max(s.bestDevotionStreak || 0, streak),
   }));
+}
+
+// ---- Play Time ----
+export function recordPlayTime(seconds) {
+  if (seconds > 0) mutate(s => ({ ...s, totalPlayTimeSeconds: (s.totalPlayTimeSeconds || 0) + Math.round(seconds) }));
 }
 
 // ---- Best-effort online sync (structured for future; safe if entity/cloud unavailable) ----

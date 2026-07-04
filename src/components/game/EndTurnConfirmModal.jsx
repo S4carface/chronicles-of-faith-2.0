@@ -18,12 +18,12 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
         {isSelected ? (
           <>
             <p className="text-center text-amber-100 text-sm leading-relaxed mb-5">
-              You have a card selected. End turn without playing it?
+              You selected a card but have not played it. End turn anyway?
             </p>
             <div className="space-y-2.5">
               <button
                 onClick={onPlaySelected}
-                className="w-full px-5 py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-sm hover:from-emerald-600/50 hover:to-emerald-500/40 transition flex items-center justify-center gap-2"
+                className="w-full px-5 py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-sm hover:from-emerald-600/50 hover:to-emerald-500/40 transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
                 <Play className="w-4 h-4" /> Play Selected Card
               </button>
@@ -31,7 +31,7 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
                 onClick={onEndTurn}
                 className="w-full px-5 py-2.5 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 font-medium text-sm hover:bg-amber-600/30 transition"
               >
-                End Turn
+                End Turn Anyway
               </button>
               <button
                 onClick={onCancel}
@@ -44,12 +44,12 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
         ) : (
           <>
             <p className="text-center text-amber-100 text-sm leading-relaxed mb-5">
-              Enemy is about to attack. You still have playable cards. End your turn anyway?
+              You still have playable cards. End turn?
             </p>
             <div className="space-y-2.5">
               <button
                 onClick={onCancel}
-                className="w-full px-5 py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-sm hover:from-emerald-600/50 hover:to-emerald-500/40 transition"
+                className="w-full px-5 py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-sm hover:from-emerald-600/50 hover:to-emerald-500/40 transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
               >
                 Keep Playing
               </button>

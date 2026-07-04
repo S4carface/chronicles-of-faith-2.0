@@ -11,8 +11,8 @@ import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import GuidanceHint from "@/components/game/GuidanceHint";
 import { getIntentExplanation } from "@/game/intentExplanations";
-import TutorialOverlay from "@/components/game/TutorialOverlay";
 import BattleHelper from "@/components/game/BattleHelper";
+import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
 import useResponsive from "@/hooks/useResponsive";
 import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -49,6 +49,39 @@ const INTENT_TYPE_MAP = {
   curse: { art: INTENT_ART.curse, label: "Curse", color: "text-purple-300", border: "border-purple-500/40" },
 };
 
+// Convert a raw battle log entry into plain language for the collapsed summary line.
+function simplifyLogEntry(entry) {
+  if (!entry) return "";
+  let s = entry;
+  // Player actions
+  s = s.replace(/^⚔️\s.*?—\s(\d+)\s*dmg.*$/, `You dealt $1 damage`);
+  s = s.replace(/^🛡️\s.*?—\s(\d+)\s*block.*$/, `You gained $1 Block`);
+  s = s.replace(/^💚\s.*?—\s\+(\d+)\s*HP.*$/, `You healed $1 HP`);
+  s = s.replace(/^✨\s.*?—\s(\d+)\s*(?:holy )?dmg.*$/, `You dealt $1 holy damage`);
+  s = s.replace(/^🎵\s.*—\s\+2\s*Faith$/, `You gained 2 Faith`);
+  s = s.replace(/^🌈\s.*—\s\+3\s*Faith$/, `You gained 3 Faith`);
+  s = s.replace(/^📖\s.*—\s*drew\s(\d+)$/, `You drew $1 cards`);
+  s = s.replace(/^🪜\s.*—\s*drew\s(\d+)$/, `You drew $1 cards`);
+  s = s.replace(/^🦁\sCounter.*$/, ``);
+  s = s.replace(/^🎯\s.*—\snext attack.*$/, `Next attack will deal double damage`);
+  // Enemy actions
+  s = s.replace(/^💥\s.*?—\s(\d+)\s*dmg.*$/, `Enemy dealt $1 damage`);
+  s = s.replace(/^🛡️\sEnemy\sblocked\s(\d+)$/, `Enemy blocked $1`);
+  s = s.replace(/^🛡️\sBlocked\s(\d+)$/, `Blocked $1 damage`);
+  s = s.replace(/^🛡️\s.*?—\s\+(\d+)\s*block.*$/, `Enemy gained $1 Block`);
+  s = s.replace(/^✨\s.*?\s.*?healed\s(\d+)$/, `Enemy healed $1 HP`);
+  s = s.replace(/^✨\s\+(\d+)\s*HP.*$/, `Enemy healed $1 HP`);
+  s = s.replace(/^☠️\sCurse.*$/, `Curse dealt damage`);
+  s = s.replace(/^⚠️\s.*?\sreadies\s(.*)$/, `Enemy will attack next.`);
+  s = s.replace(/^⚠️\s.*?\sprepares.*$/, `Enemy will attack next.`);
+  s = s.replace(/^⚠️\sScripture\sblocked.*$/, `Scripture blocked next turn`);
+  s = s.replace(/^—\sTurn ends—$/, `Turn ended`);
+  s = s.replace(/^🌈\sCovenant.*$/, `Covenant Shield activated`);
+  // Battle start
+  s = s.replace(/^Battle with.*begins!$/, `Battle begins!`);
+  return s.trim();
+}
+
 export default function BattleScreen() {
   const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun, saveAndExit } = useGame();
   const { isDesktop } = useResponsive();
@@ -74,7 +107,7 @@ export default function BattleScreen() {
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
-  const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
+  const [showGuideCallouts, setShowGuideCallouts] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
   const [showHelpTips, setShowHelpTips] = useState(false);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
@@ -154,8 +187,7 @@ export default function BattleScreen() {
     }
   }, [battleState]);
 
-  // Desktop: expand combat log by default for readability
-  useEffect(() => { setShowLog(isDesktop); }, [isDesktop]);
+  // Battle log collapsed by default — expandable via Details button
 
   // Cleanup undo timeout on unmount
   useEffect(() => {
@@ -164,8 +196,8 @@ export default function BattleScreen() {
     };
   }, []);
 
-  const handleTutorialComplete = () => {
-    setShowTutorial(false);
+  const handleGuideComplete = () => {
+    setShowGuideCallouts(false);
     saveProfile({ tutorialSeen: true });
   };
 
@@ -305,8 +337,8 @@ export default function BattleScreen() {
       }
     }
 
-    // Warning 2: playable cards while enemy about to attack (Easy/Guided only)
-    if (isEasyOrGuided && !isHardOrExpert) {
+    // Warning 2: playable cards remain (all modes except expert, when enemy is attacking)
+    if (!isHardOrExpert) {
       const enemyAttacking = (battleState.enemyHand || []).some(a => a.damage > 0);
       const hasPlayable = battleState.hand.some(cardId => {
         const c = getCardById(cardId);
@@ -770,23 +802,28 @@ export default function BattleScreen() {
         </div>
       </div>
 
-      {/* Combat Log */}
-      <div className="flex-shrink-0 px-3 py-1 lg:py-2">
+      {/* Combat Log — collapsed by default, shows latest result only */}
+      <div className="flex-shrink-0 px-3 py-0.5 lg:py-1">
         <button
           onClick={() => setShowLog(!showLog)}
-          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/15 bg-slate-900/50 text-amber-100/70 text-[9px] lg:text-xs uppercase tracking-wide hover:bg-slate-900/70 transition active:scale-[0.99]"
+          className="w-full flex items-center justify-between px-2 py-1 rounded-md border border-amber-500/10 bg-slate-900/40 text-amber-100/60 text-[10px] lg:text-xs hover:bg-slate-900/60 transition active:scale-[0.99]"
         >
-          <span className="truncate flex items-center gap-1">
-            <span className="text-amber-300/40">Log:</span>
-            {battleState.log[battleState.log.length - 1] || "Battle log"}
+          <span className="truncate flex items-center gap-1 normal-case tracking-normal">
+            {showLog
+              ? <span className="text-amber-300/50 uppercase tracking-wide text-[9px]">Battle Log</span>
+              : <span className="text-amber-100/70">{simplifyLogEntry(battleState.log[battleState.log.length - 1]) || "Battle log"}</span>
+            }
           </span>
-          {showLog ? <ChevronUp className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" /> : <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />}
+          <span className="flex items-center gap-1 text-amber-300/40 text-[9px] uppercase tracking-wide flex-shrink-0">
+            {showLog ? "Hide" : "Details"}
+            {showLog ? <ChevronUp className="w-3 h-3 lg:w-4 lg:h-4" /> : <ChevronDown className="w-3 h-3 lg:w-4 lg:h-4" />}
+          </span>
         </button>
         {showLog && (
-          <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-3 mt-1 max-h-16 lg:max-h-40 overflow-y-auto">
-            {battleState.log.slice(-8).map((entry, i) => (
-              <p key={i} className="text-amber-100/80 text-[11px] lg:text-base leading-snug">
-                {entry}
+          <div className="rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-3 mt-1 max-h-20 lg:max-h-40 overflow-y-auto">
+            {battleState.log.slice(-10).map((entry, i) => (
+              <p key={i} className="text-amber-100/70 text-[11px] lg:text-sm leading-snug">
+                {simplifyLogEntry(entry) || entry}
               </p>
             ))}
           </div>
@@ -1084,14 +1121,14 @@ export default function BattleScreen() {
         </div>
       )}
 
-      {/* Tutorial overlay */}
-      {showTutorial && (
-        <TutorialOverlay onComplete={handleTutorialComplete} />
+      {/* First-battle guided callouts */}
+      {showGuideCallouts && !battleEnd && (
+        <BattleGuideCallouts onComplete={handleGuideComplete} />
       )}
 
       {/* Help tips overlay — reopened via "?" button */}
       {showHelpTips && (
-        <TutorialOverlay onComplete={() => { setShowHelpTips(false); Sound.sfx.click(); }} />
+        <BattleGuideCallouts onComplete={() => { setShowHelpTips(false); Sound.sfx.click(); }} />
       )}
 
       {/* Pause overlay */}

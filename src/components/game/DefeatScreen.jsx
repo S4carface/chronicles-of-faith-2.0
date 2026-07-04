@@ -4,7 +4,7 @@ import { Skull } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
-import { recordGoldEarned, syncStatsToCloud } from "@/game/playerStats";
+import { recordGoldEarned, recordRunProgress, syncStatsToCloud } from "@/game/playerStats";
 import AccountPrompt from "@/components/game/AccountPrompt";
 import { getCurrentUser } from "@/game/cloudSync";
 
@@ -27,6 +27,7 @@ export default function DefeatScreen() {
       saveProfile({ gold: Math.floor((profile.gold || 0) + consolation) });
       recordGoldEarned(consolation);
     }
+    recordRunProgress(run.roomsCleared || 0);
     syncStatsToCloud();
 
     // Gentle account prompt for guests

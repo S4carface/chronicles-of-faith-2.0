@@ -49,6 +49,14 @@
       "type": "number",
       "default": 0
     },
+    "passagesListened": {
+      "type": "number",
+      "default": 0
+    },
+    "bestRoomsCleared": {
+      "type": "number",
+      "default": 0
+    },
     "dailyChallengesCompleted": {
       "type": "number",
       "default": 0
@@ -58,6 +66,10 @@
       "default": 0
     },
     "bestDailyScore": {
+      "type": "number",
+      "default": 0
+    },
+    "bestDevotionStreak": {
       "type": "number",
       "default": 0
     },
@@ -74,6 +86,9 @@
       "default": 0
     },
     "cardUsageJson": {
+      "type": "string"
+    },
+    "bestScoreByDifficultyJson": {
       "type": "string"
     }
   },

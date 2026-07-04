@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BookOpen, Heart, Sun, Volume2, Square } from "lucide-react";
 import { getDailyReflection } from "@/data/dailyReflections";
-import { recordVerseRead } from "@/game/playerStats";
+import { recordVerseRead, recordPassageListened } from "@/game/playerStats";
 import { speakNarration, stopNarration } from "@/game/soundManager";
 import * as Sound from "@/game/soundManager";
 import { useGame } from "@/game/GameContext";
@@ -28,6 +28,7 @@ export default function DailyDevotion() {
       (profile.settings.narrationVolume ?? 50) / 100,
       profile.settings.narrationVoice
     );
+    recordPassageListened();
     setReading(true);
     // Reset state after speech ends — poll since onend is inside soundManager
     const checkEnd = setInterval(() => {

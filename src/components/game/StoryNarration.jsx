@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Volume2, VolumeX, RotateCcw, BookOpen, ArrowRight, Headphones } from "lucide-react";
 import * as Sound from "@/game/soundManager";
+import { recordPassageListened } from "@/game/playerStats";
 import { useGame } from "@/game/GameContext";
 import { HOME_ART } from "@/data/art";
 
@@ -47,6 +48,7 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
     Sound.sfx.click();
     setIsListening(true);
     Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
+    recordPassageListened();
   };
 
   const handleContinue = () => {
@@ -63,6 +65,7 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
 
   const replayNarration = () => {
     Sound.speakNarration(text, (profile.settings.narrationVolume ?? 50) / 100, profile.settings.narrationVoice);
+    recordPassageListened();
   };
 
   const toggleNarration = () => {

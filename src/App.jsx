@@ -21,6 +21,7 @@ import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
 import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
+import ScriptureMastery from "./pages/ScriptureMastery";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/journey" element={<MyJourney />} />
+        <Route path="/mastery" element={<ScriptureMastery />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </GameProvider>

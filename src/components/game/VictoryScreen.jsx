@@ -63,7 +63,7 @@ export default function VictoryScreen() {
     }
 
     // Record lifetime stats (story run won)
-    recordRunWon(finalScore, run.gold || 0);
+    recordRunWon(finalScore, run.gold || 0, run.difficulty || "normal", run.roomsCleared || 0);
     syncStatsToCloud();
 
     // First Genesis completion: guarantee a strong rare card (never legendary)

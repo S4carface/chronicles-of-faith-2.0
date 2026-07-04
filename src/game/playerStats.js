@@ -29,6 +29,9 @@ const DEFAULT_STATS = {
   bestDevotionStreak: 0,
   // Gameplay / Card Mastery
   cardUsage: {},         // { cardId: count }
+  passagesListened: 0,   // scripture passages listened to via TTS
+  bestRoomsCleared: 0,   // furthest stage reached in any Genesis run
+  bestScoreByDifficulty: { easy: 0, normal: 0, hard: 0 },
   totalDamageDealt: 0,
   totalBlockGained: 0,
   totalHealingDone: 0,
@@ -39,7 +42,12 @@ export function loadStats() {
     const raw = localStorage.getItem(STATS_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return { ...DEFAULT_STATS, ...parsed, cardUsage: { ...(parsed.cardUsage || {}) } };
+      return {
+        ...DEFAULT_STATS,
+        ...parsed,
+        cardUsage: { ...(parsed.cardUsage || {}) },
+        bestScoreByDifficulty: { ...DEFAULT_STATS.bestScoreByDifficulty, ...(parsed.bestScoreByDifficulty || {}) },
+      };
     }
   } catch {}
   return { ...DEFAULT_STATS, cardUsage: {} };
@@ -64,14 +72,20 @@ function mutate(fn) {
 export function recordRunStarted() {
   mutate(s => ({ ...s, runsPlayed: s.runsPlayed + 1 }));
 }
-export function recordRunWon(score = 0, gold = 0) {
-  mutate(s => ({
-    ...s,
-    runsCompleted: s.runsCompleted + 1,
-    runsWon: s.runsWon + 1,
-    bestScore: Math.max(s.bestScore, score),
-    totalGoldEarned: s.totalGoldEarned + gold,
-  }));
+export function recordRunWon(score = 0, gold = 0, difficulty = "normal", roomsCleared = 0) {
+  mutate(s => {
+    const diff = difficulty || "normal";
+    const prevBest = s.bestScoreByDifficulty || { easy: 0, normal: 0, hard: 0 };
+    return {
+      ...s,
+      runsCompleted: s.runsCompleted + 1,
+      runsWon: s.runsWon + 1,
+      bestScore: Math.max(s.bestScore, score),
+      totalGoldEarned: s.totalGoldEarned + gold,
+      bestRoomsCleared: Math.max(s.bestRoomsCleared || 0, roomsCleared),
+      bestScoreByDifficulty: { ...prevBest, [diff]: Math.max(prevBest[diff] || 0, score) },
+    };
+  });
 }
 export function recordGoldEarned(amount) {
   if (amount > 0) mutate(s => ({ ...s, totalGoldEarned: s.totalGoldEarned + amount }));
@@ -120,6 +134,12 @@ export function recordTriviaAnswered(correct) {
 export function recordVerseRead() {
   mutate(s => ({ ...s, versesRead: s.versesRead + 1 }));
 }
+export function recordPassageListened() {
+  mutate(s => ({ ...s, passagesListened: s.passagesListened + 1 }));
+}
+export function recordRunProgress(roomsCleared = 0) {
+  mutate(s => ({ ...s, bestRoomsCleared: Math.max(s.bestRoomsCleared || 0, roomsCleared) }));
+}
 
 // ---- Daily Challenge ----
 export function recordDailyCompleted(score = 0, streak = 0, gold = 0) {
@@ -145,11 +165,12 @@ export async function syncStatsToCloud() {
   try {
     const stats = loadStats();
     const playerId = getPlayerId();
-    const { cardUsage, ...rest } = stats;
+    const { cardUsage, bestScoreByDifficulty, ...rest } = stats;
     const payload = {
       ...rest,
       playerId,
       cardUsageJson: JSON.stringify(cardUsage || {}),
+      bestScoreByDifficultyJson: JSON.stringify(bestScoreByDifficulty || {}),
     };
     const existing = await base44.entities.PlayerStats.filter({ playerId }, "-updated_date", 1);
     if (existing && existing.length > 0) {

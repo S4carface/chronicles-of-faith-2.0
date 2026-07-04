@@ -65,7 +65,7 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
       </div>
 
       {/* Desktop: right-side inspector panel */}
-      <div className="hidden lg:flex fixed right-4 top-1/2 -translate-y-1/2 z-40 w-80 animate-fade-in">
+      <div className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 w-96 animate-fade-in">
         <div className="w-full rounded-xl border-2 border-amber-500/30 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.95) 0%, rgba(15,26,48,0.95) 100%)" }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/15">
             <span className="text-amber-300/60 text-[10px] uppercase tracking-wide font-bold">Selected Card</span>

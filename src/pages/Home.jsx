@@ -92,7 +92,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
+    <div className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
       {/* Floating particles */}
       {Array.from({ length: 18 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
@@ -247,14 +247,14 @@ export default function Home() {
             key={item.path}
             to={item.path}
             onClick={() => Sound.sfx.click()}
-            className="flex items-center gap-3 px-3 py-2 lg:px-5 lg:py-4 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
+            className="flex items-center gap-3 px-3 py-2 lg:px-6 lg:py-5 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
             style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.45) 0%, rgba(15,26,48,0.45) 100%)" }}
           >
-            <div className="flex-shrink-0 w-8 h-8 lg:w-12 lg:h-12 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
+            <div className="flex-shrink-0 w-8 h-8 lg:w-14 lg:h-14 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors">
               <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="font-serif text-amber-100 text-[13px] lg:text-base leading-tight">{item.label}</div>
+              <div className="font-serif text-amber-100 text-[13px] lg:text-lg leading-tight">{item.label}</div>
               <div className="text-amber-100/40 text-[10px] lg:text-sm leading-tight">{item.desc}</div>
             </div>
             {item.status && (
@@ -275,14 +275,14 @@ export default function Home() {
               key={item.path}
               to={item.path}
               onClick={() => Sound.sfx.click()}
-              className="flex items-center gap-2.5 px-3 py-1.5 lg:px-4 lg:py-2.5 rounded-lg border border-amber-500/10 hover:border-amber-400/30 hover:bg-amber-500/5 transition-all duration-200 active:scale-[0.99] group"
+              className="flex items-center gap-2.5 px-3 py-1.5 lg:px-5 lg:py-3 rounded-lg border border-amber-500/10 hover:border-amber-400/30 hover:bg-amber-500/5 transition-all duration-200 active:scale-[0.99] group"
             >
-              <div className="flex-shrink-0 w-6 h-6 lg:w-9 lg:h-9 rounded-md overflow-hidden border border-amber-500/15 group-hover:border-amber-400/30 transition-colors">
+              <div className="flex-shrink-0 w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden border border-amber-500/15 group-hover:border-amber-400/30 transition-colors">
                 <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="font-serif text-amber-100/80 text-[12px] lg:text-sm leading-tight">{item.label}</div>
-                <div className="text-amber-100/30 text-[9px] lg:text-xs leading-tight">{item.desc}</div>
+                <div className="font-serif text-amber-100/80 text-[12px] lg:text-base leading-tight">{item.label}</div>
+                <div className="text-amber-100/30 text-[9px] lg:text-sm leading-tight">{item.desc}</div>
               </div>
               {item.status && (
                 <span className="flex-shrink-0 text-amber-300/50 text-[9px] lg:text-xs font-medium font-serif tracking-wide">

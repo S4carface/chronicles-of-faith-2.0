@@ -108,44 +108,44 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         selected && playable && "ring-4 ring-amber-300 scale-110 shadow-2xl shadow-amber-400/60 z-20 brightness-110",
         selected && !playable && "ring-4 ring-amber-400/40 scale-105 z-10",
         !playable && onClick && "opacity-60",
-        small ? "w-20 h-36" : "w-36 h-52",
+        small ? "w-20 h-36" : "w-40 h-60",
         inHand && "flex-shrink-0"
       )}
     >
       {/* Cost badge */}
-      <div className={cn("absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm z-10", style.badge, "border", style.border)}>
+      <div className={cn("absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm z-10", small ? "w-7 h-7 text-sm" : "w-8 h-8 text-base", style.badge, "border", style.border)}>
         <span className="text-white">{card.cost}</span>
       </div>
 
       {/* Rarity badge */}
-      <div className={cn("absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8px] uppercase font-bold tracking-wide z-10", style.badge)}>
+      <div className={cn("absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide z-10", small ? "text-[8px]" : "text-[9px]", style.badge)}>
         {card.rarity}
       </div>
 
       {/* Card artwork */}
-      <div className={cn("flex items-center justify-center mt-7 mb-1 overflow-hidden rounded", small ? "h-14" : "h-14")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className={cn("object-cover animate-icon-float", small ? "w-14 h-14" : "w-14 h-14")} />
+      <div className={cn("flex items-center justify-center mt-7 mb-1 overflow-hidden rounded", small ? "h-14" : "h-20")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className={cn("object-cover animate-icon-float", small ? "w-14 h-14" : "w-20 h-20")} />
       </div>
 
       {/* Card name */}
-      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[9px]" : "text-xs", style.label)}>
+      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[9px]" : "text-sm", style.label)}>
         {card.name}
       </div>
 
       {/* Type */}
-      <div className={cn("text-center text-[8px] mt-0.5 font-semibold", typeInfo.color)}>
+      <div className={cn("text-center mt-0.5 font-semibold", small ? "text-[8px]" : "text-[10px]", typeInfo.color)}>
         {typeInfo.text}
       </div>
 
       {/* Effect text */}
       {!small && (
-        <div className="px-2 mt-1 text-[9px] text-slate-200 text-center leading-tight h-10 overflow-hidden">
+        <div className="px-2 mt-1 text-[11px] text-slate-200 text-center leading-tight h-12 overflow-hidden">
           {effectText}
         </div>
       )}
 
       {/* Verse */}
-      <div className={cn("text-center text-[7px] mt-auto py-1 border-t border-white/10 italic", style.label)}>
+      <div className={cn("text-center text-[8px] mt-auto py-1 border-t border-white/10 italic", small ? "text-[7px]" : "text-[9px]", style.label)}>
         {card.verse}
       </div>
     </div>

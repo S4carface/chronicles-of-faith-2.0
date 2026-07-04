@@ -87,10 +87,14 @@ export default function Home() {
 
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
-  const devotionPrayedToday = profile.devotionReadDate === new Date().toISOString().slice(0, 10);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const devotionPrayedToday = profile.devotionReadDate === todayStr;
+  const battleDoneToday = profile.lastDailyDate === todayStr;
+  const battleStatus = battleDoneToday ? "✓ Done" : (profile.dailyStreak > 0 ? `${profile.dailyStreak}-day streak` : "New today");
+  const prayerStatus = devotionPrayedToday ? "✓ Prayed" : (profile.devotionStreak > 0 ? `${profile.devotionStreak}-day streak` : null);
   const primaryItems = [
-    { label: "Daily Battle", art: MENU_ART.daily, path: "/daily", desc: "One shared battle. Compete for the best score.", status: "New today" },
-    { label: "Daily Prayer", art: HOME_ART.cross, path: "/daily-prayer", desc: "A short scripture and prayer for today.", status: devotionPrayedToday ? "✓ Prayed" : null },
+    { label: "Daily Battle", art: MENU_ART.daily, path: "/daily", desc: "One shared battle. Compete for the best score.", status: battleStatus },
+    { label: "Daily Prayer", art: HOME_ART.cross, path: "/daily-prayer", desc: "A short scripture and prayer for today.", status: prayerStatus },
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
     { label: "Faith Progress", art: MENU_ART.progress, path: "/faith-progress", desc: "Track your Bible learning progress", status: null },

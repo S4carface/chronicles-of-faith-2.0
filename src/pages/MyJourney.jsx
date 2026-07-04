@@ -132,10 +132,11 @@ export default function MyJourney() {
 
       {/* Summary card */}
       <div className="w-full max-w-2xl mb-4 rounded-xl border-2 border-amber-400/25 p-3 lg:p-4" style={{ background: "linear-gradient(135deg, rgba(30,40,68,0.6) 0%, rgba(15,26,48,0.6) 100%)" }}>
-        <div className="grid grid-cols-4 gap-2 lg:gap-3">
+        <div className="grid grid-cols-5 gap-2 lg:gap-3">
           <SummaryTile icon={Target} label="Best Score" value={stats.bestScore} accent="bg-amber-700/30" />
           <SummaryTile icon={Crown} label="Genesis Done" value={genesisCompleted} accent="bg-amber-700/30" />
-          <SummaryTile icon={Flame} label="Daily Streak" value={profile.dailyStreak || 0} accent="bg-orange-900/30" />
+          <SummaryTile icon={Flame} label="Battle Streak" value={profile.dailyStreak || 0} accent="bg-orange-900/30" />
+          <SummaryTile icon={Heart} label="Prayer Streak" value={profile.devotionStreak || 0} accent="bg-emerald-900/30" />
           <SummaryTile icon={Award} label="Achievements" value={`${profile.achievements.length}/${ACHIEVEMENTS.length}`} accent="bg-amber-700/30" />
         </div>
       </div>

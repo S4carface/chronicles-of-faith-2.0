@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Swords, Check, Flame, Crown, Coins, Sparkles } from "lucide-react";
+import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
@@ -150,7 +150,15 @@ export default function DailyChallenge() {
                 <Flame className="w-5 h-5 text-orange-400" />
               </div>
               <p className="text-xl lg:text-2xl font-bold text-amber-200">{profile.dailyStreak}</p>
-              <p className="text-amber-100/50 text-[10px] lg:text-xs">Daily Battle Streak</p>
+              <p className="text-amber-100/50 text-[10px] lg:text-xs">Battle Streak</p>
+            </div>
+            <div className="w-px h-10 bg-amber-500/20" />
+            <div>
+              <div className="flex justify-center mb-1">
+                <Heart className="w-5 h-5 text-emerald-400" />
+              </div>
+              <p className="text-xl lg:text-2xl font-bold text-emerald-200">{profile.devotionStreak || 0}</p>
+              <p className="text-amber-100/50 text-[10px] lg:text-xs">Prayer Streak</p>
             </div>
             <div className="w-px h-10 bg-amber-500/20" />
             <div>

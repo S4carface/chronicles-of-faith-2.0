@@ -138,7 +138,14 @@ export function GameProvider({ children }) {
   }, [profile.settings]);
 
   const saveProfile = useCallback((updates) => {
-    setProfile(prev => ({ ...prev, ...updates }));
+    setProfile(prev => {
+      const next = { ...prev, ...updates };
+      // Defense-in-depth: sanitize playerName on every save, no matter the source
+      if (updates.playerName !== undefined) {
+        next.playerName = sanitizePlayerName(updates.playerName);
+      }
+      return next;
+    });
   }, []);
 
   const unlockAchievement = useCallback((id) => {

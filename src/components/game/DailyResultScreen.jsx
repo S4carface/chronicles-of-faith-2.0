@@ -132,7 +132,7 @@ export default function DailyResultScreen() {
   const isVictory = result.result === "victory";
   const triviaCorrect = run.dailyTriviaCorrect;
   const goldEarned = isVictory && streakUpdated ? (dailyConfig?.reward?.gold || 0) : 0;
-  const playerNameDisplay = profile.playerName || "Anonymous Pilgrim";
+  const playerNameDisplay = sanitizePlayerName(profile.playerName);
 
   const handleReturn = () => {
     Sound.sfx.click();

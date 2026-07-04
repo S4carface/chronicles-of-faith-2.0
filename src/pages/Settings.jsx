@@ -7,6 +7,7 @@ import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import { syncProfileToCloud } from "@/game/cloudSync";
+import { sanitizePlayerName } from "@/game/nameValidator";
 
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
@@ -299,7 +300,7 @@ export default function Settings() {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                value={profile.playerName || "Anonymous Pilgrim"}
+                value={sanitizePlayerName(profile.playerName)}
                 readOnly
                 placeholder="Enter your name"
                 className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"

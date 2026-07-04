@@ -95,7 +95,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             )}
                             style={{ filter: "blur(1px)", opacity: 0.4 }}
                           >
-                            <img src={PLACEHOLDER_ART} alt="" className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded opacity-30" />
+                            <img src={PLACEHOLDER_ART} alt="" className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded opacity-30" style={{ transform: "scale(1.03)" }} />
                           </div>
                           <span className="text-[9px] mt-1.5 h-6" />
                         </div>
@@ -123,7 +123,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                           {isCleared && !isBoss ? (
                             <span className="text-emerald-400 text-lg lg:text-2xl font-bold">✓</span>
                           ) : (
-                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="w-10 h-10 lg:w-14 lg:h-14 object-cover" />
+                            <img src={ROOM_ART[node.type] || PLACEHOLDER_ART} alt={ROOM_LABELS[node.type]} className="w-10 h-10 lg:w-14 lg:h-14 object-cover" style={{ transform: "scale(1.03)" }} />
                           )}
                           {recommendation && isAvailable && !isCleared && (
                             <span className={cn(

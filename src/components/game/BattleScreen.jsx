@@ -865,7 +865,7 @@ export default function BattleScreen() {
               <div className="absolute inset-0 -m-1 rounded-full border-2 border-blue-400/80 pointer-events-none" style={{ boxShadow: "0 0 20px rgba(96,165,250,0.7)" }} />
             )}
             {heroArt ? (
-              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" />
+              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/30" style={{ transform: "scale(1.03)" }} />
             ) : (
               <span className="text-2xl lg:text-4xl">{hero.icon}</span>
             )}

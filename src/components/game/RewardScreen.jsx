@@ -203,7 +203,9 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
           </span>
           <span className="text-xs text-amber-300/60">{card.cost} ✨</span>
         </div>
-        <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-14 h-14 object-cover rounded-lg animate-fade-in" />
+        <div className="w-14 h-14 rounded-lg overflow-hidden animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+          <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} />
+        </div>
         <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
         <div className={`text-[8px] uppercase font-bold tracking-wide ${
           card.rarity === "legendary" ? "text-amber-300" : card.rarity === "rare" ? "text-emerald-300" : "text-sky-300"

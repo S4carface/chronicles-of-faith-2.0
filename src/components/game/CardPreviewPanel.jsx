@@ -33,9 +33,9 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
         <div className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="flex items-start gap-3 mb-3">
             <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
-              <div className="relative w-12 h-12" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
+              <div className="relative w-12 h-12 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
                 <span className="absolute top-0 left-0 w-4 h-4 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[8px] font-bold z-10">{card.cost}</span>
-                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" /> : <span className="text-xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-xl flex items-center justify-center w-full h-full">{card.icon}</span>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -75,9 +75,9 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
           </div>
           <div className="flex items-center gap-3 px-4 py-3">
             <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
-              <div className="relative w-16 h-16" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
+              <div className="relative w-16 h-16 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
                 <span className="absolute top-0 left-0 w-5 h-5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[10px] font-bold z-10">{card.cost}</span>
-                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
               </div>
             </div>
             <div className="min-w-0">

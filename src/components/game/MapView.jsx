@@ -114,7 +114,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             "relative flex items-center justify-center rounded-xl border-2 overflow-hidden transition-all duration-300",
                             isBoss ? "w-16 h-16 lg:w-24 lg:h-24" : "w-14 h-14 lg:w-20 lg:h-20",
                             isCurrent && "ring-2 ring-amber-300 scale-110 shadow-lg shadow-amber-400/40",
-                            isAvailable && !isCleared && "border-amber-400/70 bg-amber-500/15 hover:scale-110 hover:bg-amber-500/25 cursor-pointer animate-pulse shadow-lg shadow-amber-500/20",
+                            isAvailable && !isCleared && "border-amber-400/70 bg-amber-500/15 hover:scale-110 hover:bg-amber-500/25 cursor-pointer animate-sacred-glow",
                             isCleared && "border-emerald-600/40 bg-emerald-900/20 opacity-50",
                             !isAvailable && !isCleared && "border-slate-600/40 bg-slate-800/40 opacity-40 cursor-not-allowed",
                             isBoss && isAvailable && !isCleared && "border-red-400/70 bg-red-500/15 shadow-lg shadow-red-500/30"

@@ -100,7 +100,8 @@ module.exports = {
   			'shield-glow': 'shieldGlow 0.6s ease-in-out',
   			'heal-glow': 'healGlow 0.6s ease-in-out',
   			'faith-particle': 'faithParticle 0.8s ease-out',
-  			'card-swirl': 'cardSwirl 0.9s ease-in-out'
+  			'card-swirl': 'cardSwirl 0.9s ease-in-out',
+  			'sacred-glow': 'sacredGlow 2.8s ease-in-out infinite'
   		},
   		keyframes: {
   			'fade-in': {
@@ -110,6 +111,10 @@ module.exports = {
   			'slide-down': {
   				from: { transform: 'translateY(-100px)', opacity: '0' },
   				to: { transform: 'translateY(0)', opacity: '1' }
+  			},
+  			'sacredGlow': {
+  				'0%, 100%': { boxShadow: '0 0 8px 0px rgba(251,191,36,0.15)' },
+  				'50%': { boxShadow: '0 0 22px 4px rgba(251,191,36,0.45)' }
   			}
   		}
   	}

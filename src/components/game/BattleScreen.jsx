@@ -73,6 +73,7 @@ export default function BattleScreen() {
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
   const [showTutorial, setShowTutorial] = useState(!profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily);
+  const [showHelpTips, setShowHelpTips] = useState(false);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
   const [intentExplain, setIntentExplain] = useState(null);
@@ -648,8 +649,15 @@ export default function BattleScreen() {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>
       <div className="flex flex-col h-full w-full lg:max-w-[1400px] lg:mx-auto">
-      {/* Top row: pause */}
-      <div className="flex items-center justify-end px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
+      {/* Top row: help + pause */}
+      <div className="flex items-center justify-end gap-2 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
+        <button
+          onClick={() => { setShowHelpTips(true); Sound.sfx.click(); }}
+          className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
+          title="Battle Tips"
+        >
+          <span className="text-sm font-bold">?</span>
+        </button>
         <button
           onClick={() => { setShowPause(true); Sound.sfx.click(); }}
           className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
@@ -1060,6 +1068,11 @@ export default function BattleScreen() {
       {/* Tutorial overlay */}
       {showTutorial && (
         <TutorialOverlay onComplete={handleTutorialComplete} />
+      )}
+
+      {/* Help tips overlay — reopened via "?" button */}
+      {showHelpTips && (
+        <TutorialOverlay onComplete={() => { setShowHelpTips(false); Sound.sfx.click(); }} />
       )}
 
       {/* Pause overlay */}

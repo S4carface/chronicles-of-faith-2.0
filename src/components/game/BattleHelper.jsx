@@ -8,10 +8,14 @@ export default function BattleHelper({ battleState, selectedCard, enemy }) {
   const helperText = useMemo(() => {
     if (!battleState || battleState.turn !== "player") return null;
 
+    if (battleState.energy === 0 && battleState.freeCardsRemaining === 0)
+      return "No Faith left. End your turn to refill.";
+    if (battleState.deck.length === 0 && battleState.hand.length > 0)
+      return "Your deck is empty. End your turn to reshuffle if possible.";
+    if (battleState.deck.length === 0 && battleState.hand.length === 0)
+      return "Your deck is empty. End your turn to reshuffle if possible.";
     if (selectedCard !== null) return "Card selected — press Play to use it.";
     if (battleState.hand.length === 0) return "No cards in hand. End turn to draw.";
-    if (battleState.energy === 0 && battleState.freeCardsRemaining === 0)
-      return "You have no Faith. End your turn to refill.";
 
     const enemyActions = battleState.enemyHand || [];
     const willShield = enemyActions.some(a => a.effect === "block");

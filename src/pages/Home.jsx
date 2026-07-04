@@ -78,13 +78,15 @@ export default function Home() {
 
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;
-  const menuItems = [
-    { label: "My Journey", art: MENU_ART.progress, path: "/journey", desc: "Your progress, streaks, and Bible learning", status: null },
-    { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
-    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs & relics", status: `${profile.gold || 0} gold` },
-    { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
+  const primaryItems = [
     { label: "Daily Challenge", art: MENU_ART.daily, path: "/daily", desc: "Today's verse, prayer, and one shared battle", status: "New today" },
+    { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
+    { label: "My Journey", art: MENU_ART.progress, path: "/journey", desc: "Stats, streaks, and Bible learning", status: null },
+  ];
+  const secondaryItems = [
+    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs with earned gold.", status: `${profile.gold || 0} gold` },
+    { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
     { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
     { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
   ];
@@ -238,9 +240,9 @@ export default function Home() {
         </div>
       )}
 
-      {/* Secondary menu — single column on mobile, two-column grid on desktop */}
-      <div className="relative w-full max-w-md lg:max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-4 lg:px-0">
-        {menuItems.map((item) => (
+      {/* Primary menu — four main tiles */}
+      <div className="relative w-full max-w-md lg:max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-4">
+        {primaryItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -262,6 +264,34 @@ export default function Home() {
             )}
           </Link>
         ))}
+      </div>
+
+      {/* Secondary menu — "More" section, visually subdued */}
+      <div className="relative w-full max-w-md lg:max-w-[1100px] mt-4 lg:mt-6">
+        <p className="text-amber-100/30 text-[10px] lg:text-xs uppercase tracking-widest font-serif text-center mb-2">More</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 lg:gap-2 opacity-70 hover:opacity-100 transition-opacity">
+          {secondaryItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => Sound.sfx.click()}
+              className="flex items-center gap-2.5 px-3 py-1.5 lg:px-4 lg:py-2.5 rounded-lg border border-amber-500/10 hover:border-amber-400/30 hover:bg-amber-500/5 transition-all duration-200 active:scale-[0.99] group"
+            >
+              <div className="flex-shrink-0 w-6 h-6 lg:w-9 lg:h-9 rounded-md overflow-hidden border border-amber-500/15 group-hover:border-amber-400/30 transition-colors">
+                <img src={item.art} alt={item.label} className="w-full h-full object-cover" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-serif text-amber-100/80 text-[12px] lg:text-sm leading-tight">{item.label}</div>
+                <div className="text-amber-100/30 text-[9px] lg:text-xs leading-tight">{item.desc}</div>
+              </div>
+              {item.status && (
+                <span className="flex-shrink-0 text-amber-300/50 text-[9px] lg:text-xs font-medium font-serif tracking-wide">
+                  {item.status}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">

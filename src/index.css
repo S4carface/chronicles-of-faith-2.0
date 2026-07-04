@@ -139,7 +139,7 @@
     object-fit: cover;
     object-position: center;
     display: block;
-    transform: scale(1.25);
+    transform: scale(1.35);
     will-change: transform;
     /* Disable iOS/Safari long-press image callout, save, copy, and drag */
     -webkit-touch-callout: none;

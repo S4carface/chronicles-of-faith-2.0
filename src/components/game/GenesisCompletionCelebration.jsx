@@ -132,12 +132,12 @@ export default function GenesisCompletionCelebration({ score, stats, nextUnlock,
               animation: "float 4s ease-in-out infinite",
             }}
           />
-          <img
-            src={VICTORY_ART.crest}
-            alt="Genesis Emblem"
-            className="relative w-28 h-28 lg:w-32 lg:h-32 object-cover rounded-full border-2 border-amber-300/70"
-            style={{ boxShadow: "0 0 50px rgba(251,191,36,0.5), 0 0 100px rgba(251,191,36,0.3)" }}
-          />
+          <div
+            className="relative w-28 h-28 lg:w-32 lg:h-32 rounded-full border-2 border-amber-300/70 overflow-hidden"
+            style={{ boxShadow: "0 0 50px rgba(251,191,36,0.5), 0 0 100px rgba(251,191,36,0.3)", background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+          >
+            <img src={VICTORY_ART.crest} alt="Genesis Emblem" className="art-portrait" />
+          </div>
         </div>
 
         {/* Title + stats */}

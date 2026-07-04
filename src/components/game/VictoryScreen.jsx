@@ -173,7 +173,9 @@ export default function VictoryScreen() {
       <div className="relative text-center max-w-lg">
         {/* Victory crest */}
         <div className="mb-4 flex justify-center">
-          <img src={VICTORY_ART.crest} alt="Victory" className="w-24 h-24 object-cover rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 animate-icon-float" />
+          <div className="w-24 h-24 rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 overflow-hidden animate-icon-float" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+            <img src={VICTORY_ART.crest} alt="Victory" className="art-portrait" />
+          </div>
         </div>
         <h1 className="text-5xl font-serif text-amber-200 mb-3">Genesis Complete!</h1>
         <p className="text-amber-100/70 text-lg mb-6 font-serif italic">

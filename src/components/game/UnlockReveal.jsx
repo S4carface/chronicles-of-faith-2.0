@@ -182,7 +182,7 @@ export default function UnlockReveal() {
             background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
           }}
         >
-          <img src={content.art} alt={content.name} className="w-full h-full object-cover" />
+          <img src={content.art} alt={content.name} className="art-portrait" />
           <div
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{ boxShadow: `inset 0 0 20px ${content.glowColor}66` }}

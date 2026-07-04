@@ -35,7 +35,7 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
             <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
               <div className="relative w-10 h-10 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
                 <span className="absolute top-0 left-0 w-3.5 h-3.5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[7px] font-bold z-10">{card.cost}</span>
-                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-lg flex items-center justify-center w-full h-full">{card.icon}</span>}
+                {artUrl ? <img src={artUrl} alt={card.name} className="art-portrait" /> : <span className="text-lg flex items-center justify-center w-full h-full">{card.icon}</span>}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export default function CardPreviewPanel({ card, playable, blocked, onPlay, onCa
             <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
               <div className="relative w-16 h-16 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
                 <span className="absolute top-0 left-0 w-5 h-5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[10px] font-bold z-10">{card.cost}</span>
-                {artUrl ? <img src={artUrl} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
+                {artUrl ? <img src={artUrl} alt={card.name} className="art-portrait" /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
               </div>
             </div>
             <div className="min-w-0">

@@ -100,7 +100,9 @@ export default function HeroSelect() {
             >
               <div className="mb-3 flex justify-center">
                 {unlocked && HERO_ART[hero.id] ? (
-                  <img src={HERO_ART[hero.id]} alt={hero.name} className="w-28 h-28 lg:w-44 lg:h-44 object-cover rounded-xl border-2 border-amber-400/40" />
+                  <div className="w-28 h-28 lg:w-44 lg:h-44 rounded-xl border-2 border-amber-400/40 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+                    <img src={HERO_ART[hero.id]} alt={hero.name} className="art-portrait" />
+                  </div>
                 ) : (
                   <span className="text-7xl lg:text-8xl">{unlocked ? hero.icon : "🔒"}</span>
                 )}

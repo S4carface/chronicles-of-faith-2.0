@@ -151,7 +151,7 @@ export default function CardReveal({ unlock, onDismiss }) {
             background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
           }}
         >
-          <img src={art} alt={card.name} className="w-full h-full object-cover" />
+          <img src={art} alt={card.name} className="art-portrait" />
           <div
             className="absolute inset-0 pointer-events-none"
             style={{ boxShadow: `inset 0 0 16px ${r.glow}55` }}

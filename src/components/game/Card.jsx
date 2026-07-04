@@ -124,7 +124,7 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
 
       {/* Card artwork */}
       <div className={cn("mt-7 mb-1 overflow-hidden rounded", small ? "h-14" : "h-20")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="w-full h-full object-cover animate-icon-float" style={{ transform: "scale(1.03)" }} />
+        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
       </div>
 
       {/* Card name */}

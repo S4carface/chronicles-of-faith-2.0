@@ -838,7 +838,7 @@ export default function BattleScreen() {
           >
             {enemyArt ? (
               <div className="w-24 h-24 lg:w-40 lg:h-40 rounded-lg overflow-hidden relative" style={{ background: "#0A0F1E", border: "2px solid rgba(201,168,76,0.45)", boxShadow: "0 0 20px rgba(201,168,76,0.15), inset 0 0 30px rgba(8,12,24,0.8)" }}>
-                <img src={enemyArt} alt={enemy.name} className="w-full h-full object-cover block" style={{ transform: "scale(1.06)", filter: "contrast(1.05) saturate(0.95)" }} />
+                <img src={enemyArt} alt={enemy.name} className="art-portrait" style={{ filter: "contrast(1.05) saturate(0.95)" }} />
                 <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, rgba(8,12,24,0.5) 100%)" }} />
               </div>
             ) : (
@@ -961,7 +961,9 @@ export default function BattleScreen() {
               <div className="absolute inset-0 -m-1 rounded-full border-2 border-blue-400/80 pointer-events-none" style={{ boxShadow: "0 0 20px rgba(96,165,250,0.7)" }} />
             )}
             {heroArt ? (
-              <img src={heroArt} alt={hero.name} className="w-8 h-8 lg:w-12 lg:h-12 object-cover rounded-full border border-amber-500/40" style={{ transform: "scale(1.03)", background: "#0A0F1E" }} />
+              <span className="block w-8 h-8 lg:w-12 lg:h-12 rounded-full border border-amber-500/40 overflow-hidden" style={{ background: "#0A0F1E" }}>
+                <img src={heroArt} alt={hero.name} className="art-portrait" />
+              </span>
             ) : (
               <span className="text-2xl lg:text-4xl">{hero.icon}</span>
             )}
@@ -1100,7 +1102,9 @@ export default function BattleScreen() {
             {battleEnd === "victory" ? (
               <>
                 <div className="mb-4 flex justify-center">
-                  <img src={VICTORY_ART.crest} alt="Victory" className="w-20 h-20 object-cover rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 animate-bounce" />
+                  <div className="w-20 h-20 rounded-full border-2 border-amber-400/50 shadow-xl shadow-amber-400/30 overflow-hidden animate-bounce" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+                    <img src={VICTORY_ART.crest} alt="Victory" className="art-portrait" />
+                  </div>
                 </div>
                 <h2 className="text-5xl font-serif text-amber-200 mb-6">Victory!</h2>
                 <button

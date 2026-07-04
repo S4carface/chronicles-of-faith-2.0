@@ -135,7 +135,9 @@ export default function RewardScreen() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "linear-gradient(180deg, #1A2744 0%, #0A0F1E 100%)" }}>
       <div className="text-center mb-6">
         <div className="mb-3 flex justify-center">
-          <img src={VICTORY_ART.crest} alt="Reward" className="w-12 h-12 object-cover rounded-full border border-amber-400/40 animate-icon-float" />
+          <div className="w-12 h-12 rounded-full border border-amber-400/40 overflow-hidden animate-icon-float" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+            <img src={VICTORY_ART.crest} alt="Reward" className="art-portrait" />
+          </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">Choose Your Reward</h2>
         <p className="text-amber-100/50 text-sm mt-2">Tap a card to read details, then confirm your choice</p>
@@ -204,7 +206,7 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
           <span className="text-xs text-amber-300/60">{card.cost} ✨</span>
         </div>
         <div className="w-14 h-14 rounded-lg overflow-hidden animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-          <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="w-full h-full object-cover" style={{ transform: "scale(1.03)" }} />
+          <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
         </div>
         <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
         <div className={`text-[8px] uppercase font-bold tracking-wide ${

@@ -12,13 +12,13 @@ function isCardObject(card) {
 
 function buildEnemyDeck(enemy) {
   const blockAction = {
-    name: "Raise Shield",
+    name: "Raise Block",
     damage: 0,
     icon: "🛡️",
     effect: "block",
     blockValue: 5,
     cost: 1,
-    description: "Gains 5 Block",
+    description: "Gains 5 Block this turn",
   };
 
   return shuffle([

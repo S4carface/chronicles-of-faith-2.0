@@ -492,7 +492,16 @@ export function enemyTurn(state) {
         `⚠️ ${state.enemy.name} prepares ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage} dmg)` : ""}`
       );
     }
+  const unusedBlock = playerBlock;
 
+  if (unusedBlock > 0) {
+    log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
+  }
+      const unusedBlock = state.playerBlock || 0;
+
+    if (unusedBlock > 0) {
+      log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
+    }
     const newState = {
       ...state,
       enemyIntent: newIntent,

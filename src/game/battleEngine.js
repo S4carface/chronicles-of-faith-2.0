@@ -1,6 +1,7 @@
 // Battle engine logic — turn-based card combat
 
 export const COUNTER_CAP = 12;
+export const HAND_LIMIT = 5;
 
 function pickEnemyAttack(enemy) {
   return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
@@ -43,6 +44,7 @@ export function createBattleState(
   const enemyDeck = buildEnemyDeck(enemy);
   const enemyHand = enemyDeck.splice(0, 3);
   const intent = enemyHand[0] || pickEnemyAttack(enemy);
+  const openingHandSize = Math.min(HAND_LIMIT, 5 + extraDraw);
 
   return {
     enemy: { ...enemy, currentHp: enemy.hp, maxHp: enemy.hp },
@@ -61,7 +63,7 @@ export function createBattleState(
     maxEnergy: 3,
 
     deck: shuffled,
-    hand: shuffled.splice(0, 5 + extraDraw),
+    hand: shuffled.splice(0, openingHandSize),
     discard: [],
 
     turn: "player",
@@ -81,6 +83,7 @@ export function createBattleState(
     skipDraw: 0,
     counter: 0,
     heroId,
+    error: null,
   };
 }
 
@@ -96,17 +99,18 @@ export function shuffle(arr) {
 }
 
 export function drawCards(state, count) {
-  const newHand = [...state.hand];
-  const newDeck = [...state.deck];
-  const newDiscard = [...state.discard];
+  const newHand = [...(state.hand || [])];
+  const newDeck = [...(state.deck || [])];
+  const newDiscard = [...(state.discard || [])];
   let reshuffled = false;
 
-  for (let i = 0; i < count; i++) {
+  const roomInHand = Math.max(0, HAND_LIMIT - newHand.length);
+  const cardsToDraw = Math.max(0, Math.min(count, roomInHand));
+
+  for (let i = 0; i < cardsToDraw; i++) {
     if (newDeck.length === 0) {
       if (newDiscard.length === 0) break;
 
-      // Older saves may contain card ids in discard instead of full card objects.
-      // Only full card objects can be redrawn safely.
       const recycledCards = newDiscard.splice(0).filter(isCardObject);
       if (recycledCards.length === 0) break;
 
@@ -127,6 +131,14 @@ export function drawCards(state, count) {
     discard: newDiscard,
     reshuffled,
   };
+}
+
+function drawUpToHandLimit(state, skipDraw = 0) {
+  const targetHandSize = Math.max(0, HAND_LIMIT - (skipDraw || 0));
+  const currentHandSize = state.hand?.length || 0;
+  const drawCount = Math.max(0, targetHandSize - currentHandSize);
+
+  return drawCards(state, drawCount);
 }
 
 export function playCard(state, handIndex, card) {
@@ -152,11 +164,7 @@ export function playCard(state, handIndex, card) {
   }
 
   const newHand = state.hand.filter((_, i) => i !== handIndex);
-
-  // Important: discard must store the full card object, not just card.id.
-  // The discard pile eventually reshuffles into the deck.
   const newDiscard = [...state.discard, card];
-
   const log = [...state.log];
 
   let playerHp = state.playerHp;
@@ -239,7 +247,7 @@ export function playCard(state, handIndex, card) {
           2
         );
 
-        log.push("📖 Wisdom — drew 2");
+        log.push("📖 Wisdom — drew up to 2 cards");
 
         return {
           ...drawn,
@@ -325,7 +333,7 @@ export function playCard(state, handIndex, card) {
           3
         );
 
-        log.push("🪜 Jacob's Ladder — drew 3");
+        log.push("🪜 Jacob's Ladder — drew up to 3 cards");
 
         return {
           ...drawn,
@@ -421,8 +429,6 @@ export function playCard(state, handIndex, card) {
   };
 }
 
-// End player turn: unplayed cards are discarded.
-// This prevents the player from hoarding too many cards and makes deck cycling clearer.
 export function endPlayerTurn(state) {
   const handCount = state.hand?.length || 0;
 
@@ -432,7 +438,7 @@ export function endPlayerTurn(state) {
     handCount > 0
       ? `  You kept ${handCount} card${handCount === 1 ? "" : "s"} in hand.`
       : "  No cards in hand.",
-    "  Enemy acts next. Draw back up to 5 after the enemy turn.",
+    `  Enemy acts next. Draw back up to ${HAND_LIMIT} after the enemy turn.`,
   ];
 
   return {
@@ -444,8 +450,6 @@ export function endPlayerTurn(state) {
   };
 }
 
-// Apply Counter retaliation to the enemy on an attack move.
-// Counter triggers once per enemy attack and persists across turns.
 function applyCounter(state, enemyHp, log, counter) {
   if (!counter || counter <= 0) {
     return { enemyHp, log, counterHit: 0 };
@@ -458,6 +462,14 @@ function applyCounter(state, enemyHp, log, counter) {
   return { enemyHp, log, counterHit: dmg };
 }
 
+function fadeBlock(playerBlock, log) {
+  const unusedBlock = playerBlock || 0;
+
+  if (unusedBlock > 0) {
+    log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
+  }
+}
+
 export function enemyTurn(state) {
   const log = [...state.log];
 
@@ -466,11 +478,10 @@ export function enemyTurn(state) {
   let enemyHp = state.enemy.currentHp;
   let enemyBlock = state.enemyBlock || 0;
   let counter = state.counter || 0;
-  let skipDraw = state.skipDraw;
+  let skipDraw = state.skipDraw || 0;
   let blockScripture = false;
-  let dots = state.dots;
+  let dots = state.dots || 0;
 
-  // Noah's Covenant Shield — negate ALL incoming damage for one turn.
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
@@ -489,11 +500,8 @@ export function enemyTurn(state) {
         `⚠️ ${state.enemy.name} prepares ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage} dmg)` : ""}`
       );
     }
-  const unusedBlock = playerBlock;
 
-    if (unusedBlock > 0) {
-    log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
-    }
+    fadeBlock(playerBlock, log);
 
     const newState = {
       ...state,
@@ -514,17 +522,11 @@ export function enemyTurn(state) {
       error: null,
     };
 
-    const drawCount = Math.max(
-  0,
-  Math.max(0, 5 - skipDraw) - (newState.hand?.length || 0)
-);
-
-const withDraw = drawCards(newState, drawCount);
+    const withDraw = drawUpToHandLimit(newState, skipDraw);
 
     return { ...withDraw, skipDraw: 0 };
   }
 
-  // Enemy plays actions using energy — can attack, block, or heal.
   let energy = state.enemyMaxEnergy || 3;
   const hand = [...(state.enemyHand || [])];
   let deck = [...(state.enemyDeck || [])];
@@ -598,14 +600,12 @@ const withDraw = drawCards(newState, drawCount);
     discard.push(action);
   }
 
-  // DOT damage to player at start of their next turn.
   if (dots > 0) {
     playerHp = Math.max(0, playerHp - 2);
     dots -= 1;
     log.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
   }
 
-  // Recycle enemy deck, played cards, and unplayed enemy hand.
   let allCards = [...deck, ...discard, ...hand];
 
   if (allCards.length === 0) {
@@ -628,6 +628,8 @@ const withDraw = drawCards(newState, drawCount);
     log.push(`⚠️ ${state.enemy.name} readies ${newIntent.name}${label}`);
   }
 
+  fadeBlock(playerBlock, log);
+
   const newState = {
     ...state,
     enemyIntent: newIntent,
@@ -649,12 +651,7 @@ const withDraw = drawCards(newState, drawCount);
     error: null,
   };
 
-  const drawCount = Math.max(
-  0,
-  Math.max(0, 5 - skipDraw) - (newState.hand?.length || 0)
-);
-
-const withDraw = drawCards(newState, drawCount);
+  const withDraw = drawUpToHandLimit(newState, skipDraw);
 
   return { ...withDraw, skipDraw: 0 };
 }
@@ -665,7 +662,6 @@ export function checkBattleEnd(state) {
   return null;
 }
 
-// Break enemy turn into individual steps for step-by-step animation.
 export function getEnemyTurnSteps(state) {
   const steps = [];
   const log = [...state.log];
@@ -675,11 +671,10 @@ export function getEnemyTurnSteps(state) {
   let enemyHp = state.enemy.currentHp;
   let enemyBlock = state.enemyBlock || 0;
   let counter = state.counter || 0;
-  let skipDraw = state.skipDraw;
+  let skipDraw = state.skipDraw || 0;
   let blockScripture = false;
-  let dots = state.dots;
+  let dots = state.dots || 0;
 
-  // Covenant Shield — negate entire enemy turn.
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
@@ -696,6 +691,8 @@ export function getEnemyTurnSteps(state) {
     if (newIntent) {
       log.push(`${state.enemy.name} readies ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage})` : ""}`);
     }
+
+    fadeBlock(playerBlock, log);
 
     const newState = {
       ...state,
@@ -716,10 +713,7 @@ export function getEnemyTurnSteps(state) {
       error: null,
     };
 
-    const currentHandSize = newState.hand?.length || 0;
-    const targetrHandsize = Math.max(0, 5 - skipDraw);
-    const drawCount = Math.max(0, targertHandSize - currentHandSize);
-    const withDraw = drawCards(newState, drawCount);
+    const withDraw = drawUpToHandLimit(newState, skipDraw);
 
     steps.push({ type: "shield", state: { ...withDraw, skipDraw: 0 } });
 
@@ -854,7 +848,6 @@ export function getEnemyTurnSteps(state) {
     log.push(...dotLog);
   }
 
-  // Recycle enemy deck, played cards, and unplayed enemy hand.
   let allCards = [...deck, ...discard, ...hand];
 
   if (allCards.length === 0) {
@@ -878,6 +871,8 @@ export function getEnemyTurnSteps(state) {
     endLog.push(`⚠️ ${state.enemy.name} readies ${newIntent.name}${label}`);
   }
 
+  fadeBlock(playerBlock, endLog);
+
   const newState = {
     ...state,
     enemyIntent: newIntent,
@@ -899,12 +894,7 @@ export function getEnemyTurnSteps(state) {
     error: null,
   };
 
-  const drawCount = Math.max(
-  0,
-  Math.max(0, 5 - skipDraw) - (newState.hand?.length || 0)
-);
-
-const withDraw = drawCards(newState, drawCount);
+  const withDraw = drawUpToHandLimit(newState, skipDraw);
 
   steps.push({ type: "end", state: { ...withDraw, skipDraw: 0 } });
 

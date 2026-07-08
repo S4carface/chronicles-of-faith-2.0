@@ -514,7 +514,9 @@ export function enemyTurn(state) {
       error: null,
     };
 
-    const drawCount = Math.max(0, 5 - skipDraw);
+    const currentHandSize = newState.hand?.length || 0;
+    const targetrHandsize = Math.max(0, 5 - skipDraw);
+    const drawCount = Math.max(0, targertHandSize - currentHandSize);
     const withDraw = drawCards(newState, drawCount);
 
     return { ...withDraw, skipDraw: 0 };

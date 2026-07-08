@@ -425,11 +425,15 @@ export function playCard(state, handIndex, card) {
 // This prevents the player from hoarding too many cards and makes deck cycling clearer.
 export function endPlayerTurn(state) {
   const cardsToDiscard = state.hand.filter(isCardObject);
+  const discardCount = cardsToDiscard.length;
 
   const log = [
     ...state.log,
     "— Turn ends —",
-    cardsToDiscard.length > 0 ? `🃏 Discarded ${cardsToDiscard.length} unplayed card${cardsToDiscard.length === 1 ? "" : "s"}` : "🃏 No unplayed cards to discard",
+    discardCount > 0
+      ? `  ${discardCount} unplayed card${discardCount === 1 ? "" : "s"} discarded.`
+      : "  No unplayed cards to discard.",
+    "  Enemy acts next. You will draw a fresh hand after the enemy turn.",
   ];
 
   return {

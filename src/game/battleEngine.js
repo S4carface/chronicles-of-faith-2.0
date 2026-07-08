@@ -424,22 +424,19 @@ export function playCard(state, handIndex, card) {
 // End player turn: unplayed cards are discarded.
 // This prevents the player from hoarding too many cards and makes deck cycling clearer.
 export function endPlayerTurn(state) {
-  const cardsToDiscard = state.hand.filter(isCardObject);
-  const discardCount = cardsToDiscard.length;
+  const handCount = state.hand?.length || 0;
 
   const log = [
     ...state.log,
     "— Turn ends —",
-    discardCount > 0
-      ? `  ${discardCount} unplayed card${discardCount === 1 ? "" : "s"} discarded.`
-      : "  No unplayed cards to discard.",
-    "  Enemy acts next. You will draw a fresh hand after the enemy turn.",
+    handCount > 0
+      ? `  You kept ${handCount} card${handCount === 1 ? "" : "s"} in hand.`
+      : "  No cards in hand.",
+    "  Enemy acts next. Draw back up to 5 after the enemy turn.",
   ];
 
   return {
     ...state,
-    hand: [],
-    discard: [...state.discard, ...cardsToDiscard],
     turn: "enemy",
     enemyAttackMultiplier: 1,
     log,

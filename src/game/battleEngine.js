@@ -494,14 +494,10 @@ export function enemyTurn(state) {
     }
   const unusedBlock = playerBlock;
 
-  if (unusedBlock > 0) {
-    log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
-  }
-      const unusedBlock = state.playerBlock || 0;
-
     if (unusedBlock > 0) {
-      log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
+    log.push(`  Block faded — ${unusedBlock} unused Block removed.`);
     }
+
     const newState = {
       ...state,
       enemyIntent: newIntent,

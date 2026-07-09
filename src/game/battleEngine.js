@@ -431,19 +431,24 @@ export function playCard(state, handIndex, card) {
 
 export function endPlayerTurn(state) {
   const handCount = state.hand?.length || 0;
+  const unusedEnemyBlock = state.enemyBlock || 0;
 
   const log = [
     ...state.log,
     "— Turn ends —",
     handCount > 0
-      ? `  You kept ${handCount} card${handCount === 1 ? "" : "s"} in hand.`
-      : "  No cards in hand.",
-    `  Enemy acts next. Draw back up to ${HAND_LIMIT} after the enemy turn.`,
+      ? `You kept ${handCount} card${handCount === 1 ? "" : "s"} in hand.`
+      : "No cards in hand.",
+    unusedEnemyBlock > 0
+      ? `Enemy Block faded — ${unusedEnemyBlock} unused Block removed.`
+      : "Enemy has no unused Block.",
+    `Enemy acts next. Draw back up to ${HAND_LIMIT} after the enemy turn.`,
   ];
 
   return {
     ...state,
     turn: "enemy",
+    enemyBlock: 0,
     enemyAttackMultiplier: 1,
     log,
     error: null,

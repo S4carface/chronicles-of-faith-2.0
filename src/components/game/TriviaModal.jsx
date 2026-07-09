@@ -97,11 +97,16 @@ export default function TriviaModal({ onComplete }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(8,12,24,0.95)" }}
-
-    >
-      <div className="max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+  className="fixed inset-0 z-50 overflow-y-auto overscroll-contain p-4"
+  style={{ background: "rgba(8,12,24,0.95)" }}
+>
+  <div
+    className="mx-auto my-6 max-w-lg w-full rounded-2xl border-2 border-amber-500/30 p-6 lg:p-8"
+    style={{
+      background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
+      marginBottom: "calc(120px + env(safe-area-inset-bottom))",
+    }}
+  >
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/40 shadow-lg shadow-amber-500/20 animate-icon-float" style={{ background: "#0F1A30" }}>

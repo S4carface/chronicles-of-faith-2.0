@@ -248,8 +248,11 @@ export default function BattleScreen() {
 
   const handlePlayCard = (handIndex) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
-    const cardId = battleState.hand[handIndex];
-    const card = getCardById(cardId);
+    const cardOrId = battleState.hand[handIndex];
+const card =
+  typeof cardOrId === "string"
+    ? getCardById(cardOrId)
+    : cardOrId;
     if (!card) return;
     if (battleState.freeCardsRemaining === 0 && battleState.energy < card.cost) {
       Sound.sfx.click();

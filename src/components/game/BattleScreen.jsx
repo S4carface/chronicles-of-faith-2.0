@@ -1079,9 +1079,13 @@ export default function BattleScreen() {
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}
           <div className="flex gap-2 lg:gap-5 overflow-x-auto flex-nowrap snap-x pb-1 w-full justify-center">
-            {battleState.hand.map((cardId, idx) => {
-              const card = getCardById(cardId);
-              if (!card) return null;
+{battleState.hand.map((cardOrId, idx) => {
+  const card =
+    typeof cardOrId === "string"
+      ? getCardById(cardOrId)
+      : cardOrId;
+
+  if (!card) return null;
               const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= card.cost;
               const blocked = battleState.blockScripture && card.type === "scripture";
               return (

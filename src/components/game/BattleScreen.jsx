@@ -50,6 +50,9 @@ const INTENT_TYPE_MAP = {
   heal: { art: INTENT_ART.heal, label: "Heal", color: "text-emerald-300", border: "border-emerald-500/40" },
   curse: { art: INTENT_ART.curse, label: "Curse", color: "text-purple-300", border: "border-purple-500/40" },
 };
+function resolveCard(cardOrId) {
+  return typeof cardOrId === "string" ? getCardById(cardOrId) : cardOrId;
+}
 
 // Convert a raw battle log entry into plain language for the collapsed summary line.
 function simplifyLogEntry(entry) {
@@ -248,11 +251,7 @@ export default function BattleScreen() {
 
   const handlePlayCard = (handIndex) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
-    const cardOrId = battleState.hand[handIndex];
-const card =
-  typeof cardOrId === "string"
-    ? getCardById(cardOrId)
-    : cardOrId;
+    const card = resolveCard(battleState.hand[handIndex]);
     if (!card) return;
     if (battleState.freeCardsRemaining === 0 && battleState.energy < card.cost) {
       Sound.sfx.click();

@@ -109,13 +109,11 @@ export function drawCards(state, count) {
 
   for (let i = 0; i < cardsToDraw; i++) {
     if (newDeck.length === 0) {
-      if (newDiscard.length === 0) break;
+  if (newDiscard.length === 0) break;
 
-      const recycledCards = newDiscard.splice(0).filter(isCardObject);
-      if (recycledCards.length === 0) break;
-
-      newDeck.push(...shuffle(recycledCards));
-      reshuffled = true;
+  newDeck.push(...shuffle(newDiscard.splice(0)));
+  reshuffled = true;
+}
     }
 
     const nextCard = newDeck.shift();

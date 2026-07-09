@@ -384,7 +384,7 @@ const card =
 
     // Warning 1: a playable card is selected (all modes)
     if (selectedCard !== null) {
-      const selCard = getCardById(battleState.hand[selectedCard]);
+      const selCard = resolveCard(battleState.hand[selectedCard]);
       const isPlayable = selCard && (battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost) && !(battleState.blockScripture && selCard.type === "scripture");
       if (isPlayable) {
         setEndTurnConfirm({ type: "selected" });
@@ -396,7 +396,7 @@ const card =
     if (!isHardOrExpert) {
       const enemyAttacking = (battleState.enemyHand || []).some(a => a.damage > 0);
       const hasPlayable = battleState.hand.some(cardId => {
-        const c = getCardById(cardId);
+        const c = resolveCard(cardId);
         if (!c) return false;
         const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= c.cost;
         const blocked = battleState.blockScripture && c.type === "scripture";
@@ -1050,7 +1050,7 @@ const card =
             )}
           </div>
           {selectedCard !== null && (() => {
-            const sc = getCardById(battleState.hand[selectedCard]);
+            const sc = resolveCard(battleState.hand[selectedCard]);
             const scPlayable = sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
             return scPlayable ? (
               <span className="text-emerald-300/60 text-[9px] lg:text-[10px] italic mr-1 lg:mr-2 max-w-[70px] lg:max-w-[120px] text-right leading-tight">
@@ -1063,7 +1063,7 @@ const card =
             disabled={isEnemyTurn}
             className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
               selectedCard !== null && (() => {
-                const sc = getCardById(battleState.hand[selectedCard]);
+                const sc = resolveCard(battleState.hand[selectedCard]);
                 return sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
               })()
                 ? "px-2.5 py-1 lg:px-4 lg:py-2 text-[10px] lg:text-sm border-amber-500/10 bg-amber-900/5 text-amber-100/25 hover:bg-amber-900/10"
@@ -1111,7 +1111,7 @@ const card =
 
       {/* Selected card preview — compact bar, hand stays visible */}
       {selectedCard !== null && battleState.hand[selectedCard] && (() => {
-        const selCard = getCardById(battleState.hand[selectedCard]);
+        const selCard = resolveCard(battleState.hand[selectedCard]);
         if (!selCard) return null;
         const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost;
         const blocked = battleState.blockScripture && selCard.type === "scripture";

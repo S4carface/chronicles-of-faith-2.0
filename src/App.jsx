@@ -12,7 +12,6 @@ import ScrollToTop from './components/ScrollToTop';
 import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
 import LoadingScreen from "@/components/LoadingScreen";
-import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
 import Collection from "./pages/Collection";
@@ -48,7 +47,6 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <GameProvider>
-      <AudioUnlockButton />
       <UnlockReveal />
       <Routes>
         <Route path="/" element={<Home />} />

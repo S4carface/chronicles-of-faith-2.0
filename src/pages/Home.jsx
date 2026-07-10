@@ -4,6 +4,7 @@ import { Swords, Pencil, Sun } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
+import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
@@ -88,20 +89,19 @@ const handleBeginRun = () => {
     return;
   }
 
-  beginEasyTutorialRun();
-};
+  // First-time player: launch Easy tutorial battle immediately
+  if (!profile.tutorialSeen) {
+    startRun("adam", false, null, {
+      difficulty: "easy",
+      startAtFirstBattle: true,
+    });
 
-  const handleNameSaved = () => {
-    setShowNamePrompt(false);
-  };
+    navigate("/play");
+    return;
+  }
 
-  const handleConfirmNew = () => {
-  endRun();
-  setShowConfirm(false);
-
-  setTimeout(() => {
-    beginEasyTutorialRun();
-  }, 0);
+  // Returning player: use selected difficulty and normal run flow
+  navigate("/play");
 };
 
   const handleContinueSaved = () => {
@@ -236,6 +236,13 @@ const handleBeginRun = () => {
           </button>
         </div>
       )}
+
+{/* Difficulty appears only after the first tutorial is completed */}
+{profile.tutorialSeen && (
+  <div className="relative w-full max-w-md lg:max-w-[600px] mb-4 lg:mb-5">
+    <DifficultySelect />
+  </div>
+)}
 
       {/* Story save corruption notice */}
       {storySaveError && !savedStoryExists && (

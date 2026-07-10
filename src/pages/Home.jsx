@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Swords, Pencil, Sun } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import DifficultySelect from "@/components/game/DifficultySelect";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import CinematicIntro from "@/components/game/CinematicIntro";
@@ -14,7 +13,19 @@ import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
 
 export default function Home() {
-  const { profile, run, endRun, Sound: Snd, savedStoryExists, resumeStoryRun, storySaveError, showIntro, handleIntroComplete } = useGame();
+  const {
+  profile,
+  run,
+  endRun,
+  startRun,
+  saveProfile,
+  Sound: Snd,
+  savedStoryExists,
+  resumeStoryRun,
+  storySaveError,
+  showIntro,
+  handleIntroComplete,
+} = useGame();
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
@@ -43,30 +54,55 @@ export default function Home() {
     }
   }, []);
 
-  const handleBeginRun = () => {
-    Sound.sfx.click();
-    // Validate active deck before starting
-    const deckCheck = validateDeck(profile.activeDeck);
-    if (!deckCheck.valid) {
-      navigate("/collection");
-      return;
-    }
-    if (run || savedStoryExists) {
-      setShowConfirm(true);
-    } else {
-      navigate("/play");
-    }
-  };
+  const beginEasyTutorialRun = () => {
+  saveProfile({
+    difficulty: "easy",
+    tutorialSeen: false,
+    settings: {
+      ...profile.settings,
+      guidanceTips: true,
+      guidanceLevel: "guided",
+    },
+  });
+
+  startRun("adam", false, null, {
+    difficulty: "easy",
+    startAtFirstBattle: true,
+  });
+
+  navigate("/play");
+};
+
+const handleBeginRun = () => {
+  Sound.sfx.click();
+
+  const deckCheck = validateDeck(profile.activeDeck);
+
+  if (!deckCheck.valid) {
+    navigate("/collection");
+    return;
+  }
+
+  if (run || savedStoryExists) {
+    setShowConfirm(true);
+    return;
+  }
+
+  beginEasyTutorialRun();
+};
 
   const handleNameSaved = () => {
     setShowNamePrompt(false);
   };
 
   const handleConfirmNew = () => {
-    endRun();
-    setShowConfirm(false);
-    navigate("/play");
-  };
+  endRun();
+  setShowConfirm(false);
+
+  setTimeout(() => {
+    beginEasyTutorialRun();
+  }, 0);
+};
 
   const handleContinueSaved = () => {
     Sound.sfx.click();
@@ -154,11 +190,6 @@ export default function Home() {
         )}
         <Pencil className="w-3 h-3" />
       </button>
-
-      {/* Difficulty selector — compact horizontal */}
-      <div className="relative w-full max-w-md lg:max-w-[600px] mb-4 lg:mb-5">
-        <DifficultySelect />
-      </div>
 
       {/* Resume prompt */}
       {run && (

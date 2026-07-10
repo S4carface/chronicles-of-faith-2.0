@@ -28,40 +28,30 @@ export default function About() {
           </h1>
 
           <div className="mt-7 space-y-5 text-base leading-8 text-amber-50/75">
-            <p>
-              Chronicles of Faith is a Bible-inspired roguelike card game
-              designed to combine Scripture, strategy, exploration, and
-              replayable challenges. Players enter journeys inspired by
-              biblical events, build and improve their decks, manage Faith as
-              a resource, face enemies, make decisions, answer Bible trivia,
-              and compete for stronger scores. The game is intended to feel
-              like a real strategy card game rather than a sermon. Every card,
-              battle, reward, and decision should contribute to meaningful
-              gameplay.
-            </p>
+  <p>
+    Chronicles of Faith is a Bible-inspired roguelike card game that combines
+    strategy, deck building, exploration, Bible trivia, and replayable
+    challenges. Players journey through events inspired by Scripture, build
+    stronger decks, manage Faith, face enemies, make decisions, and improve
+    their scores across repeated runs.
+  </p>
 
-            <p>
-              The game is built for strategy players, families, younger
-              players, Christians, people who already know the Bible, and
-              people who are simply curious about Scripture. Its purpose is
-              not to replace reading the Bible. Instead, it offers a doorway
-              into biblical stories through short references, story moments,
-              questions, challenges, and opportunities to learn more. Clear
-              onboarding and mobile readability are major priorities so that
-              non-gamers can understand the game without feeling overwhelmed.
-            </p>
+  <p>
+    The game is designed for strategy players, families, younger players,
+    Christians, and people who are simply curious about the Bible. Its goal is
+    to make biblical stories engaging without turning the experience into a
+    sermon. Chronicles of Faith is not intended to replace reading Scripture.
+    It is meant to encourage curiosity, learning, and further exploration of
+    the Bible.
+  </p>
 
-            <p>
-              Chronicles of Faith is independently designed and developed by
-              its creator with feedback from gamers, non-gamers, younger
-              players, family testers, and people who evaluate gameplay,
-              design, accessibility, biblical accuracy, and fairness. The
-              project is being developed carefully through focused updates,
-              testing, and player feedback. Its visual identity uses navy,
-              gold, light, sacred imagery, and restrained fantasy elements to
-              create a sense of faith, adventure, and discovery.
-            </p>
-          </div>
+  <p>
+    Chronicles of Faith is independently created and developed by Cid Netto
+    with help from player feedback, testing, and ongoing refinement. The game
+    is being built with a focus on clear gameplay, mobile readability, fair
+    scoring, biblical accuracy, and a sacred navy-and-gold adventure style.
+  </p>
+</div>
 
           <div className="mt-9 grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-amber-500/15 bg-slate-900/45 p-4">

@@ -1,4 +1,5 @@
 import About from "@/pages/About";
+import Contact from "@/pages/Contact";
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
         <Route path="/faith-progress" element={<FaithProgress />} />
         <Route path="*" element={<PageNotFound />} />
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </GameProvider>
   );

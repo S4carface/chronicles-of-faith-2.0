@@ -218,19 +218,17 @@ export default function Home() {
       {/* Play button — primary CTA */}
       <button
         onClick={handleBeginRun}
-        className="relative w-full max-w-md lg:max-w-[600px] mb-6 px-8 py-4 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20" style={{ fontSize: "clamp(1.1rem, 2vw, 1.75rem)" }}
-        style={{ background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)" }}
+        className="relative w-full max-w-md lg:max-w-[600px] mb-6 px-8 py-4 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+        style={{
+          fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
+          background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
+        }}
       >
         <span className="flex items-center justify-center gap-2">
           <Swords className="w-5 h-5" />
-          Begin Genesis Run
+          Start Journey
         </span>
       </button>
-
-      {/* Score guidance */}
-      <p className="text-amber-100/30 text-[10px] text-center -mt-4 mb-4 max-w-md">
-        Finish Genesis or complete the Daily Battle to post a score.
-      </p>
 
       {/* Confirmation dialog */}
       {showConfirm && (

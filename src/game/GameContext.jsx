@@ -272,11 +272,11 @@ export function GameProvider({ children }) {
   }, [profile.collectedCards, profile.achievements, unlockAchievement]);
 
   // ===== RUN MANAGEMENT =====
-  const startRun = useCallback((heroId, isDaily = false, seedOverride = null) => {
+  const startRun = useCallback((heroId, isDaily = false, seedOverride = null, options = {}) => {
     const hero = HERO_MAP[heroId];
     if (!hero || !profile.unlockedHeroes.includes(heroId)) return;
 
-    const difficulty = profile.difficulty || "normal";
+    const difficulty = options.difficulty || profile.difficulty || "normal";
     const seed = seedOverride || (isDaily ? new Date().toISOString().slice(0, 10) : `run-${Date.now()}-${Math.random()}`);
     const map = generateMap(seed, difficulty);
     const fogOfWar = difficulty !== "easy";
@@ -313,7 +313,15 @@ export function GameProvider({ children }) {
         }
       }
     }
+const startAtFirstBattle = options.startAtFirstBattle === true;
+const firstNode =
+  map[0]?.find(node => node.type === ROOM_TYPES.BATTLE) ||
+  map[0]?.[0] ||
+  null;
 
+if (startAtFirstBattle && firstNode) {
+  firstNode.visited = true;
+}
     setRun({
       hero,
       map,
@@ -336,20 +344,33 @@ export function GameProvider({ children }) {
       usedLegendary: false,
       neverLostHp: true,
       storyChoices: [],
-      currentNode: null,
-      phase: "map",
+      currentNode: startAtFirstBattle ? firstNode : null,
+      phase: startAtFirstBattle ? "battle" : "map",
       runStartTime: Date.now(), // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
       pendingReward: null,
       narrationText: "In the beginning, there was nothing... Then God said, 'Let there be light.' And there was light. — Genesis 1:1-3",
       narrationSummary: "God creates light and begins bringing order from nothing.",
-      pendingEnemyId: null,
+      pendingEnemyId: startAtFirstBattle ? firstNode?.enemyId || null : null,
       currentBattleState: null,
       buffAttack: 0,
       shieldActive: false,
       extraDraw: 0,
       nextCardRare: false,
       bossModifier: map[map.length - 1][0].bossModifier || null,
-      battleCheckpoint: null,
+      battleCheckpoint: startAtFirstBattle
+  ? {
+      playerHp: hero.maxHp,
+      maxHp: hero.maxHp,
+      deck: [...(profile.activeDeck || STARTER_DECK)],
+      gold: 0,
+      roomsCleared: 0,
+      buffAttack: 0,
+      shieldActive: false,
+      extraDraw: 0,
+      battlesWithoutDamage: 0,
+      neverLostHp: true,
+    }
+  : null,
       battleRetries: 0,
       checkpointRetries: 0,
     });

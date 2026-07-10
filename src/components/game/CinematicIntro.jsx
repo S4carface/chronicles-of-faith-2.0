@@ -19,6 +19,8 @@ export default function CinematicIntro({ onComplete }) {
   const timersRef = useRef([]);
 
   useEffect(() => {
+    Sound.stopMusic();
+    
     if (narrationOn && !narratedRef.current) {
   narratedRef.current = true;
 

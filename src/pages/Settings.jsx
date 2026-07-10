@@ -451,6 +451,27 @@ export default function Settings() {
       <span className="text-amber-300/60 text-lg">›</span>
     </div>
   </Link>
+  
+  <Link
+  to="/contact"
+  onClick={() => Sound.sfx.click()}
+  className="block p-4 rounded-xl border-2 border-amber-500/20 hover:border-amber-400/45 hover:bg-amber-500/5 transition"
+  style={{ background: "rgba(15,26,48,0.5)" }}
+>
+  <div className="flex items-center justify-between gap-4">
+    <div>
+      <p className="font-serif text-amber-100 text-sm">
+        Contact & Feedback
+      </p>
+
+      <p className="text-amber-100/40 text-[10px] mt-1">
+        Report bugs, suggest ideas, or send Bible accuracy feedback.
+      </p>
+    </div>
+
+    <span className="text-amber-300/60 text-lg">›</span>
+  </div>
+</Link>
 
   <div
     className="p-4 rounded-xl border border-amber-500/10"

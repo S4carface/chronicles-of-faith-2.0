@@ -14,46 +14,88 @@ const feedbackOptions = [
     label: "Report a Bug",
     description: "Tell us what happened and where it occurred.",
     subject: "Chronicles of Faith - Bug Report",
+    body: [
+      "Hello,",
+      "",
+      "I found a bug in Chronicles of Faith.",
+      "",
+      "Where did it happen?",
+      "",
+      "What did you expect to happen?",
+      "",
+      "What actually happened?",
+      "",
+      "Device:",
+      "",
+      "Screenshot or video attached: Yes / No",
+      "",
+      "Thank you.",
+    ].join("\n"),
     icon: Bug,
   },
   {
     label: "Suggest an Idea",
     description: "Share a gameplay, feature, or design suggestion.",
-    subject: "Chronicles of Faith - Suggestion",
+    subject: "Chronicles of Faith - Game Suggestion",
+    body: [
+      "Hello,",
+      "",
+      "I have an idea for Chronicles of Faith.",
+      "",
+      "My suggestion:",
+      "",
+      "Why I think it would improve the game:",
+      "",
+      "Where it should appear:",
+      "",
+      "Thank you.",
+    ].join("\n"),
     icon: Lightbulb,
   },
   {
     label: "Balance Feedback",
     description: "Report cards, enemies, difficulty, or scoring issues.",
     subject: "Chronicles of Faith - Balance Feedback",
+    body: [
+      "Hello,",
+      "",
+      "I have balance feedback for Chronicles of Faith.",
+      "",
+      "Card, enemy, difficulty, or scoring issue:",
+      "",
+      "What feels too strong, too weak, or unfair?",
+      "",
+      "Difficulty played:",
+      "",
+      "Score or result:",
+      "",
+      "Thank you.",
+    ].join("\n"),
     icon: Scale,
   },
   {
     label: "Bible Accuracy Feedback",
     description: "Report a Scripture, trivia, or story accuracy concern.",
     subject: "Chronicles of Faith - Bible Accuracy Feedback",
+    body: [
+      "Hello,",
+      "",
+      "I noticed a possible Bible accuracy issue.",
+      "",
+      "Where did it appear?",
+      "",
+      "Current wording or answer:",
+      "",
+      "Suggested correction:",
+      "",
+      "Bible reference:",
+      "",
+      "Thank you.",
+    ].join("\n"),
     icon: BookOpen,
   },
 ];
-
-function createEmailLink(subject) {
-  const body = [
-    "Hello,",
-    "",
-    "I would like to share feedback about Chronicles of Faith.",
-    "",
-    "What happened or what would you like to suggest?",
-    "",
-    "",
-    "Where in the game did this happen?",
-    "",
-    "",
-    "Device:",
-    "",
-    "",
-    "Thank you.",
-  ].join("\n");
-
+function createEmailLink(subject, body) {
   return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
     subject
   )}&body=${encodeURIComponent(body)}`;
@@ -99,7 +141,7 @@ export default function Contact() {
               return (
                 <a
                   key={option.label}
-                  href={createEmailLink(option.subject)}
+                  href={createEmailLink(option.subject, option.body)}
                   className="flex items-center gap-4 rounded-xl border border-amber-500/20 bg-slate-900/45 p-4 transition hover:border-amber-400/50 hover:bg-amber-500/5"
                 >
                   <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg border border-amber-500/20 bg-slate-950/45">
@@ -130,7 +172,19 @@ export default function Contact() {
             </p>
 
             <a
-              href={`mailto:${SUPPORT_EMAIL}`}
+              href={createEmailLink(
+  "Chronicles of Faith - General Feedback",
+  [
+    "Hello,",
+    "",
+    "I would like to contact you about Chronicles of Faith.",
+    "",
+    "Message:",
+    "",
+    "",
+    "Thank you.",
+  ].join("\n")
+)}
               className="mt-2 inline-block break-all font-medium text-amber-200 hover:text-amber-100"
             >
               {SUPPORT_EMAIL}

@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
-import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
 
@@ -485,8 +484,6 @@ export default function Settings() {
   </div>
 </div>
       </div>
-
-      <AudioUnlockButton />
 
       {showNamePrompt && (
         <PlayerNamePrompt

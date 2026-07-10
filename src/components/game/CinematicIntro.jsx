@@ -7,7 +7,7 @@ import { HOME_ART } from "@/data/art";
 const VERSE_1 = "In the beginning, God created the heavens and the earth.";
 const VERSE_2 = "And God said, 'Let there be light,' and there was light.";
 const REFERENCE = "Genesis 1:1-3";
-const NARRATION_TEXT = `${VERSE_1} ${VERSE_2} ${REFERENCE}`;
+const INTRO_AUDIO = "/audio/cid_intro.m4a";
 
 export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();
@@ -15,20 +15,25 @@ export default function CinematicIntro({ onComplete }) {
   const [showButtons, setShowButtons] = useState(false);
   const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
   const narratedRef = useRef(false);
+  const audioRef = useRef(null);
   const timersRef = useRef([]);
 
   useEffect(() => {
     if (narrationOn && !narratedRef.current) {
-      narratedRef.current = true;
-      const t = setTimeout(() => {
-        Sound.speakNarration(
-          NARRATION_TEXT,
-          (profile.settings.narrationVolume ?? 50) / 100,
-          profile.settings.narrationVoice
-        );
-      }, 600);
-      timersRef.current.push(t);
-    }
+  narratedRef.current = true;
+
+  const t = setTimeout(() => {
+    const audio = new Audio(INTRO_AUDIO);
+    audio.volume = (profile.settings.narrationVolume ?? 50) / 100;
+    audioRef.current = audio;
+
+    audio.play().catch(() => {
+      console.warn("Intro narration could not autoplay.");
+    });
+  }, 600);
+
+  timersRef.current.push(t);
+}
 
     timersRef.current.push(setTimeout(() => setStep(1), 1200));
     timersRef.current.push(setTimeout(() => setStep(2), 4500));
@@ -37,33 +42,45 @@ export default function CinematicIntro({ onComplete }) {
 
     return () => {
       timersRef.current.forEach(id => clearTimeout(id));
-      Sound.stopNarration();
+      audioRef.current?.pause();
+audioRef.current = null;
+Sound.stopNarration();
     };
   }, []);
 
   const handleSkip = useCallback(() => {
     timersRef.current.forEach(id => clearTimeout(id));
-    Sound.stopNarration();
+    audioRef.current?.pause();
+audioRef.current = null;
+Sound.stopNarration();
     onComplete();
   }, [onComplete]);
 
   const handleBegin = useCallback(() => {
     Sound.sfx.click();
-    Sound.stopNarration();
+    audioRef.current?.pause();
+audioRef.current = null;
+Sound.stopNarration();
     onComplete();
   }, [onComplete]);
 
   const replayNarration = () => {
-    Sound.speakNarration(
-      NARRATION_TEXT,
-      (profile.settings.narrationVolume ?? 50) / 100,
-      profile.settings.narrationVoice
-    );
-  };
+  audioRef.current?.pause();
+
+  const audio = new Audio(INTRO_AUDIO);
+  audio.volume = (profile.settings.narrationVolume ?? 50) / 100;
+  audioRef.current = audio;
+
+  audio.play().catch(() => {
+    console.warn("Intro narration could not play.");
+  });
+};
 
   const toggleNarration = () => {
     if (narrationOn) {
-      Sound.stopNarration();
+      audioRef.current?.pause();
+audioRef.current = null;
+Sound.stopNarration();
       setNarrationOn(false);
     } else {
       setNarrationOn(true);

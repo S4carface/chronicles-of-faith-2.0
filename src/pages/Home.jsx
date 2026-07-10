@@ -66,7 +66,7 @@ const launchFirstTutorialBattle = () => {
 const handleFirstIntroComplete = () => {
   handleIntroComplete();
 
-  if (!profile.tutorialSeen && !run && !savedStoryExists) {
+  if (!run && !savedStoryExists) {
     setTimeout(() => {
       launchFirstTutorialBattle();
     }, 0);

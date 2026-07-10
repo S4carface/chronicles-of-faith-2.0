@@ -54,7 +54,24 @@ export default function Home() {
       setShowResume(true);
     }
   }, []);
+const launchFirstTutorialBattle = () => {
+  startRun("adam", false, null, {
+    difficulty: "easy",
+    startAtFirstBattle: true,
+  });
+  
+  const handleFirstIntroComplete = () => {
+  handleIntroComplete();
 
+  if (!profile.tutorialSeen && !run && !savedStoryExists) {
+    setTimeout(() => {
+      launchFirstTutorialBattle();
+    }, 0);
+  }
+};
+
+  navigate("/play");
+};
 const handleBeginRun = () => {
   Sound.sfx.click();
 
@@ -72,14 +89,9 @@ const handleBeginRun = () => {
 
   // First-time player: launch Easy tutorial battle immediately
   if (!profile.tutorialSeen) {
-    startRun("adam", false, null, {
-      difficulty: "easy",
-      startAtFirstBattle: true,
-    });
-
-    navigate("/play");
-    return;
-  }
+  launchFirstTutorialBattle();
+  return;
+}
 
   // Returning player: use selected difficulty and normal run flow
   navigate("/play");
@@ -368,7 +380,7 @@ const handleNameSaved = (name) => {
       )}
 
       {showIntro && (
-        <CinematicIntro onComplete={handleIntroComplete} />
+        <CinematicIntro onComplete={handleFirstIntroComplete} />
       )}
 
       {showResume && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Swords, Pencil, Sun } from "lucide-react";
+import { Swords, Pencil, Sun, Info } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
@@ -154,11 +154,12 @@ const handleNameSaved = (name) => {
     { label: "My Progress", art: MENU_ART.progress, path: "/journey", desc: "Stats, streaks, and Bible learning", status: null },
   ];
   const secondaryItems = [
-    { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs with earned gold.", status: `${profile.gold || 0} gold` },
-    { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
-    { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
-    { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
-  ];
+  { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs with earned gold.", status: `${profile.gold || 0} gold` },
+  { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
+  { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
+  { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
+  { label: "About", art: HOME_ART.cross, path: "/about", desc: "Learn about the game and its mission.", status: null },
+];
 
   return (
     <div className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>

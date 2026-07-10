@@ -59,8 +59,11 @@ const launchFirstTutorialBattle = () => {
     difficulty: "easy",
     startAtFirstBattle: true,
   });
-  
-  const handleFirstIntroComplete = () => {
+
+  navigate("/play");
+};
+
+const handleFirstIntroComplete = () => {
   handleIntroComplete();
 
   if (!profile.tutorialSeen && !run && !savedStoryExists) {
@@ -68,9 +71,6 @@ const launchFirstTutorialBattle = () => {
       launchFirstTutorialBattle();
     }, 0);
   }
-};
-
-  navigate("/play");
 };
 const handleBeginRun = () => {
   Sound.sfx.click();

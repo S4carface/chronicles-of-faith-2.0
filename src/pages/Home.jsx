@@ -55,25 +55,6 @@ export default function Home() {
     }
   }, []);
 
-  const beginEasyTutorialRun = () => {
-  saveProfile({
-    difficulty: "easy",
-    tutorialSeen: false,
-    settings: {
-      ...profile.settings,
-      guidanceTips: true,
-      guidanceLevel: "guided",
-    },
-  });
-
-  startRun("adam", false, null, {
-    difficulty: "easy",
-    startAtFirstBattle: true,
-  });
-
-  navigate("/play");
-};
-
 const handleBeginRun = () => {
   Sound.sfx.click();
 
@@ -120,6 +101,30 @@ const handleBeginRun = () => {
       navigate("/play");
     }
   };
+  
+  const handleConfirmNew = () => {
+  endRun();
+  setShowConfirm(false);
+
+  setTimeout(() => {
+    if (!profile.tutorialSeen) {
+      startRun("adam", false, null, {
+        difficulty: "easy",
+        startAtFirstBattle: true,
+      });
+    }
+
+    navigate("/play");
+  }, 0);
+};
+
+const handleNameSaved = (name) => {
+  saveProfile({
+    playerName: sanitizePlayerName(name),
+  });
+
+  setShowNamePrompt(false);
+};
 
   const TOTAL_CARDS = 29;
   const TOTAL_ACHIEVEMENTS = 16;

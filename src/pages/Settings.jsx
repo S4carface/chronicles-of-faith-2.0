@@ -427,13 +427,42 @@ export default function Settings() {
         </div>
 
         {/* About */}
-        <div className="p-4 rounded-xl border-2 border-amber-500/10 lg:col-span-2" style={{ background: "rgba(15,26,48,0.4)" }}>
-          <p className="text-amber-100/60 text-xs text-center font-serif italic">
-            Chronicles of Faith — A Biblical Roguelike<br/>
-            Teaching the Bible through gameplay, one chapter at a time.<br/>
-            Version 1.0 — Genesis
-          </p>
-        </div>
+<div className="space-y-3 lg:col-span-2">
+  <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">
+    About
+  </h2>
+
+  <Link
+    to="/about"
+    onClick={() => Sound.sfx.click()}
+    className="block p-4 rounded-xl border-2 border-amber-500/20 hover:border-amber-400/45 hover:bg-amber-500/5 transition"
+    style={{ background: "rgba(15,26,48,0.5)" }}
+  >
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="font-serif text-amber-100 text-sm">
+          About Chronicles of Faith
+        </p>
+        <p className="text-amber-100/40 text-[10px] mt-1">
+          Learn about the game, its mission, and its development.
+        </p>
+      </div>
+
+      <span className="text-amber-300/60 text-lg">›</span>
+    </div>
+  </Link>
+
+  <div
+    className="p-4 rounded-xl border border-amber-500/10"
+    style={{ background: "rgba(15,26,48,0.35)" }}
+  >
+    <p className="text-amber-100/50 text-xs text-center font-serif italic">
+      Chronicles of Faith — A Biblical Roguelike
+      <br />
+      Version 1.0 — Genesis
+    </p>
+  </div>
+</div>
       </div>
 
       <AudioUnlockButton />

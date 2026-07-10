@@ -158,7 +158,6 @@ const handleNameSaved = (name) => {
   { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
   { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
   { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
-  { label: "About", art: HOME_ART.cross, path: "/about", desc: "Learn about the game and its mission.", status: null },
 ];
 
   return (

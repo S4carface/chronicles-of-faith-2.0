@@ -92,6 +92,17 @@ Sound.stopNarration();
 
   return (
     <div className="fixed inset-0 z-[80]" style={{ background: "#000000" }}>
+      <video
+  autoPlay
+  muted
+  playsInline
+  preload="auto"
+  className="absolute inset-0 w-full h-full object-cover"
+>
+  <source src={INTRO_VIDEO} type="video/mp4" />
+</video>
+
+<div className="absolute inset-0 bg-black/25" />
       {/* Dawn light overlay */}
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"

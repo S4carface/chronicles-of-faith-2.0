@@ -38,11 +38,13 @@ export default function CinematicIntro({ onComplete }) {
   timersRef.current.push(t);
 }
 
-    timersRef.current.push(setTimeout(() => setStep(1), 1200));
-    timersRef.current.push(setTimeout(() => setStep(2), 4500));
-    timersRef.current.push(setTimeout(() => setStep(3), 6500));
-    timersRef.current.push(setTimeout(() => { setStep(4); setShowButtons(true); }, 9500));
-
+    timersRef.current.push(setTimeout(() => setStep(1), 500));
+timersRef.current.push(setTimeout(() => setStep(2), 1800));
+timersRef.current.push(setTimeout(() => setStep(3), 3200));
+timersRef.current.push(setTimeout(() => {
+  setStep(4);
+  setShowButtons(true);
+}, 5000));
     return () => {
       timersRef.current.forEach(id => clearTimeout(id));
       audioRef.current?.pause();
@@ -96,6 +98,7 @@ Sound.stopNarration();
       <video
   autoPlay
   muted
+  loop      
   playsInline
   preload="auto"
   className="absolute inset-0 w-full h-full object-cover"
@@ -108,7 +111,7 @@ Sound.stopNarration();
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(26,39,68,0.9) 0%, rgba(10,15,30,0.95) 70%, rgba(0,0,0,1) 100%)",
+          background: "radial-gradient(ellipse at center, rgba(26,39,68,0.15) 0%, rgba(10,15,30,0.25) 70%, rgba(0,0,0,0.35) 100%)",
           opacity: step >= 2 ? 1 : 0,
         }}
       />

@@ -18,6 +18,7 @@ export const ENEMY_ART = {
 
 export const CARD_ART = {
   staff_moses: "/images/cards/staff_of_moses.PNG",
+  armor_god: "/images/cards/armor_of_god.PNG",
   sling_stone: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9bb171c32_generated_image.png",
   faith_shield: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/60485d6b2_generated_image.png",
   prayer: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/59464b791_generated_image.png",

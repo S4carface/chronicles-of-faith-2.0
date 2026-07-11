@@ -40,6 +40,196 @@ export const ENEMIES = {
       { name: "Confused Tongues", damage: 5, icon: "🗣️", effect: "random_card", description: "Forces random card play" },
     ],
   },
+    corrupt_humanity: {
+    id: "corrupt_humanity",
+    name: "Corrupt Humanity",
+    icon: "🌑",
+    hp: 34,
+    summary: "Violence and corruption spread across the earth before the Flood.",
+    narration:
+      "The earth was corrupt in God's sight and was full of violence. — Genesis 6:11",
+    attacks: [
+      { name: "Spreading Violence", damage: 7, icon: "⚔️" },
+      {
+        name: "Corrupting Influence",
+        damage: 4,
+        icon: "🌑",
+        effect: "discard",
+        description: "Discard 1 card",
+      },
+      {
+        name: "Hardened Heart",
+        damage: 5,
+        icon: "🪨",
+        effect: "block",
+        blockValue: 6,
+        description: "Gains 6 Block",
+      },
+    ],
+  },
+
+  nephilim: {
+    id: "nephilim",
+    name: "The Nephilim",
+    icon: "🗿",
+    hp: 42,
+    summary: "Ancient mighty warriors walk the earth before the Flood.",
+    narration:
+      "The Nephilim were on the earth in those days—the mighty men who were of old, men of renown. — Genesis 6:4",
+    attacks: [
+      { name: "Mighty Blow", damage: 10, icon: "💥" },
+      {
+        name: "Ancient Strength",
+        damage: 6,
+        icon: "🗿",
+        effect: "block",
+        blockValue: 8,
+        description: "Gains 8 Block",
+      },
+      {
+        name: "Terrifying Presence",
+        damage: 5,
+        icon: "👁️",
+        effect: "drain",
+        description: "Lose 1 Faith next turn",
+      },
+    ],
+  },
+
+  sodom_corruption: {
+    id: "sodom_corruption",
+    name: "Corruption of Sodom",
+    icon: "🔥",
+    hp: 38,
+    summary: "The wickedness of Sodom brings judgment upon the city.",
+    narration:
+      "The outcry against Sodom and Gomorrah is so great and their sin so grievous. — Genesis 18:20",
+    attacks: [
+      { name: "City of Wickedness", damage: 8, icon: "🔥" },
+      {
+        name: "Blinding Darkness",
+        damage: 5,
+        icon: "🌫️",
+        effect: "skip_draw",
+        description: "Draw 1 fewer card next turn",
+      },
+      {
+        name: "Burning Judgment",
+        damage: 6,
+        icon: "☄️",
+        effect: "dot",
+        description: "2 damage per turn for 3 turns",
+      },
+    ],
+  },
+
+  famine_canaan: {
+    id: "famine_canaan",
+    name: "Famine in Canaan",
+    icon: "🌾",
+    hp: 30,
+    summary: "Severe famine forces families to search for food and survival.",
+    narration:
+      "Now the famine was severe in the land. — Genesis 43:1",
+    attacks: [
+      { name: "Empty Harvest", damage: 6, icon: "🌾" },
+      {
+        name: "Hunger",
+        damage: 4,
+        icon: "🥀",
+        effect: "drain",
+        description: "Lose 1 Faith next turn",
+      },
+      {
+        name: "Scarcity",
+        damage: 3,
+        icon: "🪹",
+        effect: "skip_draw",
+        description: "Draw 1 fewer card next turn",
+      },
+    ],
+  },
+
+  esau_anger: {
+    id: "esau_anger",
+    name: "Esau's Anger",
+    icon: "🏹",
+    hp: 36,
+    summary: "Esau burns with anger after Jacob receives Isaac's blessing.",
+    narration:
+      "Esau held a grudge against Jacob because of the blessing his father had given him. — Genesis 27:41",
+    attacks: [
+      { name: "Hunter's Strike", damage: 8, icon: "🏹" },
+      {
+        name: "Burning Grudge",
+        damage: 7,
+        icon: "🔥",
+        effect: "recoil",
+        description: "Takes 3 recoil damage",
+      },
+      {
+        name: "Threat of Revenge",
+        damage: 5,
+        icon: "⚠️",
+        effect: "discard",
+        description: "Discard 1 card",
+      },
+    ],
+  },
+
+  joseph_betrayal: {
+    id: "joseph_betrayal",
+    name: "Joseph's Betrayal",
+    icon: "🕳️",
+    hp: 40,
+    summary: "Joseph's brothers betray him and sell him into slavery.",
+    narration:
+      "They took him and threw him into the cistern. The cistern was empty; there was no water in it. — Genesis 37:24",
+    attacks: [
+      { name: "Cast into the Pit", damage: 8, icon: "🕳️" },
+      {
+        name: "Brotherly Jealousy",
+        damage: 6,
+        icon: "👥",
+        effect: "discard",
+        description: "Discard 1 card",
+      },
+      {
+        name: "Sold Away",
+        damage: 5,
+        icon: "⛓️",
+        effect: "random_card",
+        description: "Forces a random card play",
+      },
+    ],
+  },
+
+  laban_deceit: {
+    id: "laban_deceit",
+    name: "Laban's Deceit",
+    icon: "🐑",
+    hp: 35,
+    summary: "Laban repeatedly deceives Jacob during his years of service.",
+    narration:
+      "What is this you have done to me? I served you for Rachel, didn't I? Why have you deceived me? — Genesis 29:25",
+    attacks: [
+      { name: "Broken Promise", damage: 6, icon: "📜" },
+      {
+        name: "Changed Wages",
+        damage: 5,
+        icon: "🪙",
+        effect: "drain",
+        description: "Lose 1 Faith next turn",
+      },
+      {
+        name: "Deception",
+        damage: 4,
+        icon: "🎭",
+        effect: "random_card",
+        description: "Forces a random card play",
+      },
+    ],
+  },
   // ===== BOSSES =====
   the_flood: {
     id: "the_flood",
@@ -76,6 +266,13 @@ export const ENEMIES = {
 export const ENEMY_POOL = [
   "serpent",
   "cain_wrath",
-  "pride_babel"
+  "pride_babel",
+  "corrupt_humanity",
+  "nephilim",
+  "sodom_corruption",
+  "famine_canaan",
+  "esau_anger",
+  "joseph_betrayal",
+  "laban_deceit",
 ];
 export const BOSSES = ["the_flood", "babel_tower"];

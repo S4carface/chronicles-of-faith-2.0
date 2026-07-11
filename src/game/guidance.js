@@ -43,8 +43,8 @@ export function getGuidanceHint(battleState) {
 
   // 4. Enemy will gain Block
   if (enemy.willBlock) {
-    return `Enemy will gain Block next. Attack now if you can.`;
-  }
+  return `Enemy will gain Block next. Attack now before the shield rises. If you cannot attack, prepare, defend, heal, or save Faith.`;
+}
 
   // 5. Enemy will heal
   if (enemy.willHeal) {

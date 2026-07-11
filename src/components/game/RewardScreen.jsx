@@ -118,11 +118,6 @@ export default function RewardScreen() {
     completeRoom(run.currentNode.id);
   };
 
-  const handleSkip = () => {
-    Sound.sfx.click();
-    completeRoom(run.currentNode.id);
-  };
-
   if (showNarration) {
     return <StoryNarration text={narrationText} summary={narrationSummary} onComplete={handleNarrationComplete} />;
   }
@@ -142,10 +137,9 @@ export default function RewardScreen() {
           </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">Choose Your Reward</h2>
-        <p className="text-amber-100/50 text-sm mt-2">Tap a card to read details, then confirm your choice</p>
-        {run.deck.length >= RUN_DECK_MAX - 2 && (
-          <p className="text-amber-300/60 text-xs mt-1">Run deck: {run.deck.length}/{RUN_DECK_MAX} cards</p>
-        )}
+        <p className="text-amber-100/50 text-sm mt-2">
+  Choose one card to add to your deck
+</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-5 w-full max-w-5xl mb-8">
@@ -162,13 +156,6 @@ export default function RewardScreen() {
           );
         })}
       </div>
-
-      <button
-        onClick={handleSkip}
-        className="text-amber-100/40 hover:text-amber-200/70 text-sm transition"
-      >
-        Skip reward →
-      </button>
 
       {detailCard && (
         <CardDetailModal

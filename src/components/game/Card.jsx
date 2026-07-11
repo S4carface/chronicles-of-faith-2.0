@@ -11,6 +11,13 @@ const RARITY_STYLES = {
     label: "text-sky-200",
     badge: "bg-sky-600/40",
   },
+    uncommon: {
+    border: "border-purple-400/70",
+    glow: "shadow-lg shadow-purple-500/20",
+    bg: "from-purple-800/40 to-slate-800",
+    label: "text-purple-200",
+    badge: "bg-purple-600/40",
+  },
   rare: {
     border: "border-emerald-400/70",
     glow: "shadow-lg shadow-emerald-500/25",

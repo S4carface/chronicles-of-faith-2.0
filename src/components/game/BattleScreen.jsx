@@ -766,7 +766,39 @@ const selectedCardData =
     : null;
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)" }}>
+  <>
+    <style>{`
+      .phone-landscape-blocker {
+        display: none;
+      }
+
+      @media (orientation: landscape) and (max-height: 500px) and (max-width: 950px) {
+        .phone-landscape-blocker {
+          display: flex;
+        }
+      }
+    `}</style>
+
+    <div
+      className="phone-landscape-blocker fixed inset-0 z-[999] items-center justify-center px-8 text-center"
+      style={{
+        background: "linear-gradient(180deg, #0F1A30 0%, #080C18 100%)",
+      }}
+    >
+      <div>
+        <div className="text-5xl mb-5">📱</div>
+
+        <h2 className="text-2xl font-serif text-amber-200 mb-3">
+          Rotate Your Phone
+        </h2>
+
+        <p className="text-amber-100/65 text-sm leading-relaxed">
+          Chronicles of Faith is designed for portrait play on phones.
+        </p>
+      </div>
+    </div>
+
+    <div className="fixed inset-0 flex flex-col overflow-hidden"
       <div className="flex flex-col h-full w-full lg:max-w-[1600px] lg:mx-auto lg:px-6">
       {/* Top row: help + pause */}
       <div className="flex items-center justify-end gap-2 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
@@ -1402,5 +1434,6 @@ const selectedCardData =
       )}
       </div>
     </div>
+    </>
   );
 }

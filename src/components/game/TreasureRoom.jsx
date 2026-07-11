@@ -85,9 +85,13 @@ export default function TreasureRoom() {
       {/* Rarity label */}
       <div className="mb-3 text-center">
         <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
-          card.rarity === "legendary" ? "border-amber-400/50 bg-amber-900/20 text-amber-300" :
-          card.rarity === "rare" ? "border-emerald-400/50 bg-emerald-900/20 text-emerald-300" :
-          "border-sky-400/50 bg-sky-900/20 text-sky-300"
+          card.rarity === "legendary"
+  ? "border-amber-400/50 bg-amber-900/20 text-amber-300"
+  : card.rarity === "rare"
+    ? "border-emerald-400/50 bg-emerald-900/20 text-emerald-300"
+    : card.rarity === "uncommon"
+      ? "border-purple-400/50 bg-purple-900/20 text-purple-300"
+      : "border-sky-400/50 bg-sky-900/20 text-sky-300"
         }`}>{rarityLabel}</span>
       </div>
 

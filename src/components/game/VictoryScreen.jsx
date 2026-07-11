@@ -71,17 +71,36 @@ export default function VictoryScreen() {
     recordRunWon(finalScore, run.gold || 0, completedDifficulty, run.roomsCleared || 0);
     syncStatsToCloud();
 
-    // First Genesis completion: guarantee a strong rare card (never legendary)
-    if (!profile.genesisCompleted) {
-      const rewardId = generateFirstCompletionReward(Math.random);
-      if (rewardId) {
-        addCardToCollection(rewardId);
-        setFirstCompletionCard(rewardId);
-      }
-      saveProfile({ genesisCompleted: true });
-      queueUnlock({ type: 'chapter', name: 'Genesis' });
-      setShowCelebration(true);
-    }
+    // Build progression updates from the completed difficulty.
+const progressionUpdates = {};
+
+// Any successful Genesis run unlocks Rare card packs.
+if (!profile.genesisCompleted) {
+  progressionUpdates.genesisCompleted = true;
+
+  const rewardId = generateFirstCompletionReward(Math.random);
+
+  if (rewardId) {
+    addCardToCollection(rewardId);
+    setFirstCompletionCard(rewardId);
+  }
+
+  queueUnlock({ type: "chapter", name: "Genesis" });
+  setShowCelebration(true);
+}
+
+// Completing Genesis on Normal or Hard unlocks Legendary card packs.
+if (
+  ["normal", "hard"].includes(completedDifficulty) &&
+  !profile.genesisNormalCompleted
+) {
+  progressionUpdates.genesisNormalCompleted = true;
+}
+
+// Save all progression updates together.
+if (Object.keys(progressionUpdates).length > 0) {
+  saveProfile(progressionUpdates);
+}
 
     // Always submit the score (as Anonymous Pilgrim if no name set).
     // If the player has no name, offer to add one after submission.

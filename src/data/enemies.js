@@ -40,19 +40,6 @@ export const ENEMIES = {
       { name: "Confused Tongues", damage: 5, icon: "🗣️", effect: "random_card", description: "Forces random card play" },
     ],
   },
-  pharaoh: {
-    id: "pharaoh",
-    name: "Pharaoh of Egypt",
-    icon: "👑",
-    hp: 42,
-    summary: "Joseph rises to power under Pharaoh in Egypt.",
-    narration: "Pharaoh said to Joseph, 'See, I have set you over all the land of Egypt.' — Genesis 41:41",
-    attacks: [
-      { name: "Royal Decree", damage: 7, icon: "📜" },
-      { name: "Whip of Bondage", damage: 6, icon: "⛓️" },
-      { name: "Plague Reversal", damage: 8, icon: "🦗", effect: "heal_self", description: "Heals self 4 HP" },
-    ],
-  },
   // ===== BOSSES =====
   the_flood: {
     id: "the_flood",
@@ -86,5 +73,9 @@ export const ENEMIES = {
   },
 };
 
-export const ENEMY_POOL = ["serpent", "cain_wrath", "pride_babel", "pharaoh"];
+export const ENEMY_POOL = [
+  "serpent",
+  "cain_wrath",
+  "pride_babel"
+];
 export const BOSSES = ["the_flood", "babel_tower"];

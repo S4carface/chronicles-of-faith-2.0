@@ -14,12 +14,14 @@ import { getCardEffectText } from "@/components/game/Card";
 
 const RARITY_BORDER = {
   common: "border-sky-400/60",
+  uncommon: "border-purple-400/70",
   rare: "border-emerald-400/70",
   legendary: "border-amber-300/80",
 };
 
 const RARITY_GLOW = {
   common: "shadow-md shadow-sky-500/10",
+  uncommon: "shadow-lg shadow-purple-500/20",
   rare: "shadow-lg shadow-emerald-500/25",
   legendary: "shadow-xl shadow-amber-400/40",
 };
@@ -210,7 +212,13 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
         </div>
         <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
         <div className={`text-[8px] uppercase font-bold tracking-wide ${
-          card.rarity === "legendary" ? "text-amber-300" : card.rarity === "rare" ? "text-emerald-300" : "text-sky-300"
+          card.rarity === "legendary"
+  ? "text-amber-300"
+  : card.rarity === "rare"
+    ? "text-emerald-300"
+    : card.rarity === "uncommon"
+      ? "text-purple-300"
+      : "text-sky-300"
         }`}>{rarityLabel}</div>
         <div className="text-[7px] text-amber-100/50 text-center leading-tight">{getCardEffectText(card)}</div>
       </div>

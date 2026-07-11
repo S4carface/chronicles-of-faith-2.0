@@ -33,7 +33,7 @@ export const CARD_ART = {
   burning_bush: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9b6365d20_generated_image.png",
   manna_heaven: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/8a9223f41_generated_image.png",
   rainbow_covenant: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/33b9c4c21_generated_image.png",
-  pillar_fire: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/99823a34d_generated_image.png",
+  pillar_fire: "images/cards/pillar_of_fire.PNG",
   the_flood: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/085e2c3a0_generated_image.png",
   rams_horn: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/b67e416bb_generated_image.png",
   wisdom: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d08c007fb_generated_image.png",

@@ -27,6 +27,7 @@ export const CARD_ART = {
   coat_colors: "/images/cards/coat_of_many_colors.PNG",
   jacobs_ladder: "/images/cards/jacobs_ladder.PNG",
   angel_lord: "/images/cards/angel_of_the_lord.PNG",
+  creation_light: "images/cards/creations_light.PNG",
   sling_stone: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9bb171c32_generated_image.png",
   faith_shield: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/60485d6b2_generated_image.png",
   prayer: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/59464b791_generated_image.png",

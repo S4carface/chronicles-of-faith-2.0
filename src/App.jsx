@@ -24,6 +24,7 @@ import Settings from "./pages/Settings";
 import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
+import SpecialThanks from "@/pages/SpecialThanks";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -64,6 +65,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/special-thanks" element={<SpecialThanks />} />
       </Routes>
     </GameProvider>
   );

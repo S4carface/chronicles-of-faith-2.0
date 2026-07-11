@@ -8,6 +8,7 @@ import {
   Lightbulb,
   PartyPopper,
   Sparkles,
+  LockKeyhole,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById, CARDS } from "@/data/cards";
@@ -22,18 +23,51 @@ const ICON_MAP = {
 };
 
 const SHOP_ITEMS = [
-    {
+  {
+    id: "shop_common_card",
+    name: "Common Card Pack",
+    icon: "common",
+    cost: 50,
+    desc: "Receive one random Common card you do not own.",
+    type: "card_pack",
+    rarity: "common",
+    unlockRequirement: "always",
+  },
+
+  {
     id: "shop_uncommon_card",
     name: "Uncommon Card Pack",
     icon: "uncommon",
-    cost: 35,
-    desc: "Get a random Uncommon card for your collection.",
+    cost: 150,
+    desc: "Receive one random Uncommon card you do not own.",
     type: "card_pack",
     rarity: "uncommon",
+    unlockRequirement: "always",
   },
-  { id: "shop_rare_card", name: "Rare Card Pack", icon: "rare", cost: 50, desc: "Get a random Rare card for your collection.", type: "card_pack", rarity: "rare" },
-  { id: "shop_legendary_card", name: "Legendary Relic", icon: "legendary", cost: 120, desc: "Get a random Legendary card. Very rare!", type: "card_pack", rarity: "legendary" },
-  { id: "shop_common_card", name: "Common Card Pack", icon: "common", cost: 20, desc: "Get a random Common card for your collection.", type: "card_pack", rarity: "common" },
+
+  {
+    id: "shop_rare_card",
+    name: "Rare Card Pack",
+    icon: "rare",
+    cost: 500,
+    desc: "Receive one random Rare card you do not own.",
+    type: "card_pack",
+    rarity: "rare",
+    unlockRequirement: "genesis",
+    lockedText: "Complete Genesis to unlock",
+  },
+
+  {
+    id: "shop_legendary_card",
+    name: "Legendary Card Pack",
+    icon: "legendary",
+    cost: 2000,
+    desc: "Receive one random Legendary card you do not own.",
+    type: "card_pack",
+    rarity: "legendary",
+    unlockRequirement: "genesis_normal",
+    lockedText: "Complete Genesis on Normal to unlock",
+  },
 ];
 
 export default function Shop() {
@@ -41,14 +75,44 @@ export default function Shop() {
   const [purchased, setPurchased] = useState(null);
   const [detailCard, setDetailCard] = useState(null);
   const gold = profile.gold || 0;
+  const isItemUnlocked = (item) => {
+  switch (item.unlockRequirement) {
+    case "genesis":
+      return profile.genesisCompleted === true;
+
+    case "genesis_normal":
+      return profile.genesisNormalCompleted === true;
+
+    case "always":
+    default:
+      return true;
+  }
+};
 
   useEffect(() => { Sound.playMusic("menu"); }, []);
 
   const handleBuy = (item) => {
-    if (gold < item.cost) {
-      Sound.sfx.click();
-      return;
-    }
+  if (!isItemUnlocked(item)) {
+    Sound.sfx.click();
+
+    setPurchased({
+      message: item.lockedText || "This card pack is still locked.",
+      isError: true,
+    });
+
+    return;
+  }
+
+  if (gold < item.cost) {
+    Sound.sfx.click();
+
+    setPurchased({
+      message: `You need ${item.cost - gold} more gold.`,
+      isError: true,
+    });
+
+    return;
+  }
     if (item.type === "card_pack") {
       const pool = CARDS.filter(c => c.rarity === item.rarity && !profile.collectedCards.includes(c.id));
       if (pool.length === 0) {
@@ -69,7 +133,7 @@ export default function Shop() {
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="text-center">
           <h1 className="text-3xl font-serif text-amber-200">Marketplace</h1>
-          <p className="text-amber-100/60 text-xs mt-1">Buy card packs & relics</p>
+          <p className="text-amber-100/60 text-xs mt-1">   Open card packs and expand your collection </p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20">
           <Coins className="w-5 h-5 text-amber-300" />
@@ -81,19 +145,22 @@ export default function Shop() {
         <div className="flex items-start gap-2">
           <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
           <p className="text-amber-100/60 text-sm text-left">
-            Earn gold by winning battles and completing runs. Spend it here to expand your card collection!
+            Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
         {SHOP_ITEMS.map((item) => {
-          const canAfford = gold >= item.cost;
-          const Icon = ICON_MAP[item.icon] || Package;
+          const isUnlocked = isItemUnlocked(item);
+const canAfford = gold >= item.cost;
+const canPurchase = isUnlocked && canAfford;
+const Icon = ICON_MAP[item.icon] || Package;
           return (
             <div
               key={item.id}
-              className="p-6 rounded-xl border-2 text-center"
+              className={`p-6 rounded-xl border-2 text-center transition ${
+  isUnlocked ? "" : "opacity-70"
               style={{
                 background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)",
                 borderColor:
@@ -116,45 +183,80 @@ export default function Shop() {
       ? "border-purple-400/40 bg-purple-500/10"
       : "border-sky-400/40 bg-sky-500/10"
                 }`}>
-                  <Icon className={`w-7 h-7 ${
-                    item.rarity === "legendary"
-  ? "text-amber-300"
-  : item.rarity === "rare"
-    ? "text-emerald-300"
-    : item.rarity === "uncommon"
-      ? "text-purple-300"
-      : "text-sky-300"
-                  }`} />
+                  {isUnlocked ? (
+  <Icon
+    className={`w-7 h-7 ${
+      item.rarity === "legendary"
+        ? "text-amber-300"
+        : item.rarity === "rare"
+          ? "text-emerald-300"
+          : item.rarity === "uncommon"
+            ? "text-purple-300"
+            : "text-sky-300"
+    }`}
+  />
+) : (
+  <LockKeyhole className="w-7 h-7 text-slate-400" />
+)}
                 </div>
               </div>
               <h3 className="font-serif text-amber-100 text-lg mb-1">{item.name}</h3>
               <p className="text-amber-100/50 text-xs mb-3">{item.desc}</p>
               <button
-                onClick={() => handleBuy(item)}
-                disabled={!canAfford}
-                className={`w-full px-4 py-2 rounded-lg border-2 font-bold transition flex items-center justify-center gap-1.5 ${
-                  canAfford
-                    ? "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
-                    : "border-slate-700/30 text-slate-500 cursor-not-allowed"
-                }`}
-              >
-                <Coins className="w-4 h-4" />
-                {canAfford ? `${item.cost} gold` : `Need ${item.cost} gold`}
-              </button>
-              {!canAfford && (
-                <p className="text-amber-100/30 text-[9px] mt-1.5 text-center">Earn gold by winning battles</p>
-              )}
+  onClick={() => handleBuy(item)}
+  disabled={!canPurchase}
+  className={`w-full px-4 py-2 rounded-lg border-2 font-bold transition flex items-center justify-center gap-1.5 ${
+    canPurchase
+      ? "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
+      : "border-slate-700/30 text-slate-500 cursor-not-allowed"
+  }`}
+>
+  {isUnlocked ? (
+    <>
+      <Coins className="w-4 h-4" />
+      {canAfford ? `${item.cost} gold` : `Need ${item.cost} gold`}
+    </>
+  ) : (
+    <>
+      <LockKeyhole className="w-4 h-4" />
+      Locked
+    </>
+  )}
+</button>
+              {!isUnlocked ? (
+  <p className="text-slate-400 text-[10px] mt-2 text-center">
+    {item.lockedText}
+  </p>
+) : !canAfford ? (
+  <p className="text-amber-100/30 text-[9px] mt-1.5 text-center">
+    Earn gold by winning battles
+  </p>
+) : (
+  <p className="text-amber-100/30 text-[9px] mt-1.5 text-center">
+    Contains one unowned card
+  </p>
+)}
             </div>
           );
         })}
       </div>
 
       {purchased && (
-        <div className="max-w-md mx-auto rounded-xl border-2 border-emerald-400/40 bg-emerald-900/20 p-6 text-center animate-fade-in">
+        <div
+  className={`max-w-md mx-auto rounded-xl border-2 p-6 text-center animate-fade-in ${
+    purchased.isError
+      ? "border-red-400/40 bg-red-900/20"
+      : "border-emerald-400/40 bg-emerald-900/20"
+  }`}
+>
           <div className="flex justify-center mb-2">
-            <PartyPopper className="w-8 h-8 text-emerald-400" />
+            {purchased.isError ? (
+  <LockKeyhole className="w-8 h-8 text-red-300" />
+) : (
+  <PartyPopper className="w-8 h-8 text-emerald-400" />
+)}
           </div>
-          <p className="text-emerald-200 text-lg font-serif mb-2">{purchased.message}</p>
+          <p   className={`text-lg font-serif mb-2 ${     purchased.isError ? "text-red-200" : "text-emerald-200"   }`} >   {purchased.message} </p>
           {purchased.card && (
             <button
               onClick={() => { Sound.sfx.click(); setDetailCard(purchased.card); }}

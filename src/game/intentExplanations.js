@@ -3,46 +3,41 @@
 export function getIntentExplanation(action, enemy) {
   if (!action) return null;
 
-  const parts = [];
   const isBoss = enemy?.isBoss;
 
-  if (action.damage > 0) {
-    parts.push(`Enemy deals ${action.damage} damage.`);
-  }
+  switch (action.effect) {
+    case "block":
+      return `Enemy will gain ${action.blockValue || 5} Block next turn. Attack now before the shield goes up.`;
 
-  if (action.effect === "block") {
-    parts.push(`Enemy gains +${action.blockValue || 5} Block.`);
-  }
+    case "heal_self":
+      return `Enemy will heal ${isBoss ? 6 : 4} HP. Finish the fight quickly or expect a longer battle.`;
 
-  if (action.effect === "heal_self") {
-    parts.push(`Enemy heals ${isBoss ? 6 : 4} HP.`);
-  }
+    case "dot":
+      return "Enemy will curse you. Prepare to lose 2 HP each turn for 3 turns.";
 
-  if (action.effect === "dot") {
-    parts.push("Curses you — 2 damage per turn for 3 turns.");
-  }
-  if (action.effect === "skip_draw") {
-    parts.push("You draw 1 fewer card next turn.");
-  }
-  if (action.effect === "block_scripture") {
-    parts.push("Confused Tongues: Scripture cards are blocked next turn.");
-  }
-  if (action.effect === "drain") {
-    parts.push("Faith Drain: You lose 1 Faith next turn.");
-  }
-  if (action.effect === "discard") {
-    parts.push("Discard: Forces you to discard 1 card.");
-  }
-  if (action.effect === "random_card") {
-    parts.push("Confusion: Forces you to play a random card.");
-  }
-  if (action.effect === "recoil") {
-    parts.push("Enemy takes 3 recoil damage.");
-  }
+    case "skip_draw":
+      return "Enemy will reduce your next draw. Consider saving strong cards.";
 
-  if (parts.length === 0) {
-    parts.push(`${action.name}: unknown effect.`);
-  }
+    case "block_scripture":
+      return "Enemy will block Scripture cards next turn. Play Scripture cards now if needed.";
 
-  return parts.join(" ");
+    case "drain":
+      return "Enemy will drain 1 Faith. Spend Faith wisely before your next turn.";
+
+    case "discard":
+      return "Enemy will force you to discard a card. Don't hold key cards for too long.";
+
+    case "random_card":
+      return "Enemy may force a random card to be played. Plan for some chaos.";
+
+    case "recoil":
+      return "Enemy will hurt itself after attacking. Survive and let it take damage.";
+
+    default:
+      if (action.damage > 0) {
+        return `Enemy will deal ${action.damage} damage next turn. Consider defending or healing.`;
+      }
+
+      return action.name;
+  }
 }

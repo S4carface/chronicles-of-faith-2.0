@@ -27,11 +27,13 @@ export default function CinematicIntro({ onComplete }) {
 music.volume = 0.3;
 musicRef.current = music;
 
-setTimeout(() => {
+const musicTimer = setTimeout(() => {
   music.play().catch(() => {
     console.warn("Intro music could not autoplay.");
   });
 }, 500);
+
+timersRef.current.push(musicTimer);
     
     if (narrationOn && !narratedRef.current) {
   narratedRef.current = true;
@@ -56,29 +58,53 @@ timersRef.current.push(setTimeout(() => {
   setStep(4);
   setShowButtons(true);
 }, 5000));
-    return () => {
-      timersRef.current.forEach(id => clearTimeout(id));
-      audioRef.current?.pause();
-audioRef.current = null;
-Sound.stopNarration();
-    };
-  }, []);
+        return () => {
+  timersRef.current.forEach((id) => clearTimeout(id));
+
+  audioRef.current?.pause();
+  audioRef.current = null;
+
+  musicRef.current?.pause();
+  if (musicRef.current) {
+    musicRef.current.currentTime = 0;
+  }
+  musicRef.current = null;
+
+  Sound.stopNarration();
+};
+      }, []);
 
   const handleSkip = useCallback(() => {
-    timersRef.current.forEach(id => clearTimeout(id));
-    audioRef.current?.pause();
-audioRef.current = null;
-Sound.stopNarration();
-    onComplete();
-  }, [onComplete]);
+  timersRef.current.forEach((id) => clearTimeout(id));
+
+  audioRef.current?.pause();
+  audioRef.current = null;
+
+  musicRef.current?.pause();
+  if (musicRef.current) {
+    musicRef.current.currentTime = 0;
+  }
+  musicRef.current = null;
+
+  Sound.stopNarration();
+  onComplete();
+}, [onComplete]);
 
   const handleBegin = useCallback(() => {
-    Sound.sfx.click();
-    audioRef.current?.pause();
-audioRef.current = null;
-Sound.stopNarration();
-    onComplete();
-  }, [onComplete]);
+  Sound.sfx.click();
+
+  audioRef.current?.pause();
+  audioRef.current = null;
+
+  musicRef.current?.pause();
+  if (musicRef.current) {
+    musicRef.current.currentTime = 0;
+  }
+  musicRef.current = null;
+
+  Sound.stopNarration();
+  onComplete();
+}, [onComplete]);
 
   const replayNarration = () => {
   audioRef.current?.pause();

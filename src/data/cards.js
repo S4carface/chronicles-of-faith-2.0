@@ -10,6 +10,7 @@ export const CARD_TYPES = {
 
 export const RARITIES = {
   COMMON: "common",
+  UNCOMMON: "uncommon",
   RARE: "rare",
   LEGENDARY: "legendary",
 };
@@ -23,16 +24,19 @@ export const CARDS = [
   { id: "bread_life", name: "Bread of Life", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.COMMON, cost: 1, value: 5, icon: "🍞", verse: "John 6:35", description: "I am the bread of life. Heal 5 HP." },
   { id: "righteous_strike", name: "Righteous Strike", type: CARD_TYPES.ATTACK, rarity: RARITIES.COMMON, cost: 2, value: 8, icon: "⚔️", verse: "Exodus 15:2", description: "The Lord is my strength." },
   { id: "armor_god", name: "Armor of God", type: CARD_TYPES.DEFENSE, rarity: RARITIES.COMMON, cost: 2, value: 7, icon: "🛡️", verse: "Ephesians 6:11", description: "Put on the full armor of God." },
-  { id: "song_praise", name: "Song of Praise", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.COMMON, cost: 0, value: 0, icon: "🎵", verse: "Psalm 96:1", description: "Sing to the Lord a new song. Gain 2 Faith." },
+  { id: "song_praise", name: "Song of Praise", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.UNCOMMON, cost: 0, value: 0, icon: "🎵", verse: "Psalm 96:1", description: "Sing to the Lord a new song. Gain 2 Faith." },
   { id: "stone_tablet", name: "Stone Tablet", type: CARD_TYPES.DEFENSE, rarity: RARITIES.COMMON, cost: 1, value: 4, icon: "📜", verse: "Hebrews 9:4", description: "The tablets of the covenant." },
-  { id: "wisdom", name: "Wisdom", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.COMMON, cost: 1, value: 0, icon: "🦉", verse: "James 1:5", description: "If you lack wisdom, ask God. Draw 2 cards." },
-  { id: "doves_peace", name: "Dove's Peace", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.COMMON, cost: 1, value: 3, icon: "🕊️", verse: "Genesis 8:11", description: "The dove came back. Heal 3, draw 1." },
+  { id: "wisdom", name: "Wisdom", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.UNCOMMON, cost: 1, value: 0, icon: "🦉", verse: "James 1:5", description: "If you lack wisdom, ask God. Draw 2 cards." },
+  { id: "doves_peace", name: "Dove's Peace", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.UNCOMMON, cost: 1, value: 3, icon: "🕊️", verse: "Genesis 8:11", description: "The dove came back. Heal 3, draw 1." },
   { id: "rainbow_covenant", name: "Rainbow Covenant", type: CARD_TYPES.DEFENSE, rarity: RARITIES.COMMON, cost: 1, value: 5, icon: "🌈", verse: "Genesis 9:13", description: "I set my rainbow in the clouds." },
   { id: "fig_leaf", name: "Fig Leaf", type: CARD_TYPES.DEFENSE, rarity: RARITIES.COMMON, cost: 0, value: 3, icon: "🌿", verse: "Genesis 3:7", description: "They sewed fig leaves together." },
-  { id: "rams_horn", name: "Ram's Horn", type: CARD_TYPES.ATTACK, rarity: RARITIES.COMMON, cost: 2, value: 9, icon: "📯", verse: "Genesis 22:13", description: "Abraham saw a ram caught in the thicket." },
-  { id: "living_water", name: "Living Water", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.COMMON, cost: 1, value: 6, icon: "💧", verse: "John 4:10", description: "Living water. Heal 6 HP." },
+  { id: "rams_horn", name: "Ram's Horn", type: CARD_TYPES.ATTACK, rarity: RARITIES.UNCOMMON, cost: 2, value: 9, icon: "📯", verse: "Genesis 22:13", description: "Abraham saw a ram caught in the thicket." },
+  { id: "living_water", name: "Living Water", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.UNCOMMON, cost: 1, value: 6, icon: "💧", verse: "John 4:10", description: "Living water. Heal 6 HP." },
 
-  // ===== RARE (Gold) =====
+  // ===== UNCOMMON (Violet) =====
+  // Song of Praise, Wisdom, Dove's Peace, Ram's Horn, and Living Water are above.
+
+  // ===== RARE (Emerald) =====
   { id: "sling_david", name: "Sling of David", type: CARD_TYPES.ATTACK, rarity: RARITIES.RARE, cost: 2, value: 12, icon: "🎯", verse: "1 Samuel 17:50", description: "David prevailed over Goliath. Combo: x2 with Righteous Aim." },
   { id: "righteous_aim", name: "Righteous Aim", type: CARD_TYPES.SCRIPTURE, rarity: RARITIES.RARE, cost: 1, value: 0, icon: "✝️", verse: "1 Samuel 17:47", description: "The battle is the Lord's. Next attack deals double." },
   { id: "parting_waters", name: "Parting Waters", type: CARD_TYPES.MIRACLE, rarity: RARITIES.RARE, cost: 3, value: 15, icon: "🌊", verse: "Exodus 14:21", description: "The waters were divided." },

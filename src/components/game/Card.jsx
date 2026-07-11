@@ -112,11 +112,11 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         style.glow,
         style.bg,
         "bg-gradient-to-b",
-        playable && "hover:scale-105 active:scale-95",
-        selected && playable && "ring-4 ring-amber-300 scale-110 shadow-2xl shadow-amber-400/60 z-20 brightness-110",
-        selected && !playable && "ring-4 ring-amber-400/40 scale-105 z-10",
+        playable && "hover:-translate-y-2 hover:scale-[1.03] active:scale-95",
+        selected && playable && "-translate-y-3 ring-4 ring-amber-300 scale-[1.05] shadow-2xl shadow-amber-400/60 z-20 brightness-110",
+        selected && !playable && "-translate-y-2 ring-4 ring-amber-400/40 scale-[1.03] z-10",
         !playable && onClick && "opacity-60",
-        small ? "w-20 h-36" : "w-40 h-60",
+        small ? "w-28 h-44" : "w-44 h-64",
         inHand && "flex-shrink-0"
       )}
     >
@@ -131,8 +131,19 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       </div>
 
       {/* Card artwork */}
-      <div className={cn("mt-7 mb-1 overflow-hidden rounded relative", small ? "h-14" : "h-20")} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-        <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
+      <div
+  className={cn(
+    "mt-0 mb-1 overflow-hidden relative",
+    small ? "h-28" : "h-36"
+  )}
+  style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+>
+  <img
+    src={artUrl || PLACEHOLDER_ART}
+    alt={card.name}
+    className="absolute inset-0 w-full h-full object-cover"
+  />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-slate-950/70" />
         {blocked && (
           <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(15,26,48,0.55)" }}>
             <Lock className={cn("text-red-300/80", small ? "w-4 h-4" : "w-6 h-6")} />

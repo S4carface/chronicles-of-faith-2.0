@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Package, Gem, Inbox, Coins, Lightbulb, PartyPopper } from "lucide-react";
+import {
+  Package,
+  Gem,
+  Inbox,
+  Coins,
+  Lightbulb,
+  PartyPopper,
+  Sparkles,
+} from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById, CARDS } from "@/data/cards";
 import CardDetailModal from "@/components/game/CardDetailModal";
@@ -8,11 +16,21 @@ import * as Sound from "@/game/soundManager";
 
 const ICON_MAP = {
   common: Inbox,
+  uncommon: Sparkles,
   rare: Package,
   legendary: Gem,
 };
 
 const SHOP_ITEMS = [
+    {
+    id: "shop_uncommon_card",
+    name: "Uncommon Card Pack",
+    icon: "uncommon",
+    cost: 35,
+    desc: "Get a random Uncommon card for your collection.",
+    type: "card_pack",
+    rarity: "uncommon",
+  },
   { id: "shop_rare_card", name: "Rare Card Pack", icon: "rare", cost: 50, desc: "Get a random Rare card for your collection.", type: "card_pack", rarity: "rare" },
   { id: "shop_legendary_card", name: "Legendary Relic", icon: "legendary", cost: 120, desc: "Get a random Legendary card. Very rare!", type: "card_pack", rarity: "legendary" },
   { id: "shop_common_card", name: "Common Card Pack", icon: "common", cost: 20, desc: "Get a random Common card for your collection.", type: "card_pack", rarity: "common" },
@@ -78,18 +96,34 @@ export default function Shop() {
               className="p-6 rounded-xl border-2 text-center"
               style={{
                 background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)",
-                borderColor: item.rarity === "legendary" ? "rgba(252,211,77,0.5)" : item.rarity === "rare" ? "rgba(52,211,153,0.5)" : "rgba(56,189,248,0.5)",
+                borderColor:
+  item.rarity === "legendary"
+    ? "rgba(252,211,77,0.5)"
+    : item.rarity === "rare"
+      ? "rgba(52,211,153,0.5)"
+      : item.rarity === "uncommon"
+        ? "rgba(192,132,252,0.5)"
+        : "rgba(56,189,248,0.5)",
               }}
             >
               <div className="flex justify-center mb-3">
                 <div className={`w-14 h-14 rounded-lg flex items-center justify-center border ${
-                  item.rarity === "legendary" ? "border-amber-400/40 bg-amber-500/10" :
-                  item.rarity === "rare" ? "border-emerald-400/40 bg-emerald-500/10" :
-                  "border-sky-400/40 bg-sky-500/10"
+                  item.rarity === "legendary"
+  ? "border-amber-400/40 bg-amber-500/10"
+  : item.rarity === "rare"
+    ? "border-emerald-400/40 bg-emerald-500/10"
+    : item.rarity === "uncommon"
+      ? "border-purple-400/40 bg-purple-500/10"
+      : "border-sky-400/40 bg-sky-500/10"
                 }`}>
                   <Icon className={`w-7 h-7 ${
-                    item.rarity === "legendary" ? "text-amber-300" :
-                    item.rarity === "rare" ? "text-emerald-300" : "text-sky-300"
+                    item.rarity === "legendary"
+  ? "text-amber-300"
+  : item.rarity === "rare"
+    ? "text-emerald-300"
+    : item.rarity === "uncommon"
+      ? "text-purple-300"
+      : "text-sky-300"
                   }`} />
                 </div>
               </div>

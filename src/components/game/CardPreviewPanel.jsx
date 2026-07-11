@@ -14,6 +14,7 @@ const TYPE_INFO = {
 
 const RARITY_BORDER = {
   common: "border-sky-400/60",
+  uncommon: "border-purple-400/70",
   rare: "border-emerald-400/70",
   legendary: "border-amber-300/80",
 };

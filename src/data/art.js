@@ -23,6 +23,7 @@ export const CARD_ART = {
   doves_peace: "/images/cards/doves_peace.PNG",
   sling_david: "/images/cards/sling_of_david.PNG",
   righteous_aim: "/images/cards/righteous_aim.PNG",
+  ark_covenant: "/images/cards/ark_of_the_covenant.PNG",
   sling_stone: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9bb171c32_generated_image.png",
   faith_shield: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/60485d6b2_generated_image.png",
   prayer: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/59464b791_generated_image.png",

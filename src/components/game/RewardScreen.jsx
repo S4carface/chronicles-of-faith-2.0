@@ -193,36 +193,78 @@ export default function RewardScreen() {
   );
 }
 
-function RewardCardDisplay({ card, ownedCount, onClick }) {   const alreadyOwned = ownedCount > 0;   const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;   const rarityLabel =     card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);    return (     <div       onClick={onClick}       className="min-w-0 cursor-pointer transition active:scale-95 hover:scale-[1.02]"     >       <div         className={`relative w-full aspect-[3/4] rounded-xl border-2 ${           RARITY_BORDER[card.rarity]         } ${RARITY_GLOW[card.rarity]} overflow-hidden bg-slate-950`}       >         <img           src={CARD_ART[card.id] || PLACEHOLDER_ART}           alt={card.name}           className="absolute inset-0 w-full h-full object-cover"         />          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-slate-950/95" />          <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">           <span             className={`text-[8px] sm:text-[10px] font-bold px-1.5 py-1 rounded uppercase leading-tight ${               alreadyOwned                 ? "text-amber-100 bg-amber-950/85"                 : "text-emerald-100 bg-emerald-950/85"             }`}           >             {alreadyOwned ? "Owned" : "New"}           </span>            <span className="rounded-full bg-slate-950/85 border border-amber-400/50 px-2 py-1 text-[10px] sm:text-sm font-bold text-amber-200">             {card.cost} ✨           </span>         </div>          <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4 text-center">           <h3 className="font-serif text-sm sm:text-xl text-amber-100 leading-tight">             {card.name}           </h3>            <p             className={`mt-1 text-[8px] sm:text-[10px] uppercase font-bold tracking-wide ${               card.rarity === "legendary"                 ? "text-amber-300"                 : card.rarity === "rare"                   ? "text-emerald-300"                   : card.rarity === "uncommon"                     ? "text-purple-300"                     : "text-sky-300"             }`}           >             {rarityLabel}           </p>            <div className="mt-2 border-t border-amber-500/20 pt-2">             <p className="text-[9px] sm:text-sm text-amber-50/75 leading-tight line-clamp-2">               {getCardEffectText(card)}             </p>           </div>         </div>       </div>        {alreadyOwned && (         <div className="text-center mt-1">           <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">             +{goldBonus} gold           </p>         </div>       )}     </div>   ); }   
-      const alreadyOwned = ownedCount > 0;   const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;   const rarityLabel =     card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);    return (     <div       onClick={onClick}       className="min-w-0 cursor-pointer transition active:scale-95 hover:scale-[1.02]"     >       <div         className={`relative w-full aspect-[3/4] rounded-xl border-2 ${           RARITY_BORDER[card.rarity]         } ${RARITY_GLOW[card.rarity]} overflow-hidden bg-slate-950`}       >         <img           src={CARD_ART[card.id] || PLACEHOLDER_ART}           alt={card.name}           className="absolute inset-0 w-full h-full object-cover"         />          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-slate-950/95" />          <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">           <span             className={`text-[8px] sm:text-[10px] font-bold px-1.5 py-1 rounded uppercase leading-tight ${               alreadyOwned                 ? "text-amber-100 bg-amber-950/85"                 : "text-emerald-100 bg-emerald-950/85"             }`}           >             {alreadyOwned ? "Owned" : "New"}           </span>            <span className="rounded-full bg-slate-950/85 border border-amber-400/50 px-2 py-1 text-[10px] sm:text-sm font-bold text-amber-200">             {card.cost} ✨           </span>         </div>          <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4 text-center">           <h3 className="font-serif text-sm sm:text-xl text-amber-100 leading-tight">             {card.name}           </h3>            <p             className={`mt-1 text-[8px] sm:text-[10px] uppercase font-bold tracking-wide ${               card.rarity === "legendary"                 ? "text-amber-300"                 : card.rarity === "rare"                   ? "text-emerald-300"                   : card.rarity === "uncommon"                     ? "text-purple-300"                     : "text-sky-300"             }`}           >             {rarityLabel}           </p>            <div className="mt-2 border-t border-amber-500/20 pt-2">             <p className="text-[9px] sm:text-sm text-amber-50/75 leading-tight line-clamp-2">               {getCardEffectText(card)}             </p>           </div>         </div>       </div>        {alreadyOwned && (         <div className="text-center mt-1">           <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">             +{goldBonus} gold           </p>         </div>       )}     </div>   ); }
+function RewardCardDisplay({ card, ownedCount, onClick }) {
+  const alreadyOwned = ownedCount > 0;
+  const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
+  const rarityLabel =
+    card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
+
   return (
-    <div onClick={onClick} className="transform hover:scale-105 transition cursor-pointer">
-      <div className={`w-32 h-48 sm:w-36 sm:h-52 rounded-lg border-2 ${RARITY_BORDER[card.rarity]} ${RARITY_GLOW[card.rarity]} overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between`}>
-        <div className="flex items-center justify-between w-full">
-          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide ${alreadyOwned ? "text-amber-200 bg-amber-900/40" : "text-emerald-300 bg-emerald-900/30"}`}>
-            {alreadyOwned ? `Already Owned` : "New Card"}
+    <div
+      onClick={onClick}
+      className="min-w-0 cursor-pointer transition active:scale-95 hover:scale-[1.02]"
+    >
+      <div
+        className={`relative w-full aspect-[3/4] rounded-xl border-2 ${
+          RARITY_BORDER[card.rarity]
+        } ${RARITY_GLOW[card.rarity]} overflow-hidden bg-slate-950`}
+      >
+        <img
+          src={CARD_ART[card.id] || PLACEHOLDER_ART}
+          alt={card.name}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-slate-950/95" />
+
+        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-1">
+          <span
+            className={`text-[8px] sm:text-[10px] font-bold px-1.5 py-1 rounded uppercase leading-tight ${
+              alreadyOwned
+                ? "text-amber-100 bg-amber-950/85"
+                : "text-emerald-100 bg-emerald-950/85"
+            }`}
+          >
+            {alreadyOwned ? "Owned" : "New"}
           </span>
-          <span className="text-xs text-amber-300/60">{card.cost} ✨</span>
+
+          <span className="rounded-full bg-slate-950/85 border border-amber-400/50 px-2 py-1 text-[10px] sm:text-sm font-bold text-amber-200">
+            {card.cost} ✨
+          </span>
         </div>
-        <div className="w-14 h-14 rounded-lg overflow-hidden animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-          <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
+
+        <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-4 text-center">
+          <h3 className="font-serif text-sm sm:text-xl text-amber-100 leading-tight">
+            {card.name}
+          </h3>
+
+          <p
+            className={`mt-1 text-[8px] sm:text-[10px] uppercase font-bold tracking-wide ${
+              card.rarity === "legendary"
+                ? "text-amber-300"
+                : card.rarity === "rare"
+                  ? "text-emerald-300"
+                  : card.rarity === "uncommon"
+                    ? "text-purple-300"
+                    : "text-sky-300"
+            }`}
+          >
+            {rarityLabel}
+          </p>
+
+          <div className="mt-2 border-t border-amber-500/20 pt-2">
+            <p className="text-[9px] sm:text-sm text-amber-50/75 leading-tight line-clamp-2">
+              {getCardEffectText(card)}
+            </p>
+          </div>
         </div>
-        <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
-        <div className={`text-[8px] uppercase font-bold tracking-wide ${
-          card.rarity === "legendary"
-  ? "text-amber-300"
-  : card.rarity === "rare"
-    ? "text-emerald-300"
-    : card.rarity === "uncommon"
-      ? "text-purple-300"
-      : "text-sky-300"
-        }`}>{rarityLabel}</div>
-        <div className="text-[7px] text-amber-100/50 text-center leading-tight">{getCardEffectText(card)}</div>
       </div>
+
       {alreadyOwned && (
         <div className="text-center mt-1">
-          <p className="text-amber-200/70 text-[9px] font-semibold">+{goldBonus} gold bonus</p>
-          <p className="text-amber-100/40 text-[8px]">Duplicate reward</p>
+          <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">
+            +{goldBonus} gold
+          </p>
         </div>
       )}
     </div>

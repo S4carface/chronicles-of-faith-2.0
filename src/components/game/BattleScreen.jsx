@@ -799,10 +799,14 @@ const selectedCardData =
     </div>
 
     <div
-  className="fixed inset-0 flex flex-col overflow-hidden"
+  className="fixed inset-0 flex flex-col overflow-hidden select-none"
   style={{
     background:
       "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)",
+    WebkitUserSelect: "none",
+    userSelect: "none",
+    WebkitTouchCallout: "none",
+    touchAction: "pan-x pan-y",
   }}
 >
   <div className="flex flex-col h-full w-full lg:max-w-[1600px] lg:mx-auto lg:px-6">

@@ -943,31 +943,6 @@ const selectedCardData =
     </div>
   );
 })()}
-{/* Selected card Scripture — displayed in the center battlefield space */}
-{selectedCardData?.verse && (
-  <div className="flex-shrink-0 px-4 py-2 lg:px-8 lg:py-3 animate-fade-in">
-    <div
-      className="mx-auto w-full max-w-xl rounded-xl border border-amber-500/25 px-4 py-3 text-center shadow-lg"
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(15,26,48,0.88) 0%, rgba(8,12,24,0.92) 100%)",
-        boxShadow: "0 0 20px rgba(201,168,76,0.08)",
-      }}
-    >
-      <div className="flex items-center justify-center gap-2">
-        <BookOpen className="w-4 h-4 text-amber-300/70" />
-
-        <p className="text-[10px] lg:text-xs uppercase tracking-[0.18em] text-amber-300/70">
-          {selectedCardData.verse}
-        </p>
-      </div>
-
-      <p className="mt-2 max-h-24 overflow-y-auto font-serif text-xs lg:text-base leading-5 lg:leading-7 italic text-amber-100/80">
-        “{selectedCardData.scriptureText || selectedCardData.description}”
-      </p>
-    </div>
-  </div>
-)}
       {/* Floating combat text */}
       {floatingText && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
@@ -1146,7 +1121,7 @@ const selectedCardData =
                   key={idx}
                   card={card}
                   inHand
-                  small={!isDesktop}
+                  small={false}
                   playable={playable && !blocked && !isEnemyTurn}
                   blocked={blocked}
                   selected={selectedCard === idx}

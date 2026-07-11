@@ -6,109 +6,133 @@ const RARITY_INFO = {
   common: {
     label: "Common",
     color: "text-sky-200",
-    dropRate: "Frequent",
     border: "border-sky-400/60",
     borderColor: "rgba(56,189,248,0.4)",
   },
-
   uncommon: {
     label: "Uncommon",
     color: "text-purple-200",
-    dropRate: "Occasional",
     border: "border-purple-400/70",
     borderColor: "rgba(192,132,252,0.45)",
   },
-
   rare: {
     label: "Rare",
     color: "text-emerald-200",
-    dropRate: "Rare",
     border: "border-emerald-400/70",
     borderColor: "rgba(52,211,153,0.4)",
   },
-
   legendary: {
     label: "Legendary",
     color: "text-amber-100",
-    dropRate: "Very Rare",
     border: "border-amber-300/80",
     borderColor: "rgba(252,211,77,0.5)",
   },
 };
 
-export default function CardDetailModal({ card, owned, onClose, onSelect, selectLabel, justCollected }) {
+export default function CardDetailModal({
+  card,
+  onClose,
+  onSelect,
+  selectLabel,
+}) {
   if (!card) return null;
+
   const rarity = RARITY_INFO[card.rarity] || RARITY_INFO.common;
   const effectText = getCardEffectText(card);
-  const artUrl = CARD_ART[card.id];
+  const artUrl = CARD_ART[card.id] || PLACEHOLDER_ART;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      style={{ background: "rgba(8,12,24,0.95)" }}
+      onClick={onClose}
+    >
       <div
-        className="max-w-md w-full rounded-2xl border-2 p-6"
+        className="w-full max-w-sm max-h-[94vh] overflow-y-auto rounded-2xl border-2 p-4"
         style={{
-  background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
-  borderColor: rarity.borderColor,
-}}
+          background:
+            "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
+          borderColor: rarity.borderColor,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className={`text-xs uppercase tracking-widest font-bold ${rarity.color}`}>
+        <div className="flex items-center justify-between mb-3">
+          <div
+            className={`text-xs uppercase tracking-widest font-bold ${rarity.color}`}
+          >
             {rarity.label}
           </div>
-          <button onClick={onClose} className="text-amber-100/40 hover:text-amber-200 text-xl">✕</button>
+
+          <button
+            onClick={onClose}
+            className="text-amber-100/40 hover:text-amber-200 text-xl"
+          >
+            ✕
+          </button>
         </div>
 
-        {/* Card visual */}
         <div className="flex justify-center mb-4">
-          <div className={`w-32 h-48 rounded-lg border-2 ${rarity.border} bg-gradient-to-b from-slate-800 to-slate-900 p-3 flex flex-col items-center justify-between`}>
-            <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
-            <div className="w-20 h-20 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-              <img src={artUrl || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
+          <div
+            className={`relative w-56 aspect-[3/4] rounded-xl border-2 ${rarity.border} overflow-hidden bg-slate-950`}
+          >
+            <img
+              src={artUrl}
+              alt={card.name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-slate-950/95" />
+
+            <div className="absolute top-3 right-3 rounded-full border border-amber-400/50 bg-slate-950/85 px-3 py-1 text-sm font-bold text-amber-200">
+              {card.cost} ✨
             </div>
-            <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
-            <div className="text-[8px] text-amber-300/40 italic text-center">{card.verse}</div>
+
+            <div className="absolute bottom-0 left-0 right-0 p-4 text-center">
+              <h2 className="font-serif text-2xl text-amber-100 leading-tight">
+                {card.name}
+              </h2>
+
+              <p className={`mt-1 text-xs uppercase font-bold ${rarity.color}`}>
+                {rarity.label}
+              </p>
+
+              {card.verse && (
+                <p className="mt-2 text-[11px] italic text-amber-300/60">
+                  {card.verse}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Name & type */}
-        <h2 className="text-xl font-serif text-amber-200 text-center mb-1">{card.name}</h2>
-        <p className="text-center text-amber-100/40 text-xs uppercase tracking-wide mb-4">
-          {card.type} — Cost: {card.cost} ✨
-        </p>
+        <div className="rounded-lg border border-amber-500/20 bg-slate-900/50 p-3 mb-3">
+          <p className="text-xs text-amber-100/50 uppercase tracking-wide mb-1">
+            Effect
+          </p>
 
-        {/* Effect */}
-        <div className="rounded-lg border border-amber-500/20 bg-slate-900/50 p-3 mb-4">
-          <p className="text-xs text-amber-100/50 uppercase tracking-wide mb-1">Effect</p>
-          <p className="text-sm text-amber-100">{effectText}</p>
+          <p className="text-base text-amber-100">
+            {effectText}
+          </p>
         </div>
 
-        {/* Description */}
-        <div className="rounded-lg border border-amber-500/10 bg-slate-900/30 p-3 mb-4">
-          <p className="text-xs text-amber-100/50 uppercase tracking-wide mb-1">Description</p>
-          <p className="text-sm text-amber-100/70 italic">{card.description}</p>
-        </div>
+        {card.scriptureText && (
+          <div className="rounded-lg border border-amber-500/10 bg-slate-900/30 p-3 mb-4">
+            <p className="text-xs text-amber-100/50 uppercase tracking-wide mb-1">
+              Scripture
+            </p>
 
-        {/* Drop rate info */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="rounded-lg border border-slate-600/20 bg-slate-800/40 p-2 text-center">
-            <p className="text-xs text-amber-100/40">Drop Rate</p>
-            <p className={`text-lg font-bold ${rarity.color}`}>{rarity.dropRate}</p>
+            <p className="text-sm leading-6 text-amber-100/75 italic">
+              “{card.scriptureText}”
+            </p>
           </div>
-          <div className="rounded-lg border border-slate-600/20 bg-slate-800/40 p-2 text-center">
-            <p className="text-xs text-amber-100/40">Status</p>
-            <p className="text-sm font-bold text-amber-100">{justCollected ? "Added to Collection" : owned ? "Already Owned" : "New Card"}</p>
-          </div>
-        </div>
+        )}
 
-        {/* Actions */}
         {onSelect ? (
           <button
             onClick={onSelect}
             className="w-full px-6 py-3 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold hover:bg-amber-600/40 transition"
           >
-            {selectLabel || "Select This Card"}
+            {selectLabel || "Choose This Card"}
           </button>
         ) : (
           <button

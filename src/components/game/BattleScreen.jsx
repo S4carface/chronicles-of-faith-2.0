@@ -921,28 +921,6 @@ const selectedCardData =
           </div>
         )}
       </div>
-{/* Scripture Reading Area */}
-{selectedCard !== null && (() => {
-  const card = resolveCard(battleState.hand[selectedCard]);
-
-  if (!card?.scripture || !card?.verse) return null;
-
-  return (
-    <div className="px-4 py-3 flex justify-center animate-fade-in">
-      <div className="max-w-xl w-full rounded-xl border border-amber-500/20 bg-slate-950/40 backdrop-blur-sm px-5 py-4 text-center">
-
-        <p className="text-[11px] uppercase tracking-[0.2em] text-amber-300/70">
-          {card.verse}
-        </p>
-
-        <p className="mt-2 text-sm lg:text-base italic leading-7 text-amber-100/85 font-serif">
-          "{card.scripture}"
-        </p>
-
-      </div>
-    </div>
-  );
-})()}
       {/* Floating combat text */}
       {floatingText && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">
@@ -1099,7 +1077,23 @@ const selectedCardData =
           </button>
         </div>
       </div>
+{/* Scripture Reading Area */}
+{selectedCardData?.verse && selectedCardData?.scriptureText && (
+  <div className="flex-shrink-0 px-4 py-2 animate-fade-in">
+    <div className="mx-auto w-full max-w-xl rounded-xl border border-amber-500/20 bg-slate-950/40 px-5 py-3 text-center">
+      <div className="flex items-center justify-center gap-2">
+        <BookOpen className="w-4 h-4 text-amber-300/70" />
+        <p className="text-[11px] uppercase tracking-[0.2em] text-amber-300/70">
+          {selectedCardData.verse}
+        </p>
+      </div>
 
+      <p className="mt-2 text-sm lg:text-base italic leading-6 text-amber-100/85 font-serif">
+        “{selectedCardData.scriptureText}”
+      </p>
+    </div>
+  </div>
+)}
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
         <div className={`flex-1 flex items-end justify-center overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))]"}`}>

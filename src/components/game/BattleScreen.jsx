@@ -1096,11 +1096,11 @@ const selectedCardData =
 )}
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div className={`flex-1 flex items-end justify-center overflow-hidden px-3 pt-2 min-h-0 transition-all duration-200 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))]"}`}>
+        <div className={`flex-1 flex items-end overflow-x-auto overflow-y-hidden px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"}`}>
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}
-          <div className="flex gap-2 lg:gap-5 overflow-x-auto flex-nowrap snap-x pb-1 w-full justify-center">
+          <div className="flex gap-2 lg:gap-5 flex-nowrap snap-x snap-mandatory pb-1 w-max min-w-full justify-start landscape:justify-center">
 {battleState.hand.map((cardOrId, idx) => {
   const card =
     typeof cardOrId === "string"

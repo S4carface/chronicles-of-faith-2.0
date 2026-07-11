@@ -798,8 +798,14 @@ const selectedCardData =
       </div>
     </div>
 
-    <div className="fixed inset-0 flex flex-col overflow-hidden"
-      <div className="flex flex-col h-full w-full lg:max-w-[1600px] lg:mx-auto lg:px-6">
+    <div
+  className="fixed inset-0 flex flex-col overflow-hidden"
+  style={{
+    background:
+      "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)",
+  }}
+>
+  <div className="flex flex-col h-full w-full lg:max-w-[1600px] lg:mx-auto lg:px-6">
       {/* Top row: help + pause */}
       <div className="flex items-center justify-end gap-2 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
         <button

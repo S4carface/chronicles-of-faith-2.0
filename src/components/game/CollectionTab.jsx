@@ -67,7 +67,7 @@ export default function CollectionTab() {
 
       {/* Filter */}
       <div className="flex justify-center gap-2 mb-4">
-        {["all", "common", "rare", "legendary"].map(f => (
+        {["all", "common", "uncommon", "rare", "legendary"].map(f => (
           <button
             key={f}
             onClick={() => { setFilter(f); Sound.sfx.click(); }}

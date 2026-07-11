@@ -3,9 +3,37 @@ import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 
 const RARITY_INFO = {
-  common: { label: "Common", color: "text-sky-200", dropRate: "Common", border: "border-sky-400/60" },
-  rare: { label: "Rare", color: "text-emerald-200", dropRate: "Uncommon", border: "border-emerald-400/70" },
-  legendary: { label: "Legendary", color: "text-amber-100", dropRate: "Very Rare", border: "border-amber-300/80" },
+  common: {
+    label: "Common",
+    color: "text-sky-200",
+    dropRate: "Frequent",
+    border: "border-sky-400/60",
+    borderColor: "rgba(56,189,248,0.4)",
+  },
+
+  uncommon: {
+    label: "Uncommon",
+    color: "text-purple-200",
+    dropRate: "Occasional",
+    border: "border-purple-400/70",
+    borderColor: "rgba(192,132,252,0.45)",
+  },
+
+  rare: {
+    label: "Rare",
+    color: "text-emerald-200",
+    dropRate: "Rare",
+    border: "border-emerald-400/70",
+    borderColor: "rgba(52,211,153,0.4)",
+  },
+
+  legendary: {
+    label: "Legendary",
+    color: "text-amber-100",
+    dropRate: "Very Rare",
+    border: "border-amber-300/80",
+    borderColor: "rgba(252,211,77,0.5)",
+  },
 };
 
 export default function CardDetailModal({ card, owned, onClose, onSelect, selectLabel, justCollected }) {
@@ -18,7 +46,10 @@ export default function CardDetailModal({ card, owned, onClose, onSelect, select
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={onClose}>
       <div
         className="max-w-md w-full rounded-2xl border-2 p-6"
-        style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)", borderColor: rarity.border.replace("border-", "").includes("sky") ? "rgba(56,189,248,0.4)" : rarity.border.includes("emerald") ? "rgba(52,211,153,0.4)" : "rgba(252,211,77,0.5)" }}
+        style={{
+  background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
+  borderColor: rarity.borderColor,
+}}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

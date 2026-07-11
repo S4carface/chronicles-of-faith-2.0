@@ -45,6 +45,10 @@ function loadProfile() {
       if (parsed.devotionReadDate === undefined) parsed.devotionReadDate = null;
       // Migrate Genesis completion flag
       if (parsed.genesisCompleted === undefined) parsed.genesisCompleted = false;
+      // Migrate Genesis Normal completion flag
+      if (parsed.genesisNormalCompleted === undefined) {
+        parsed.genesisNormalCompleted = false;
+      }
       // Migrate leaderboard name-prompt-seen flag
       if (parsed.leaderboardNamePromptSeen === undefined) parsed.leaderboardNamePromptSeen = false;
       return parsed;
@@ -69,6 +73,7 @@ function loadProfile() {
     gold: 0,
     tutorialSeen: false,
     genesisCompleted: false,
+    genesisNormalCompleted: false,
     leaderboardNamePromptSeen: false,
   };
 }

@@ -62,15 +62,6 @@ export default function CardPreviewPanel({ card, playable, blocked, battleState,
   <p className="text-amber-100 text-xs leading-snug">{effectText}</p>
 </div>
 
-<div className="rounded-md border border-emerald-500/15 bg-emerald-950/15 px-2.5 py-2 mb-2">
-  <p className="text-emerald-300/70 text-[9px] uppercase tracking-wide mb-1">
-    {card.verse}
-  </p>
-
-  <p className="text-amber-100/65 text-[10px] leading-snug italic">
-    {card.scriptureText || card.description}
-  </p>
-</div>
           <div className="flex gap-2.5">
             <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>
             <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 active:scale-95">Play Card</button>
@@ -116,8 +107,7 @@ export default function CardPreviewPanel({ card, playable, blocked, battleState,
               <p className="text-amber-100/40 text-[10px] uppercase tracking-wide mb-1">Effect</p>
               <p className="text-amber-100 text-sm leading-snug">{effectText}</p>
             </div>
-            <div className="rounded-lg border border-emerald-500/15 bg-emerald-950/15 px-3 py-2 mb-3">   <p className="text-emerald-300/70 text-[10px] uppercase tracking-wide mb-1">     {card.verse}   </p>    <p className="text-amber-100/65 text-xs leading-relaxed italic">     {card.scriptureText || card.description}   </p> </div>
-            </div>
+          
              <div className="px-4 pb-4 flex gap-3">
              <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
              <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>

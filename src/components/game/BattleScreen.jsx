@@ -789,12 +789,12 @@ const selectedCardData =
         <div className="text-5xl mb-5">📱</div>
 
         <h2 className="text-2xl font-serif text-amber-200 mb-3">
-          Rotate Your Phone
-        </h2>
+  Portrait Mode Required
+</h2>
 
-        <p className="text-amber-100/65 text-sm leading-relaxed">
-          Chronicles of Faith is designed for portrait play on phones.
-        </p>
+<p className="text-amber-100/65 text-sm leading-relaxed">
+  Rotate your phone upright to continue playing.
+</p>
       </div>
     </div>
 

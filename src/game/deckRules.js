@@ -5,6 +5,7 @@ export const RUN_DECK_MAX = 15;
 
 export const MAX_COPIES = {
   common: 2,
+  uncommon: 2,
   rare: 1,
   legendary: 1,
 };
@@ -21,15 +22,39 @@ export const HEALING_CARD_IDS = new Set([
 ]);
 
 export const REWARD_ODDS = {
-  normal: { common: 0.88, rare: 0.12, legendary: 0 },
-  treasure: { common: 0.72, rare: 0.27, legendary: 0.01 },
-  boss: { common: 0.50, rare: 0.45, legendary: 0.05 },
-  daily: { common: 0.82, rare: 0.18, legendary: 0 },
+  normal: {
+    common: 0.68,
+    uncommon: 0.25,
+    rare: 0.07,
+    legendary: 0,
+  },
+
+  treasure: {
+    common: 0.48,
+    uncommon: 0.35,
+    rare: 0.16,
+    legendary: 0.01,
+  },
+
+  boss: {
+    common: 0.25,
+    uncommon: 0.40,
+    rare: 0.30,
+    legendary: 0.05,
+  },
+
+  daily: {
+    common: 0.65,
+    uncommon: 0.30,
+    rare: 0.05,
+    legendary: 0,
+  },
 };
 
 // Gold bonus when claiming a duplicate reward card
 export const DUPLICATE_GOLD_BONUS = {
   common: 5,
+  uncommon: 10,
   rare: 15,
   legendary: 40,
 };
@@ -136,11 +161,13 @@ export function generateRewardCards(rng, roomType) {
   for (let i = 0; i < 3; i++) {
     const roll = rng();
     let rarity;
-    if (!legendaryUsed && roll < odds.legendary) {
+        if (!legendaryUsed && roll < odds.legendary) {
       rarity = "legendary";
       legendaryUsed = true;
     } else if (roll < odds.legendary + odds.rare) {
       rarity = "rare";
+    } else if (roll < odds.legendary + odds.rare + odds.uncommon) {
+      rarity = "uncommon";
     } else {
       rarity = "common";
     }
@@ -166,12 +193,14 @@ export function generateTreasureCard(rng) {
   const roll = rng();
   let rarity;
   if (roll < odds.legendary) {
-    rarity = "legendary";
-  } else if (roll < odds.legendary + odds.rare) {
-    rarity = "rare";
-  } else {
-    rarity = "common";
-  }
+  rarity = "legendary";
+} else if (roll < odds.legendary + odds.rare) {
+  rarity = "rare";
+} else if (roll < odds.legendary + odds.rare + odds.uncommon) {
+  rarity = "uncommon";
+} else {
+  rarity = "common";
+}
   const pool = CARDS.filter(c => c.rarity === rarity);
   if (pool.length === 0) return null;
   return pool[Math.floor(rng() * pool.length)].id;

@@ -21,6 +21,7 @@ export const CARD_ART = {
   armor_god: "/images/cards/armor_of_god.PNG",
   stone_tablet: "/images/cards/stone_tablet.PNG",
   doves_peace: "/images/cards/doves_peace.PNG",
+  sling_david: "/images/cards/sling_of_david.PNG",
   sling_stone: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/9bb171c32_generated_image.png",
   faith_shield: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/60485d6b2_generated_image.png",
   prayer: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/59464b791_generated_image.png",

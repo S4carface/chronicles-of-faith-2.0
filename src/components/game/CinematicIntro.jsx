@@ -9,6 +9,8 @@ const VERSE_2 = "And God said, 'Let there be light,' and there was light.";
 const REFERENCE = "Genesis 1:1-3";
 const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
+const introMusic = new Audio("/audio/genesis_intro_music_15s.mp3");
+introMusic.volume = 0.2;
 
 export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();

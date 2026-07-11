@@ -916,7 +916,28 @@ export default function BattleScreen() {
           </div>
         )}
       </div>
+{/* Scripture Reading Area */}
+{selectedCard !== null && (() => {
+  const card = resolveCard(battleState.hand[selectedCard]);
 
+  if (!card?.scripture || !card?.verse) return null;
+
+  return (
+    <div className="px-4 py-3 flex justify-center animate-fade-in">
+      <div className="max-w-xl w-full rounded-xl border border-amber-500/20 bg-slate-950/40 backdrop-blur-sm px-5 py-4 text-center">
+
+        <p className="text-[11px] uppercase tracking-[0.2em] text-amber-300/70">
+          {card.verse}
+        </p>
+
+        <p className="mt-2 text-sm lg:text-base italic leading-7 text-amber-100/85 font-serif">
+          "{card.scripture}"
+        </p>
+
+      </div>
+    </div>
+  );
+})()}
       {/* Floating combat text */}
       {floatingText && (
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-30">

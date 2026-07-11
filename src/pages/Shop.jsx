@@ -11,7 +11,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import { getCardById, CARDS } from "@/data/cards";
+import { CARDS } from "@/data/cards";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
 

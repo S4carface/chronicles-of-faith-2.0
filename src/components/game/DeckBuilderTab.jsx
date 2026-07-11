@@ -7,6 +7,7 @@ import * as Sound from "@/game/soundManager";
 
 const RARITY_BORDER = {
   common: "border-sky-400/60",
+  uncommon: "border-purple-400/70",
   rare: "border-emerald-400/70",
   legendary: "border-amber-300/80",
 };
@@ -32,7 +33,7 @@ export default function DeckBuilderTab() {
           These are the cards you bring into battle.
         </p>
         <p className="text-amber-100/40 text-[10px] lg:text-xs">
-          Max 2 copies of Common · Max 1 copy of Rare or Legendary per deck
+          Max 2 copies of Common or Uncommon · Max 1 copy of Rare or Legendary per deck
         </p>
       </div>
 

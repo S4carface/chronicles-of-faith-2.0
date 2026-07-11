@@ -116,13 +116,13 @@ export default function Shop() {
     if (item.type === "card_pack") {
       const pool = CARDS.filter(c => c.rarity === item.rarity && !profile.collectedCards.includes(c.id));
       if (pool.length === 0) {
-        setPurchased({ message: "You already own all cards of this rarity!" });
+        setPurchased({   message: "You already own all cards of this rarity!",   isError: true, });
         return;
       }
       const card = pool[Math.floor(Math.random() * pool.length)];
       saveProfile({ gold: gold - item.cost });
       addCardsToCollection([card.id]);
-      setPurchased({ message: `You got: ${card.name}!`, card });
+      setPurchased({   message: `You received: ${card.name}!`,   card,   isError: false, });
       Sound.sfx.reward();
     }
   };
@@ -150,29 +150,31 @@ export default function Shop() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-8">
         {SHOP_ITEMS.map((item) => {
           const isUnlocked = isItemUnlocked(item);
-const canAfford = gold >= item.cost;
-const canPurchase = isUnlocked && canAfford;
-const Icon = ICON_MAP[item.icon] || Package;
+          const canAfford = gold >= item.cost;
+          const canPurchase = isUnlocked && canAfford;
+          const Icon = ICON_MAP[item.icon] || Package;
           return (
             <div
-              key={item.id}
-              className={`p-6 rounded-xl border-2 text-center transition ${
-  isUnlocked ? "" : "opacity-70"
-              style={{
-                background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)",
-                borderColor:
-  item.rarity === "legendary"
-    ? "rgba(252,211,77,0.5)"
-    : item.rarity === "rare"
-      ? "rgba(52,211,153,0.5)"
-      : item.rarity === "uncommon"
-        ? "rgba(192,132,252,0.5)"
-        : "rgba(56,189,248,0.5)",
-              }}
-            >
+  key={item.id}
+  className={`p-6 rounded-xl border-2 text-center transition ${
+    isUnlocked ? "" : "opacity-70"
+  }`}
+  style={{
+    background:
+      "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)",
+    borderColor:
+      item.rarity === "legendary"
+        ? "rgba(252,211,77,0.5)"
+        : item.rarity === "rare"
+          ? "rgba(52,211,153,0.5)"
+          : item.rarity === "uncommon"
+            ? "rgba(192,132,252,0.5)"
+            : "rgba(56,189,248,0.5)",
+  }}
+>
               <div className="flex justify-center mb-3">
                 <div className={`w-14 h-14 rounded-lg flex items-center justify-center border ${
                   item.rarity === "legendary"

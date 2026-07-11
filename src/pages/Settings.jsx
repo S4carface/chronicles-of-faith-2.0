@@ -472,6 +472,27 @@ export default function Settings() {
   </div>
 </Link>
 
+<Link
+  to="/special-thanks"
+  onClick={() => Sound.sfx.click()}
+  className="block p-4 rounded-xl border-2 border-amber-500/20 hover:border-amber-400/45 hover:bg-amber-500/5 transition"
+  style={{ background: "rgba(15,26,48,0.5)" }}
+>
+  <div className="flex items-center justify-between gap-4">
+    <div>
+      <p className="font-serif text-amber-100 text-sm">
+        Special Thanks
+      </p>
+
+      <p className="text-amber-100/40 text-[10px] mt-1">
+        Recognizing testers and supporters who helped improve the game.
+      </p>
+    </div>
+
+    <span className="text-amber-300/60 text-lg">›</span>
+  </div>
+</Link>
+
   <div
     className="p-4 rounded-xl border border-amber-500/10"
     style={{ background: "rgba(15,26,48,0.35)" }}

@@ -51,7 +51,12 @@ function loadProfile() {
       }
       // Migrate leaderboard name-prompt-seen flag
       if (parsed.leaderboardNamePromptSeen === undefined) parsed.leaderboardNamePromptSeen = false;
-      return parsed;
+
+// Codex migration
+if (!Array.isArray(parsed.encounteredEnemies)) parsed.encounteredEnemies = [];
+if (!Array.isArray(parsed.defeatedEnemies)) parsed.defeatedEnemies = [];
+
+return parsed;
     }
   } catch (e) {}
   return {
@@ -74,7 +79,7 @@ function loadProfile() {
     tutorialSeen: false,
     genesisCompleted: false,
     genesisNormalCompleted: false,
-    leaderboardNamePromptSeen: false,
+    leaderboardNamePromptSeen: false, encounteredEnemies: [], defeatedEnemies: [],
   };
 }
 
@@ -170,7 +175,39 @@ export function GameProvider({ children }) {
       return next;
     });
   }, []);
+const recordEnemyEncounter = useCallback((enemyId) => {
+  if (!enemyId) return;
 
+  setProfile(prev => {
+    const encountered = prev.encounteredEnemies || [];
+
+    if (encountered.includes(enemyId)) return prev;
+
+    return {
+      ...prev,
+      encounteredEnemies: [...encountered, enemyId],
+    };
+  });
+}, []);
+
+const recordEnemyDefeat = useCallback((enemyId) => {
+  if (!enemyId) return;
+
+  setProfile(prev => {
+    const encountered = prev.encounteredEnemies || [];
+    const defeated = prev.defeatedEnemies || [];
+
+    return {
+      ...prev,
+      encounteredEnemies: encountered.includes(enemyId)
+        ? encountered
+        : [...encountered, enemyId],
+      defeatedEnemies: defeated.includes(enemyId)
+        ? defeated
+        : [...defeated, enemyId],
+    };
+  });
+}, []);
   const unlockAchievement = useCallback((id) => {
     setProfile(prev => {
       if (prev.achievements.includes(id)) return prev;
@@ -671,6 +708,8 @@ if (startAtFirstBattle && firstNode) {
   const value = {
     profile,
     saveProfile,
+    recordEnemyEncounter,
+    recordEnemyDefeat,
     run,
     startRun,
     startDailyBattle,

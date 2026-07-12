@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import BottomNavigation from "./components/BottomNavigation";
 // Add page imports here
 import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
@@ -49,8 +50,10 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <GameProvider>
-      <UnlockReveal />
-      <Routes>
+  <UnlockReveal />
+
+  <div className="min-h-screen pb-24">
+    <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Play />} />
         <Route path="/collection" element={<Collection />} />
@@ -68,8 +71,11 @@ const AuthenticatedApp = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/special-thanks" element={<SpecialThanks />} />
-      </Routes>
-    </GameProvider>
+          </Routes>
+
+    <BottomNavigation />
+  </div>
+</GameProvider>
   );
 };
 

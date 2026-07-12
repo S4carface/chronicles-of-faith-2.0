@@ -1,5 +1,5 @@
 import { ACHIEVEMENT_ART } from "@/data/art";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Star,
@@ -21,6 +21,7 @@ import {
   Lock,
   Check,
   Coins,
+  X,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
@@ -71,8 +72,10 @@ function getAchievementProgress(achievementId, stats) {
 }
 
 export default function Achievements() {
-  const { profile, Sound: Snd } = useGame();
+const { profile, Sound: Snd } = useGame();
 const stats = getStats();
+
+const [selectedAchievement, setSelectedAchievement] = useState(null);
 
 useEffect(() => {
   Snd.playMusic("menu");
@@ -108,10 +111,14 @@ const progressPercent = progress
   ? Math.min(100, Math.round((progress.current / progress.target) * 100))
   : 0;    
   return (
-            <div
-              key={achievement.id}
-              className={`flex items-center gap-4 p-5 rounded-xl border-2 transition ${
-                isUnlocked
+<button
+  type="button"
+  key={achievement.id}
+  onClick={() => {
+    Sound.sfx.click();
+    setSelectedAchievement(achievement);
+  }}
+  className={`w-full text-left flex items-center gap-4 p-5 rounded-xl border-2 transition active:scale-[0.99] ${                isUnlocked
                   ? "border-amber-400/50 bg-amber-500/10 shadow-md shadow-amber-500/10"
                   : "border-slate-600/40 bg-slate-900/50"
               }`}
@@ -208,6 +215,108 @@ const progressPercent = progress
           );
         })}
       </div>
+
+      {selectedAchievement && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-8 backdrop-blur-sm"
+          onClick={() => setSelectedAchievement(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="achievement-detail-title"
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-amber-400/35 bg-[#101a30] shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                Sound.sfx.click();
+                setSelectedAchievement(null);
+              }}
+              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-amber-300/30 bg-slate-950/80 text-amber-100 transition hover:bg-slate-900"
+              aria-label="Close achievement details"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="aspect-square w-full overflow-hidden rounded-t-2xl bg-slate-950">
+              {ACHIEVEMENT_ART[selectedAchievement.art] ? (
+                <div className="relative h-full w-full">
+                  <img
+                    src={ACHIEVEMENT_ART[selectedAchievement.art]}
+                    alt={selectedAchievement.name}
+                    className={`h-full w-full object-cover ${
+                      unlocked.has(selectedAchievement.id)
+                        ? ""
+                        : "grayscale opacity-45"
+                    }`}
+                    draggable={false}
+                  />
+
+                  {!unlocked.has(selectedAchievement.id) && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full border border-slate-300/30 bg-slate-950/80">
+                        <Lock className="h-7 w-7 text-slate-200" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <Trophy className="h-16 w-16 text-amber-300" />
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 text-center">
+              <p className="mb-2 text-[10px] uppercase tracking-[0.25em] text-amber-300/55">
+                {unlocked.has(selectedAchievement.id)
+                  ? "Achievement Unlocked"
+                  : "Locked Achievement"}
+              </p>
+
+              <h2
+                id="achievement-detail-title"
+                className="font-serif text-2xl text-amber-200"
+              >
+                {selectedAchievement.name}
+              </h2>
+
+              <p className="mt-3 text-sm leading-relaxed text-amber-100/65">
+                {selectedAchievement.description}
+              </p>
+
+              <div className="my-5 h-px bg-gradient-to-r from-transparent via-amber-400/35 to-transparent" />
+
+              <p className="font-serif text-sm italic text-amber-300/60">
+                “{selectedAchievement.verse}”
+              </p>
+
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-500/10 px-4 py-2">
+                <Coins className="h-4 w-4 text-amber-300" />
+
+                <span className="text-sm font-bold text-amber-200">
+                  {unlocked.has(selectedAchievement.id)
+                    ? `+${selectedAchievement.goldReward || 0} Gold Earned`
+                    : `Reward: ${selectedAchievement.goldReward || 0} Gold`}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  Sound.sfx.click();
+                  setSelectedAchievement(null);
+                }}
+                className="mt-6 min-h-12 w-full rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 font-serif text-amber-100 transition hover:bg-amber-500/20"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

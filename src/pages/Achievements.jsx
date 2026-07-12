@@ -26,6 +26,7 @@ import {
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { getStats } from "@/game/playerStats";
+import * as Sound from "@/game/soundManager";
 
 const ICON_MAP = {
   "star": Star, "cross": Cross, "sword": Sword, "book-open": BookOpen,
@@ -206,12 +207,12 @@ const progressPercent = progress
   </div>
 )}
               </div>
-              {isUnlocked && (
-                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                </div>
-              )}
-            </div>
+{isUnlocked && (
+  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">
+    <Check className="w-4 h-4 text-emerald-400" />
+  </div>
+)}
+</button>
           );
         })}
       </div>

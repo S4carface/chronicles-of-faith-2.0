@@ -131,16 +131,23 @@ const progressPercent = progress
               }`} style={isUnlocked ? { background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" } : {}}>
 {ACHIEVEMENT_ART[achievement.art] ? (
   <div className="relative h-full w-full">
-    <img
-      src={ACHIEVEMENT_ART[achievement.art]}
-      alt={achievement.name}
-      className={`h-full w-full object-cover transition ${
-        isUnlocked
-          ? ""
-          : "grayscale opacity-30 blur-[0.5px]"
-      }`}
-      draggable={false}
-    />
+<img
+  src={ACHIEVEMENT_ART[achievement.art]}
+  alt={achievement.name}
+  className={`h-full w-full object-cover transition select-none pointer-events-none ${
+    isUnlocked
+      ? ""
+      : "grayscale opacity-30 blur-[0.5px]"
+  }`}
+  draggable={false}
+  onDragStart={(event) => event.preventDefault()}
+  onContextMenu={(event) => event.preventDefault()}
+  style={{
+    WebkitTouchCallout: "none",
+    WebkitUserSelect: "none",
+    userSelect: "none",
+  }}
+/>
 
     {!isUnlocked && (
       <div className="absolute inset-0 flex items-center justify-center bg-slate-950/35">
@@ -247,16 +254,23 @@ const progressPercent = progress
             <div className="aspect-square w-full overflow-hidden rounded-t-2xl bg-slate-950">
               {ACHIEVEMENT_ART[selectedAchievement.art] ? (
                 <div className="relative h-full w-full">
-                  <img
-                    src={ACHIEVEMENT_ART[selectedAchievement.art]}
-                    alt={selectedAchievement.name}
-                    className={`h-full w-full object-cover ${
-                      unlocked.has(selectedAchievement.id)
-                        ? ""
-                        : "grayscale opacity-45"
-                    }`}
-                    draggable={false}
-                  />
+<img
+  src={ACHIEVEMENT_ART[selectedAchievement.art]}
+  alt={selectedAchievement.name}
+  className={`h-full w-full object-cover select-none pointer-events-none ${
+    unlocked.has(selectedAchievement.id)
+      ? ""
+      : "grayscale opacity-45"
+  }`}
+  draggable={false}
+  onDragStart={(event) => event.preventDefault()}
+  onContextMenu={(event) => event.preventDefault()}
+  style={{
+    WebkitTouchCallout: "none",
+    WebkitUserSelect: "none",
+    userSelect: "none",
+  }}
+/>
 
                   {!unlocked.has(selectedAchievement.id) && (
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-950/40">

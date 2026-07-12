@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
-import * as Sound from "@/game/soundManager";
+import { getStats } from "@/game/playerStats";
 
 const ICON_MAP = {
   "star": Star, "cross": Cross, "sword": Sword, "book-open": BookOpen,
@@ -33,11 +33,50 @@ const ICON_MAP = {
   "building-2": Building2, "sparkles": Sparkles, "wand-2": Wand2,
   "trophy": Trophy, "shield-check": ShieldCheck,
 };
+function getAchievementProgress(achievementId, stats) {
+  switch (achievementId) {
+    case "first_victory": {
+      const current = Math.min(stats.runsCompleted || 0, 1);
+
+      return {
+        current,
+        target: 1,
+        label: `${current} / 1 Genesis run`,
+      };
+    }
+
+    case "daily_devotion": {
+      const current = Math.min(stats.dailyChallengesCompleted || 0, 3);
+
+      return {
+        current,
+        target: 3,
+        label: `${current} / 3 Daily Battles`,
+      };
+    }
+
+    case "low_score_champion": {
+      const current = Math.max(0, stats.bestScore || 0);
+
+      return {
+        current: Math.min(current, 500),
+        target: 500,
+        label: `${current} / 500 score`,
+      };
+    }
+
+    default:
+      return null;
+  }
+}
 
 export default function Achievements() {
   const { profile, Sound: Snd } = useGame();
-  useEffect(() => { Snd.playMusic("menu"); }, []);
+const stats = getStats();
 
+useEffect(() => {
+  Snd.playMusic("menu");
+}, []);
   const PREVIEW_ALL_ACHIEVEMENTS = true;
 
 const unlocked = PREVIEW_ALL_ACHIEVEMENTS
@@ -62,8 +101,13 @@ const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
       <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
         {ACHIEVEMENTS.map(achievement => {
           const isUnlocked = unlocked.has(achievement.id);
-          const Icon = ICON_MAP[achievement.icon] || Star;
-          return (
+const Icon = ICON_MAP[achievement.icon] || Star;
+const progress = getAchievementProgress(achievement.id, stats);
+
+const progressPercent = progress
+  ? Math.min(100, Math.round((progress.current / progress.target) * 100))
+  : 0;    
+  return (
             <div
               key={achievement.id}
               className={`flex items-center gap-4 p-5 rounded-xl border-2 transition ${
@@ -113,6 +157,26 @@ const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
   </span>
 </div>
   </>
+)}
+{!isUnlocked && progress && (
+  <div className="mt-3">
+    <div className="mb-1.5 flex items-center justify-between gap-3">
+      <span className="text-[10px] text-slate-300/70">
+        Progress
+      </span>
+
+      <span className="text-[10px] font-semibold text-amber-200/75">
+        {progress.label}
+      </span>
+    </div>
+
+    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-950/70">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-amber-700 to-amber-300 transition-all duration-500"
+        style={{ width: `${progressPercent}%` }}
+      />
+    </div>
+  </div>
 )}
               </div>
               {isUnlocked && (

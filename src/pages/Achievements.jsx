@@ -225,9 +225,11 @@ const progressPercent = progress
           aria-modal="true"
           aria-labelledby="achievement-detail-title"
         >
-          <div
-            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-amber-400/35 bg-[#101a30] shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
+  <div
+  className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-amber-400/35 bg-[#101a30] shadow-2xl animate-fade-in"
+  style={{
+    animation:
+                onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
@@ -235,7 +237,7 @@ const progressPercent = progress
                 Sound.sfx.click();
                 setSelectedAchievement(null);
               }}
-              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-amber-300/30 bg-slate-950/80 text-amber-100 transition hover:bg-slate-900"
+              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-amber-300/45 bg-slate-950/90 text-amber-100 shadow-lg shadow-black/40 backdrop-blur-sm transition hover:border-amber-200/70 hover:bg-slate-900 active:scale-90"
               aria-label="Close achievement details"
             >
               <X className="h-5 w-5" />
@@ -271,11 +273,27 @@ const progressPercent = progress
             </div>
 
             <div className="p-6 text-center">
-              <p className="mb-2 text-[10px] uppercase tracking-[0.25em] text-amber-300/55">
-                {unlocked.has(selectedAchievement.id)
-                  ? "Achievement Unlocked"
-                  : "Locked Achievement"}
-              </p>
+        <div className="mb-3 flex justify-center">
+  <span
+    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+      unlocked.has(selectedAchievement.id)
+        ? "border-emerald-400/35 bg-emerald-500/10 text-emerald-300"
+        : "border-slate-500/35 bg-slate-800/40 text-slate-300"
+    }`}
+  >
+    {unlocked.has(selectedAchievement.id) ? (
+      <>
+        <Check className="h-3.5 w-3.5" />
+        Unlocked
+      </>
+    ) : (
+      <>
+        <Lock className="h-3.5 w-3.5" />
+        Locked
+      </>
+    )}
+  </span>
+</div>
 
               <h2
                 id="achievement-detail-title"

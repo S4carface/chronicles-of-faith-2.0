@@ -311,3 +311,16 @@ select,
   -webkit-user-select: text;
   user-select: text;
 }
+/* Hide scrollbars on every internal game scroll container.
+   Scrolling remains enabled. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}

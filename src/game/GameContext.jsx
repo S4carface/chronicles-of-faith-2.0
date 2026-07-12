@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { HEROES, HERO_MAP } from "@/data/heroes";
 import { CARDS, CARD_MAP, getCardById } from "@/data/cards";
-import { ENEMIES, ENEMY_POOL } from "@/data/enemies";
+import { ENEMIES, ENEMY_POOL, BOSSES } from "@/data/enemies";
 import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
@@ -332,9 +332,9 @@ const recordEnemyDefeat = useCallback((enemyId) => {
           node.enemyId = enemyId;
         }
         if (node.type === ROOM_TYPES.BOSS) {
-          node.enemyId = "babel_tower";
-          node.bossModifier = pick(enemyRng, BOSS_MODIFIER_IDS);
-        }
+  node.enemyId = pick(enemyRng, BOSSES);
+  node.bossModifier = pick(enemyRng, BOSS_MODIFIER_IDS);
+}
         if (node.type === ROOM_TYPES.TREASURE) {
           node.treasureReward = pick(enemyRng, TREASURE_REWARDS);
         }

@@ -8,21 +8,21 @@ export const HERO_ART = {
 };
 
 export const ENEMY_ART = {
-  serpent: "/enemies/serpent.PNG",
-  cain_wrath: "/enemies/cain_wrath.PNG",
-  pride_babel: "/enemies/pride_babel.PNG",
+  serpent: "/images/enemies/serpent.PNG",
+  cain_wrath: "/images/enemies/cain_wrath.PNG",
+  pride_babel: "/images/enemies/pride_babel.PNG",
 
-  corrupt_humanity: "/enemies/corrupt_humanity.PNG",
-  nephilim: "/enemies/nephilim.PNG",
-  sodom_corruption: "/enemies/sodom_corruption.PNG",
-  famine_canaan: "/enemies/famine_canaan.PNG",
-  esau_anger: "/enemies/esau_anger.PNG",
-  joseph_betrayal: "/enemies/joseph_betrayal.PNG",
-  laban_deceit: "/enemies/laban_deceit.PNG",
+  corrupt_humanity: "/images/enemies/corrupt_humanity.PNG",
+  nephilim: "/images/enemies/nephilim.PNG",
+  sodom_corruption: "/images/enemies/sodom_corruption.PNG",
+  famine_canaan: "/images/enemies/famine_canaan.PNG",
+  esau_anger: "/images/enemies/esau_anger.PNG",
+  joseph_betrayal: "/images/enemies/joseph_betrayal.PNG",
+  laban_deceit: "/images/enemies/laban_deceit.PNG",
 
-  babel_tower: "/enemies/babel_tower.PNG",
-  the_flood: "/enemies/the_flood.PNG",
-  sodom_gomorrah: "/enemies/sodom_gomorrah.PNG",
+  babel_tower: "/images/enemies/babel_tower.PNG",
+  the_flood: "/images/enemies/the_flood.PNG",
+  sodom_gomorrah: "/images/enemies/sodom_gomorrah.PNG",
 };
 
 export const CARD_ART = {

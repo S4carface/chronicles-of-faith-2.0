@@ -81,7 +81,7 @@ const [selectedAchievement, setSelectedAchievement] = useState(null);
 useEffect(() => {
   Snd.playMusic("menu");
 }, []);
-  const PREVIEW_ALL_ACHIEVEMENTS = false;
+  const PREVIEW_ALL_ACHIEVEMENTS = true;
 
 const unlocked = PREVIEW_ALL_ACHIEVEMENTS
   ? new Set(ACHIEVEMENTS.map((achievement) => achievement.id))

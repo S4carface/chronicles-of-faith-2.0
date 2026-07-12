@@ -78,7 +78,7 @@ export default function Codex() {
           </div>
 
           <h1 className="font-serif text-4xl text-amber-200">
-            Enemy Codex
+            Codex
           </h1>
 
           <p className="mt-2 text-sm text-amber-100/45">

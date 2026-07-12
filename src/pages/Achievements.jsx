@@ -121,19 +121,31 @@ const progressPercent = progress
                   ? "border-amber-400/40"
                   : "border-slate-600/30 bg-slate-800/50"
               }`} style={isUnlocked ? { background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" } : {}}>
-                {isUnlocked ? (
-  ACHIEVEMENT_ART[achievement.art] ? (
+{ACHIEVEMENT_ART[achievement.art] ? (
+  <div className="relative h-full w-full">
     <img
       src={ACHIEVEMENT_ART[achievement.art]}
       alt={achievement.name}
-      className="w-full h-full object-cover"
+      className={`h-full w-full object-cover transition ${
+        isUnlocked
+          ? ""
+          : "grayscale opacity-30 blur-[0.5px]"
+      }`}
       draggable={false}
     />
-  ) : (
-    <Icon className="w-6 h-6 text-amber-300" />
-  )
+
+    {!isUnlocked && (
+      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/35">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-400/30 bg-slate-950/75">
+          <Lock className="h-4 w-4 text-slate-300" />
+        </div>
+      </div>
+    )}
+  </div>
+) : isUnlocked ? (
+  <Icon className="h-6 w-6 text-amber-300" />
 ) : (
-  <Lock className="w-5 h-5 text-slate-400" />
+  <Lock className="h-5 w-5 text-slate-400" />
 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -143,20 +155,28 @@ const progressPercent = progress
                 <p className={`text-xs ${isUnlocked ? "text-amber-100/60" : "text-slate-400"}`}>
                   {achievement.description}
                 </p>
-                {isUnlocked && (
+{isUnlocked ? (
   <>
-    <p className="text-amber-300/50 text-[10px] italic mt-1">
+    <p className="mt-1 text-[10px] italic text-amber-300/50">
       "{achievement.verse}"
     </p>
 
     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-400/25 bg-amber-500/10 px-2.5 py-1">
-  <Coins className="w-3.5 h-3.5 text-amber-300" />
+      <Coins className="h-3.5 w-3.5 text-amber-300" />
 
-  <span className="text-amber-200 text-[11px] font-bold">
-    +{achievement.goldReward || 0} Gold
-  </span>
-</div>
+      <span className="text-[11px] font-bold text-amber-200">
+        +{achievement.goldReward || 0} Gold Earned
+      </span>
+    </div>
   </>
+) : (
+  <div className="mt-2 inline-flex items-center gap-1.5 text-slate-400/75">
+    <Coins className="h-3.5 w-3.5" />
+
+    <span className="text-[10px] font-semibold">
+      Reward: {achievement.goldReward || 0} Gold
+    </span>
+  </div>
 )}
 {!isUnlocked && progress && (
   <div className="mt-3">

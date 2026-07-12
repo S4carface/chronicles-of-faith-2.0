@@ -139,7 +139,7 @@ const handleNameSaved = (name) => {
 };
 
   const TOTAL_CARDS = 29;
-  const TOTAL_ACHIEVEMENTS = 16;
+  const TOTAL_ACHIEVEMENTS = 17;
   const todayStr = new Date().toISOString().slice(0, 10);
   const devotionPrayedToday = profile.devotionReadDate === todayStr;
   const battleDoneToday = profile.lastDailyDate === todayStr;

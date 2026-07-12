@@ -1,3 +1,4 @@
+import { ACHIEVEMENT_ART } from "@/data/art";
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Star, Cross, Sword, BookOpen, Calendar, Layers, Footprints, Route, Heart, CloudRain, Waves, Building2, Sparkles, Wand2, Trophy, ShieldCheck, Lock, Check } from "lucide-react";

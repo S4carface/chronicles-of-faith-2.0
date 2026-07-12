@@ -225,12 +225,13 @@ const progressPercent = progress
           aria-modal="true"
           aria-labelledby="achievement-detail-title"
         >
-  <div
+<div
   className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-amber-400/35 bg-[#101a30] shadow-2xl animate-fade-in"
   style={{
-    animation:
-                onClick={(event) => event.stopPropagation()}
-          >
+    animation: "achievementModalOpen 180ms ease-out",
+  }}
+  onClick={(event) => event.stopPropagation()}
+>
             <button
               type="button"
               onClick={() => {

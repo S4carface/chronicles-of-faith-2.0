@@ -21,6 +21,7 @@ import DailyPrayer from "./pages/DailyPrayer";
 import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
+import Codex from "./pages/Codex";
 import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/codex" element={<Codex />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/journey" element={<MyJourney />} />
         <Route path="/faith-progress" element={<FaithProgress />} />

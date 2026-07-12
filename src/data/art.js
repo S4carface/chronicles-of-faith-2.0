@@ -8,12 +8,21 @@ export const HERO_ART = {
 };
 
 export const ENEMY_ART = {
-  serpent: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/e4cd49990_generated_image.png",
-  cain_wrath: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/ff44e8d9e_generated_image.png",
-  pride_babel: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/987a73b87_generated_image.png",
-  pharaoh: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/d6522f2a5_generated_image.png",
-  babel_tower: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/95eb0cbf4_generated_image.png",
-  the_flood: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/085e2c3a0_generated_image.png",
+  serpent: "/images/enemies/serpent.PNG",
+  cain_wrath: "/images/enemies/cain_wrath.PNG",
+  pride_babel: "/images/enemies/pride_babel.PNG",
+
+  corrupt_humanity: "/images/enemies/corrupt_humanity.PNG",
+  nephilim: "/images/enemies/nephilim.PNG",
+  sodom_corruption: "/images/enemies/sodom_corruption.PNG",
+  famine_canaan: "/images/enemies/famine_canaan.PNG",
+  esau_anger: "/images/enemies/esau_anger.PNG",
+  joseph_betrayal: "/images/enemies/joseph_betrayal.PNG",
+  laban_deceit: "/images/enemies/laban_deceit.PNG",
+
+  babel_tower: "/images/enemies/babel_tower.PNG",
+  the_flood: "/images/enemies/the_flood.PNG",
+  sodom_gomorrah: "/images/enemies/sodom_gomorrah.PNG",
 };
 
 export const CARD_ART = {

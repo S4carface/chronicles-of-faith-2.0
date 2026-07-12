@@ -18,8 +18,15 @@ export default function Achievements() {
   const { profile, Sound: Snd } = useGame();
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
-  const unlocked = new Set(profile.achievements);
-  const unlockedCount = ACHIEVEMENTS.filter(a => unlocked.has(a.id)).length;
+  const PREVIEW_ALL_ACHIEVEMENTS = true;
+
+const unlocked = PREVIEW_ALL_ACHIEVEMENTS
+  ? new Set(ACHIEVEMENTS.map((achievement) => achievement.id))
+  : new Set(profile.achievements);
+
+const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
+  unlocked.has(achievement.id)
+).length;
 
   return (
     <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>

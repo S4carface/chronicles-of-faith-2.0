@@ -103,6 +103,26 @@ export const UI_ART = {
   trivia: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/674a33d82_generated_image.png",
 };
 
+export const ACHIEVEMENT_ART = {
+  in_the_beginning: "/images/achievements/in_the_beginning.PNG",
+  righteous_run: "/images/achievements/righteous_run.PNG",
+  serpent_slayer: "/images/achievements/serpent_slayer.PNG",
+  scholar_of_the_word: "/images/achievements/scholar_of_the_word.PNG",
+  daily_devotion: "/images/achievements/daily_devotion.PNG",
+  collector_of_faith: "/images/achievements/collector_of_faith.PNG",
+  walking_with_god: "/images/achievements/walking_with_god.PNG",
+  narrow_path: "/images/achievements/narrow_path.PNG",
+  by_faith_alone: "/images/achievements/by_faith_alone.PNG",
+  covenant_keeper: "/images/achievements/covenant_keeper.PNG",
+  flood_survivor: "/images/achievements/flood_survivor.PNG",
+  tower_toppler: "/images/achievements/tower_toppler.PNG",
+  escaped_the_fire: "/images/achievements/escaped_the_fire.PNG",
+  divine_favor: "/images/achievements/divine_favor.PNG",
+  miracle_worker: "/images/achievements/miracle_worker.PNG",
+  humble_victor: "/images/achievements/humble_victor.PNG",
+  unscathed: "/images/achievements/unscathed.PNG",
+};
+
 // Derive the correct artwork for a map node from its actual data.
 // Battle/boss nodes use the enemy's art; mystery nodes stay hidden;
 // everything else uses the room-type art. This is the single source of truth.

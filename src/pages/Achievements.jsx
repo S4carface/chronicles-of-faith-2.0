@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { Star, Cross, Sword, BookOpen, Calendar, Layers, Footprints, Route, Heart, CloudRain, Waves, Building2, Sparkles, Wand2, Trophy, ShieldCheck, Lock, Check } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
-import { ENEMY_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
 const ICON_MAP = {
@@ -51,14 +50,20 @@ export default function Achievements() {
                   ? "border-amber-400/40"
                   : "border-slate-600/30 bg-slate-800/50"
               }`} style={isUnlocked ? { background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" } : {}}>
-                {isUnlocked
-                  ? (() => {
-                    const artUrl = achievement.art === "victory_crest" ? VICTORY_ART.crest : ENEMY_ART[achievement.art];
-                    if (artUrl) return <img src={artUrl} alt={achievement.name} className="art-portrait" />;
-                    return <Icon className="w-6 h-6 text-amber-300" />;
-                  })()
-                  : <Lock className="w-5 h-5 text-slate-400" />
-                }
+                {isUnlocked ? (
+  ACHIEVEMENT_ART[achievement.art] ? (
+    <img
+      src={ACHIEVEMENT_ART[achievement.art]}
+      alt={achievement.name}
+      className="w-full h-full object-cover"
+      draggable={false}
+    />
+  ) : (
+    <Icon className="w-6 h-6 text-amber-300" />
+  )
+) : (
+  <Lock className="w-5 h-5 text-slate-400" />
+)}
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className={`font-serif ${isUnlocked ? "text-amber-200" : "text-slate-300"}`}>

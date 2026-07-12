@@ -25,15 +25,34 @@ export function getPlayerId() {
  * keeping only the highest score per player.
  */
 export function deduplicateByPlayer(scores) {
-  const byPlayer = new Map();
-  for (const s of scores) {
-    const key = s.playerId || s.playerName;
-    const existing = byPlayer.get(key);
-    if (!existing || s.score > existing.score) {
-      byPlayer.set(key, s);
+  const bestByName = new Map();
+
+  for (const scoreEntry of scores) {
+    const safeName = sanitizePlayerName(scoreEntry.playerName);
+
+    const normalizedName = safeName
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+
+    const key =
+      normalizedName && normalizedName !== "anonymous pilgrim"
+        ? normalizedName
+        : scoreEntry.playerId || scoreEntry.id;
+
+    const existing = bestByName.get(key);
+
+    if (
+      !existing ||
+      Number(scoreEntry.score || 0) > Number(existing.score || 0)
+    ) {
+      bestByName.set(key, scoreEntry);
     }
   }
-  return Array.from(byPlayer.values()).sort((a, b) => b.score - a.score);
+
+  return Array.from(bestByName.values()).sort(
+    (a, b) => Number(b.score || 0) - Number(a.score || 0)
+  );
 }
 
 /**
@@ -69,7 +88,7 @@ export async function submitBestScore(scoreData) {
     if (payload.mode === "daily") {
       query.dailyChallengeId = payload.dailyChallengeId;
     }
-    const existing = await base44.entities.LeaderboardScore.filter(query, "-score", 1);
+    let existing = await base44.entities.LeaderboardScore.filter(   query,   "-score",   1 );  // A player may receive a new local playerId after clearing storage, // changing browsers, or reinstalling. Reuse the existing visible name // so the leaderboard still keeps only one best entry for that name. if (   (!existing || existing.length === 0) &&   safeName !== "Anonymous Pilgrim" ) {   const nameQuery = {     playerName: safeName,     mode: payload.mode,   };    if (payload.mode === "daily") {     nameQuery.dailyChallengeId = payload.dailyChallengeId;   }    existing = await base44.entities.LeaderboardScore.filter(     nameQuery,     "-score",     1   ); }
 
     if (existing && existing.length > 0) {
       const prev = existing[0];

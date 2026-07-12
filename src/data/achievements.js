@@ -11,6 +11,7 @@ export const ACHIEVEMENTS = [
   { id: "noah_unlocked", name: "Covenant Keeper", icon: "cloud-rain", description: "Unlock Noah as a playable hero", verse: "Genesis 9:13" },
   { id: "flood_survivor", name: "Flood Survivor", icon: "waves", art: "the_flood", description: "Defeat The Great Flood boss", verse: "Genesis 9:11" },
   { id: "babel_destroyer", name: "Tower Toppler", icon: "building-2", art: "babel_tower", description: "Defeat the Tower of Babel boss", verse: "Genesis 11:8" },
+  { id: "sodom_judgment", name: "Escaped the Fire", icon: "flame", art: "sodom_gomorrah", description: "Defeat the Sodom & Gomorrah boss", verse: "Genesis 19:24" },
   { id: "divine_favor", name: "Divine Favor", icon: "sparkles", description: "Encounter 3 Divine Intervention rooms in one run", verse: "Exodus 33:14" },
   { id: "miracle_worker", name: "Miracle Worker", icon: "wand-2", description: "Play a Legendary card in battle", verse: "John 2:11" },
   { id: "low_score_champion", name: "Humble Victor", icon: "trophy", art: "victory_crest", description: "Score over 500 points in a single run", verse: "James 4:6" },

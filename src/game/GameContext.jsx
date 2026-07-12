@@ -491,8 +491,17 @@ if (startAtFirstBattle && firstNode) {
       // Check achievements
       if (isBoss) {
         unlockAchievement("first_victory");
-        if (node.enemyId === "the_flood") unlockAchievement("flood_survivor");
-        if (node.enemyId === "babel_tower") unlockAchievement("babel_destroyer");
+        if (node.enemyId === "the_flood") {
+  unlockAchievement("flood_survivor");
+}
+
+if (node.enemyId === "sodom_gomorrah") {
+  unlockAchievement("sodom_judgment");
+}
+
+if (node.enemyId === "babel_tower") {
+  unlockAchievement("babel_destroyer");
+}
         if (prev.battlesWithoutDamage >= 3) unlockAchievement("unscathed");
         if (prev.triviaCorrect >= 5) unlockAchievement("scholar");
         if (prev.divineEncounters >= 3) unlockAchievement("divine_favor");

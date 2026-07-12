@@ -227,3 +227,22 @@
     @apply bg-background text-foreground font-body;
   }
 }
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+button,
+a {
+  -webkit-user-drag: none;
+}

@@ -1,7 +1,27 @@
 import { ACHIEVEMENT_ART } from "@/data/art";
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Star, Cross, Sword, BookOpen, Calendar, Layers, Footprints, Route, Heart, CloudRain, Waves, Building2, Sparkles, Wand2, Trophy, ShieldCheck, Lock, Check } from "lucide-react";
+import {
+  Star,
+  Cross,
+  Sword,
+  BookOpen,
+  Calendar,
+  Layers,
+  Footprints,
+  Route,
+  Heart,
+  CloudRain,
+  Waves,
+  Building2,
+  Sparkles,
+  Wand2,
+  Trophy,
+  ShieldCheck,
+  Lock,
+  Check,
+  Coins,
+} from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import * as Sound from "@/game/soundManager";
@@ -46,13 +66,13 @@ const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
           return (
             <div
               key={achievement.id}
-              className={`flex items-center gap-4 p-4 rounded-xl border-2 transition ${
+              className={`flex items-center gap-4 p-5 rounded-xl border-2 transition ${
                 isUnlocked
                   ? "border-amber-400/50 bg-amber-500/10 shadow-md shadow-amber-500/10"
                   : "border-slate-600/40 bg-slate-900/50"
               }`}
             >
-              <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border overflow-hidden ${
+              <div className={`flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center border overflow-hidden ${
                 isUnlocked
                   ? "border-amber-400/40"
                   : "border-slate-600/30 bg-slate-800/50"
@@ -73,7 +93,7 @@ const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className={`font-serif ${isUnlocked ? "text-amber-200" : "text-slate-300"}`}>
+                <h3 className={`font-serif font-semibold tracking-wide ${   isUnlocked ? "text-amber-200" : "text-slate-300" }`}>
                   {achievement.name}
                 </h3>
                 <p className={`text-xs ${isUnlocked ? "text-amber-100/60" : "text-slate-400"}`}>
@@ -85,9 +105,13 @@ const unlockedCount = ACHIEVEMENTS.filter((achievement) =>
       "{achievement.verse}"
     </p>
 
-    <p className="text-amber-300 text-[11px] font-semibold mt-1">
-      +{achievement.goldReward || 0} gold earned
-    </p>
+    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-400/25 bg-amber-500/10 px-2.5 py-1">
+  <Coins className="w-3.5 h-3.5 text-amber-300" />
+
+  <span className="text-amber-200 text-[11px] font-bold">
+    +{achievement.goldReward || 0} Gold
+  </span>
+</div>
   </>
 )}
               </div>

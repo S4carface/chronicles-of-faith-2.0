@@ -66,28 +66,49 @@ export default function Leaderboard() {
     loadLeaderboard(filter);
   };
 
-  const playerId = getPlayerId();
-  const hasMyScore = entries.some(e => e.playerId === playerId);
+const playerId = getPlayerId();
+
+const normalizedPlayerName = sanitizePlayerName(profile.playerName)
+  .trim()
+  .replace(/\s+/g, " ")
+  .toLowerCase();
+
+const isMyEntry = (entry) => {
+  const entryName = sanitizePlayerName(entry.playerName)
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
 
   return (
+    entry.playerId === playerId ||
+    (
+      normalizedPlayerName &&
+      normalizedPlayerName !== "anonymous pilgrim" &&
+      entryName === normalizedPlayerName
+    )
+  );
+};
+
+const hasMyScore = entries.some(isMyEntry);
+  return (
     <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
         <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
             <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
           </div>
-          <h1 className="text-3xl font-serif text-amber-200">Leaderboard</h1>
+          <h1 className="font-serif text-2xl text-amber-200 sm:text-3xl">   Leaderboard </h1>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={handleChangeName}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition"
-            title="Change Name"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Change Name</span>
-          </button>
+  onClick={handleChangeName}
+  className="flex items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-900/20 px-3 py-2 text-xs font-medium text-amber-200 transition hover:bg-amber-800/30"
+  title="Change Name"
+>
+  <Pencil className="h-3.5 w-3.5" />
+  <span>Name</span>
+</button>
           <button
             onClick={handleRefresh}
             className="w-9 h-9 rounded-lg border border-amber-400/30 bg-amber-900/20 flex items-center justify-center text-amber-200 hover:bg-amber-800/30 transition"
@@ -140,7 +161,11 @@ export default function Leaderboard() {
           );
         })}
       </div>
-
+<p className="mb-4 text-center text-[11px] text-amber-100/45">
+  {filter === "all" && "Each player’s best story score is shown."}
+  {filter === "weekly" && "Best story score submitted in the last 7 days."}
+  {filter === "daily" && "Best score from today’s shared Daily Battle."}
+</p>
       <div className="max-w-2xl mx-auto rounded-xl border-2 border-amber-500/15 overflow-hidden" style={{ background: "rgba(15,26,48,0.5)" }}>
         {loading && (
           <div className="p-12 text-center text-amber-100/60">
@@ -168,13 +193,20 @@ export default function Leaderboard() {
         {entries.length > 0 && (
           <div className="divide-y divide-amber-500/5">
             {entries.map((entry, idx) => {
-              const rank = RANK_STYLES[idx] || null;
-              return (
+  const rank = RANK_STYLES[idx] || null;
+  const mine = isMyEntry(entry);
+                return (
                 <div
                   key={entry.id}
                   className={`flex items-center gap-4 p-4 transition ${
-                    idx === 0 ? "bg-amber-500/10" : idx < 3 ? "bg-amber-500/5" : ""
-                  }`}
+  mine
+    ? "bg-amber-400/10 ring-1 ring-inset ring-amber-300/30"
+    : idx === 0
+      ? "bg-amber-500/10"
+      : idx < 3
+        ? "bg-amber-500/5"
+        : ""
+}`}
                 >
                   <div className="flex-shrink-0 w-10 flex justify-center">
                     {rank ? (
@@ -186,7 +218,17 @@ export default function Leaderboard() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-serif text-amber-100 truncate">{sanitizePlayerName(entry.playerName)}</div>
+                    <div className="flex items-center gap-2">
+  <div className="truncate font-serif text-amber-100">
+    {sanitizePlayerName(entry.playerName)}
+  </div>
+
+  {mine && (
+    <span className="rounded-full border border-amber-300/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+      You
+    </span>
+  )}
+</div>
                     <div className="text-amber-100/60 text-xs flex items-center gap-1.5 flex-wrap">
                       <span className="text-amber-300/70">{entry.hero}</span>
                       <span className="text-amber-100/30">·</span>
@@ -212,10 +254,25 @@ export default function Leaderboard() {
       </div>
 
       {!loading && !loadError && entries.length > 0 && !hasMyScore && (
-        <div className="max-w-2xl mx-auto mt-4 p-4 rounded-lg border border-amber-500/20 bg-amber-900/10 text-center">
-          <p className="text-amber-100/60 text-sm">No score yet. Complete Genesis or Daily Battle to appear here.</p>
-        </div>
-      )}
+  <div className="mx-auto mt-4 max-w-2xl rounded-lg border border-amber-500/20 bg-amber-900/10 p-4 text-center">
+    <p className="text-sm text-amber-100/60">
+      {filter === "daily"
+        ? "Complete today’s Daily Battle to challenge this score."
+        : "Complete Genesis to place your best score on this leaderboard."}
+    </p>
+  </div>
+)}
+{!loading &&
+  !loadError &&
+  filter === "daily" &&
+  entries.length === 1 &&
+  hasMyScore && (
+    <div className="mx-auto mt-4 max-w-2xl rounded-lg border border-amber-500/15 bg-slate-900/20 p-4 text-center">
+      <p className="text-sm text-amber-100/45">
+        You currently hold the only score today. Other players can still challenge it.
+      </p>
+    </div>
+  )}
 
       {showNamePrompt && (
         <PlayerNamePrompt

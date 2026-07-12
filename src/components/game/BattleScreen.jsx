@@ -89,13 +89,18 @@ function simplifyLogEntry(entry) {
 }
 
 export default function BattleScreen() {
-  const { run, updateRun, saveBattleState, setPhase, completeRoom, unlockAchievement, profile, saveProfile, endRun, saveAndExit } = useGame();
+  const {   run,   updateRun,   saveBattleState,   setPhase,   completeRoom,   unlockAchievement,   profile,   saveProfile,   endRun,   saveAndExit,   recordEnemyEncounter,   recordEnemyDefeat, } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
   const isTutorialBattle = !profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily;
   const tutorialEnemy = isTutorialBattle ? { ...ENEMIES.serpent, hp: 12, attacks: [{ name: "Venomous Bite", damage: 5, icon: "🦷" }] } : null;
   const baseEnemy = run.dailyEnemy || (isTutorialBattle ? tutorialEnemy : ENEMIES[run.pendingEnemyId]);
   const enemy = (run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
+  useEffect(() => {
+  if (enemy?.id) {
+    recordEnemyEncounter(enemy.id);
+  }
+}, [enemy?.id, recordEnemyEncounter]);
   const [battleState, setBattleState] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [battleEnd, setBattleEnd] = useState(null);
@@ -674,6 +679,7 @@ export default function BattleScreen() {
   const handleBattleEnd = (result, state) => {
     if (run.isDaily) {
       if (result === "victory") {
+        recordEnemyDefeat(enemy.id);
         Sound.sfx.victory();
         Sound.playMusic("victory");
       } else {
@@ -694,6 +700,7 @@ export default function BattleScreen() {
       return;
     }
     if (result === "victory") {
+      recordEnemyDefeat(enemy.id);
       Sound.sfx.victory();
       const goldReward = enemy.isBoss ? 30 : 10 + Math.floor(Math.random() * 5);
       if (run.pendingEnemyId === "serpent" && run.roomsCleared === 0) {

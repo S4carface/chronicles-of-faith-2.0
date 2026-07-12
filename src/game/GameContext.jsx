@@ -209,13 +209,32 @@ const recordEnemyDefeat = useCallback((enemyId) => {
   });
 }, []);
   const unlockAchievement = useCallback((id) => {
-    setProfile(prev => {
-      if (prev.achievements.includes(id)) return prev;
-      setUnlockQueue(q => [...q, { type: 'achievement', id }]);
-      if (prev.settings.sfx) Sound.sfx.achievement();
-      return { ...prev, achievements: [...prev.achievements, id] };
-    });
-  }, []);
+  setProfile(prev => {
+    if (prev.achievements.includes(id)) return prev;
+
+    const achievement = ACHIEVEMENT_MAP[id];
+    const goldReward = achievement?.goldReward || 0;
+
+    setUnlockQueue(q => [
+      ...q,
+      {
+        type: "achievement",
+        id,
+        goldReward,
+      },
+    ]);
+
+    if (prev.settings.sfx) {
+      Sound.sfx.achievement();
+    }
+
+    return {
+      ...prev,
+      achievements: [...prev.achievements, id],
+      gold: (prev.gold || 0) + goldReward,
+    };
+  });
+}, []);
 
   const dismissUnlock = useCallback(() => {
     setUnlockQueue(q => q.slice(1));

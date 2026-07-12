@@ -193,7 +193,13 @@ const handleNameSaved = (name) => {
 ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden" }}>
+    <div
+  className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden"
+  style={{
+    background:
+      "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+  }}
+>
       {/* Floating particles */}
       {Array.from({ length: 18 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{

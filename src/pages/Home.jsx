@@ -155,7 +155,7 @@ const handleNameSaved = (name) => {
   ];
   const secondaryItems = [
   {
-    label: "Enemy Codex",
+    label: "Codex",
     art: MENU_ART.collection,
     path: "/codex",
     desc: "View every enemy you've discovered",

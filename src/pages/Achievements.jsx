@@ -67,8 +67,16 @@ export default function Achievements() {
                   {achievement.description}
                 </p>
                 {isUnlocked && (
-                  <p className="text-amber-300/50 text-[10px] italic mt-1">"{achievement.verse}"</p>
-                )}
+  <>
+    <p className="text-amber-300/50 text-[10px] italic mt-1">
+      "{achievement.verse}"
+    </p>
+
+    <p className="text-amber-300 text-[11px] font-semibold mt-1">
+      +{achievement.goldReward || 0} gold earned
+    </p>
+  </>
+)}
               </div>
               {isUnlocked && (
                 <div className="flex-shrink-0 w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center">

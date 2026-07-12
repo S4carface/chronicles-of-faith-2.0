@@ -1,46 +1,112 @@
 import React from "react";
 import { ROOM_INFO } from "@/data/genesisRooms";
-import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
+import { getNodeArt } from "@/data/art";
 import { cn } from "@/utils";
 
-export default function RoomPreviewPanel({ node, recommendation, onEnter, onCancel }) {
+export default function RoomPreviewPanel({
+  node,
+  recommendation,
+  onEnter,
+  onCancel,
+}) {
   if (!node) return null;
+
   const info = ROOM_INFO[node.type] || ROOM_INFO.mystery;
   const artUrl = getNodeArt(node);
   const isBoss = node.type === "boss";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ background: "rgba(8,12,24,0.85)" }} onClick={onCancel}>
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center overflow-hidden"
+      style={{ background: "rgba(8, 12, 24, 0.88)" }}
+      onClick={onCancel}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="room-preview-title"
+    >
       <div
-        className="w-full max-w-md rounded-t-2xl border-2 p-5 animate-fade-in"
-        style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)", borderColor: isBoss ? "rgba(248,113,113,0.5)" : "rgba(252,211,77,0.4)" }}
-        onClick={(e) => e.stopPropagation()}
+        className="flex w-full max-w-md flex-col overflow-hidden rounded-t-2xl border-2 animate-fade-in"
+        style={{
+          maxHeight:
+            "calc(100dvh - env(safe-area-inset-top) - 12px)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+          background:
+            "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
+          borderColor: isBoss
+            ? "rgba(248, 113, 113, 0.5)"
+            : "rgba(252, 211, 77, 0.4)",
+        }}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center gap-3 mb-3">
-          <div className={cn("w-12 h-12 rounded-lg border-2 overflow-hidden flex-shrink-0", isBoss ? "border-red-400/60" : "border-amber-400/40")} style={{ background: "#0F1A30" }}>
-            <img src={artUrl} alt={info.title} className="art-portrait" />
+        <div className="overflow-y-auto overscroll-contain p-5 pb-3">
+          <div className="mb-3 flex items-center gap-3">
+            <div
+              className={cn(
+                "h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2",
+                isBoss
+                  ? "border-red-400/60"
+                  : "border-amber-400/40"
+              )}
+              style={{ background: "#0F1A30" }}
+            >
+              <img
+                src={artUrl}
+                alt={info.title}
+                className="h-full w-full select-none object-cover"
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
+                onContextMenu={(event) => event.preventDefault()}
+                style={{
+                  WebkitTouchCallout: "none",
+                  WebkitUserSelect: "none",
+                  userSelect: "none",
+                }}
+              />
+            </div>
+
+            <div className="min-w-0">
+              <h3
+                id="room-preview-title"
+                className={cn(
+                  "font-serif text-xl",
+                  isBoss ? "text-red-200" : "text-amber-200"
+                )}
+              >
+                {info.title}
+              </h3>
+
+              {recommendation && (
+                <span
+                  className={cn(
+                    "mt-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold",
+                    recommendation === "Recommended"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-amber-500/20 text-amber-300"
+                  )}
+                >
+                  {recommendation === "Recommended"
+                    ? "★ Recommended"
+                    : "⚔ High Reward"}
+                </span>
+              )}
+            </div>
           </div>
-          <div>
-            <h3 className={cn("text-lg font-serif", isBoss ? "text-red-200" : "text-amber-200")}>{info.title}</h3>
-            {recommendation && (
-              <span className={cn(
-                "inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold",
-                recommendation === "Recommended" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"
-              )}>
-                {recommendation === "Recommended" ? "★ Recommended" : "⚔ High Reward"}
-              </span>
-            )}
-          </div>
+
+          <p className="mb-2 text-sm leading-relaxed text-amber-100/80">
+            {info.description}
+          </p>
+
+          <p className="text-xs italic leading-relaxed text-amber-100/50">
+            {info.tip}
+          </p>
         </div>
 
-        <p className="text-amber-100/80 text-sm leading-relaxed mb-2">{info.description}</p>
-        <p className="text-amber-100/50 text-xs italic mb-4">{info.tip}</p>
-
-        <div className="flex gap-3">
+        <div className="flex flex-shrink-0 gap-3 border-t border-amber-500/15 bg-[#0F1A30]/95 p-4">
           <button
+            type="button"
             onClick={onEnter}
             className={cn(
-              "flex-1 px-4 py-2.5 rounded-lg border-2 font-bold text-sm transition",
+              "min-h-12 flex-1 rounded-lg border-2 px-4 py-3 text-sm font-bold transition active:scale-[0.98]",
               isBoss
                 ? "border-red-400/60 bg-red-900/30 text-red-100 hover:bg-red-800/40"
                 : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
@@ -48,9 +114,11 @@ export default function RoomPreviewPanel({ node, recommendation, onEnter, onCanc
           >
             Enter Room →
           </button>
+
           <button
+            type="button"
             onClick={onCancel}
-            className="px-6 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/70 text-sm hover:bg-slate-700/40 transition"
+            className="min-h-12 rounded-lg border border-slate-500/40 bg-slate-800/40 px-5 py-3 text-sm text-amber-100/70 transition hover:bg-slate-700/40 active:scale-[0.98]"
           >
             Cancel
           </button>

@@ -246,6 +246,45 @@ export const ENEMIES = {
       { name: "Cleansing Wave", damage: 7, icon: "🌀", effect: "heal_self", description: "Heals self 6 HP" },
     ],
   },
+    sodom_gomorrah: {
+    id: "sodom_gomorrah",
+    name: "Sodom & Gomorrah",
+    icon: "🔥",
+    hp: 58,
+    isBoss: true,
+    summary:
+      "Fire and sulfur fall upon Sodom and Gomorrah after their wickedness brings divine judgment.",
+    narration:
+      "Then the Lord rained down burning sulfur on Sodom and Gomorrah—from the Lord out of the heavens. — Genesis 19:24",
+    attacks: [
+      {
+        name: "Fire from Heaven",
+        damage: 10,
+        icon: "☄️",
+      },
+      {
+        name: "Burning Sulfur",
+        damage: 8,
+        icon: "🔥",
+        effect: "dot",
+        description: "2 damage per turn for 3 turns",
+      },
+      {
+        name: "Blinding Smoke",
+        damage: 6,
+        icon: "🌫️",
+        effect: "skip_draw",
+        description: "Draw 1 fewer card next turn",
+      },
+      {
+        name: "City in Ruins",
+        damage: 7,
+        icon: "🏚️",
+        effect: "discard",
+        description: "Discard 1 card",
+      },
+    ],
+  },
   babel_tower: {
     id: "babel_tower",
     name: "Tower of Babel",
@@ -275,4 +314,4 @@ export const ENEMY_POOL = [
   "joseph_betrayal",
   "laban_deceit",
 ];
-export const BOSSES = ["the_flood", "babel_tower"];
+export const BOSSES = [   "the_flood",   "sodom_gomorrah",   "babel_tower", ];

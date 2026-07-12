@@ -154,10 +154,41 @@ const handleNameSaved = (name) => {
     { label: "My Progress", art: MENU_ART.progress, path: "/journey", desc: "Stats, streaks, and Bible learning", status: null },
   ];
   const secondaryItems = [
-  { label: "Marketplace", art: MENU_ART.shop, path: "/shop", desc: "Buy card packs with earned gold.", status: `${profile.gold || 0} gold` },
-  { label: "Progress Map", art: MENU_ART.progress, path: "/progress", desc: "Genesis to Revelation", status: "Genesis active" },
-  { label: "Achievements", art: MENU_ART.achievements, path: "/achievements", desc: "Sacred milestones", status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}` },
-  { label: "Settings", art: MENU_ART.settings, path: "/settings", desc: "Audio & player options", status: null },
+  {
+    label: "Enemy Codex",
+    art: MENU_ART.collection,
+    path: "/codex",
+    desc: "View every enemy you've discovered",
+    status: `${profile.encounteredEnemies?.length || 0} found`,
+  },
+  {
+    label: "Marketplace",
+    art: MENU_ART.shop,
+    path: "/shop",
+    desc: "Buy card packs with earned gold.",
+    status: `${profile.gold || 0} gold`,
+  },
+  {
+    label: "Progress Map",
+    art: MENU_ART.progress,
+    path: "/progress",
+    desc: "Genesis to Revelation",
+    status: "Genesis active",
+  },
+  {
+    label: "Achievements",
+    art: MENU_ART.achievements,
+    path: "/achievements",
+    desc: "Sacred milestones",
+    status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}`,
+  },
+  {
+    label: "Settings",
+    art: MENU_ART.settings,
+    path: "/settings",
+    desc: "Audio & player options",
+    status: null,
+  },
 ];
 
   return (

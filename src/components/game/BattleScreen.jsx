@@ -168,8 +168,11 @@ export default function BattleScreen() {
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
-    if (run.currentBattleState) {
-      const saved = run.currentBattleState;
+    const savedBattleMatchesEnemy =
+  run.currentBattleState?.enemy?.id === enemy?.id;
+
+if (run.currentBattleState && savedBattleMatchesEnemy) {
+  const saved = run.currentBattleState;
       if (saved.turn === "enemy") {
         // Mid-enemy-turn resume: complete the turn so the player isn't stuck.
         // Remaining enemy actions are skipped (already-applied effects stay),

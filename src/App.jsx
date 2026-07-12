@@ -31,9 +31,9 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return <LoadingScreen />;
-  }
+  if (isLoadingAuth) {
+  return <LoadingScreen />;
+}
 
   // Handle authentication errors
   if (authError) {

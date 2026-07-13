@@ -1075,19 +1075,6 @@ const selectedCardData =
 
     {/* Battle log on far right */}
     <div className="flex min-w-0 flex-col items-stretch">
-      <button
-        onClick={() => setShowLog(!showLog)}
-        className="flex items-center justify-center gap-1 rounded-full border border-amber-500/20 bg-slate-950/75 px-2 py-1 text-[8px] uppercase tracking-wide text-amber-300/60 shadow-md backdrop-blur-sm transition active:scale-[0.96] lg:text-[10px]"
-      >
-        {showLog ? "Hide Log" : "Log"}
-
-        {showLog ? (
-          <ChevronUp className="h-3 w-3" />
-        ) : (
-          <ChevronDown className="h-3 w-3" />
-        )}
-      </button>
-
       {showLog && (
         <div className="mt-1 max-h-28 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/90 p-1.5 text-left shadow-xl backdrop-blur-sm lg:max-h-40 lg:p-3">
           {battleState.log.slice(-8).map((entry, i) => (

@@ -140,26 +140,7 @@ export default function BattleScreen() {
   const [tutorialActive, setTutorialActive] = useState(isTutorialBattle);
   const [tutorialCompleteMsg, setTutorialCompleteMsg] = useState(false);
   const tutorialStepRef = useRef(0);
-  useEffect(() => {
-    if (!tutorialActive || selectedCard === null || !battleState) return;
-
-    const selected = resolveCard(battleState.hand[selectedCard]);
-
-    if (
-      !tutorialAllowsCardSelection ||
-      (tutorialRequiredCardId &&
-        selected?.id !== tutorialRequiredCardId)
-    ) {
-      setSelectedCard(null);
-    }
-  }, [
-    tutorialActive,
-    tutorialStep,
-    selectedCard,
-    battleState,
-    tutorialAllowsCardSelection,
-    tutorialRequiredCardId,
-  ]);
+  
   const advanceTutorial = () => {
     const next = tutorialStepRef.current + 1;
     tutorialStepRef.current = next;

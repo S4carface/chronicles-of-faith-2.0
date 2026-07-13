@@ -109,9 +109,9 @@ export function GameProvider({ children }) {
   // Defeat/dailyResult: clear immediately — the run is lost and the screen is shown.
   useEffect(() => {
     if (run) {
-      if (run.isDaily) {
-        return;
-      }
+      if (run.isDaily || run.isTutorial) {
+  return;
+}
       if (run.phase === "victory") {
         return;
       }
@@ -142,7 +142,7 @@ export function GameProvider({ children }) {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
         } catch (e) {}
-        if (run && !run.isDaily && !["victory", "defeat", "dailyResult"].includes(run.phase)) {
+        if (   run &&   !run.isDaily &&   !run.isTutorial &&   !["victory", "defeat", "dailyResult"].includes(run.phase) ) {
           saveStoryRun(run);
         }
       }
@@ -333,6 +333,77 @@ const recordEnemyDefeat = useCallback((enemyId) => {
   }, [profile.collectedCards, profile.achievements, unlockAchievement]);
 
   // ===== RUN MANAGEMENT =====
+const startTutorialRun = useCallback(() => {
+  const hero = HERO_MAP.adam;
+
+  if (!hero) return;
+
+  clearStoryRun();
+  setSavedStoryExists(false);
+  setStorySaveError(false);
+
+  setRun({
+    hero,
+
+    // Tutorial is not part of the Genesis campaign.
+    isTutorial: true,
+    isDaily: false,
+    difficulty: "easy",
+
+    // No campaign map or room progression exists during tutorial.
+    map: null,
+    currentNode: null,
+    pendingEnemyId: "serpent",
+    phase: "battle",
+    fogOfWar: false,
+
+    // Dedicated tutorial health and cards.
+    playerHp: hero.maxHp,
+    maxHp: hero.maxHp,
+    deck: [
+      "sling_stone",
+      "faith_shield",
+      "prayer",
+      "sling_stone",
+    ],
+
+    gold: 0,
+    roomsCleared: 0,
+
+    triviaCorrect: 0,
+    triviaAttempted: 0,
+    triviaWrong: 0,
+
+    battlesWithoutDamage: 0,
+    divineEncounters: 0,
+    tookOnlyBattles: true,
+    usedScriptureOnly: true,
+    usedLegendary: false,
+    neverLostHp: true,
+    storyChoices: [],
+
+    pendingReward: null,
+    narrationText: "",
+    narrationSummary: "",
+
+    currentBattleState: null,
+
+    buffAttack: 0,
+    shieldActive: false,
+    extraDraw: 0,
+    freeCardsNext: 0,
+    nextCardRare: false,
+
+    bossModifier: null,
+    battleCheckpoint: null,
+    battleRetries: 0,
+    checkpointRetries: 0,
+
+    runStartTime: Date.now(),
+  });
+
+  Sound.playMusic("battle");
+}, []);
   const startRun = useCallback((heroId, isDaily = false, seedOverride = null, options = {}) => {
     const hero = HERO_MAP[heroId];
     if (!hero || !profile.unlockedHeroes.includes(heroId)) return;
@@ -664,7 +735,7 @@ if (node.enemyId === "babel_tower") {
   // Save the current story run and return to menu WITHOUT deleting the save.
   // The in-memory run is cleared so Home shows the "Continue Saved Run" button.
   const saveAndExit = useCallback(() => {
-    if (run && !run.isDaily && !["victory", "defeat", "dailyResult"].includes(run.phase)) {
+    if (   run &&   !run.isDaily &&   !run.isTutorial &&   !["victory", "defeat", "dailyResult"].includes(run.phase) ) {
       if (run.runStartTime) {
         recordPlayTime((Date.now() - run.runStartTime) / 1000);
       }
@@ -740,6 +811,7 @@ if (node.enemyId === "babel_tower") {
     recordEnemyDefeat,
     run,
     startRun,
+    startTutorialRun,
     startDailyBattle,
     selectNode,
     completeRoom,

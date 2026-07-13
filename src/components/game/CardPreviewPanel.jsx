@@ -58,9 +58,21 @@ export default function CardPreviewPanel({ card, playable, blocked, battleState,
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="rounded-md border border-amber-500/15 bg-slate-900/40 px-2.5 py-1.5 mb-2">
-  <p className="text-amber-100 text-xs leading-snug">{effectText}</p>
-</div>
+{card.verse && card.scriptureText && (
+  <div className="mb-2 rounded-md border border-amber-500/20 bg-slate-900/45 px-3 py-2">
+    <div className="mb-1 flex items-center justify-center gap-1.5">
+      <BookOpen className="h-3 w-3 text-amber-300/70" />
+
+      <p className="text-[9px] uppercase tracking-[0.16em] text-amber-300/70">
+        {card.verse}
+      </p>
+    </div>
+
+    <p className="line-clamp-3 text-center font-serif text-[11px] italic leading-4 text-amber-100/80">
+      “{card.scriptureText}”
+    </p>
+  </div>
+)}
 
           <div className="flex gap-2.5">
             <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>

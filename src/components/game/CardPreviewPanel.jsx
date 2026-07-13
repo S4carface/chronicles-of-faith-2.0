@@ -37,39 +37,7 @@ export default function CardPreviewPanel({ card, playable, blocked, battleState,
       {/* Mobile: bottom sheet */}
       <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
         <div className="px-3 pt-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-          <div className="flex items-center gap-2.5 mb-2">
-  <div className="flex-1 min-w-0">
-    <h4 className="font-serif text-amber-100 text-sm leading-tight truncate">
-      {card.name}
-    </h4>
-
-    <div className="flex items-center gap-1.5 mt-0.5">
-      <span
-        className={cn(
-          "text-[9px] font-semibold uppercase flex items-center gap-0.5",
-          typeInfo.color
-        )}
-      >
-        <TypeIcon className="w-2.5 h-2.5" />
-        {typeInfo.text}
-      </span>
-
-      <span className="text-amber-300/40 text-[9px]">·</span>
-
-      <span className="flex items-center gap-0.5 text-amber-300/60 text-[9px]">
-        <Sparkles className="w-2.5 h-2.5" />
-        {card.cost} Faith
-      </span>
-    </div>
-  </div>
-
-  <button
-    onClick={onCancel}
-    className="flex-shrink-0 w-7 h-7 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60 active:scale-90"
-  >
-    <X className="w-3.5 h-3.5" />
-  </button>
-</div>
+          
 {card.verse && card.scriptureText && (
   <div className="mb-2 rounded-md border border-amber-500/20 bg-slate-900/45 px-3 py-2">
     <div className="mb-1 flex items-center justify-center gap-1.5">

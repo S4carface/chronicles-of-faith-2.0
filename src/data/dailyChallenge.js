@@ -22,7 +22,12 @@ const SPECIAL_RULES = [
   { id: "fortified_start", name: "Fortified Start", description: "You begin battle with 8 Block.", playerStartBlock: 8 },
   { id: "abundant_faith", name: "Abundant Faith", description: "You start with 5 max Faith energy instead of 3.", maxEnergy: 5 },
   { id: "mighty_adversary", name: "Mighty Adversary", description: "The enemy has 30% more HP.", enemyHpMult: 1.3 },
-  { id: "tactical_hand", name: "Tactical Hand", description: "You start with 7 cards in hand instead of 5.", extraDraw: 2 },
+  {
+  id: "tactical_hand",
+  name: "Prepared Spirit",
+  description: "Begin battle with 1 additional Faith.",
+  maxEnergy: 4
+},
 ];
 
 const DIFFICULTY_CONFIG = {

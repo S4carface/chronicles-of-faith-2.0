@@ -910,7 +910,7 @@ const selectedCardData =
         {/* Enemy Intent — compact strip with painted icons */}
         {battleState.enemyHand?.length > 0 && !battleEnd && (
           <div className="mb-1 flex items-center gap-1 lg:gap-2.5 justify-center flex-wrap max-w-[95%] lg:max-w-[800px]">
-            {battleState.enemyHand.map((action, i) => {
+            {battleState.enemyHand.slice(0, 1).map((action, i) => {
               const actionType = getActionType(action);
               const intentInfo = INTENT_TYPE_MAP[actionType];
               const isCurrent = currentIntentIdx === i;
@@ -938,7 +938,6 @@ const selectedCardData =
                       return <span className={`text-[8px] lg:text-base font-bold leading-none ${amtColor}`}>{amt}</span>;
                     })()}
                   </button>
-                  {i < battleState.enemyHand.length - 1 && <span className="text-amber-300/20 text-[8px]">→</span>}
                 </React.Fragment>
               );
             })}

@@ -14,7 +14,7 @@ import {
   HAND_LIMIT
 } from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
-import Card from "@/components/game/Card";
+import Card, { getCardEffectText } from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
@@ -1193,15 +1193,52 @@ const selectedCardData =
           </div>
         </div>
       </div>
-{/* Compact Scripture reference while a card is selected */}
-{selectedCardData?.verse && (
-  <div className="flex-shrink-0 px-3 py-1 animate-fade-in">
-    <div className="mx-auto flex w-fit max-w-[90%] items-center justify-center gap-1.5 rounded-full border border-amber-500/20 bg-slate-950/45 px-3 py-1">
-      <BookOpen className="h-3 w-3 flex-shrink-0 text-amber-300/70" />
+{/* Compact selected-card summary */}
+{selectedCardData && (
+  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 animate-fade-in">
+    <div className="mx-auto flex w-full max-w-xl items-center gap-2">
+      <div className="flex-shrink-0">
+        {selectedCardData.type === "attack" && (
+          <SwordsIcon className="h-4 w-4 text-red-300" />
+        )}
 
-      <p className="truncate text-[10px] uppercase tracking-[0.14em] text-amber-300/70">
-        {selectedCardData.verse}
-      </p>
+        {selectedCardData.type === "defense" && (
+          <Shield className="h-4 w-4 text-blue-300" />
+        )}
+
+        {selectedCardData.type === "scripture" && (
+          <BookOpen className="h-4 w-4 text-emerald-300" />
+        )}
+
+        {selectedCardData.type === "miracle" && (
+          <Sparkles className="h-4 w-4 text-yellow-200" />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="truncate font-serif text-[11px] font-semibold uppercase tracking-wide text-amber-100">
+            {selectedCardData.name}
+          </span>
+
+          <span className="text-amber-300/30">•</span>
+
+          <span className="whitespace-nowrap text-[10px] uppercase text-amber-100/60">
+            {selectedCardData.type}
+          </span>
+
+          <span className="text-amber-300/30">•</span>
+
+          <span className="flex items-center gap-0.5 whitespace-nowrap text-[10px] text-yellow-200">
+            <Sparkles className="h-3 w-3" />
+            {selectedCardData.cost} Faith
+          </span>
+        </div>
+
+        <p className="mt-0.5 truncate text-xs text-amber-100/85">
+          {getCardEffectText(selectedCardData)}
+        </p>
+      </div>
     </div>
   </div>
 )}

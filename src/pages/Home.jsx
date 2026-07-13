@@ -69,20 +69,13 @@ const handleFirstIntroComplete = () => {
 const handleFirstTimeBegin = () => {
   Sound.sfx.click();
 
-  // Continue an active tutorial run if one is already loaded
-  if (run) {
-    navigate("/play");
-    return;
-  }
+  // An unfinished tutorial must always begin from a clean battle state.
+  // Do not resume an old normal run or partially completed tutorial.
+  endRun();
 
-  // Restore a saved tutorial run after closing or refreshing the game
-  if (savedStoryExists && resumeStoryRun()) {
-    navigate("/play");
-    return;
-  }
-
-  // New player: begin Genesis Easy at the first tutorial battle
-  launchFirstTutorialBattle();
+  setTimeout(() => {
+    launchFirstTutorialBattle();
+  }, 0);
 };
 const handleBeginRun = () => {
   Sound.sfx.click();

@@ -1193,19 +1193,14 @@ const selectedCardData =
           </div>
         </div>
       </div>
-{/* Scripture Reading Area */}
-{selectedCardData?.verse && selectedCardData?.scriptureText && (
-  <div className="flex-shrink-0 px-4 py-2 animate-fade-in">
-    <div className="mx-auto w-full max-w-xl rounded-xl border border-amber-500/20 bg-slate-950/40 px-5 py-3 text-center">
-      <div className="flex items-center justify-center gap-2">
-        <BookOpen className="w-4 h-4 text-amber-300/70" />
-        <p className="text-[11px] uppercase tracking-[0.2em] text-amber-300/70">
-          {selectedCardData.verse}
-        </p>
-      </div>
+{/* Compact Scripture reference while a card is selected */}
+{selectedCardData?.verse && (
+  <div className="flex-shrink-0 px-3 py-1 animate-fade-in">
+    <div className="mx-auto flex w-fit max-w-[90%] items-center justify-center gap-1.5 rounded-full border border-amber-500/20 bg-slate-950/45 px-3 py-1">
+      <BookOpen className="h-3 w-3 flex-shrink-0 text-amber-300/70" />
 
-      <p className="mt-2 text-sm lg:text-base italic leading-6 text-amber-100/85 font-serif">
-        “{selectedCardData.scriptureText}”
+      <p className="truncate text-[10px] uppercase tracking-[0.14em] text-amber-300/70">
+        {selectedCardData.verse}
       </p>
     </div>
   </div>

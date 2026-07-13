@@ -4,6 +4,7 @@ import { CARD_ART } from "@/data/art";
 import { getCardPlayabilityReason } from "@/game/statusExplanations";
 import { cn } from "@/utils";
 import { Sparkles, X, Swords, Shield, BookOpen, Wand2 } from "lucide-react";
+import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
 
 const TYPE_INFO = {
   attack: { text: "Attack", color: "text-red-300", icon: Swords, border: "border-red-400/30" },
@@ -19,7 +20,7 @@ const RARITY_BORDER = {
   legendary: "border-amber-300/80",
 };
 
-export default function CardPreviewPanel({ card, playable, blocked, battleState, onPlay, onCancel }) {
+export default function CardPreviewPanel({   card,   playable,   blocked,   battleState,   onPlay,   onCancel,   showTutorialPlayGuide = false, }) {
   if (!card) return null;
   const typeInfo = TYPE_INFO[card.type] || TYPE_INFO.attack;
   const effectText = getCardEffectText(card);
@@ -56,8 +57,26 @@ export default function CardPreviewPanel({ card, playable, blocked, battleState,
 
           <div className="flex gap-2.5">
             <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>
-            <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 active:scale-95">Play Card</button>
-          </div>
+            <div className="relative flex-[2]">
+  {showTutorialPlayGuide && canPlay && (
+    <TutorialGuidingLight
+      direction="down"
+      className="-top-14 left-1/2 -translate-x-1/2"
+    />
+  )}
+
+  <button
+    onClick={onPlay}
+    disabled={!canPlay}
+    className={`w-full rounded-lg border-2 py-3 text-base font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+      showTutorialPlayGuide
+        ? "border-amber-300 bg-gradient-to-r from-emerald-600/50 to-emerald-500/40 text-emerald-50 ring-4 ring-amber-300/70 shadow-xl shadow-amber-400/40"
+        : "border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 shadow-lg shadow-emerald-500/20 hover:from-emerald-600/50 hover:to-emerald-500/40"
+    }`}
+  >
+    Play Card
+  </button>
+</div>          </div>
           {blockReason && (
             <div className="mt-1.5 px-2.5 py-1.5 rounded-md border border-red-500/30 bg-red-900/20 text-center">
               <p className="text-red-300 text-[10px] font-bold uppercase tracking-wide">🔒 {blockReason.label}</p>

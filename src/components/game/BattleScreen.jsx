@@ -985,25 +985,34 @@ const selectedCardData =
         </div>
       </div>
 
-      {/* Combat Log — minimal pill when collapsed, expandable for full log */}
-      <div className="flex-shrink-0 flex flex-col items-center py-0.5 lg:py-1">
-        <button
-          onClick={() => setShowLog(!showLog)}
-          className="flex items-center gap-1.5 px-3 py-0.5 rounded-full border border-amber-500/10 bg-slate-900/30 text-amber-300/35 text-[9px] lg:text-[10px] uppercase tracking-wide hover:bg-slate-900/50 hover:text-amber-300/60 transition active:scale-[0.98]"
+      {/* Floating combat log beside the enemy */}
+<div className="absolute right-3 top-36 z-20 flex flex-col items-end">
+  <button
+    onClick={() => setShowLog(!showLog)}
+    className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-slate-950/80 px-2.5 py-1 text-[9px] uppercase tracking-wide text-amber-300/60 shadow-md backdrop-blur-sm transition active:scale-[0.96]"
+  >
+    {showLog ? "Hide Log" : "Log"}
+
+    {showLog ? (
+      <ChevronUp className="h-3 w-3" />
+    ) : (
+      <ChevronDown className="h-3 w-3" />
+    )}
+  </button>
+
+  {showLog && (
+    <div className="mt-1 max-h-28 w-40 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/95 p-2 text-left shadow-xl backdrop-blur-sm">
+      {battleState.log.slice(-8).map((entry, i) => (
+        <p
+          key={i}
+          className="border-b border-amber-500/10 py-0.5 text-[9px] leading-snug text-amber-100/70 last:border-b-0"
         >
-          {showLog ? "Hide Log" : "Log"}
-          {showLog ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        </button>
-        {showLog && (
-          <div className="w-full rounded-md border border-amber-500/15 bg-slate-900/50 p-1.5 lg:p-3 mt-1 max-h-20 lg:max-h-40 overflow-y-auto">
-            {battleState.log.slice(-10).map((entry, i) => (
-              <p key={i} className="text-amber-100/70 text-[11px] lg:text-sm leading-snug">
-                {simplifyLogEntry(entry) || entry}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
+          {simplifyLogEntry(entry) || entry}
+        </p>
+      ))}
+    </div>
+  )}
+</div>
 
       {/* Battle helper — contextual advice below the log */}
       <div className="flex-shrink-0">

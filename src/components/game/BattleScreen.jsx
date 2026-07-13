@@ -1193,37 +1193,27 @@ const selectedCardData =
           </div>
         </div>
       </div>
-{/* Compact selected-card summary */}
+{/* Selected-card battle summary */}
 {selectedCardData && (
   <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 animate-fade-in">
-    <div className="mx-auto flex w-full max-w-xl items-center gap-2">
-      <div className="flex-shrink-0">
-        {selectedCardData.type === "attack" && (
-          <SwordsIcon className="h-4 w-4 text-red-300" />
-        )}
-
-        {selectedCardData.type === "defense" && (
-          <Shield className="h-4 w-4 text-blue-300" />
-        )}
-
-        {selectedCardData.type === "scripture" && (
-          <BookOpen className="h-4 w-4 text-emerald-300" />
-        )}
-
-        {selectedCardData.type === "miracle" && (
-          <Sparkles className="h-4 w-4 text-yellow-200" />
-        )}
+    <div className="mx-auto flex w-full max-w-xl items-center justify-center gap-3">
+      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-md shadow-black/30">
+        <img
+          src={selectedCardData.art}
+          alt={selectedCardData.name}
+          className="h-full w-full object-cover"
+        />
       </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="truncate font-serif text-[11px] font-semibold uppercase tracking-wide text-amber-100">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-center">
+          <span className="font-serif text-[12px] font-semibold uppercase tracking-wide text-amber-100">
             {selectedCardData.name}
           </span>
 
           <span className="text-amber-300/30">•</span>
 
-          <span className="whitespace-nowrap text-[10px] uppercase text-amber-100/60">
+          <span className="text-[10px] uppercase text-amber-100/60">
             {selectedCardData.type}
           </span>
 
@@ -1235,7 +1225,7 @@ const selectedCardData =
           </span>
         </div>
 
-        <p className="mt-0.5 truncate text-xs text-amber-100/85">
+        <p className="mt-1 text-center text-xs text-amber-100/85">
           {getCardEffectText(selectedCardData)}
         </p>
       </div>

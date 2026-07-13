@@ -65,12 +65,24 @@ const launchFirstTutorialBattle = () => {
 
 const handleFirstIntroComplete = () => {
   handleIntroComplete();
+};
+const handleFirstTimeBegin = () => {
+  Sound.sfx.click();
 
-  if (!run && !savedStoryExists) {
-    setTimeout(() => {
-      launchFirstTutorialBattle();
-    }, 0);
+  // Continue an active tutorial run if one is already loaded
+  if (run) {
+    navigate("/play");
+    return;
   }
+
+  // Restore a saved tutorial run after closing or refreshing the game
+  if (savedStoryExists && resumeStoryRun()) {
+    navigate("/play");
+    return;
+  }
+
+  // New player: begin Genesis Easy at the first tutorial battle
+  launchFirstTutorialBattle();
 };
 const handleBeginRun = () => {
   Sound.sfx.click();
@@ -190,7 +202,93 @@ const handleNameSaved = (name) => {
     status: null,
   },
 ];
+  // First-time experience:
+  // Keep the opening screen focused on one action until the tutorial is complete.
+  if (!profile.tutorialSeen) {
+    return (
+      <div
+        className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+        }}
+      >
+        {/* Subtle sacred gold particles */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className="pointer-events-none absolute rounded-full"
+            style={{
+              width: `${2 + Math.random() * 2}px`,
+              height: `${2 + Math.random() * 2}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `rgba(201,168,76,${
+                0.15 + Math.random() * 0.25
+              })`,
+              animation: `float ${
+                5 + Math.random() * 5
+              }s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 4}s`,
+            }}
+          />
+        ))}
 
+        <main className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+          <div
+            className="mb-5 h-24 w-24 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-lg shadow-amber-400/20"
+            style={{ background: "#0F1A30" }}
+          >
+            <img
+              src={HOME_ART.cross}
+              alt="Chronicles of Faith"
+              className="art-portrait"
+            />
+          </div>
+
+          <h1
+            className="font-serif text-4xl leading-tight tracking-wide text-amber-200 sm:text-5xl"
+            style={{
+              textShadow: "0 0 30px rgba(201,168,76,0.3)",
+            }}
+          >
+            Chronicles of Faith
+          </h1>
+
+          <p className="mt-3 font-serif text-sm italic tracking-wide text-amber-100/60 sm:text-base">
+            A Bible-inspired roguelike card game
+          </p>
+
+          <div className="my-7 h-px w-32 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+
+          <button
+            type="button"
+            onClick={handleFirstTimeBegin}
+            className="w-full rounded-xl border-2 border-amber-400/70 px-8 py-4 font-serif text-xl font-bold text-amber-100 shadow-lg shadow-amber-500/20 transition active:scale-[0.98]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(180,140,40,0.32) 0%, rgba(120,90,20,0.24) 100%)",
+            }}
+          >
+            <span className="flex items-center justify-center gap-3">
+              <Swords className="h-6 w-6" />
+              Begin Journey
+            </span>
+          </button>
+
+          <p className="mt-6 max-w-xs font-serif text-xs italic leading-relaxed text-amber-100/40">
+            “In the beginning, God created the heavens and the earth.”
+            <br />
+            Genesis 1:1
+          </p>
+        </main>
+
+        {showIntro && (
+          <CinematicIntro onComplete={handleFirstIntroComplete} />
+        )}
+      </div>
+    );
+  }
   return (
     <div
   className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden"

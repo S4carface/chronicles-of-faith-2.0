@@ -117,9 +117,9 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         selected && !playable && "-translate-y-2 ring-4 ring-amber-400/40 scale-[1.03] z-10",
         !playable && onClick && "opacity-60",
         small
-  ? "w-full h-44 landscape:w-24 landscape:h-36"
+  ? "w-28 h-44 landscape:w-24 landscape:h-36"
   : "w-44 h-64 landscape:w-36 landscape:h-52",
-        inHand && "min-w-0"
+        inHand && "flex-shrink-0"
       )}
     >
       {/* Cost badge */}

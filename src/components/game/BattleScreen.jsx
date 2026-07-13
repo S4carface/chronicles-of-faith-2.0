@@ -565,14 +565,21 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
 
       // Action step — enemy plays one action
       if (step.type === "action") {
-        setCurrentIntentIdx(step.handIndex);
-        Sound.sfx.enemyWindUp();
-        setEnemyAttackAnim(true);
+  setCurrentIntentIdx(step.handIndex);
 
-        setTimeout(() => {
-          setEnemyAttackAnim(false);
-          const actionType = getActionType(step.action);
+  const actionType = getActionType(step.action);
+  const actionDealsDamage =
+    actionType === "attack" ||
+    (actionType === "curse" && step.action.damage > 0);
 
+  if (actionDealsDamage) {
+    Sound.sfx.enemyWindUp();
+    setEnemyAttackAnim(true);
+  }
+
+  setTimeout(() => {
+    setEnemyAttackAnim(false);
+    
           if (actionType === "attack") {
             Sound.sfx.enemyAttack();
             setPlayerShake(true);

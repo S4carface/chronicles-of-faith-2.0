@@ -1472,7 +1472,7 @@ const selectedCardData =
                     : ""
               }`}
             >
-              {isRequiredTutorialCard && (
+              {isRequiredTutorialCard && !isSelected && (
   <TutorialGuidingLight
     direction="down"
     className="-top-14 left-1/2 -translate-x-1/2"
@@ -1512,13 +1512,23 @@ const selectedCardData =
         const blocked = battleState.blockScripture && selCard.type === "scripture";
         return (
           <CardPreviewPanel
-            card={selCard}
-            playable={playable && !isEnemyTurn}
-            blocked={blocked}
-            battleState={battleState}
-            onPlay={() => handlePlayCard(selectedCard)}
-            onCancel={() => { Sound.sfx.click(); setSelectedCard(null); }}
-          />
+  card={selCard}
+  playable={playable && !isEnemyTurn}
+  blocked={blocked}
+  battleState={battleState}
+  onPlay={() => handlePlayCard(selectedCard)}
+  onCancel={() => {
+    Sound.sfx.click();
+    setSelectedCard(null);
+  }}
+  showTutorialPlayGuide={
+    tutorialActive &&
+    (
+      (tutorialStep === 3 && selCard.id === "sling_stone") ||
+      (tutorialStep === 4 && selCard.id === "faith_shield")
+    )
+  }
+/>
         );
       })()}
 

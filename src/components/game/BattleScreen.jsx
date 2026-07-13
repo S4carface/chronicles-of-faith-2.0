@@ -664,19 +664,38 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
 
       // End step — draw new hand, return to player
       if (step.type === "end") {
-        if (step.state.reshuffled) {
-          setReshuffleAnim(true);
-          setDeckMessage("Deck renewed — discard pile reshuffled.");
-          setTimeout(() => setReshuffleAnim(false), 1000);
-          setTimeout(() => setDeckMessage(null), 2500);
-        }
-        setBattleState(step.state);
-        setCurrentIntentIdx(-1);
-        setAnimating(false);
-        const end = checkBattleEnd(step.state);
-        if (end) { setBattleEnd(end); handleBattleEnd(end, step.state); }
-        return;
-      }
+  if (step.state.reshuffled) {
+    setReshuffleAnim(true);
+    setDeckMessage("Deck renewed — discard pile reshuffled.");
+    setTimeout(() => setReshuffleAnim(false), 1000);
+    setTimeout(() => setDeckMessage(null), 2500);
+  }
+
+  setBattleState(step.state);
+  setCurrentIntentIdx(-1);
+  setAnimating(false);
+
+  const end = checkBattleEnd(step.state);
+
+  if (end) {
+    setBattleEnd(end);
+    handleBattleEnd(end, step.state);
+  }
+
+  // The guided tutorial ends after the enemy completes its first turn.
+  // Without this, tutorial restrictions remain active and soft-lock battle.
+  if (
+    tutorialActive &&
+    tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS &&
+    !end
+  ) {
+    setTimeout(() => {
+      setTutorialCompleteMsg(true);
+    }, 300);
+  }
+
+  return;
+}
     };
 
     // Start with wind-up

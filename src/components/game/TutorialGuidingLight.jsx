@@ -12,152 +12,185 @@ export default function TutorialGuidingLight({
     right: "rotate(-90deg)",
   };
 
+  const movementAnimation = {
+    up: "guidingLightMoveUp 1.6s ease-in-out infinite",
+    down: "guidingLightMoveDown 1.6s ease-in-out infinite",
+    left: "guidingLightMoveLeft 1.6s ease-in-out infinite",
+    right: "guidingLightMoveRight 1.6s ease-in-out infinite",
+  };
+
   return (
     <>
       <style>{`
-        @keyframes guidingLightNudgeDown {
+        @keyframes guidingLightMoveDown {
           0%, 100% {
             transform: translateY(0);
           }
 
           50% {
-            transform: translateY(8px);
+            transform: translateY(7px);
           }
         }
 
-        @keyframes guidingLightNudgeUp {
+        @keyframes guidingLightMoveUp {
           0%, 100% {
             transform: translateY(0);
           }
 
           50% {
-            transform: translateY(-8px);
+            transform: translateY(-7px);
           }
         }
 
-        @keyframes guidingLightNudgeLeft {
+        @keyframes guidingLightMoveLeft {
           0%, 100% {
             transform: translateX(0);
           }
 
           50% {
-            transform: translateX(-8px);
+            transform: translateX(-7px);
           }
         }
 
-        @keyframes guidingLightNudgeRight {
+        @keyframes guidingLightMoveRight {
           0%, 100% {
             transform: translateX(0);
           }
 
           50% {
-            transform: translateX(8px);
+            transform: translateX(7px);
           }
         }
 
-        @keyframes guidingLightPulse {
+        @keyframes guidingLightBreathe {
           0%, 100% {
-            opacity: 0.75;
-            filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.55));
+            opacity: 0.72;
+            transform: scale(0.92);
           }
 
           50% {
             opacity: 1;
-            filter:
-              drop-shadow(0 0 9px rgba(251, 191, 36, 0.9))
-              drop-shadow(0 0 16px rgba(255, 255, 255, 0.28));
+            transform: scale(1.08);
           }
         }
 
-        @keyframes guidingLightParticleOne {
+        @keyframes guidingLightCorePulse {
           0%, 100% {
-            opacity: 0.2;
-            transform: translate(0, 0) scale(0.7);
+            filter:
+              drop-shadow(0 0 5px rgba(251,191,36,0.65))
+              drop-shadow(0 0 9px rgba(255,255,255,0.18));
+          }
+
+          50% {
+            filter:
+              drop-shadow(0 0 9px rgba(251,191,36,0.95))
+              drop-shadow(0 0 17px rgba(255,255,255,0.38));
+          }
+        }
+
+        @keyframes guidingParticleLeft {
+          0%, 100% {
+            opacity: 0.15;
+            transform: translate(0, 3px) scale(0.6);
           }
 
           50% {
             opacity: 0.9;
-            transform: translate(-5px, -7px) scale(1);
+            transform: translate(-7px, -8px) scale(1);
           }
         }
 
-        @keyframes guidingLightParticleTwo {
+        @keyframes guidingParticleRight {
           0%, 100% {
-            opacity: 0.15;
-            transform: translate(0, 0) scale(0.6);
+            opacity: 0.1;
+            transform: translate(0, 2px) scale(0.6);
           }
 
           50% {
             opacity: 0.8;
-            transform: translate(6px, -5px) scale(1);
+            transform: translate(7px, -6px) scale(1);
           }
         }
       `}</style>
 
       <div
-        className={`pointer-events-none absolute z-[57] flex h-14 w-14 items-center justify-center ${className}`}
+        className={`pointer-events-none absolute z-[57] flex h-16 w-16 items-center justify-center ${className}`}
         style={{
           animation:
-            direction === "up"
-              ? "guidingLightNudgeUp 1.25s ease-in-out infinite"
-              : direction === "left"
-                ? "guidingLightNudgeLeft 1.25s ease-in-out infinite"
-                : direction === "right"
-                  ? "guidingLightNudgeRight 1.25s ease-in-out infinite"
-                  : "guidingLightNudgeDown 1.25s ease-in-out infinite",
+            movementAnimation[direction] ||
+            movementAnimation.down,
         }}
         aria-hidden="true"
       >
         <div
-          className="relative flex h-12 w-12 items-center justify-center"
+          className="relative flex h-14 w-14 items-center justify-center"
           style={{
-            transform: rotation[direction] || rotation.down,
-            animation: "guidingLightPulse 1.5s ease-in-out infinite",
+            transform:
+              rotation[direction] ||
+              rotation.down,
           }}
         >
-          {/* Soft sacred glow */}
+          {/* Large soft halo */}
           <div
-            className="absolute h-10 w-10 rounded-full"
+            className="absolute h-14 w-14 rounded-full"
             style={{
               background:
-                "radial-gradient(circle, rgba(255,248,210,0.42) 0%, rgba(251,191,36,0.18) 42%, transparent 72%)",
+                "radial-gradient(circle, rgba(255,251,226,0.52) 0%, rgba(251,191,36,0.24) 35%, rgba(251,191,36,0.08) 58%, transparent 76%)",
+              animation:
+                "guidingLightBreathe 1.9s ease-in-out infinite",
             }}
           />
 
-          {/* Central guiding star */}
-          <Sparkles
-            className="relative z-10 h-7 w-7 text-amber-200"
-            strokeWidth={1.8}
+          {/* Inner sacred glow */}
+          <div
+            className="absolute h-9 w-9 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(255,255,245,0.7) 0%, rgba(251,191,36,0.24) 48%, transparent 75%)",
+            }}
           />
 
-          {/* Direction point */}
+          {/* Main symbol */}
+          <Sparkles
+            className="relative z-10 h-8 w-8 text-amber-100"
+            strokeWidth={1.7}
+            style={{
+              animation:
+                "guidingLightCorePulse 1.7s ease-in-out infinite",
+            }}
+          />
+
+          {/* Clear direction pointer */}
           <div
-            className="absolute -bottom-1 left-1/2 -translate-x-1/2"
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2"
             style={{
               width: 0,
               height: 0,
-              borderLeft: "7px solid transparent",
-              borderRight: "7px solid transparent",
-              borderTop: "12px solid rgba(251,191,36,0.95)",
+              borderLeft:
+                "9px solid transparent",
+              borderRight:
+                "9px solid transparent",
+              borderTop:
+                "16px solid rgba(251,191,36,0.98)",
               filter:
-                "drop-shadow(0 0 5px rgba(251,191,36,0.75))",
+                "drop-shadow(0 0 6px rgba(251,191,36,0.9))",
             }}
           />
 
-          {/* Floating light particles */}
+          {/* Small particles */}
           <span
-            className="absolute left-0 top-1 h-1.5 w-1.5 rounded-full bg-amber-200"
+            className="absolute left-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-100"
             style={{
               animation:
-                "guidingLightParticleOne 1.7s ease-in-out infinite",
+                "guidingParticleLeft 2s ease-in-out infinite",
             }}
           />
 
           <span
-            className="absolute right-0 top-3 h-1 w-1 rounded-full bg-amber-100"
+            className="absolute right-1 top-3 h-1.5 w-1.5 rounded-full bg-yellow-100"
             style={{
               animation:
-                "guidingLightParticleTwo 1.9s ease-in-out infinite",
+                "guidingParticleRight 2.2s ease-in-out infinite",
             }}
           />
         </div>

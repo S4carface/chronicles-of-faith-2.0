@@ -1196,7 +1196,7 @@ const selectedCardData =
 {/* Selected-card battle summary */}
 {selectedCardData && (
   <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 animate-fade-in">
-    <div className="mx-auto flex w-full max-w-xl items-center justify-center gap-3">
+    <div className="mx-auto flex w-full max-w-xl items-center justify-start gap-3">
       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-md shadow-black/30">
         <img
           src={CARD_ART[selectedCardData.id]}
@@ -1206,7 +1206,7 @@ const selectedCardData =
       </div>
 
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-center">
+        <div className="flex flex-wrap items-center justify-start gap-x-1.5 gap-y-0.5 text-left">
           <span className="font-serif text-[12px] font-semibold uppercase tracking-wide text-amber-100">
             {selectedCardData.name}
           </span>
@@ -1225,7 +1225,7 @@ const selectedCardData =
           </span>
         </div>
 
-        <p className="mt-1 text-center text-xs text-amber-100/85">
+        <p className="mt-1 text-left text-xs text-amber-100/85">
           {getCardEffectText(selectedCardData)}
         </p>
       </div>
@@ -1249,7 +1249,7 @@ const selectedCardData =
         No cards — End Turn to draw
       </p>
     ) : (
-      <div className="grid w-full grid-cols-4 items-end gap-1.5">
+      <div className="grid w-full grid-cols-4 items-end gap-1.5 px-1">
         {battleState.hand.map((cardOrId, idx) => {
           const card =
             typeof cardOrId === "string"
@@ -1291,9 +1291,9 @@ const selectedCardData =
               key={idx}
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
-                  ? "z-30 -translate-y-8 scale-[1.08]"
+                  ? "z-30 -translate-y-4 scale-[1.03]"
                   : anotherCardSelected
-                    ? "z-0 scale-[0.96] opacity-45"
+                    ? "z-0 scale-[0.98] opacity-65"
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
                 isRequiredTutorialCard

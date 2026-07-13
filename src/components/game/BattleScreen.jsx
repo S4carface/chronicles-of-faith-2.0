@@ -3,7 +3,16 @@ import { useNavigate } from "react-router-dom";
 import {   Pause,   Heart,   Shield,   Skull,   Sparkles,   Swords as SwordsIcon,   ChevronUp,   ChevronDown,   Volume2,   Zap,   Check,   BookOpen, } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { createBattleState, playCard as playCardEngine, endPlayerTurn, enemyTurn, checkBattleEnd, getEnemyTurnSteps, drawCards } from "@/game/battleEngine";
+import {
+  createBattleState,
+  playCard as playCardEngine,
+  endPlayerTurn,
+  enemyTurn,
+  checkBattleEnd,
+  getEnemyTurnSteps,
+  drawCards,
+  HAND_LIMIT
+} from "@/game/battleEngine";
 import { ENEMIES } from "@/data/enemies";
 import Card from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
@@ -191,7 +200,7 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
           playerHp,
           dots,
         };
-        const drawCount = Math.max(0, 5 - (saved.skipDraw || 0));
+        const drawCount = Math.max(   0,   HAND_LIMIT - (saved.skipDraw || 0) - (saved.hand?.length || 0) );
         const newState = drawCards(baseState, drawCount);
         const finalState = { ...newState, skipDraw: 0 };
         setBattleState(finalState);
@@ -1204,11 +1213,11 @@ const selectedCardData =
 )}
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div className={`flex-1 flex items-end overflow-x-auto overflow-y-hidden px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"}`}>
+        <div className={`flex-1 flex items-end overflow-hidden px-2 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${selectedCard !== null ? "pb-[calc(5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]" : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"}`}>
           {battleState.hand.length === 0 && (
             <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
           )}
-          <div className="flex gap-2 lg:gap-5 flex-nowrap snap-x snap-mandatory pb-1 w-max min-w-full justify-start landscape:justify-center">
+          <div className="grid w-full grid-cols-4 gap-1.5 pb-1 lg:gap-4">
 {battleState.hand.map((cardOrId, idx) => {
   const card =
     typeof cardOrId === "string"

@@ -3,6 +3,7 @@ import { Sparkles } from "lucide-react";
 
 export default function TutorialGuidingLight({
   direction = "down",
+  size = "normal",
   className = "",
 }) {
   const rotation = {
@@ -18,6 +19,43 @@ export default function TutorialGuidingLight({
     left: "guidingLightMoveLeft 1.6s ease-in-out infinite",
     right: "guidingLightMoveRight 1.6s ease-in-out infinite",
   };
+  
+  const sizeClasses = {
+  small: {
+    container: "h-12 w-12",
+    inner: "h-10 w-10",
+    halo: "h-10 w-10",
+    glow: "h-7 w-7",
+    icon: "h-6 w-6",
+    pointerLeft: "7px",
+    pointerRight: "7px",
+    pointerTop: "12px",
+  },
+
+  normal: {
+    container: "h-16 w-16",
+    inner: "h-14 w-14",
+    halo: "h-14 w-14",
+    glow: "h-9 w-9",
+    icon: "h-8 w-8",
+    pointerLeft: "9px",
+    pointerRight: "9px",
+    pointerTop: "16px",
+  },
+
+  large: {
+    container: "h-20 w-20",
+    inner: "h-16 w-16",
+    halo: "h-16 w-16",
+    glow: "h-11 w-11",
+    icon: "h-9 w-9",
+    pointerLeft: "10px",
+    pointerRight: "10px",
+    pointerTop: "18px",
+  },
+};
+
+const activeSize = sizeClasses[size] || sizeClasses.normal;
 
   return (
     <>
@@ -114,7 +152,7 @@ export default function TutorialGuidingLight({
       `}</style>
 
       <div
-        className={`pointer-events-none absolute z-[57] flex h-16 w-16 items-center justify-center ${className}`}
+        className={`pointer-events-none absolute z-[57] flex items-center justify-center ${activeSize.container} ${className}`}
         style={{
           animation:
             movementAnimation[direction] ||
@@ -123,7 +161,7 @@ export default function TutorialGuidingLight({
         aria-hidden="true"
       >
         <div
-          className="relative flex h-14 w-14 items-center justify-center"
+          className={`relative flex items-center justify-center ${activeSize.inner}`}
           style={{
             transform:
               rotation[direction] ||
@@ -132,7 +170,7 @@ export default function TutorialGuidingLight({
         >
           {/* Large soft halo */}
           <div
-            className="absolute h-14 w-14 rounded-full"
+            className={`absolute rounded-full ${activeSize.halo}`}
             style={{
               background:
                 "radial-gradient(circle, rgba(255,251,226,0.52) 0%, rgba(251,191,36,0.24) 35%, rgba(251,191,36,0.08) 58%, transparent 76%)",
@@ -143,7 +181,7 @@ export default function TutorialGuidingLight({
 
           {/* Inner sacred glow */}
           <div
-            className="absolute h-9 w-9 rounded-full"
+            className={`absolute rounded-full ${activeSize.glow}`}
             style={{
               background:
                 "radial-gradient(circle, rgba(255,255,245,0.7) 0%, rgba(251,191,36,0.24) 48%, transparent 75%)",
@@ -152,7 +190,7 @@ export default function TutorialGuidingLight({
 
           {/* Main symbol */}
           <Sparkles
-            className="relative z-10 h-8 w-8 text-amber-100"
+            className={`relative z-10 text-amber-100 ${activeSize.icon}`}
             strokeWidth={1.7}
             style={{
               animation:
@@ -167,11 +205,11 @@ export default function TutorialGuidingLight({
               width: 0,
               height: 0,
               borderLeft:
-                "9px solid transparent",
-              borderRight:
-                "9px solid transparent",
-              borderTop:
-                "16px solid rgba(251,191,36,0.98)",
+  `${activeSize.pointerLeft} solid transparent`,
+borderRight:
+  `${activeSize.pointerRight} solid transparent`,
+borderTop:
+  `${activeSize.pointerTop} solid rgba(251,191,36,0.98)`,
               filter:
                 "drop-shadow(0 0 6px rgba(251,191,36,0.9))",
             }}

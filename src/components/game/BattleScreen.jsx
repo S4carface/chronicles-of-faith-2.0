@@ -25,7 +25,7 @@ import BattleHelper from "@/components/game/BattleHelper";
 import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
 import GuidedBattleTutorial, { TUTORIAL_TOTAL_STEPS } from "@/components/game/GuidedBattleTutorial";
 import useResponsive from "@/hooks/useResponsive";
-import { ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
+import { CARD_ART, ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import { recordBattleWon, recordBattleLost, recordCardPlayed, recordDamage, recordBlock, recordHealing } from "@/game/playerStats";
 import { applyBossModifier } from "@/data/bossModifiers";
@@ -1199,7 +1199,7 @@ const selectedCardData =
     <div className="mx-auto flex w-full max-w-xl items-center justify-center gap-3">
       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-md shadow-black/30">
         <img
-          src={selectedCardData.art}
+          src={CARD_ART[selectedCardData.id]}
           alt={selectedCardData.name}
           className="h-full w-full object-cover"
         />
@@ -1232,94 +1232,105 @@ const selectedCardData =
     </div>
   </div>
 )}
-      {/* Bottom: hand — extra bottom padding when card selected */}
-      <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
-        <div
-  className={`flex-1 flex items-end overflow-x-hidden overflow-y-visible px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${
-    selectedCard !== null
-      ? "pb-[calc(1rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
-      : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
-  }`}
+{/* Bottom card area */}
+<div
+  className="flex-1 flex flex-col min-h-0"
+  style={{ background: "rgba(15,10,5,0.8)" }}
 >
-          {battleState.hand.length === 0 && (
-            <p className="text-amber-100/50 text-xs py-4 w-full text-center">No cards — End Turn to draw</p>
-          )}
-          <div className="grid w-full grid-cols-4 items-end gap-1.5 pb-1">
-{battleState.hand.map((cardOrId, idx) => {
-  const card =
-    typeof cardOrId === "string"
-      ? getCardById(cardOrId)
-      : cardOrId;
-
-  if (!card) return null;
-                            const playable =
-                battleState.freeCardsRemaining > 0 ||
-                battleState.energy >= card.cost;
-
-              const blocked =
-                battleState.blockScripture && card.type === "scripture";
-
-              const isRequiredTutorialCard =
-                tutorialActive &&
-                tutorialRequiredCardId === card.id;
-
-              const tutorialCardEnabled =
-                !tutorialActive ||
-                (tutorialAllowsCardSelection &&
-                  (!tutorialRequiredCardId ||
-                    tutorialRequiredCardId === card.id));
-
-              const cardCanBePlayed =
-                playable &&
-                !blocked &&
-                !isEnemyTurn &&
-                tutorialCardEnabled;
-
-              return (
-                <div
-  key={idx}
-  className={`relative min-w-0 transition-all duration-200 ${
-  selectedCard === idx
-    ? "invisible"
-    : ""
-} ${
-  isRequiredTutorialCard
-    ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
-    : tutorialActive && !tutorialCardEnabled
-      ? "opacity-35 grayscale"
-      : ""
-}`}
->
-                  {isRequiredTutorialCard && (
-                    <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2 animate-bounce text-xl">
-                      
-                    </div>
-                  )}
-
-                  <Card
-                    card={card}
-                    inHand
-                    small={true}
-                    playable={cardCanBePlayed}
-                    blocked={blocked}
-                    selected={selectedCard === idx}
-                    onClick={
-                      tutorialCardEnabled
-                        ? () => handleSelectCard(idx)
-                        : undefined
-                    }
-                    onLongPress={
-                      tutorialActive
-                        ? undefined
-                        : () => setLongPressCard(card)
-                    }
-                  />
-                </div>
-              );
-            })}
-          </div>
-        </div>
+  {selectedCardData ? (
+    /* When a card is selected, show one centered card */
+    <div className="flex-1 min-h-0 flex items-center justify-center px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-2">
+      <div className="w-28 max-w-[32vw]">
+        <Card
+          card={selectedCardData}
+          inHand
+          small={true}
+          playable={false}
+          blocked={false}
+          selected={true}
+          onClick={undefined}
+          onLongPress={undefined}
+        />
       </div>
+    </div>
+  ) : (
+    /* Normal four-card hand */
+    <div className="flex-1 flex items-end overflow-x-hidden overflow-y-visible px-3 pt-2 min-h-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pt-1 landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      {battleState.hand.length === 0 && (
+        <p className="text-amber-100/50 text-xs py-4 w-full text-center">
+          No cards — End Turn to draw
+        </p>
+      )}
+
+      <div className="grid w-full grid-cols-4 items-end gap-1.5 pb-1">
+        {battleState.hand.map((cardOrId, idx) => {
+          const card =
+            typeof cardOrId === "string"
+              ? getCardById(cardOrId)
+              : cardOrId;
+
+          if (!card) return null;
+
+          const playable =
+            battleState.freeCardsRemaining > 0 ||
+            battleState.energy >= card.cost;
+
+          const blocked =
+            battleState.blockScripture &&
+            card.type === "scripture";
+
+          const isRequiredTutorialCard =
+            tutorialActive &&
+            tutorialRequiredCardId === card.id;
+
+          const tutorialCardEnabled =
+            !tutorialActive ||
+            (tutorialAllowsCardSelection &&
+              (!tutorialRequiredCardId ||
+                tutorialRequiredCardId === card.id));
+
+          const cardCanBePlayed =
+            playable &&
+            !blocked &&
+            !isEnemyTurn &&
+            tutorialCardEnabled;
+
+          return (
+            <div
+              key={idx}
+              className={`relative min-w-0 transition-all duration-200 ${
+                isRequiredTutorialCard
+                  ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
+                  : tutorialActive && !tutorialCardEnabled
+                    ? "opacity-35 grayscale"
+                    : ""
+              }`}
+            >
+              <Card
+                card={card}
+                inHand
+                small={true}
+                playable={cardCanBePlayed}
+                blocked={blocked}
+                selected={false}
+                onClick={
+                  tutorialCardEnabled
+                    ? () => handleSelectCard(idx)
+                    : undefined
+                }
+                onLongPress={
+                  tutorialActive
+                    ? undefined
+                    : () => setLongPressCard(card)
+                }
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  )}
+</div>
 
       {/* Selected card preview — compact bar, hand stays visible */}
       {selectedCard !== null && battleState.hand[selectedCard] && (() => {

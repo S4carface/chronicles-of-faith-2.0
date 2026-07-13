@@ -24,23 +24,23 @@ const STEPS = [
     arrow: "up",
     actionable: false,
   },
-  {
-    text: "Play Sling Stone to deal damage.",
-    subtext: "Tap the card, then press Play Card.",
+    {
+    text: "Tap Sling Stone.",
+    subtext: "Then press Play Card to attack the enemy.",
     position: "bottom-center",
     arrow: "down",
     actionable: true,
   },
-  {
-    text: "Play Faith Shield before enemy attacks.",
-    subtext: "Block absorbs incoming damage.",
+    {
+    text: "Now tap Faith Shield.",
+    subtext: "Then press Play Card to block incoming damage.",
     position: "bottom-center",
     arrow: "down",
     actionable: true,
   },
-  {
-    text: "End Turn when you are done.",
-    subtext: "The enemy will then take its turn.",
+    {
+    text: "Now press End Turn.",
+    subtext: "The enemy will take its turn.",
     position: "bottom-right",
     arrow: "down",
     actionable: true,

@@ -427,31 +427,53 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
     const isEasyOrGuided = profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips;
     const isHardOrExpert = profile.difficulty === "hard" || gLevel === "expert";
 
-    // Warning 1: a playable card is selected (all modes)
-    if (selectedCard !== null) {
-      const selCard = resolveCard(battleState.hand[selectedCard]);
-      const isPlayable = selCard && (battleState.freeCardsRemaining > 0 || battleState.energy >= selCard.cost) && !(battleState.blockScripture && selCard.type === "scripture");
-      if (isPlayable) {
-        setEndTurnConfirm({ type: "selected" });
-        return;
-      }
-    }
+    // Normal End Turn warnings are disabled during the guided tutorial.
+// The tutorial instruction is the only guidance the player should follow.
+if (!tutorialActive) {
+  // Warning 1: a playable card is selected
+  if (selectedCard !== null) {
+    const selCard = resolveCard(battleState.hand[selectedCard]);
 
-    // Warning 2: playable cards remain (all modes except expert, when enemy is attacking)
-    if (!isHardOrExpert) {
-      const enemyAttacking = (battleState.enemyHand || []).some(a => a.damage > 0);
-      const hasPlayable = battleState.hand.some(cardId => {
-        const c = resolveCard(cardId);
-        if (!c) return false;
-        const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= c.cost;
-        const blocked = battleState.blockScripture && c.type === "scripture";
-        return playable && !blocked;
-      });
-      if (enemyAttacking && hasPlayable) {
-        setEndTurnConfirm({ type: "playable" });
-        return;
-      }
+    const isPlayable =
+      selCard &&
+      (battleState.freeCardsRemaining > 0 ||
+        battleState.energy >= selCard.cost) &&
+      !(battleState.blockScripture && selCard.type === "scripture");
+
+    if (isPlayable) {
+      setEndTurnConfirm({ type: "selected" });
+      return;
     }
+  }
+
+  // Warning 2: playable cards remain
+  if (!isHardOrExpert) {
+    const enemyAttacking = (battleState.enemyHand || []).some(
+      action => action.damage > 0
+    );
+
+    const hasPlayable = battleState.hand.some(cardId => {
+      const card = resolveCard(cardId);
+
+      if (!card) return false;
+
+      const playable =
+        battleState.freeCardsRemaining > 0 ||
+        battleState.energy >= card.cost;
+
+      const blocked =
+        battleState.blockScripture &&
+        card.type === "scripture";
+
+      return playable && !blocked;
+    });
+
+    if (enemyAttacking && hasPlayable) {
+      setEndTurnConfirm({ type: "playable" });
+      return;
+    }
+  }
+}
 
     performEndTurn();
   };
@@ -915,12 +937,22 @@ const selectedCardData =
       {/* Top row: help + pause */}
       <div className="flex items-center justify-end gap-2 px-3 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-1">
         <button
-          onClick={() => { setShowHelpTips(true); Sound.sfx.click(); }}
-          className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
-          title="Battle Tips"
-        >
-          <span className="text-sm font-bold">?</span>
-        </button>
+  onClick={() => {
+    if (tutorialActive) return;
+
+    setShowHelpTips(true);
+    Sound.sfx.click();
+  }}
+  disabled={tutorialActive}
+  className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition ${
+    tutorialActive
+      ? "border-amber-500/10 bg-slate-900/30 text-amber-100/20 cursor-not-allowed"
+      : "border-amber-500/30 bg-slate-900/60 text-amber-200 hover:bg-amber-500/20 active:scale-90"
+  }`}
+  title={tutorialActive ? "Available after tutorial" : "Battle Tips"}
+>
+  <span className="text-sm font-bold">?</span>
+</button>
         <button
           onClick={() => { setShowPause(true); Sound.sfx.click(); }}
           className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
@@ -1546,7 +1578,7 @@ const selectedCardData =
       )}
 
       {/* End Turn confirmation */}
-      {endTurnConfirm && (
+      {endTurnConfirm && !tutorialActive && (
         <EndTurnConfirmModal
           type={endTurnConfirm.type}
           onPlaySelected={() => {
@@ -1598,9 +1630,14 @@ const selectedCardData =
       )}
 
       {/* Help tips overlay — reopened via "?" button */}
-      {showHelpTips && (
-        <BattleGuideCallouts onComplete={() => { setShowHelpTips(false); Sound.sfx.click(); }} />
-      )}
+      {showHelpTips && !tutorialActive && (
+  <BattleGuideCallouts
+    onComplete={() => {
+      setShowHelpTips(false);
+      Sound.sfx.click();
+    }}
+  />
+)}
 
       {/* Pause overlay */}
       {showPause && !showAbandonConfirm && (

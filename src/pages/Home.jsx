@@ -19,6 +19,9 @@ export default function Home() {
   run,
   endRun,
   startRun,
+    endRun,
+  startRun,
+  startTutorialRun,
   saveProfile,
   Sound: Snd,
   savedStoryExists,
@@ -55,11 +58,7 @@ export default function Home() {
     }
   }, []);
 const launchFirstTutorialBattle = () => {
-  startRun("adam", false, null, {
-    difficulty: "easy",
-    startAtFirstBattle: true,
-  });
-
+  startTutorialRun();
   navigate("/play");
 };
 
@@ -68,14 +67,7 @@ const handleFirstIntroComplete = () => {
 };
 const handleFirstTimeBegin = () => {
   Sound.sfx.click();
-
-  // An unfinished tutorial must always begin from a clean battle state.
-  // Do not resume an old normal run or partially completed tutorial.
-  endRun();
-
-  setTimeout(() => {
-    launchFirstTutorialBattle();
-  }, 0);
+  launchFirstTutorialBattle();
 };
 const handleBeginRun = () => {
   Sound.sfx.click();
@@ -125,10 +117,9 @@ const handleBeginRun = () => {
 
   setTimeout(() => {
     if (!profile.tutorialSeen) {
-      startRun("adam", false, null, {
-        difficulty: "easy",
-        startAtFirstBattle: true,
-      });
+      startTutorialRun();
+      navigate("/play");
+      return;
     }
 
     navigate("/play");

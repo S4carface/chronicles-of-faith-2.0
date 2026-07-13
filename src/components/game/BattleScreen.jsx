@@ -1204,7 +1204,7 @@ const selectedCardData =
       </div>
 {/* Selected-card battle summary */}
 {selectedCardData && (
-  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 animate-fade-in">
+  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 mb-2 animate-fade-in">
     <div className="mx-auto flex w-full max-w-xl items-center justify-start gap-3">
       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-md shadow-black/30">
         <img
@@ -1249,7 +1249,7 @@ const selectedCardData =
   <div
     className={`flex-1 min-h-0 flex items-center justify-center overflow-visible px-3 pt-2 transition-all duration-200 ${
       selectedCard !== null
-        ? "pb-[calc(9.5rem+env(safe-area-inset-bottom))]"
+        ? "pb-[calc(10.5rem+env(safe-area-inset-bottom))]"
         : "pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
     }`}
   >
@@ -1300,9 +1300,9 @@ const selectedCardData =
               key={idx}
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
-                  ? "z-30 -translate-y-4 scale-[1.03]"
+                  ? "z-30 -translate-y-2 scale-[1.01] ring-4 ring-amber-300 rounded-xl shadow-xl shadow-amber-400/30"
                   : anotherCardSelected
-                    ? "z-0 scale-[0.98] opacity-65"
+                    ? "z-0 scale-[0.99] opacity-75"
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
                 isRequiredTutorialCard
@@ -1318,7 +1318,7 @@ const selectedCardData =
                 small={true}
                 playable={cardCanBePlayed}
                 blocked={blocked}
-                selected={isSelected}
+                selected={false}
                 onClick={
                   tutorialCardEnabled
                     ? () => handleSelectCard(idx)

@@ -986,7 +986,7 @@ const selectedCardData =
       </div>
 
       {/* Floating combat log beside the enemy */}
-<div className="absolute right-3 top-36 z-20 flex flex-col items-end">
+<div className="absolute right-3 top-32 z-20 flex flex-col items-end">
   <button
     onClick={() => setShowLog(!showLog)}
     className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-slate-950/80 px-2.5 py-1 text-[9px] uppercase tracking-wide text-amber-300/60 shadow-md backdrop-blur-sm transition active:scale-[0.96]"
@@ -1204,9 +1204,9 @@ const selectedCardData =
       </div>
 {/* Selected-card battle summary */}
 {selectedCardData && (
-  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-2 mb-2 animate-fade-in">
+  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-1.5 mb-1 animate-fade-in">
     <div className="mx-auto flex w-full max-w-xl items-center justify-start gap-3">
-      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-md shadow-black/30">
+      <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-sm shadow-black/20">
         <img
           src={CARD_ART[selectedCardData.id]}
           alt={selectedCardData.name}
@@ -1216,7 +1216,7 @@ const selectedCardData =
 
       <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-start gap-x-1.5 gap-y-0.5 text-left">
-          <span className="font-serif text-[12px] font-semibold uppercase tracking-wide text-amber-100">
+          <span className="font-serif text-[11px] font-semibold uppercase tracking-wide text-amber-100">
             {selectedCardData.name}
           </span>
 
@@ -1234,7 +1234,7 @@ const selectedCardData =
           </span>
         </div>
 
-        <p className="mt-1 text-left text-xs text-amber-100/85">
+        <p className="mt-0.5 text-left text-[11px] leading-tight text-amber-100/80">
           {getCardEffectText(selectedCardData)}
         </p>
       </div>
@@ -1249,7 +1249,7 @@ const selectedCardData =
   <div
     className={`flex-1 min-h-0 flex items-center justify-center overflow-visible px-3 pt-2 transition-all duration-200 ${
       selectedCard !== null
-        ? "pb-[calc(10.5rem+env(safe-area-inset-bottom))]"
+        ? "pb-[calc(9.5rem+env(safe-area-inset-bottom))]"
         : "pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
     }`}
   >
@@ -1300,9 +1300,9 @@ const selectedCardData =
               key={idx}
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
-                  ? "z-30 -translate-y-2 scale-[1.01] ring-4 ring-amber-300 rounded-xl shadow-xl shadow-amber-400/30"
+                  ? "z-30 -translate-y-1 scale-[1.02]"
                   : anotherCardSelected
-                    ? "z-0 scale-[0.99] opacity-75"
+                    ? "z-0 scale-[0.99] opacity-85"
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
                 isRequiredTutorialCard

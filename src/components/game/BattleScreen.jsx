@@ -890,128 +890,211 @@ const selectedCardData =
         </button>
       </div>
 
-      {/* Enemy area */}
-      <div className="flex-shrink-0 flex flex-col items-center px-3 pb-1 lg:pt-3">
-        <div className="text-center mb-1">
-          <h2 className="text-lg lg:text-3xl font-serif text-red-200 leading-tight">{enemy.name}</h2>
-          {enemy.isBoss && (
-            <span className="inline-block text-red-400 text-[9px] lg:text-xs font-bold tracking-widest px-2 py-0.5 rounded-full border border-red-500/30 bg-red-900/30 mt-0.5">BOSS</span>
-          )}
-          {enemy.bossModifier && (
-            <div className="mt-1">
-              <span className="inline-block text-purple-300 text-[10px] lg:text-sm font-serif font-semibold tracking-wide px-2.5 py-0.5 rounded-full border border-purple-500/30 bg-purple-900/20">
-                {enemy.bossModifier.icon} {enemy.bossModifier.name}
-              </span>
-              <p className="text-purple-200/40 text-[8px] lg:text-[10px] italic mt-0.5">{enemy.bossModifier.description}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Enemy Intent — compact strip with painted icons */}
-        {battleState.enemyHand?.length > 0 && !battleEnd && (
-          <div className="mb-1 flex items-center gap-1 lg:gap-2.5 justify-center flex-wrap max-w-[95%] lg:max-w-[800px]">
-            {battleState.enemyHand.slice(0, 1).map((action, i) => {
-              const actionType = getActionType(action);
-              const intentInfo = INTENT_TYPE_MAP[actionType];
-              const isCurrent = currentIntentIdx === i;
-              const isResolved = currentIntentIdx > i;
-              return (
-                <React.Fragment key={i}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setIntentExplain(action); Sound.sfx.click(); }}
-                    disabled={isResolved}
-                    className={`flex items-center gap-1 px-1.5 py-0.5 lg:px-2.5 lg:py-1 rounded-md border transition-all duration-200 ${
-                      isCurrent ? `${intentInfo.border} bg-amber-500/20 scale-110 shadow-md shadow-amber-400/20` :
-                      isResolved ? "border-slate-700/20 opacity-25" :
-                      `${intentInfo.border} bg-slate-900/40 hover:bg-slate-800/60`
-                    }`}
-                  >
-                    <span className="w-4 h-4 lg:w-6 lg:h-6 rounded-sm overflow-hidden flex-shrink-0" style={{ background: "#0F1A30" }}>
-                      <img src={intentInfo.art} alt={intentInfo.label} className="art-portrait" />
-                    </span>
-                    <span className={`${intentInfo.color} text-[9px] lg:text-base font-medium leading-none`}>{action.name}</span>
-                    {(() => {
-                      if (hideIntentValues) return null;
-                      const amt = getIntentAmountText(action, enemy);
-                      if (!amt) return null;
-                      const amtColor = actionType === "attack" ? "text-red-300/80" : actionType === "block" ? "text-blue-300/80" : actionType === "heal" ? "text-emerald-300/80" : "text-purple-300/80";
-                      return <span className={`text-[8px] lg:text-base font-bold leading-none ${amtColor}`}>{amt}</span>;
-                    })()}
-                  </button>
-                </React.Fragment>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="relative flex flex-col items-center">
+      {/* Battle UI 2.0: enemy left, information center, log right */}
+<div className="flex-shrink-0 px-3 pb-2 lg:px-6 lg:pt-3">
+  <div className="grid grid-cols-[80px_minmax(0,1fr)_128px] items-center gap-2 lg:grid-cols-[160px_minmax(0,1fr)_260px] lg:gap-5">
+    {/* Enemy portrait */}
+    <div className="relative flex items-center justify-center">
+      <div
+        className={`transition-transform duration-300 ${
+          battleEnd === "victory" ? "animate-bounce" : ""
+        } ${
+          battleEnd === "defeat" ? "opacity-30" : ""
+        } ${
+          enemyAttackAnim ? "animate-enemy-lunge" : ""
+        } ${
+          enemyShake ? "animate-shake" : ""
+        } ${
+          enemyFlash ? "animate-damage-flash" : ""
+        }`}
+      >
+        {enemyArt ? (
           <div
-            className={`mb-1 transition-transform duration-300 ${
-              battleEnd === "victory" ? "animate-bounce" : ""
-            } ${battleEnd === "defeat" ? "opacity-30" : ""} ${
-              enemyAttackAnim ? "animate-enemy-lunge" : ""
-            } ${enemyShake ? "animate-shake" : ""} ${enemyFlash ? "animate-damage-flash" : ""}`}
+            className="relative h-20 w-20 overflow-hidden rounded-lg lg:h-40 lg:w-40"
+            style={{
+              background: "#0A0F1E",
+              border: "2px solid rgba(201,168,76,0.45)",
+              boxShadow:
+                "0 0 20px rgba(201,168,76,0.15), inset 0 0 30px rgba(8,12,24,0.8)",
+            }}
           >
-            {enemyArt ? (
-              <div className="w-24 h-24 lg:w-40 lg:h-40 rounded-lg overflow-hidden relative" style={{ background: "#0A0F1E", border: "2px solid rgba(201,168,76,0.45)", boxShadow: "0 0 20px rgba(201,168,76,0.15), inset 0 0 30px rgba(8,12,24,0.8)" }}>
-                <img src={enemyArt} alt={enemy.name} className="art-portrait" style={{ filter: "contrast(1.05) saturate(0.95)" }} />
-                <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, transparent 60%, rgba(8,12,24,0.5) 100%)" }} />
-              </div>
-            ) : (
-              <span className="text-5xl">{enemy.icon}</span>
-            )}
-          </div>
-          {/* Enemy damage float — red number from player attacks */}
-          {enemyDamageFloat && (
-            <span key={enemyDamageFloat.key} className="absolute top-4 left-1/2 -translate-x-1/2 text-2xl lg:text-4xl font-serif font-bold pointer-events-none animate-fade-in z-20" style={{ color: "#f87171", textShadow: "0 0 15px rgba(248,113,113,0.8)" }}>
-              -{enemyDamageFloat.amount}
-            </span>
-          )}
-          {/* Enemy HP bar */}
-          <div className="w-36 lg:w-56 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
+            <img
+              src={enemyArt}
+              alt={enemy.name}
+              className="art-portrait"
+              style={{
+                filter: "contrast(1.05) saturate(0.95)",
+              }}
+            />
+
             <div
-              className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"
-              style={{ width: `${(battleState.enemy.currentHp / battleState.enemy.maxHp) * 100}%` }}
+              className="pointer-events-none absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent 60%, rgba(8,12,24,0.5) 100%)",
+              }}
             />
           </div>
-          <div className="flex items-center justify-center gap-2 mt-0.5">
-            <p className="text-red-200 text-[11px] lg:text-lg">{battleState.enemy.currentHp}/{battleState.enemy.maxHp} HP</p>
-            {battleState.enemyBlock > 0 && (
-              <span className="text-blue-300 text-[11px] lg:text-lg flex items-center gap-0.5">
-                <Shield className="w-3 h-3 lg:w-4 lg:h-4 inline" />{battleState.enemyBlock}
-              </span>
-            )}
-          </div>
-        </div>
+        ) : (
+          <span className="text-5xl">{enemy.icon}</span>
+        )}
       </div>
 
-      {/* Floating combat log beside the enemy */}
-<div className="absolute right-3 top-32 z-20 flex flex-col items-end">
-  <button
-    onClick={() => setShowLog(!showLog)}
-    className="flex items-center gap-1 rounded-full border border-amber-500/20 bg-slate-950/80 px-2.5 py-1 text-[9px] uppercase tracking-wide text-amber-300/60 shadow-md backdrop-blur-sm transition active:scale-[0.96]"
-  >
-    {showLog ? "Hide Log" : "Log"}
-
-    {showLog ? (
-      <ChevronUp className="h-3 w-3" />
-    ) : (
-      <ChevronDown className="h-3 w-3" />
-    )}
-  </button>
-
-  {showLog && (
-    <div className="mt-1 max-h-28 w-40 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/95 p-2 text-left shadow-xl backdrop-blur-sm">
-      {battleState.log.slice(-8).map((entry, i) => (
-        <p
-          key={i}
-          className="border-b border-amber-500/10 py-0.5 text-[9px] leading-snug text-amber-100/70 last:border-b-0"
+      {enemyDamageFloat && (
+        <span
+          key={enemyDamageFloat.key}
+          className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 animate-fade-in font-serif text-2xl font-bold lg:text-4xl"
+          style={{
+            color: "#f87171",
+            textShadow: "0 0 15px rgba(248,113,113,0.8)",
+          }}
         >
-          {simplifyLogEntry(entry) || entry}
-        </p>
-      ))}
+          -{enemyDamageFloat.amount}
+        </span>
+      )}
     </div>
-  )}
+
+    {/* Enemy name, intent and health */}
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5">
+        <h2 className="truncate font-serif text-base leading-tight text-red-200 lg:text-3xl">
+          {enemy.name}
+        </h2>
+
+        {enemy.isBoss && (
+          <span className="flex-shrink-0 rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
+            BOSS
+          </span>
+        )}
+      </div>
+
+      {enemy.bossModifier && (
+        <div className="mt-1">
+          <span className="inline-block max-w-full truncate rounded-full border border-purple-500/30 bg-purple-900/20 px-2 py-0.5 font-serif text-[9px] font-semibold text-purple-300 lg:text-sm">
+            {enemy.bossModifier.icon} {enemy.bossModifier.name}
+          </span>
+        </div>
+      )}
+
+      {/* Enemy’s single next action */}
+      {battleState.enemyHand?.length > 0 && !battleEnd && (
+        <div className="mt-1">
+          {battleState.enemyHand.slice(0, 1).map((action, i) => {
+            const actionType = getActionType(action);
+            const intentInfo = INTENT_TYPE_MAP[actionType];
+            const isCurrent = currentIntentIdx === i;
+            const isResolved = currentIntentIdx > i;
+            const amount = hideIntentValues
+              ? null
+              : getIntentAmountText(action, enemy);
+
+            return (
+              <button
+                key={i}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIntentExplain(action);
+                  Sound.sfx.click();
+                }}
+                disabled={isResolved}
+                className={`flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
+                  isCurrent
+                    ? `${intentInfo.border} scale-[1.02] bg-amber-500/20 shadow-md shadow-amber-400/20`
+                    : isResolved
+                      ? "border-slate-700/20 opacity-25"
+                      : `${intentInfo.border} bg-slate-900/40`
+                }`}
+              >
+                <span
+                  className="h-4 w-4 flex-shrink-0 overflow-hidden rounded-sm lg:h-6 lg:w-6"
+                  style={{ background: "#0F1A30" }}
+                >
+                  <img
+                    src={intentInfo.art}
+                    alt={intentInfo.label}
+                    className="art-portrait"
+                  />
+                </span>
+
+                <span className="min-w-0">
+                  <span
+                    className={`block truncate text-[9px] font-medium leading-tight lg:text-base ${intentInfo.color}`}
+                  >
+                    {action.name}
+                  </span>
+
+                  {amount && (
+                    <span className="block truncate text-[8px] font-bold leading-tight text-amber-100/55 lg:text-sm">
+                      {amount}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Enemy HP */}
+      <div className="mt-2">
+        <div className="h-3 w-full overflow-hidden rounded-full border border-red-900/50 bg-slate-900 lg:h-4">
+          <div
+            className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"
+            style={{
+              width: `${
+                (battleState.enemy.currentHp /
+                  battleState.enemy.maxHp) *
+                100
+              }%`,
+            }}
+          />
+        </div>
+
+        <div className="mt-0.5 flex items-center gap-2">
+          <p className="text-[10px] text-red-200 lg:text-lg">
+            {battleState.enemy.currentHp}/
+            {battleState.enemy.maxHp} HP
+          </p>
+
+          {battleState.enemyBlock > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-blue-300 lg:text-lg">
+              <Shield className="h-3 w-3 lg:h-4 lg:w-4" />
+              {battleState.enemyBlock}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* Battle log on far right */}
+    <div className="flex min-w-0 flex-col items-stretch">
+      <button
+        onClick={() => setShowLog(!showLog)}
+        className="flex items-center justify-center gap-1 rounded-full border border-amber-500/20 bg-slate-950/75 px-2 py-1 text-[8px] uppercase tracking-wide text-amber-300/60 shadow-md backdrop-blur-sm transition active:scale-[0.96] lg:text-[10px]"
+      >
+        {showLog ? "Hide Log" : "Log"}
+
+        {showLog ? (
+          <ChevronUp className="h-3 w-3" />
+        ) : (
+          <ChevronDown className="h-3 w-3" />
+        )}
+      </button>
+
+      {showLog && (
+        <div className="mt-1 max-h-28 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/90 p-1.5 text-left shadow-xl backdrop-blur-sm lg:max-h-40 lg:p-3">
+          {battleState.log.slice(-8).map((entry, i) => (
+            <p
+              key={i}
+              className="border-b border-amber-500/10 py-0.5 text-[8px] leading-snug text-amber-100/70 last:border-b-0 lg:text-xs"
+            >
+              {simplifyLogEntry(entry) || entry}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
 </div>
 
       {/* Battle helper — contextual advice below the log */}

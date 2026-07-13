@@ -1051,12 +1051,7 @@ const selectedCardData =
       {/* Enemy’s single next action */}
       {battleState.enemyHand?.length > 0 && !battleEnd && (
   <div className="relative mt-1">
-    {tutorialActive && tutorialStep === 2 && (
-      <TutorialGuidingLight
-        direction="down"
-        className="-top-14 left-2"
-      />
-    )}
+
           {battleState.enemyHand.slice(0, 1).map((action, i) => {
             const actionType = getActionType(action);
             const intentInfo = INTENT_TYPE_MAP[actionType];
@@ -1075,7 +1070,7 @@ const selectedCardData =
                   Sound.sfx.click();
                 }}
                 disabled={isResolved}
-                className={`flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
+                className={`relative flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
                   isCurrent
                     ? `${intentInfo.border} scale-[1.02] bg-amber-500/20 shadow-md shadow-amber-400/20`
                     : isResolved
@@ -1083,6 +1078,14 @@ const selectedCardData =
                       : `${intentInfo.border} bg-slate-900/40`
                 }`}
               >
+              
+              {tutorialActive && tutorialStep === 2 && (
+  <TutorialGuidingLight
+    direction="down"
+    className="-top-14 left-1/2 -translate-x-1/2"
+  />
+)}
+              
                 <span
                   className="h-4 w-4 flex-shrink-0 overflow-hidden rounded-sm lg:h-6 lg:w-6"
                   style={{ background: "#0F1A30" }}
@@ -1466,9 +1469,9 @@ const selectedCardData =
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
                 isRequiredTutorialCard
-                  ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
+                  ? "rounded-xl ring-2 ring-amber-300/80 shadow-lg shadow-amber-400/25"
                   : tutorialActive && !tutorialCardEnabled
-                    ? "opacity-35 grayscale"
+                    ? "opacity-55 grayscale"
                     : ""
               }`}
             >

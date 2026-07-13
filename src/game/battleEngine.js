@@ -130,12 +130,10 @@ export function drawCards(state, count) {
   };
 }
 
-function drawUpToHandLimit(state, skipDraw = 0) {
-  const targetHandSize = Math.max(0, HAND_LIMIT - (skipDraw || 0));
-  const currentHandSize = state.hand?.length || 0;
-  const drawCount = Math.max(0, targetHandSize - currentHandSize);
+function drawNextTurnCard(state, skipDraw = 0) {
+  const cardsToDraw = Math.max(0, 1 - (skipDraw || 0));
 
-  return drawCards(state, drawCount);
+  return drawCards(state, cardsToDraw);
 }
 
 export function playCard(state, handIndex, card) {
@@ -524,7 +522,7 @@ export function enemyTurn(state) {
       error: null,
     };
 
-    const withDraw = drawUpToHandLimit(newState, skipDraw);
+    const withDraw = drawNextTurnCard(newState, skipDraw);
 
     return { ...withDraw, skipDraw: 0 };
   }
@@ -653,7 +651,7 @@ export function enemyTurn(state) {
     error: null,
   };
 
-  const withDraw = drawUpToHandLimit(newState, skipDraw);
+  const withDraw = drawNextTurnCard(newState, skipDraw);
 
   return { ...withDraw, skipDraw: 0 };
 }
@@ -715,7 +713,7 @@ export function getEnemyTurnSteps(state) {
       error: null,
     };
 
-    const withDraw = drawUpToHandLimit(newState, skipDraw);
+    const withDraw = drawNextTurnCard(newState, skipDraw);
 
     steps.push({ type: "shield", state: { ...withDraw, skipDraw: 0 } });
 
@@ -896,7 +894,7 @@ export function getEnemyTurnSteps(state) {
     error: null,
   };
 
-  const withDraw = drawUpToHandLimit(newState, skipDraw);
+  const withDraw = drawNextTurnCard(newState, skipDraw);
 
   steps.push({ type: "end", state: { ...withDraw, skipDraw: 0 } });
 

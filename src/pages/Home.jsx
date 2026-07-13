@@ -19,8 +19,6 @@ export default function Home() {
   run,
   endRun,
   startRun,
-    endRun,
-  startRun,
   startTutorialRun,
   saveProfile,
   Sound: Snd,

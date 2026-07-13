@@ -437,7 +437,7 @@ export function endPlayerTurn(state) {
     unusedEnemyBlock > 0
       ? `Enemy Block faded — ${unusedEnemyBlock} unused Block removed.`
       : "Enemy has no unused Block.",
-    `Enemy acts next. Draw back up to ${HAND_LIMIT} after the enemy turn.`,
+    "Enemy performs one action, then you draw 1 card.",
   ];
 
   return {
@@ -538,6 +538,9 @@ export function enemyTurn(state) {
 
     if (cost > energy) {
       discard.push(action);
+      
+      // Enemies perform only one playable action per turn.
+      break;
       continue;
     }
 
@@ -820,6 +823,9 @@ export function getEnemyTurnSteps(state) {
         error: null,
       },
     });
+    
+    // Stop after animating one playable enemy action.
+    break;
 
     log.length = 0;
     log.push(...stepLog);

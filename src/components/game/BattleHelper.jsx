@@ -17,10 +17,14 @@ export default function BattleHelper({ battleState, selectedCard, enemy }) {
     if (selectedCard !== null) return "Card selected — press Play to use it.";
     if (battleState.hand.length === 0) return "No cards in hand. End turn to draw.";
 
-    const enemyActions = battleState.enemyHand || [];
-    const willShield = enemyActions.some(a => a.effect === "block");
-    const willAttack = enemyActions.some(a => a.damage > 0);
-    const hasDefense = battleState.hand.some(id => getCardById(id)?.type === "defense");
+    const nextEnemyAction = battleState.enemyHand?.[0];
+
+const willShield = nextEnemyAction?.effect === "block";
+
+const willAttack =
+  nextEnemyAction &&
+  nextEnemyAction.damage > 0 &&
+  nextEnemyAction.effect !== "block";    const hasDefense = battleState.hand.some(id => getCardById(id)?.type === "defense");
     const hasHealing = battleState.hand.some(id => {
       const c = getCardById(id);
       return c?.type === "scripture" && HEAL_CARD_IDS.includes(c.id);

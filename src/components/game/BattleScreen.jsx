@@ -140,7 +140,26 @@ export default function BattleScreen() {
   const [tutorialActive, setTutorialActive] = useState(isTutorialBattle);
   const [tutorialCompleteMsg, setTutorialCompleteMsg] = useState(false);
   const tutorialStepRef = useRef(0);
+  useEffect(() => {
+    if (!tutorialActive || selectedCard === null || !battleState) return;
 
+    const selected = resolveCard(battleState.hand[selectedCard]);
+
+    if (
+      !tutorialAllowsCardSelection ||
+      (tutorialRequiredCardId &&
+        selected?.id !== tutorialRequiredCardId)
+    ) {
+      setSelectedCard(null);
+    }
+  }, [
+    tutorialActive,
+    tutorialStep,
+    selectedCard,
+    battleState,
+    tutorialAllowsCardSelection,
+    tutorialRequiredCardId,
+  ]);
   const advanceTutorial = () => {
     const next = tutorialStepRef.current + 1;
     tutorialStepRef.current = next;
@@ -375,14 +394,28 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
     setSelectedCard(null);
   };
 
-  const handleSelectCard = (idx) => {
+    const handleSelectCard = (idx) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+
+    const card = resolveCard(battleState.hand[idx]);
+    if (!card) return;
+
+    // During the guided tutorial, only the required card can be selected.
+    if (tutorialActive) {
+      if (!tutorialAllowsCardSelection) return;
+      if (tutorialRequiredCardId && card.id !== tutorialRequiredCardId) return;
+    }
+
     Sound.sfx.click();
-    setSelectedCard(prev => prev === idx ? null : idx);
+    setSelectedCard((prev) => (prev === idx ? null : idx));
   };
 
-  const handleEndTurnClick = () => {
+    const handleEndTurnClick = () => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+
+    // The first-battle tutorial unlocks End Turn only at its proper step.
+    if (!tutorialAllowsEndTurn) return;
+
     Sound.sfx.click();
 
     const gLevel = profile.settings.guidanceLevel || "normal";
@@ -774,7 +807,18 @@ const selectedCardData =
   selectedCard !== null
     ? resolveCard(battleState.hand[selectedCard])
     : null;
+  const tutorialRequiredCardId =
+    tutorialActive && tutorialStep === 3
+      ? "sling_stone"
+      : tutorialActive && tutorialStep === 4
+        ? "faith_shield"
+        : null;
 
+  const tutorialAllowsCardSelection =
+    !tutorialActive || tutorialStep === 3 || tutorialStep === 4;
+
+  const tutorialAllowsEndTurn =
+    !tutorialActive || tutorialStep === 5;
   return (
   <>
     <style>{`
@@ -1113,10 +1157,21 @@ const selectedCardData =
               </span>
             ) : null;
           })()}
-          <button
-            onClick={handleEndTurnClick}
-            disabled={isEnemyTurn}
-            className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
+                    <div className="relative">
+            {tutorialActive && tutorialStep === 5 && (
+              <div className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 animate-bounce whitespace-nowrap text-xl">
+                👆
+              </div>
+            )}
+
+            <button
+              onClick={handleEndTurnClick}
+              disabled={isEnemyTurn || !tutorialAllowsEndTurn}
+                        className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
+              tutorialActive && tutorialStep === 5
+                ? "ring-4 ring-amber-300 shadow-xl shadow-amber-400/60 animate-pulse "
+                : ""
+            } ${
               selectedCard !== null && (() => {
                 const sc = resolveCard(battleState.hand[selectedCard]);
                 return sc && (battleState.freeCardsRemaining > 0 || battleState.energy >= sc.cost) && !(battleState.blockScripture && sc.type === "scripture");
@@ -1125,8 +1180,9 @@ const selectedCardData =
                 : "px-3 py-1.5 lg:px-6 lg:py-2.5 text-xs lg:text-lg border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 active:bg-amber-600/50"
             } disabled:opacity-40 disabled:active:scale-100`}
           >
-            End Turn →
-          </button>
+                          End Turn →
+            </button>
+          </div>
         </div>
       </div>
 {/* Scripture Reading Area */}
@@ -1160,20 +1216,65 @@ const selectedCardData =
       : cardOrId;
 
   if (!card) return null;
-              const playable = battleState.freeCardsRemaining > 0 || battleState.energy >= card.cost;
-              const blocked = battleState.blockScripture && card.type === "scripture";
+                            const playable =
+                battleState.freeCardsRemaining > 0 ||
+                battleState.energy >= card.cost;
+
+              const blocked =
+                battleState.blockScripture && card.type === "scripture";
+
+              const isRequiredTutorialCard =
+                tutorialActive &&
+                tutorialRequiredCardId === card.id;
+
+              const tutorialCardEnabled =
+                !tutorialActive ||
+                (tutorialAllowsCardSelection &&
+                  (!tutorialRequiredCardId ||
+                    tutorialRequiredCardId === card.id));
+
+              const cardCanBePlayed =
+                playable &&
+                !blocked &&
+                !isEnemyTurn &&
+                tutorialCardEnabled;
+
               return (
-                <Card
+                <div
                   key={idx}
-                  card={card}
-                  inHand
-                  small={false}
-                  playable={playable && !blocked && !isEnemyTurn}
-                  blocked={blocked}
-                  selected={selectedCard === idx}
-                  onClick={() => handleSelectCard(idx)}
-                  onLongPress={() => setLongPressCard(card)}
-                />
+                  className={`relative flex-shrink-0 transition-all ${
+                    isRequiredTutorialCard
+                      ? "z-20 rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
+                      : tutorialActive && !tutorialCardEnabled
+                        ? "opacity-35 grayscale"
+                        : ""
+                  }`}
+                >
+                  {isRequiredTutorialCard && (
+                    <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2 animate-bounce text-xl">
+                      👆
+                    </div>
+                  )}
+
+                  <Card
+                    card={card}
+                    inHand
+                    small={false}
+                    playable={cardCanBePlayed}
+                    blocked={blocked}
+                    selected={selectedCard === idx}
+                    onClick={
+                      tutorialCardEnabled
+                        ? () => handleSelectCard(idx)
+                        : undefined
+                    }
+                    onLongPress={
+                      tutorialActive
+                        ? undefined
+                        : () => setLongPressCard(card)
+                    }
+                  />
+                </div>
               );
             })}
           </div>

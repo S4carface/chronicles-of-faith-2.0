@@ -24,6 +24,7 @@ import { getStatusExplanation } from "@/game/statusExplanations";
 import BattleHelper from "@/components/game/BattleHelper";
 import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
 import GuidedBattleTutorial, { TUTORIAL_TOTAL_STEPS } from "@/components/game/GuidedBattleTutorial";
+import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
 import useResponsive from "@/hooks/useResponsive";
 import { CARD_ART, ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -1049,7 +1050,13 @@ const selectedCardData =
 
       {/* Enemy’s single next action */}
       {battleState.enemyHand?.length > 0 && !battleEnd && (
-        <div className="mt-1">
+  <div className="relative mt-1">
+    {tutorialActive && tutorialStep === 2 && (
+      <TutorialGuidingLight
+        direction="down"
+        className="-top-14 left-2"
+      />
+    )}
           {battleState.enemyHand.slice(0, 1).map((action, i) => {
             const actionType = getActionType(action);
             const intentInfo = INTENT_TYPE_MAP[actionType];
@@ -1238,8 +1245,15 @@ const selectedCardData =
             )}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-3 h-3 lg:w-5 lg:h-5 text-red-400 flex-shrink-0" />
+            <div className="relative flex items-center gap-1.5">
+  {tutorialActive && tutorialStep === 0 && (
+    <TutorialGuidingLight
+      direction="down"
+      className="-top-14 left-8"
+    />
+  )}
+
+  <Heart className="w-3 h-3 lg:w-5 lg:h-5 text-red-400 flex-shrink-0" />
               <div className="w-16 lg:w-36 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
               </div>
@@ -1297,6 +1311,12 @@ const selectedCardData =
             </button>
           )}
           <div className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
+            {tutorialActive && tutorialStep === 1 && (
+  <TutorialGuidingLight
+    direction="down"
+    className="-top-14 left-1/2 -translate-x-1/2"
+  />
+)}
             <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
             <span className="text-yellow-200 text-sm lg:text-2xl font-bold">{battleState.energy}</span>
             <span className="text-yellow-100/50 text-[9px] lg:text-sm">/{battleState.maxEnergy}</span>
@@ -1314,11 +1334,12 @@ const selectedCardData =
             ) : null;
           })()}
                     <div className="relative">
-            {tutorialActive && tutorialStep === 5 && (
-              <div className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 animate-bounce whitespace-nowrap text-xl">
-                
-              </div>
-            )}
+  {tutorialActive && tutorialStep === 5 && (
+    <TutorialGuidingLight
+      direction="down"
+      className="-top-14 left-1/2 -translate-x-1/2"
+    />
+  )}
 
             <button
               onClick={handleEndTurnClick}
@@ -1451,6 +1472,12 @@ const selectedCardData =
                     : ""
               }`}
             >
+              {isRequiredTutorialCard && (
+  <TutorialGuidingLight
+    direction="down"
+    className="-top-14 left-1/2 -translate-x-1/2"
+  />
+)}
               <Card
                 card={card}
                 inHand

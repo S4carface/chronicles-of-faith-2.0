@@ -1608,10 +1608,11 @@ const selectedCardData =
       {/* Guided first-battle tutorial */}
       {tutorialActive && tutorialStep < TUTORIAL_TOTAL_STEPS && !battleEnd && !tutorialCompleteMsg && !isEnemyTurn && (
         <GuidedBattleTutorial
-          step={tutorialStep}
-          onAcknowledge={handleTutorialAcknowledge}
-          onSkip={handleTutorialSkip}
-        />
+  step={tutorialStep}
+  onAcknowledge={handleTutorialAcknowledge}
+  onSkip={handleTutorialSkip}
+  selectedCardId={selectedCardData?.id || null}
+/>
       )}
 
       {/* Tutorial completion message */}

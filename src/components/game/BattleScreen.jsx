@@ -1235,9 +1235,9 @@ const selectedCardData =
       {/* Bottom: hand — extra bottom padding when card selected */}
       <div className="flex-1 flex flex-col min-h-0" style={{ background: "rgba(15,10,5,0.8)" }}>
         <div
-  className={`flex-1 flex items-end overflow-x-hidden overflow-y-hidden px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${
+  className={`flex-1 flex items-end overflow-x-hidden overflow-y-visible px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${
     selectedCard !== null
-      ? "pb-[calc(5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+      ? "pb-[calc(10rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
       : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
   }`}
 >
@@ -1277,15 +1277,19 @@ const selectedCardData =
 
               return (
                 <div
-                  key={idx}
-                  className={`relative flex-shrink-0 transition-all ${
-                    isRequiredTutorialCard
-                      ? "z-20 rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
-                      : tutorialActive && !tutorialCardEnabled
-                        ? "opacity-35 grayscale"
-                        : ""
-                  }`}
-                >
+  key={idx}
+  className={`relative min-w-0 transition-all duration-200 ${
+    selectedCard === idx
+      ? "z-30 -translate-y-16"
+      : "z-0 translate-y-0"
+  } ${
+    isRequiredTutorialCard
+      ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
+      : tutorialActive && !tutorialCardEnabled
+        ? "opacity-35 grayscale"
+        : ""
+  }`}
+>
                   {isRequiredTutorialCard && (
                     <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2 animate-bounce text-xl">
                       

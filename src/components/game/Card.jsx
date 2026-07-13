@@ -116,10 +116,12 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         selected && playable && "-translate-y-3 ring-4 ring-amber-300 scale-[1.05] shadow-2xl shadow-amber-400/60 z-20 brightness-110",
         selected && !playable && "-translate-y-2 ring-4 ring-amber-400/40 scale-[1.03] z-10",
         !playable && onClick && "opacity-60",
-        small
-  ? "w-28 h-44 landscape:w-24 landscape:h-36"
-  : "w-44 h-64 landscape:w-36 landscape:h-52",
-        inHand && "flex-shrink-0"
+        inHand
+  ? "w-full min-w-0 h-40 landscape:h-36"
+  : small
+    ? "w-28 h-44 landscape:w-24 landscape:h-36"
+    : "w-44 h-64 landscape:w-36 landscape:h-52",
+inHand && "flex-shrink-0"
       )}
     >
       {/* Cost badge */}

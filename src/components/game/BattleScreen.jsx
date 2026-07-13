@@ -98,10 +98,10 @@ function simplifyLogEntry(entry) {
 }
 
 export default function BattleScreen() {
-  const {   run,   updateRun,   saveBattleState,   setPhase,   completeRoom,   unlockAchievement,   profile,   saveProfile,   endRun,   saveAndExit,   recordEnemyEncounter,   recordEnemyDefeat, } = useGame();
+  const {   run,   startRun,   updateRun,   saveBattleState,   setPhase,   completeRoom,   unlockAchievement,   profile,   saveProfile,   endRun,   saveAndExit,   recordEnemyEncounter,   recordEnemyDefeat, } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
-  const isTutorialBattle = !profile.tutorialSeen && run.roomsCleared === 0 && !run.isDaily;
+  const isTutorialBattle = run.isTutorial === true;
   const tutorialEnemy = isTutorialBattle ? { ...ENEMIES.serpent, hp: 12, attacks: [{ name: "Venomous Bite", damage: 5, icon: "🦷" }] } : null;
   const baseEnemy = run.dailyEnemy || (isTutorialBattle ? tutorialEnemy : ENEMIES[run.pendingEnemyId]);
   const enemy = (run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
@@ -161,19 +161,34 @@ export default function BattleScreen() {
     advanceTutorial();
   };
 
-  const handleTutorialSkip = () => {
-    Sound.sfx.click();
-    setTutorialActive(false);
-    setTutorialCompleteMsg(false);
-    saveProfile({ tutorialSeen: true });
-  };
+ const finishTutorialAndStartGenesis = () => {
+  Sound.sfx.click();
 
-  const handleTutorialDismiss = () => {
-    Sound.sfx.click();
-    setTutorialActive(false);
-    setTutorialCompleteMsg(false);
-    saveProfile({ tutorialSeen: true });
-  };
+  setTutorialActive(false);
+  setTutorialCompleteMsg(false);
+
+  saveProfile({ tutorialSeen: true });
+
+  // Destroy the temporary tutorial run.
+  endRun();
+
+  // Start a completely fresh Genesis campaign.
+  setTimeout(() => {
+    startRun("adam", false, null, {
+      difficulty: "easy",
+    });
+
+    navigate("/play");
+  }, 0);
+};
+
+const handleTutorialSkip = () => {
+  finishTutorialAndStartGenesis();
+};
+
+const handleTutorialDismiss = () => {
+  finishTutorialAndStartGenesis();
+};
 
   useEffect(() => {
     Sound.playMusic(enemy.isBoss ? "boss" : "battle");
@@ -729,7 +744,24 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
   };
 
   const handleBattleEnd = (result, state) => {
-    if (run.isDaily) {
+  // Tutorial victory never enters rewards, trivia, map progression, or scoring.
+  if (run.isTutorial) {
+    if (result === "victory") {
+      Sound.sfx.victory();
+      Sound.playMusic("victory");
+
+      setBattleEnd(null);
+      setTutorialActive(false);
+      setTutorialCompleteMsg(true);
+    } else {
+      Sound.sfx.defeat();
+      Sound.playMusic("defeat");
+    }
+
+    return;
+  }
+
+  if (run.isDaily) {
       if (result === "victory") {
         recordEnemyDefeat(enemy.id);
         Sound.sfx.victory();
@@ -1432,7 +1464,7 @@ const selectedCardData =
       })()}
 
       {/* Battle end overlay */}
-      {battleEnd && (
+      {battleEnd && !run.isTutorial && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
           <div className="text-center">
             {battleEnd === "victory" ? (
@@ -1557,7 +1589,7 @@ const selectedCardData =
             <div className="w-12 h-12 rounded-full border-2 border-emerald-400/50 bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
               <Check className="w-6 h-6 text-emerald-400" />
             </div>
-            <p className="text-amber-100 text-sm mb-4">You learned the basics. Now continue Genesis.</p>
+            <div className="mb-4">   <h3 className="font-serif text-lg text-emerald-200">     Tutorial Complete   </h3>    <p className="mt-2 text-sm leading-relaxed text-amber-100/80">     You now know how to attack, defend, and spend Faith.   </p> </div>
             <button onClick={handleTutorialDismiss} className="px-6 py-2 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 font-bold text-sm hover:bg-amber-600/40 transition">
               Continue
             </button>

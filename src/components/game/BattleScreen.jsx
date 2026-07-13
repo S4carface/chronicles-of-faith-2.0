@@ -1232,37 +1232,24 @@ const selectedCardData =
     </div>
   </div>
 )}
-{/* Bottom card area */}
+{/* Battle UI 2.0: four-card hand with selected-card focus */}
 <div
   className="flex-1 flex flex-col min-h-0"
   style={{ background: "rgba(15,10,5,0.8)" }}
 >
-  {selectedCardData ? (
-    /* When a card is selected, show one centered card */
-    <div className="flex-1 min-h-0 flex items-center justify-center px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-2">
-      <div className="w-28 max-w-[32vw]">
-        <Card
-          card={selectedCardData}
-          inHand
-          small={true}
-          playable={false}
-          blocked={false}
-          selected={true}
-          onClick={undefined}
-          onLongPress={undefined}
-        />
-      </div>
-    </div>
-  ) : (
-    /* Normal four-card hand */
-    <div className="flex-1 flex items-end overflow-x-hidden overflow-y-visible px-3 pt-2 min-h-0 pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pt-1 landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
-      {battleState.hand.length === 0 && (
-        <p className="text-amber-100/50 text-xs py-4 w-full text-center">
-          No cards — End Turn to draw
-        </p>
-      )}
-
-      <div className="grid w-full grid-cols-4 items-end gap-1.5 pb-1">
+  <div
+    className={`flex-1 min-h-0 flex items-center justify-center overflow-visible px-3 pt-2 transition-all duration-200 ${
+      selectedCard !== null
+        ? "pb-[calc(9.5rem+env(safe-area-inset-bottom))]"
+        : "pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+    }`}
+  >
+    {battleState.hand.length === 0 ? (
+      <p className="text-amber-100/50 text-xs py-4 w-full text-center">
+        No cards — End Turn to draw
+      </p>
+    ) : (
+      <div className="grid w-full grid-cols-4 items-end gap-1.5">
         {battleState.hand.map((cardOrId, idx) => {
           const card =
             typeof cardOrId === "string"
@@ -1295,10 +1282,20 @@ const selectedCardData =
             !isEnemyTurn &&
             tutorialCardEnabled;
 
+          const isSelected = selectedCard === idx;
+          const anotherCardSelected =
+            selectedCard !== null && !isSelected;
+
           return (
             <div
               key={idx}
-              className={`relative min-w-0 transition-all duration-200 ${
+              className={`relative min-w-0 origin-bottom transition-all duration-200 ${
+                isSelected
+                  ? "z-30 -translate-y-8 scale-[1.08]"
+                  : anotherCardSelected
+                    ? "z-0 scale-[0.96] opacity-45"
+                    : "z-0 translate-y-0 scale-100 opacity-100"
+              } ${
                 isRequiredTutorialCard
                   ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
                   : tutorialActive && !tutorialCardEnabled
@@ -1312,7 +1309,7 @@ const selectedCardData =
                 small={true}
                 playable={cardCanBePlayed}
                 blocked={blocked}
-                selected={false}
+                selected={isSelected}
                 onClick={
                   tutorialCardEnabled
                     ? () => handleSelectCard(idx)
@@ -1328,8 +1325,8 @@ const selectedCardData =
           );
         })}
       </div>
-    </div>
-  )}
+    )}
+  </div>
 </div>
 
       {/* Selected card preview — compact bar, hand stays visible */}

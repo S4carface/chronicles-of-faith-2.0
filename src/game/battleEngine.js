@@ -1,7 +1,7 @@
 // Battle engine logic — turn-based card combat
 
 export const COUNTER_CAP = 12;
-export const HAND_LIMIT = 5;
+export const HAND_LIMIT = 4;
 
 function pickEnemyAttack(enemy) {
   return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
@@ -44,7 +44,7 @@ export function createBattleState(
   const enemyDeck = buildEnemyDeck(enemy);
   const enemyHand = enemyDeck.splice(0, 3);
   const intent = enemyHand[0] || pickEnemyAttack(enemy);
-  const openingHandSize = Math.min(HAND_LIMIT, 5 + extraDraw);
+  const openingHandSize = HAND_LIMIT;
 
   return {
     enemy: { ...enemy, currentHp: enemy.hp, maxHp: enemy.hp },

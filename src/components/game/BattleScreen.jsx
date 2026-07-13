@@ -1237,7 +1237,7 @@ const selectedCardData =
         <div
   className={`flex-1 flex items-end overflow-x-hidden overflow-y-visible px-3 pt-2 min-h-0 transition-all duration-200 landscape:pt-1 ${
     selectedCard !== null
-      ? "pb-[calc(10rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+      ? "pb-[calc(1rem+env(safe-area-inset-bottom))] landscape:pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
       : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] landscape:pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
   }`}
 >
@@ -1279,16 +1279,16 @@ const selectedCardData =
                 <div
   key={idx}
   className={`relative min-w-0 transition-all duration-200 ${
-    selectedCard === idx
-      ? "z-30 -translate-y-16"
-      : "z-0 translate-y-0"
-  } ${
-    isRequiredTutorialCard
-      ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
-      : tutorialActive && !tutorialCardEnabled
-        ? "opacity-35 grayscale"
-        : ""
-  }`}
+  selectedCard === idx
+    ? "invisible"
+    : ""
+} ${
+  isRequiredTutorialCard
+    ? "rounded-xl ring-4 ring-amber-300 shadow-2xl shadow-amber-400/70 animate-pulse"
+    : tutorialActive && !tutorialCardEnabled
+      ? "opacity-35 grayscale"
+      : ""
+}`}
 >
                   {isRequiredTutorialCard && (
                     <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2 animate-bounce text-xl">

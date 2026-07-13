@@ -1169,7 +1169,7 @@ const selectedCardData =
                     <div className="relative">
             {tutorialActive && tutorialStep === 5 && (
               <div className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 animate-bounce whitespace-nowrap text-xl">
-                👆
+                
               </div>
             )}
 
@@ -1267,7 +1267,7 @@ const selectedCardData =
                 >
                   {isRequiredTutorialCard && (
                     <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2 animate-bounce text-xl">
-                      👆
+                      
                     </div>
                   )}
 

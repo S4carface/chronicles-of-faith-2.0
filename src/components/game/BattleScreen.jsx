@@ -1075,19 +1075,17 @@ const selectedCardData =
 
     {/* Battle log on far right */}
     <div className="flex min-w-0 flex-col items-stretch">
-      {showLog && (
-        <div className="mt-1 max-h-28 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/90 p-1.5 text-left shadow-xl backdrop-blur-sm lg:max-h-40 lg:p-3">
-          {battleState.log.slice(-8).map((entry, i) => (
-            <p
-              key={i}
-              className="border-b border-amber-500/10 py-0.5 text-[8px] leading-snug text-amber-100/70 last:border-b-0 lg:text-xs"
-            >
-              {simplifyLogEntry(entry) || entry}
-            </p>
-          ))}
-        </div>
-      )}
-    </div>
+  <div className="max-h-28 overflow-y-auto rounded-lg border border-amber-500/20 bg-slate-950/90 p-1.5 text-left shadow-xl backdrop-blur-sm lg:max-h-40 lg:p-3">
+    {battleState.log.slice(-6).map((entry, i) => (
+      <p
+        key={i}
+        className="border-b border-amber-500/10 py-0.5 text-[8px] leading-snug text-amber-100/70 last:border-b-0 lg:text-xs"
+      >
+        {simplifyLogEntry(entry) || entry}
+      </p>
+    ))}
+  </div>
+</div>
   </div>
 </div>
 

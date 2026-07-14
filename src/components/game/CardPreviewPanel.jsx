@@ -60,9 +60,10 @@ export default function CardPreviewPanel({   card,   playable,   blocked,   batt
             <div className="relative flex-[2]">
   {showTutorialPlayGuide && canPlay && (
     <TutorialGuidingLight
-      direction="down"
-      className="-top-14 left-1/2 -translate-x-1/2"
-    />
+  direction="down"
+  size="normal"
+  className="-top-14 left-1/2 -translate-x-1/2"
+/>
   )}
 
   <button

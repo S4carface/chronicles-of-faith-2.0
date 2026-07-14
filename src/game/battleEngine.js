@@ -52,7 +52,7 @@ if (firstAttackIndex > 0) {
   ];
 }
 
-const enemyHand = enemyDeck.splice(0, 3);
+const enemyHand = enemyDeck.splice(0, 1);
 const intent = enemyHand[0];
   const intent = enemyHand[0] || pickEnemyAttack(enemy);
   const openingHandSize = HAND_LIMIT;
@@ -503,7 +503,7 @@ export function enemyTurn(state) {
     }
 
     const newDeck = shuffle(allCards);
-    const newHand = newDeck.splice(0, 3);
+    const newHand = newDeck.splice(0, 1);
     const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
 
     if (newIntent) {
@@ -552,7 +552,6 @@ export function enemyTurn(state) {
       
       // Enemies perform only one playable action per turn.
       break;
-      continue;
     }
 
     energy -= cost;
@@ -627,7 +626,7 @@ export function enemyTurn(state) {
   }
 
   const newDeck = shuffle(allCards);
-  const newHand = newDeck.splice(0, 3);
+  const newHand = newDeck.splice(0, 1);
   const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
 
   if (newIntent) {
@@ -699,7 +698,7 @@ export function getEnemyTurnSteps(state) {
     }
 
     const newDeck = shuffle(allCards);
-    const newHand = newDeck.splice(0, 3);
+    const newHand = newDeck.splice(0, 1);
     const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
 
     if (newIntent) {
@@ -872,7 +871,7 @@ export function getEnemyTurnSteps(state) {
   }
 
   const newDeck = shuffle(allCards);
-  const newHand = newDeck.splice(0, 3);
+  const newHand = newDeck.splice(0, 1);
   const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
   const endLog = [...log];
 

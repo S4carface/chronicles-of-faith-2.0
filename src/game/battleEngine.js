@@ -40,7 +40,8 @@ export function createBattleState(
   extraDraw = 0,
   heroId = null
 ) {
-const enemyDeck = buildEnemyDeck(enemy);
+  const shuffled = shuffle([...deck]);
+  const enemyDeck = buildEnemyDeck(enemy);
 
 // Force the first enemy action to be an attack.
 const firstAttackIndex = enemyDeck.findIndex(card => card.damage > 0);

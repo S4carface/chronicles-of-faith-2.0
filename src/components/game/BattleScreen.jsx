@@ -1369,16 +1369,22 @@ const selectedCardData =
           </div>
         </div>
       </div>
-{/* Selected-card battle summary */}
-{selectedCardData && (
-  <div className="flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-1.5 mb-1 animate-fade-in">
-    <div className="mx-auto flex w-full max-w-xl items-center justify-start gap-3">
+{/* Selected-card battle summary — fixed-height slot prevents hand movement */}
+<div className="h-[58px] flex-shrink-0 border-y border-amber-500/15 bg-slate-950/45 px-3 py-1.5 mb-1">
+  {selectedCardData ? (
+    <div className="mx-auto flex h-full w-full max-w-xl items-center justify-start gap-3 animate-fade-in">
       <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border border-amber-400/35 bg-slate-900 shadow-sm shadow-black/20">
-        <img
-          src={CARD_ART[selectedCardData.id]}
-          alt={selectedCardData.name}
-          className="h-full w-full object-cover"
-        />
+        {CARD_ART[selectedCardData.id] ? (
+          <img
+            src={CARD_ART[selectedCardData.id]}
+            alt={selectedCardData.name}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-sm text-amber-200/40">
+            ?
+          </div>
+        )}
       </div>
 
       <div className="min-w-0">
@@ -1406,8 +1412,10 @@ const selectedCardData =
         </p>
       </div>
     </div>
-  </div>
-)}
+  ) : (
+    <div className="h-full" aria-hidden="true" />
+  )}
+</div>
 {/* Battle UI 2.0: four-card hand with selected-card focus */}
 <div
   className="flex-1 flex flex-col min-h-0"

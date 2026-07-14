@@ -1,72 +1,186 @@
 import React, { useMemo } from "react";
 import { Lightbulb } from "lucide-react";
+import { getCardById } from "@/data/cards";
 
-export default function BattleHelper({ battleState, selectedCard }) {
+const HEAL_CARD_IDS = [
+  "prayer",
+  "bread_life",
+  "living_water",
+  "burning_bush",
+  "doves_peace",
+  "manna_heaven",
+];
+
+function resolveCard(cardOrId) {
+  return typeof cardOrId === "string"
+    ? getCardById(cardOrId)
+    : cardOrId;
+}
+
+function canPlayCard(card, battleState) {
+  if (!card || !battleState) return false;
+
+  const scriptureBlocked =
+    battleState.blockScripture &&
+    card.type === "scripture";
+
+  if (scriptureBlocked) return false;
+
+  if (battleState.freeCardsRemaining > 0) return true;
+
+  return battleState.energy >= card.cost;
+}
+
+export default function BattleHelper({
+  battleState,
+  selectedCard,
+  enemy,
+}) {
   const helperText = useMemo(() => {
-    if (!battleState || battleState.turn !== "player") return null;
-
-    if (battleState.energy === 0 && battleState.freeCardsRemaining === 0) {
-      return "No Faith left. End your turn.";
+    if (!battleState || battleState.turn !== "player") {
+      return null;
     }
 
-    if (selectedCard !== null) {
+    const handCards = (battleState.hand || [])
+      .map(resolveCard)
+      .filter(Boolean);
+
+    const playableCards = handCards.filter((card) =>
+      canPlayCard(card, battleState)
+    );
+
+    const selectedCardData =
+      selectedCard !== null &&
+      selectedCard !== undefined
+        ? resolveCard(battleState.hand?.[selectedCard])
+        : null;
+
+    const selectedCardPlayable =
+      selectedCardData &&
+      canPlayCard(selectedCardData, battleState);
+
+    /*
+     * Selection guidance comes first.
+     * This prevents the helper from saying "End Turn"
+     * while the player has already selected a valid card.
+     */
+    if (selectedCardPlayable) {
       return "Card selected — press Play Card.";
     }
 
-    if (battleState.hand.length === 0) {
-      return "No cards in hand. End turn to draw.";
+    /*
+     * Never say the turn is over while any playable card remains.
+     * This correctly recognizes zero-cost cards such as Fig Leaf.
+     */
+    if (playableCards.length === 0) {
+      if (
+        battleState.energy === 0 &&
+        battleState.freeCardsRemaining === 0
+      ) {
+        return "No playable cards remain. End your turn.";
+      }
+
+      if (handCards.length === 0) {
+        return "No cards in hand. End your turn to draw.";
+      }
     }
 
-    const nextEnemyAction = battleState.enemyHand?.[0];
+    /*
+     * If Faith is empty but a free card remains,
+     * explicitly tell the player it can still be used.
+     */
+    if (
+      battleState.energy === 0 &&
+      battleState.freeCardsRemaining === 0 &&
+      playableCards.length > 0
+    ) {
+      const freeDefense = playableCards.find(
+        (card) =>
+          card.cost === 0 &&
+          card.type === "defense"
+      );
 
-    if (!nextEnemyAction) return null;
+      if (freeDefense) {
+        return `${freeDefense.name} costs 0 Faith and can still be played.`;
+      }
 
-    if (nextEnemyAction.effect === "block") {
-      return `Enemy gains ${nextEnemyAction.blockValue || 5} Block.`;
+      const freeCard = playableCards.find(
+        (card) => card.cost === 0
+      );
+
+      if (freeCard) {
+        return `${freeCard.name} costs 0 Faith and can still be played.`;
+      }
     }
 
-    if (nextEnemyAction.effect === "heal_self") {
-      return "Enemy will heal.";
+    const nextEnemyAction =
+      battleState.enemyHand?.[0] || null;
+
+    const enemyWillAttack =
+      Boolean(nextEnemyAction?.damage > 0);
+
+    const enemyWillBlock =
+      nextEnemyAction?.effect === "block" ||
+      Boolean(nextEnemyAction?.blockValue > 0);
+
+    const hasPlayableDefense = playableCards.some(
+      (card) => card.type === "defense"
+    );
+
+    const hasPlayableAttack = playableCards.some(
+      (card) =>
+        card.type === "attack" ||
+        card.type === "miracle"
+    );
+
+    const hasPlayableHealing = playableCards.some(
+      (card) =>
+        card.type === "scripture" &&
+        HEAL_CARD_IDS.includes(card.id)
+    );
+
+    const lowHp =
+      battleState.playerHp <=
+      Math.floor(battleState.maxPlayerHp * 0.35);
+
+    /*
+     * Damage is more urgent than enemy Block.
+     * When the move does both, describe both effects.
+     */
+    if (enemyWillAttack && enemyWillBlock) {
+      if (hasPlayableDefense) {
+        return "Enemy will attack and gain Block. Defend before ending your turn.";
+      }
+
+      if (hasPlayableAttack) {
+        return "Enemy will attack and gain Block. Strike now if you can.";
+      }
+
+      return "Enemy will attack and gain Block this turn.";
     }
 
-    if (nextEnemyAction.effect === "skip_draw") {
-      return "Enemy will reduce your next draw.";
+    if (enemyWillAttack && hasPlayableDefense) {
+      return "Enemy will attack next. Consider using Defense.";
     }
 
-    if (nextEnemyAction.effect === "block_scripture") {
-      return "Enemy will block Scripture cards.";
+    if (lowHp && hasPlayableHealing) {
+      return "Your HP is low. Consider healing.";
     }
 
-    if (nextEnemyAction.effect === "drain") {
-      return "Enemy will drain Faith.";
-    }
-
-    if (nextEnemyAction.effect === "discard") {
-      return "Enemy will force a discard.";
-    }
-
-    if (nextEnemyAction.effect === "random_card") {
-      return "Enemy will cause confusion.";
-    }
-
-    if (nextEnemyAction.effect === "dot") {
-      return `Enemy attacks for ${nextEnemyAction.damage} and applies a curse.`;
-    }
-
-    if (nextEnemyAction.damage > 0) {
-      return `Enemy attacks for ${nextEnemyAction.damage}.`;
+    if (enemyWillBlock && hasPlayableAttack) {
+      return "Enemy will gain Block. Attack before the shield rises.";
     }
 
     return null;
-  }, [battleState, selectedCard]);
+  }, [battleState, selectedCard, enemy]);
 
   if (!helperText) return null;
 
   return (
     <div className="flex items-center gap-1.5 px-3 py-1 animate-fade-in">
-      <Lightbulb className="w-3 h-3 text-amber-300/50 flex-shrink-0" />
+      <Lightbulb className="h-3 w-3 flex-shrink-0 text-amber-300/50" />
 
-      <span className="truncate text-amber-100/55 text-[10px] lg:text-xs italic leading-tight">
+      <span className="text-[10px] italic leading-tight text-amber-100/50 lg:text-xs">
         {helperText}
       </span>
     </div>

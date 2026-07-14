@@ -53,8 +53,7 @@ if (firstAttackIndex > 0) {
 }
 
 const enemyHand = enemyDeck.splice(0, 1);
-const intent = enemyHand[0];
-  const intent = enemyHand[0] || pickEnemyAttack(enemy);
+const intent = enemyHand[0] || pickEnemyAttack(enemy);
   const openingHandSize = HAND_LIMIT;
 
   return {

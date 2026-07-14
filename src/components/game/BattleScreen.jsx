@@ -1467,9 +1467,9 @@ const selectedCardData =
               key={idx}
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
-                  ? "z-30 -translate-y-1 scale-[1.02]"
+                  ? "z-30 translate-y-0 scale-100"
                   : anotherCardSelected
-                    ? "z-0 scale-[0.99] opacity-85"
+                    ? "z-0 translate-y-0 scale-100 opacity-75"
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
                 isRequiredTutorialCard

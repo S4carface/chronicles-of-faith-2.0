@@ -1081,9 +1081,10 @@ const selectedCardData =
               
               {tutorialActive && tutorialStep === 2 && (
   <TutorialGuidingLight
-    direction="down"
-    className="-top-14 left-1/2 -translate-x-1/2"
-  />
+  direction="down"
+  size="small"
+  className="-top-12 left-1/2 -translate-x-1/2"
+/>
 )}
               
                 <span
@@ -1251,9 +1252,10 @@ const selectedCardData =
             <div className="relative flex items-center gap-1.5">
   {tutorialActive && tutorialStep === 0 && (
     <TutorialGuidingLight
-      direction="down"
-      className="-top-14 left-8"
-    />
+  direction="down"
+  size="small"
+  className="-top-12 left-8"
+/>
   )}
 
   <Heart className="w-3 h-3 lg:w-5 lg:h-5 text-red-400 flex-shrink-0" />
@@ -1316,9 +1318,10 @@ const selectedCardData =
           <div className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
             {tutorialActive && tutorialStep === 1 && (
   <TutorialGuidingLight
-    direction="down"
-    className="-top-14 left-1/2 -translate-x-1/2"
-  />
+  direction="down"
+  size="small"
+  className="-top-12 left-1/2 -translate-x-1/2"
+/>
 )}
             <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
             <span className="text-yellow-200 text-sm lg:text-2xl font-bold">{battleState.energy}</span>
@@ -1339,9 +1342,10 @@ const selectedCardData =
                     <div className="relative">
   {tutorialActive && tutorialStep === 5 && (
     <TutorialGuidingLight
-      direction="down"
-      className="-top-14 left-1/2 -translate-x-1/2"
-    />
+  direction="down"
+  size="normal"
+  className="-top-14 left-1/2 -translate-x-1/2"
+/>
   )}
 
             <button
@@ -1477,9 +1481,10 @@ const selectedCardData =
             >
               {isRequiredTutorialCard && !isSelected && (
   <TutorialGuidingLight
-    direction="down"
-    className="-top-14 left-1/2 -translate-x-1/2"
-  />
+  direction="down"
+  size="normal"
+  className="-top-14 left-1/2 -translate-x-1/2"
+/>
 )}
               <Card
                 card={card}

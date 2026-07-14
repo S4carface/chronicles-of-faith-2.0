@@ -1414,7 +1414,7 @@ const selectedCardData =
   style={{ background: "rgba(15,10,5,0.8)" }}
 >
   <div
-  className="flex-1 min-h-0 flex items-center justify-center overflow-visible px-3 pt-2 pb-[calc(9.5rem+env(safe-area-inset-bottom))]"
+  className="flex-1 min-h-0 flex items-end justify-center overflow-visible px-3 pt-2 pb-[calc(9.5rem+env(safe-area-inset-bottom))]"
 >
     {battleState.hand.length === 0 ? (
       <p className="text-amber-100/50 text-xs py-4 w-full text-center">

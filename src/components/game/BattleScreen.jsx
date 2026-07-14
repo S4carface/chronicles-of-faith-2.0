@@ -954,12 +954,17 @@ const selectedCardData =
 >
   <span className="text-sm font-bold">?</span>
 </button>
-        <button
-          onClick={() => { setShowPause(true); Sound.sfx.click(); }}
-          className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
-        >
-          <Pause className="w-4 h-4" />
-        </button>
+        {!tutorialActive && (
+  <button
+    onClick={() => {
+      setShowPause(true);
+      Sound.sfx.click();
+    }}
+    className="w-9 h-9 rounded-full border-2 border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition active:scale-90"
+  >
+    <Pause className="w-4 h-4" />
+  </button>
+)}
       </div>
 
       {/* Battle UI 2.0: enemy left, information center, log right */}
@@ -1476,11 +1481,11 @@ const selectedCardData =
                     ? "z-0 translate-y-0 scale-100 opacity-75"
                     : "z-0 translate-y-0 scale-100 opacity-100"
               } ${
-                isRequiredTutorialCard
-                  ? "rounded-xl ring-2 ring-amber-300/80 shadow-lg shadow-amber-400/25"
-                  : tutorialActive && !tutorialCardEnabled
-                    ? "opacity-55 grayscale"
-                    : ""
+       isRequiredTutorialCard && !isSelected
+  ? "rounded-xl ring-2 ring-inset ring-amber-300/80 shadow-lg shadow-amber-400/25"
+  : tutorialActive && !tutorialCardEnabled
+    ? "opacity-55 grayscale"
+    : ""
               }`}
             >
               {isRequiredTutorialCard && !isSelected && (
@@ -1690,7 +1695,7 @@ const selectedCardData =
 )}
 
       {/* Pause overlay */}
-      {showPause && !showAbandonConfirm && (
+      {showPause && !showAbandonConfirm && !tutorialActive && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(8,12,24,0.95)" }}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-8" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
             <h2 className="text-2xl font-serif text-amber-200 text-center mb-1">Paused</h2>

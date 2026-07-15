@@ -74,7 +74,7 @@ return (
         style={{
           backgroundImage:
             hero.id === "adam"
-              ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-eden.png')"
+              ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-ede.PNG')"
               : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
           backgroundSize: "cover",
           backgroundPosition: "center",

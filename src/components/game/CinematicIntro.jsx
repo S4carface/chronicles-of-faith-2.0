@@ -60,7 +60,7 @@ timersRef.current.push(setTimeout(() => {
 
 timersRef.current.push(setTimeout(() => {
   handleBegin();
-}, 8500));
+}, 15000));
         return () => {
   timersRef.current.forEach((id) => clearTimeout(id));
 

@@ -53,7 +53,7 @@ const STEPS = [
 
 const POSITION_CLASSES = {
   health:
-    "top-[38%] left-3 lg:left-8",
+    "top-[32%] left-3 lg:left-8",
 
   faith:
     "top-[47%] right-3 lg:right-8",

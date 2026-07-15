@@ -13,8 +13,6 @@ export default function HeroSelect() {
   const [index, setIndex] = useState(0);
   const dragStartX = useRef(0);
   const dragDelta = useRef(0);
-  const ambienceAudioRef = useRef(null);
-  const ambienceFadeRef = useRef(null);
 const hero = HEROES[index];
 const unlocked = profile.unlockedHeroes.includes(hero.id);
 const hasAttackCards = hero.starterDeck.some(id => getCardById(id)?.type === "attack");
@@ -23,81 +21,34 @@ useEffect(() => {
   Sound.pauseMusicForAmbience();
 
   return () => {
+    Sound.stopHeroAmbience();
     Sound.resumeMusicAfterAmbience("menu");
   };
 }, []);
 
 useEffect(() => {
-  const soundEffectsEnabled = profile.settings?.soundEffects !== false;
-  const audio = new Audio("/audio/hero-ambience/adam-eden.mp3");
-
-  audio.loop = true;
-  audio.preload = "auto";
-  audio.volume = 0;
-
-  ambienceAudioRef.current = audio;
-
-  const stopFade = () => {
-    if (ambienceFadeRef.current) {
-      window.clearInterval(ambienceFadeRef.current);
-      ambienceFadeRef.current = null;
+  const startAmbience = () => {
+    if (hero.id === "adam") {
+      Sound.playHeroAmbience("/audio/hero-ambience/adam-eden.mp3");
+    } else {
+      Sound.stopHeroAmbience();
     }
   };
 
-  const stopAudio = () => {
-    stopFade();
-    audio.pause();
-    audio.currentTime = 0;
-  };
+  startAmbience();
 
-  const fadeIn = () => {
-    stopFade();
-
-    const targetVolume = 0.18;
-
-    ambienceFadeRef.current = window.setInterval(() => {
-      if (audio.volume >= targetVolume) {
-        audio.volume = targetVolume;
-        stopFade();
-        return;
-      }
-
-      audio.volume = Math.min(targetVolume, audio.volume + 0.02);
-    }, 100);
-  };
-
-  const beginPlayback = async () => {
-    if (hero.id !== "adam" || !soundEffectsEnabled) return;
-
-    try {
-      await audio.play();
-      fadeIn();
-
-      window.removeEventListener("pointerdown", beginPlayback);
-      window.removeEventListener("touchstart", beginPlayback);
-    } catch {
-      // iPhone may require the player's first tap before audio can start.
+  const unsubscribe = Sound.subscribeUnlock((unlocked) => {
+    if (unlocked && hero.id === "adam") {
+      startAmbience();
     }
-  };
-
-  if (hero.id === "adam" && soundEffectsEnabled) {
-    beginPlayback();
-
-    window.addEventListener("pointerdown", beginPlayback, { once: true });
-    window.addEventListener("touchstart", beginPlayback, { once: true });
-  }
+  });
 
   return () => {
-    window.removeEventListener("pointerdown", beginPlayback);
-    window.removeEventListener("touchstart", beginPlayback);
-
-    stopAudio();
-
-    if (ambienceAudioRef.current === audio) {
-      ambienceAudioRef.current = null;
-    }
+    unsubscribe();
+    Sound.stopHeroAmbience();
   };
-}, [hero.id, profile.settings?.soundEffects]);
+}, [hero.id]);
+
   const goNext = () => {
     Sound.sfx.click();
     setIndex(i => (i + 1) % HEROES.length);

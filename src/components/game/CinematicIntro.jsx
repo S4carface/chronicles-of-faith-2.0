@@ -313,11 +313,9 @@ return (
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
           <div className="max-w-2xl text-center">
             <div
-              className={`mb-4 flex justify-center transition-all duration-[2600ms] ${
-                step >= 4
-                  ? "scale-100 opacity-100"
-                  : "scale-50 opacity-0"
-              }`}
+    className={`mb-4 flex justify-center transition-opacity duration-[2600ms] ${
+  step >= 4 ? "opacity-100" : "opacity-0"
+}`}
             >
         <div
   className="intro-logo h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
@@ -332,11 +330,9 @@ return (
             </div>
 
             <h1
-              className={`font-serif tracking-wide text-amber-200 transition-all duration-[2600ms] ${
-                step >= 4
-                  ? "translate-y-0 opacity-100"
-                  : "-translate-y-4 opacity-0"
-              }`}
+     className={`font-serif tracking-wide text-amber-200 transition-opacity duration-[2600ms] ${
+  step >= 4 ? "opacity-100" : "opacity-0"
+}`}
               style={{
                 fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
                 textShadow: "0 0 30px rgba(201,168,76,0.3)",
@@ -391,11 +387,13 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
               &mdash; {REFERENCE}
             </p>
 
-            {step >= 4 && (
-              <p className="mt-10 animate-fade-in font-serif text-sm italic text-amber-100/45">
-                Your journey begins...
-              </p>
-            )}
+<p
+  className={`mt-10 min-h-[1.25rem] font-serif text-sm italic text-amber-100/45 transition-opacity duration-1000 ${
+    step >= 4 ? "opacity-100" : "opacity-0"
+  }`}
+>
+  Your journey begins...
+</p>
           </div>
         </div>
       )}

@@ -145,14 +145,18 @@ export function initGlobalUnlockListener() {
 
   // Gesture handler — stays registered for the app's lifetime.
   // Handles both first-time unlock and post-background resume.
-  const gestureHandler = () => {
-    if (audioUnlocked && ctxIsRunning()) return;
+const gestureHandler = () => {
+  if (!audioUnlocked || !ctxIsRunning()) {
     unlockAudio();
-    if (audioUnlocked) {
-      hasUserInteracted = true;
-      restartMusicIfNeeded();
-    }
-  };
+  }
+
+  if (ctxIsRunning()) {
+    audioUnlocked = true;
+    hasUserInteracted = true;
+    notifyUnlockListeners();
+    restartMusicIfNeeded();
+  }
+};
 
   document.addEventListener("touchstart", gestureHandler, true);
   document.addEventListener("pointerdown", gestureHandler, true);

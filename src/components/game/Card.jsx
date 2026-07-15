@@ -116,8 +116,8 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         selected && playable && "-translate-y-3 ring-4 ring-amber-300 scale-[1.05] shadow-2xl shadow-amber-400/60 z-20 brightness-110",
         selected && !playable && "-translate-y-2 ring-4 ring-amber-400/40 scale-[1.03] z-10",
         !playable && onClick && "opacity-60",
-        inHand
-  ? "w-full min-w-0 h-40 landscape:h-36"
+inHand
+  ? "mx-auto h-40 w-full max-w-[8rem] min-w-0"
   : small
     ? "w-28 h-44 landscape:w-24 landscape:h-36"
     : "w-44 h-64 landscape:w-36 landscape:h-52",
@@ -138,9 +138,11 @@ inHand && "flex-shrink-0"
       <div
   className={cn(
     "mt-0 mb-1 overflow-hidden relative",
-    small
-  ? "h-28 landscape:h-20"
-  : "h-36 landscape:h-28"
+inHand
+  ? "h-28"
+  : small
+    ? "h-28 landscape:h-20"
+    : "h-36 landscape:h-28"
   )}
   style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
 >

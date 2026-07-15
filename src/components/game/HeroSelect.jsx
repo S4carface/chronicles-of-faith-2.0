@@ -71,6 +71,54 @@ return (
   animation: heroBackgroundDrift 18s ease-in-out infinite;
   will-change: background-position, background-size;
 }
+
+@keyframes noahRainFall {
+  0% {
+    background-position: 0 -160px;
+  }
+
+  100% {
+    background-position: -45px 160px;
+  }
+}
+
+@keyframes noahRainFallNear {
+  0% {
+    background-position: 0 -220px;
+  }
+
+  100% {
+    background-position: -70px 220px;
+  }
+}
+
+.noah-rain-far {
+  background-image: repeating-linear-gradient(
+    112deg,
+    transparent 0,
+    transparent 20px,
+    rgba(210, 230, 255, 0.13) 21px,
+    rgba(210, 230, 255, 0.13) 22px,
+    transparent 23px,
+    transparent 42px
+  );
+  background-size: 180px 180px;
+  animation: noahRainFall 1.2s linear infinite;
+}
+
+.noah-rain-near {
+  background-image: repeating-linear-gradient(
+    112deg,
+    transparent 0,
+    transparent 32px,
+    rgba(225, 238, 255, 0.18) 33px,
+    rgba(225, 238, 255, 0.18) 35px,
+    transparent 36px,
+    transparent 68px
+  );
+  background-size: 240px 240px;
+  animation: noahRainFallNear 0.8s linear infinite;
+}
       `}</style>
 
 <div
@@ -100,6 +148,22 @@ return (
         backgroundRepeat: "no-repeat",
       }}
     />
+  </AnimatePresence>
+    <AnimatePresence>
+    {hero.id === "noah" && (
+      <motion.div
+        key="noah-rain"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.45 }}
+        className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
+        aria-hidden="true"
+      >
+        <div className="noah-rain-far absolute inset-0 opacity-60" />
+        <div className="noah-rain-near absolute inset-0 opacity-45" />
+      </motion.div>
+    )}
   </AnimatePresence>
         {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between mb-4 flex-shrink-0">

@@ -48,7 +48,7 @@ export default function HeroSelect() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 sm:p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
+    <div className="h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">
@@ -63,7 +63,7 @@ export default function HeroSelect() {
 
       {/* Carousel */}
       <div
-        className="flex-1 flex items-center justify-center overflow-hidden"
+        className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"
         onTouchStart={onDragStart}
         onTouchEnd={onDragEnd}
         onMouseDown={onDragStart}
@@ -91,7 +91,7 @@ export default function HeroSelect() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -80 }}
               transition={{ duration: 0.2 }}
-              className={`rounded-xl border-2 p-6 lg:p-10 text-center ${
+              className={`rounded-xl border-2 p-4 lg:p-10 text-center ${
                 unlocked
                   ? "border-amber-400/60 bg-amber-500/10"
                   : "border-slate-700/30 bg-slate-900/40 opacity-60"
@@ -100,7 +100,7 @@ export default function HeroSelect() {
             >
               <div className="mb-3 flex justify-center">
                 {unlocked && HERO_ART[hero.id] ? (
-                  <div className="w-28 h-28 lg:w-44 lg:h-44 rounded-xl border-2 border-amber-400/40 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
+                  <div className="w-24 h-24 lg:w-44 lg:h-44 rounded-xl border-2 border-amber-400/40 overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
                     <img src={HERO_ART[hero.id]} alt={hero.name} className="art-portrait" />
                   </div>
                 ) : (
@@ -151,7 +151,7 @@ export default function HeroSelect() {
       </div>
 
       {/* Bottom action */}
-      <div className="flex-shrink-0 pb-4">
+      <div className="flex-shrink-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
         {unlocked && !hasAttackCards && (
           <div className="mb-3 px-4 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm text-center">
             ⚠️ This hero's deck has no attack cards!

@@ -1808,7 +1808,6 @@ const selectedCardData =
           </div>
         </div>
       )}
-      </div>
     </div>
     </>
   );

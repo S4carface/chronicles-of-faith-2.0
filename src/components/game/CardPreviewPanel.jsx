@@ -33,10 +33,17 @@ export default function CardPreviewPanel({   card,   playable,   blocked,   batt
   const canPlay = playable && !blocked;
   const blockReason = canPlay ? null : getCardPlayabilityReason(card, battleState);
 
-  return (
-    <>
-      {/* Mobile: bottom sheet */}
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
+return (
+  <>
+    {/* Block taps from reaching the battle screen behind this preview */}
+    <div
+      className="fixed inset-0 z-[39]"
+      onClick={onCancel}
+      aria-hidden="true"
+    />
+
+    {/* Mobile: bottom sheet */}
+          <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
         <div className="px-3 pt-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           
 {card.verse && card.scriptureText && (

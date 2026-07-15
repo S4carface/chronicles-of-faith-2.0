@@ -187,12 +187,13 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
 
       {/* Room preview panel */}
       {previewNode && (
-        <RoomPreviewPanel
-          node={previewNode}
-          recommendation={getRecommendation(previewNode.type)}
-          onEnter={handleEnterRoom}
-          onCancel={() => setPreviewNode(null)}
-        />
+<RoomPreviewPanel
+  node={previewNode}
+  recommendation={getRecommendation(previewNode.type)}
+  difficulty={difficulty}
+  onEnter={handleEnterRoom}
+  onCancel={() => setPreviewNode(null)}
+/>
       )}
     </div>
   );

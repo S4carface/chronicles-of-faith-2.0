@@ -30,7 +30,8 @@ export default function CinematicIntro({ onComplete }) {
   const [cinematicStarted, setCinematicStarted] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false); 
+  const [bookCardStage, setBookCardStage] = useState(0);
   const [narrationOn, setNarrationOn] = useState(
     profile.settings.narration !== false
   );
@@ -50,22 +51,28 @@ export default function CinematicIntro({ onComplete }) {
     timersRef.current = [];
   }, []);
 
-  const handleBegin = useCallback(() => {
-    if (isTransitioning) return;
+ const handleBegin = useCallback(() => {
+  if (isTransitioning) return;
 
-    setIsTransitioning(true);
-    Sound.stopCinematicTracks(1.2);
+  setIsTransitioning(true);
+  setBookCardStage(1);
 
-    narrationTrackRef.current = null;
-    musicTrackRef.current = null;
+  Sound.stopCinematicTracks(1.2);
 
-    const finishTimer = window.setTimeout(() => {
-      Sound.stopNarration();
-      onComplete();
-    }, 1400);
+  narrationTrackRef.current = null;
+  musicTrackRef.current = null;
 
-    timersRef.current.push(finishTimer);
-  }, [isTransitioning, onComplete]);
+  const chapterTimer = window.setTimeout(() => {
+    setBookCardStage(2);
+  }, 1400);
+
+  const finishTimer = window.setTimeout(() => {
+    Sound.stopNarration();
+    onComplete();
+  }, 2800);
+
+  timersRef.current.push(chapterTimer, finishTimer);
+}, [isTransitioning, onComplete]);
 
   const startCinematic = useCallback(async () => {
     if (cinematicStartedRef.current) return;
@@ -400,13 +407,39 @@ export default function CinematicIntro({ onComplete }) {
         >
           <div className="mx-auto mb-5 h-px w-32 bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
-          <p className="font-serif text-xl tracking-[0.16em] text-amber-100 sm:text-2xl">
-            Your Journey Begins
-          </p>
+ <div className="relative flex min-h-[9rem] min-w-[18rem] items-center justify-center">
+  <div
+    className={`absolute text-center transition-all duration-700 ${
+      bookCardStage === 1
+        ? "translate-y-0 opacity-100"
+        : "-translate-y-3 opacity-0"
+    }`}
+  >
+    <p className="text-xs uppercase tracking-[0.45em] text-amber-300/55">
+      Book I
+    </p>
 
-          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-300/50">
-            Entering Genesis
-          </p>
+    <p className="mt-3 font-serif text-4xl tracking-[0.18em] text-amber-100 sm:text-5xl">
+      Genesis
+    </p>
+  </div>
+
+  <div
+    className={`absolute text-center transition-all duration-700 ${
+      bookCardStage === 2
+        ? "translate-y-0 opacity-100"
+        : "translate-y-3 opacity-0"
+    }`}
+  >
+    <p className="text-xs uppercase tracking-[0.35em] text-amber-300/50">
+      Chapter One
+    </p>
+
+    <p className="mt-3 font-serif text-2xl tracking-[0.12em] text-amber-100">
+      The Beginning
+    </p>
+  </div>
+</div>
         </div>
       </div>
     </div>

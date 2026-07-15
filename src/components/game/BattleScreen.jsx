@@ -1432,7 +1432,13 @@ const selectedCardData =
         No cards — End Turn to draw
       </p>
     ) : (
-      <div className="grid w-full grid-cols-4 items-end gap-1.5 px-1">
+<div
+  className={`grid w-full grid-cols-4 items-end gap-1.5 px-1 transition-transform duration-300 ease-out ${
+    selectedCard !== null
+      ? "-translate-y-24"
+      : "translate-y-0"
+  }`}
+>
         {battleState.hand.map((cardOrId, idx) => {
           const card =
             typeof cardOrId === "string"

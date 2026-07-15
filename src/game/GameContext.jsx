@@ -33,9 +33,27 @@ function loadProfile() {
         parsed.cardCollection = collection;
       }
       // Migrate to activeDeck if missing
-      if (!parsed.activeDeck) {
-        parsed.activeDeck = [...STARTER_DECK];
-      }
+if (!parsed.activeDeck) {
+  parsed.activeDeck = [...STARTER_DECK];
+} else {
+  const hasOldStarterDeck =
+    parsed.activeDeck.includes("song_praise") &&
+    parsed.activeDeck.filter(id => id === "righteous_strike").length === 1;
+
+  if (hasOldStarterDeck) {
+    parsed.activeDeck = parsed.activeDeck.map(id =>
+      id === "song_praise" ? "righteous_strike" : id
+    );
+
+    parsed.cardCollection = {
+      ...parsed.cardCollection,
+      righteous_strike: Math.max(
+        2,
+        parsed.cardCollection?.righteous_strike || 0
+      ),
+    };
+  }
+}
       // Keep collectedCards in sync (unique card IDs)
       parsed.collectedCards = Object.keys(parsed.cardCollection);
       // Sanitize any stored player name (old invalid names become "Anonymous Pilgrim")

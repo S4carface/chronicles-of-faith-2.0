@@ -22,6 +22,7 @@ let currentMusicNodes = [];
 let musicTimeoutId = null;
 let musicTheme = null;
 let pendingMusicTheme = null;
+let musicPausedForAmbience = false;
 let duckedGain = null;
 let audioUnlocked = false;
 let hasUserInteracted = false; // true once the player has ever unlocked audio via a gesture
@@ -112,8 +113,8 @@ function tryResumeAfterReturn() {
 
 // Restart the music loop if it should be playing but isn't
 function restartMusicIfNeeded() {
-  if (!musicEnabled) return;
-  const theme = pendingMusicTheme || musicTheme;
+  if (!musicEnabled || musicPausedForAmbience) return;
+    const theme = pendingMusicTheme || musicTheme;
   if (theme && !musicTimeoutId) {
     pendingMusicTheme = null;
     _startMusic(theme);
@@ -251,10 +252,10 @@ export function setMusicEnabled(enabled) {
     pendingMusicTheme = null;
   } else {
     // If audio is unlocked and we have a theme, play it
-    if (audioUnlocked && ctxIsRunning()) {
-      const theme = musicTheme || pendingMusicTheme;
-      if (theme) _startMusic(theme);
-    } else if (pendingMusicTheme || musicTheme) {
+if (!musicPausedForAmbience && audioUnlocked && ctxIsRunning()) {
+  const theme = musicTheme || pendingMusicTheme;
+  if (theme) _startMusic(theme);
+      } else if (pendingMusicTheme || musicTheme) {
       // Store pending; will start on unlock
       pendingMusicTheme = pendingMusicTheme || musicTheme;
     }
@@ -464,12 +465,34 @@ export const sfx = {
 export function stopMusic() {
   currentMusicNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
   currentMusicNodes = [];
+
   if (musicTimeoutId) {
     clearTimeout(musicTimeoutId);
     musicTimeoutId = null;
   }
 }
 
+export function pauseMusicForAmbience() {
+  musicPausedForAmbience = true;
+
+  if (musicTheme) {
+    pendingMusicTheme = musicTheme;
+  }
+
+  stopMusic();
+}
+
+export function resumeMusicAfterAmbience(fallbackTheme = "menu") {
+  musicPausedForAmbience = false;
+
+  const themeToResume =
+    pendingMusicTheme ||
+    musicTheme ||
+    fallbackTheme;
+
+  pendingMusicTheme = null;
+  playMusic(themeToResume);
+}
 // Chord pad — multiple sustained oscillators for warm background
 function playChordPad(freqs, duration, vol, type = "sine") {
   const ctx = getCtx();
@@ -653,9 +676,15 @@ function _startMusic(theme) {
 // store as pending — it starts on the first user gesture / unlock.
 export function playMusic(theme) {
   if (!musicEnabled) return;
+
+  if (musicPausedForAmbience) {
+    musicTheme = theme;
+    pendingMusicTheme = theme;
+    return;
+  }
+
   // Ensure context exists
   getCtx();
-
   // Don't restart if the same theme is already playing — prevents music
   // restarting from the beginning on route changes within the same theme.
   if (musicTheme === theme && musicTimeoutId !== null) return;

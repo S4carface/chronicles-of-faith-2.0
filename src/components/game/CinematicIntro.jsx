@@ -4,7 +4,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { RotateCcw, Volume2, VolumeX } from "lucide-react";
+
 import * as Sound from "@/game/soundManager";
 import { useGame } from "@/game/GameContext";
 import { HOME_ART } from "@/data/art";
@@ -168,44 +168,6 @@ export default function CinematicIntro({ onComplete }) {
     onComplete();
   }, [clearTimers, onComplete]);
 
-  const replayNarration = async () => {
-    if (narrationTrackRef.current?.source) {
-      try {
-        narrationTrackRef.current.source.stop();
-      } catch (error) {}
-    }
-
-    narrationTrackRef.current = await Sound.playCinematicTrack(
-      INTRO_AUDIO,
-      {
-        volume:
-          (profile.settings.narrationVolume ?? 50) / 100,
-        loop: false,
-      }
-    );
-  };
-
-  const toggleNarration = () => {
-    if (narrationOn) {
-      if (narrationTrackRef.current?.source) {
-        try {
-          narrationTrackRef.current.source.stop();
-        } catch (error) {}
-      }
-
-      narrationTrackRef.current = null;
-      Sound.stopNarration();
-      setNarrationOn(false);
-      return;
-    }
-
-    setNarrationOn(true);
-
-    if (cinematicStartedRef.current) {
-      replayNarration();
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 z-[80] overflow-hidden bg-black"
@@ -314,42 +276,6 @@ export default function CinematicIntro({ onComplete }) {
         >
           Skip →
         </button>
-      )}
-
-      {cinematicStarted && (
-        <div className="absolute left-4 top-[calc(1rem+env(safe-area-inset-top))] z-20 flex gap-2">
-          <button
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleNarration();
-            }}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-500/30 bg-slate-900/60 text-amber-200 transition hover:bg-amber-500/20"
-            aria-label={
-              narrationOn
-                ? "Turn narration off"
-                : "Turn narration on"
-            }
-          >
-            {narrationOn ? (
-              <Volume2 className="h-4 w-4" />
-            ) : (
-              <VolumeX className="h-4 w-4" />
-            )}
-          </button>
-
-          {narrationOn && (
-            <button
-              onClick={(event) => {
-                event.stopPropagation();
-                replayNarration();
-              }}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-500/30 bg-slate-900/60 text-amber-200 transition hover:bg-amber-500/20"
-              aria-label="Replay narration"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          )}
-        </div>
       )}
 
       {/* Main cinematic content */}

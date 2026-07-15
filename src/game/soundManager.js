@@ -28,6 +28,11 @@ let audioUnlocked = false;
 let hasUserInteracted = false; // true once the player has ever unlocked audio via a gesture
 let unlockListeners = new Set();
 
+let heroAmbienceSource = null;
+let heroAmbienceGain = null;
+let heroAmbienceBuffer = null;
+let heroAmbienceRequestId = 0;
+
 // Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
 function getCtx() {
   if (!audioCtx) {
@@ -264,8 +269,11 @@ if (!musicPausedForAmbience && audioUnlocked && ctxIsRunning()) {
 
 export function setSfxEnabled(enabled) {
   sfxEnabled = enabled;
-}
 
+  if (!enabled) {
+    stopHeroAmbience();
+  }
+}
 export function setMusicVolume(vol) {
   musicVol = vol;
   if (musicGain) {
@@ -339,6 +347,94 @@ function playTone(freq, duration, type = "sine", vol = 0.3, target = null) {
   } catch (e) {
     console.warn("[Audio] playTone error:", e);
   }
+}
+
+export async function playHeroAmbience(
+  url = "/audio/hero-ambience/adam-eden.mp3"
+) {
+  const ctx = getCtx();
+
+  if (!ctx || !sfxEnabled || !ctxIsRunning()) {
+    return false;
+  }
+
+  stopHeroAmbience();
+
+  const requestId = heroAmbienceRequestId;
+
+  try {
+    if (!heroAmbienceBuffer) {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to load hero ambience: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      heroAmbienceBuffer = await ctx.decodeAudioData(arrayBuffer);
+    }
+
+    if (
+      requestId !== heroAmbienceRequestId ||
+      !sfxEnabled ||
+      !ctxIsRunning()
+    ) {
+      return false;
+    }
+
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+
+    source.buffer = heroAmbienceBuffer;
+    source.loop = true;
+
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 1.5);
+
+    source.connect(gain);
+    gain.connect(sfxGain);
+
+    source.start();
+
+    heroAmbienceSource = source;
+    heroAmbienceGain = gain;
+
+    return true;
+  } catch (error) {
+    console.warn("[Audio] Hero ambience failed:", error);
+    return false;
+  }
+}
+
+export function stopHeroAmbience() {
+  heroAmbienceRequestId += 1;
+
+  if (heroAmbienceGain && audioCtx) {
+    try {
+      heroAmbienceGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      heroAmbienceGain.gain.setValueAtTime(
+        heroAmbienceGain.gain.value,
+        audioCtx.currentTime
+      );
+      heroAmbienceGain.gain.linearRampToValueAtTime(
+        0,
+        audioCtx.currentTime + 0.25
+      );
+    } catch (error) {}
+  }
+
+  const sourceToStop = heroAmbienceSource;
+
+  if (sourceToStop) {
+    window.setTimeout(() => {
+      try {
+        sourceToStop.stop();
+      } catch (error) {}
+    }, 275);
+  }
+
+  heroAmbienceSource = null;
+  heroAmbienceGain = null;
 }
 
 // === SOUND EFFECTS ===

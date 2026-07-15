@@ -21,7 +21,7 @@ const hasAttackCards = hero.starterDeck.some(id => getCardById(id)?.type === "at
 
 useEffect(() => {
   const soundEffectsEnabled = profile.settings?.soundEffects !== false;
-  const audio = new Audio("/audio/hero-ambience/adam-eden.wav");
+  const audio = new Audio("/audio/hero-ambience/adam-eden.mp3");
 
   audio.loop = true;
   audio.preload = "auto";

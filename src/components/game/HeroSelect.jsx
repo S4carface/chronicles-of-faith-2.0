@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame } from "@/game/GameContext";
@@ -13,11 +13,83 @@ export default function HeroSelect() {
   const [index, setIndex] = useState(0);
   const dragStartX = useRef(0);
   const dragDelta = useRef(0);
+  const ambienceAudioRef = useRef(null);
+  const ambienceFadeRef = useRef(null);
+const hero = HEROES[index];
+const unlocked = profile.unlockedHeroes.includes(hero.id);
+const hasAttackCards = hero.starterDeck.some(id => getCardById(id)?.type === "attack");
 
-  const hero = HEROES[index];
-  const unlocked = profile.unlockedHeroes.includes(hero.id);
-  const hasAttackCards = hero.starterDeck.some(id => getCardById(id)?.type === "attack");
+useEffect(() => {
+  const soundEffectsEnabled = profile.settings?.soundEffects !== false;
+  const audio = new Audio("/audio/hero-ambience/adam-eden.wav");
 
+  audio.loop = true;
+  audio.preload = "auto";
+  audio.volume = 0;
+
+  ambienceAudioRef.current = audio;
+
+  const stopFade = () => {
+    if (ambienceFadeRef.current) {
+      window.clearInterval(ambienceFadeRef.current);
+      ambienceFadeRef.current = null;
+    }
+  };
+
+  const stopAudio = () => {
+    stopFade();
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
+  const fadeIn = () => {
+    stopFade();
+
+    const targetVolume = 0.18;
+
+    ambienceFadeRef.current = window.setInterval(() => {
+      if (audio.volume >= targetVolume) {
+        audio.volume = targetVolume;
+        stopFade();
+        return;
+      }
+
+      audio.volume = Math.min(targetVolume, audio.volume + 0.02);
+    }, 100);
+  };
+
+  const beginPlayback = async () => {
+    if (hero.id !== "adam" || !soundEffectsEnabled) return;
+
+    try {
+      await audio.play();
+      fadeIn();
+
+      window.removeEventListener("pointerdown", beginPlayback);
+      window.removeEventListener("touchstart", beginPlayback);
+    } catch {
+      // iPhone may require the player's first tap before audio can start.
+    }
+  };
+
+  if (hero.id === "adam" && soundEffectsEnabled) {
+    beginPlayback();
+
+    window.addEventListener("pointerdown", beginPlayback, { once: true });
+    window.addEventListener("touchstart", beginPlayback, { once: true });
+  }
+
+  return () => {
+    window.removeEventListener("pointerdown", beginPlayback);
+    window.removeEventListener("touchstart", beginPlayback);
+
+    stopAudio();
+
+    if (ambienceAudioRef.current === audio) {
+      ambienceAudioRef.current = null;
+    }
+  };
+}, [hero.id, profile.settings?.soundEffects]);
   const goNext = () => {
     Sound.sfx.click();
     setIndex(i => (i + 1) % HEROES.length);
@@ -72,53 +144,6 @@ return (
   will-change: background-position, background-size;
 }
 
-@keyframes noahRainFall {
-  0% {
-    background-position: 0 -160px;
-  }
-
-  100% {
-    background-position: -45px 160px;
-  }
-}
-
-@keyframes noahRainFallNear {
-  0% {
-    background-position: 0 -220px;
-  }
-
-  100% {
-    background-position: -70px 220px;
-  }
-}
-
-.noah-rain-far {
-  background-image: repeating-linear-gradient(
-    112deg,
-    transparent 0,
-    transparent 20px,
-    rgba(210, 230, 255, 0.13) 21px,
-    rgba(210, 230, 255, 0.13) 22px,
-    transparent 23px,
-    transparent 42px
-  );
-  background-size: 180px 180px;
-  animation: noahRainFall 1.2s linear infinite;
-}
-
-.noah-rain-near {
-  background-image: repeating-linear-gradient(
-    112deg,
-    transparent 0,
-    transparent 32px,
-    rgba(225, 238, 255, 0.18) 33px,
-    rgba(225, 238, 255, 0.18) 35px,
-    transparent 36px,
-    transparent 68px
-  );
-  background-size: 240px 240px;
-  animation: noahRainFallNear 0.8s linear infinite;
-}
       `}</style>
 
 <div
@@ -148,22 +173,6 @@ return (
         backgroundRepeat: "no-repeat",
       }}
     />
-  </AnimatePresence>
-    <AnimatePresence>
-    {hero.id === "noah" && (
-      <motion.div
-        key="noah-rain"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.45 }}
-        className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
-        aria-hidden="true"
-      >
-        <div className="noah-rain-far absolute inset-0 opacity-60" />
-        <div className="noah-rain-near absolute inset-0 opacity-45" />
-      </motion.div>
-    )}
   </AnimatePresence>
         {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between mb-4 flex-shrink-0">

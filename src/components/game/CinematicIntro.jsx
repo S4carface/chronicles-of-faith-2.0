@@ -64,12 +64,12 @@ export default function CinematicIntro({ onComplete }) {
 
   const chapterTimer = window.setTimeout(() => {
     setBookCardStage(2);
-  }, 1400);
+  }, 1800);
 
   const finishTimer = window.setTimeout(() => {
     Sound.stopNarration();
     onComplete();
-  }, 2800);
+  }, 3600);
 
   timersRef.current.push(chapterTimer, finishTimer);
 }, [isTransitioning, onComplete]);
@@ -121,7 +121,7 @@ export default function CinematicIntro({ onComplete }) {
       window.setTimeout(() => setStep(1), 500),
       window.setTimeout(() => setStep(2), 1800),
       window.setTimeout(() => setStep(3), 3200),
-      window.setTimeout(() => setStep(4), 5000),
+      window.setTimeout(() => setStep(4), 5600),
       window.setTimeout(() => handleBegin(), 15000)
     );
   }, [
@@ -290,7 +290,7 @@ export default function CinematicIntro({ onComplete }) {
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
           <div className="max-w-2xl text-center">
             <div
-              className={`mb-4 flex justify-center transition-all duration-[2000ms] ${
+              className={`mb-4 flex justify-center transition-all duration-[2600ms] ${
                 step >= 4
                   ? "scale-100 opacity-100"
                   : "scale-50 opacity-0"
@@ -309,7 +309,7 @@ export default function CinematicIntro({ onComplete }) {
             </div>
 
             <h1
-              className={`font-serif tracking-wide text-amber-200 transition-all duration-[2000ms] ${
+              className={`font-serif tracking-wide text-amber-200 transition-all duration-[2600ms] ${
                 step >= 4
                   ? "translate-y-0 opacity-100"
                   : "-translate-y-4 opacity-0"
@@ -323,7 +323,7 @@ export default function CinematicIntro({ onComplete }) {
             </h1>
 
             <p
-              className={`mb-8 mt-1 font-serif italic text-amber-100/45 transition-all duration-[2000ms] ${
+              className={`mb-8 mt-1 font-serif italic text-amber-100/45 transition-all duration-[2600ms] ${
                 step >= 4 ? "opacity-100" : "opacity-0"
               }`}
               style={{
@@ -334,9 +334,11 @@ export default function CinematicIntro({ onComplete }) {
             </p>
 
             <p
-              className={`font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1500ms] ${
-                step >= 1 ? "opacity-100" : "opacity-0"
-              }`}
+className={`font-serif text-amber-100/90 leading-relaxed transition-all duration-[1800ms] ${
+  step >= 1
+    ? "opacity-100"
+    : "opacity-0"
+}`}
               style={{
                 fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
               }}
@@ -415,7 +417,7 @@ export default function CinematicIntro({ onComplete }) {
         : "-translate-y-3 opacity-0"
     }`}
   >
-    <p className="text-xs uppercase tracking-[0.45em] text-amber-300/55">
+    <p className="text-xs uppercase tracking-[0.65em] text-amber-300/55">
       Book I
     </p>
 

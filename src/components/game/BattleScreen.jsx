@@ -1441,7 +1441,7 @@ const selectedCardData =
       </p>
     ) : (
 <div
-  className={`grid w-full grid-cols-4 items-end gap-1.5 px-1 transition-transform duration-300 ease-out ${
+  className={`mx-auto grid w-full max-w-[34rem] grid-cols-4 items-end gap-1.5 px-1 transition-transform duration-300 ease-out ${
     selectedCard !== null
       ? "translate-y-0"
       : "translate-y-10"

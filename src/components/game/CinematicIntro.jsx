@@ -14,6 +14,7 @@ const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();
   const [step, setStep] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showButtons, setShowButtons] = useState(false);
   const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
   const narratedRef = useRef(false);
@@ -93,21 +94,47 @@ timersRef.current.push(setTimeout(() => {
   onComplete();
 }, [onComplete]);
 
-  const handleBegin = useCallback(() => {
-  Sound.sfx.click();
+const handleBegin = useCallback(() => {
+  if (isTransitioning) return;
 
-  audioRef.current?.pause();
-  audioRef.current = null;
+  setIsTransitioning(true);
 
-  musicRef.current?.pause();
-  if (musicRef.current) {
-    musicRef.current.currentTime = 0;
-  }
-  musicRef.current = null;
+  const fadeAudio = window.setInterval(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = Math.max(
+        0,
+        audioRef.current.volume - 0.08
+      );
+    }
 
-  Sound.stopNarration();
-  onComplete();
-}, [onComplete]);
+    if (musicRef.current) {
+      musicRef.current.volume = Math.max(
+        0,
+        musicRef.current.volume - 0.025
+      );
+    }
+  }, 80);
+
+  const finishTimer = window.setTimeout(() => {
+    window.clearInterval(fadeAudio);
+
+    audioRef.current?.pause();
+    audioRef.current = null;
+
+    musicRef.current?.pause();
+
+    if (musicRef.current) {
+      musicRef.current.currentTime = 0;
+    }
+
+    musicRef.current = null;
+
+    Sound.stopNarration();
+    onComplete();
+  }, 1400);
+
+  timersRef.current.push(fadeAudio, finishTimer);
+}, [isTransitioning, onComplete]);
 
   const replayNarration = () => {
   audioRef.current?.pause();
@@ -259,6 +286,29 @@ Sound.stopNarration();
             {VERSE_2} &mdash; {REFERENCE}
           </p>
         )}
+      </div>
+      <div
+        className={`pointer-events-none absolute inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-1000 ${
+          isTransitioning ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div
+          className={`text-center transition-all delay-300 duration-700 ${
+            isTransitioning
+              ? "translate-y-0 opacity-100"
+              : "translate-y-3 opacity-0"
+          }`}
+        >
+          <div className="mx-auto mb-5 h-px w-32 bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
+
+          <p className="font-serif text-xl tracking-[0.16em] text-amber-100 sm:text-2xl">
+            Your Journey Begins
+          </p>
+
+          <p className="mt-3 text-xs uppercase tracking-[0.3em] text-amber-300/50">
+            Entering Genesis
+          </p>
+        </div>
       </div>
     </div>
   );

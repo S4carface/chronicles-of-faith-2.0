@@ -142,7 +142,19 @@ export function drawCards(state, count) {
 }
 
 function drawNextTurnCard(state, skipDraw = 0) {
-  const cardsToDraw = Math.max(0, 1 - (skipDraw || 0));
+  const handSize = state.hand?.length || 0;
+
+  const normalDrawCount = 1;
+  const easyDrawCount = Math.max(0, HAND_LIMIT - handSize);
+
+  const baseDrawCount = state.drawToFull
+    ? easyDrawCount
+    : normalDrawCount;
+
+  const cardsToDraw = Math.max(
+    0,
+    baseDrawCount - (skipDraw || 0)
+  );
 
   return drawCards(state, cardsToDraw);
 }
@@ -448,8 +460,10 @@ export function endPlayerTurn(state) {
     unusedEnemyBlock > 0
       ? `Enemy Block faded — ${unusedEnemyBlock} unused Block removed.`
       : "Enemy has no unused Block.",
-    "Enemy performs one action, then you draw 1 card.",
-  ];
+state.drawToFull
+  ? "Enemy performs one action, then your hand refills up to 4 cards."
+  : "Enemy performs one action, then you draw 1 card.",
+    ];
 
   return {
     ...state,

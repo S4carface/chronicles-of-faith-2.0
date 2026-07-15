@@ -113,13 +113,6 @@ export function GameProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   }, [profile]);
 
-  // Show cinematic intro on first launch
-  useEffect(() => {
-    if (!profile.introSeen) {
-      setShowIntro(true);
-    }
-  }, []);
-
   // Autosave story runs (never daily) — saves on every state change.
   // Victory: keep the last non-terminal save so the player can resume if they
   // reload during the victory screen. The save is cleared by endRun() after the

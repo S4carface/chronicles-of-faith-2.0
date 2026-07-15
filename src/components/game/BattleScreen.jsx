@@ -971,8 +971,18 @@ const selectedCardData =
 <div className="flex-shrink-0 px-3 pb-2 lg:px-6 lg:pt-3">
   <div className="grid grid-cols-[80px_minmax(0,1fr)_128px] items-center gap-2 lg:grid-cols-[160px_minmax(0,1fr)_260px] lg:gap-5">
     {/* Enemy portrait */}
-    <div className="relative flex items-center justify-center">
-      <div
+    <div className="relative flex flex-col items-start justify-center">
+  <div className="mb-1 w-full">
+    <h2 className="font-serif text-[12px] leading-tight text-red-200 lg:text-2xl">
+      {enemy.name}
+    </h2>
+
+    {enemy.isBoss && (
+      <span className="mt-1 inline-block rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[7px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
+        BOSS
+      </span>
+    )}
+  </div>      <div
         className={`transition-transform duration-300 ${
           battleEnd === "victory" ? "animate-bounce" : ""
         } ${
@@ -1034,15 +1044,7 @@ const selectedCardData =
 {/* Enemy name, intent and health */}
 <div className="flex min-w-0 flex-col items-start gap-1">
   <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-    <h2 className="max-w-full font-serif text-[15px] leading-tight text-red-200 lg:text-3xl">
-      {enemy.name}
-    </h2>
 
-    {enemy.isBoss && (
-      <span className="flex-shrink-0 rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
-        BOSS
-      </span>
-    )}
   </div>
 
   {enemy.bossModifier && (

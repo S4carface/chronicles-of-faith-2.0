@@ -389,7 +389,7 @@ export async function playHeroAmbience(
     source.loop = true;
 
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 1.5);
+    gain.gain.linearRampToValueAtTime(1.4, ctx.currentTime + 1.2);
 
     source.connect(gain);
     gain.connect(sfxGain);

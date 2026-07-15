@@ -1,277 +1,465 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Volume2, VolumeX, RotateCcw } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { RotateCcw, Volume2, VolumeX } from "lucide-react";
 import * as Sound from "@/game/soundManager";
 import { useGame } from "@/game/GameContext";
 import { HOME_ART } from "@/data/art";
 
-const VERSE_1 = "In the beginning, God created the heavens and the earth.";
-const VERSE_2 = "And God said, 'Let there be light,' and there was light.";
+const VERSE_1 =
+  "In the beginning, God created the heavens and the earth.";
+const VERSE_2 =
+  "And God said, 'Let there be light,' and there was light.";
 const REFERENCE = "Genesis 1:1-3";
+
 const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 
+const PORTRAIT_POSTER = "/images/intro/intro_poster.PNG";
+const LANDSCAPE_POSTER = "/images/intro/intro-poster-2.0.PNG";
+
 export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();
+
   const [step, setStep] = useState(0);
+  const [videoReady, setVideoReady] = useState(false);
+  const [cinematicStarted, setCinematicStarted] = useState(false);
+  const [needsTap, setNeedsTap] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showButtons, setShowButtons] = useState(false);
-  const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
-  const narratedRef = useRef(false);
-  
-  const narrationTrackRef = useRef(null);
-  const timersRef = useRef([]);
-  const musicTrackRef = useRef(null);
-
-  useEffect(() => {
-Sound.stopMusic();
-
-const musicTimer = window.setTimeout(async () => {
-  musicTrackRef.current = await Sound.playCinematicTrack(
-    INTRO_MUSIC,
-    {
-      volume: 0.12,
-      loop: false,
-    }
+  const [narrationOn, setNarrationOn] = useState(
+    profile.settings.narration !== false
   );
-}, 500);
 
-timersRef.current.push(musicTimer);
+  const videoRef = useRef(null);
+  const narrationTrackRef = useRef(null);
+  const musicTrackRef = useRef(null);
+  const timersRef = useRef([]);
+  const cinematicStartedRef = useRef(false);
 
-if (narrationOn && !narratedRef.current) {
-  narratedRef.current = true;
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach((id) => {
+      window.clearTimeout(id);
+      window.clearInterval(id);
+    });
 
-  const narrationTimer = window.setTimeout(async () => {
-    narrationTrackRef.current = await Sound.playCinematicTrack(
-      INTRO_AUDIO,
+    timersRef.current = [];
+  }, []);
+
+  const handleBegin = useCallback(() => {
+    if (isTransitioning) return;
+
+    setIsTransitioning(true);
+    Sound.stopCinematicTracks(1.2);
+
+    narrationTrackRef.current = null;
+    musicTrackRef.current = null;
+
+    const finishTimer = window.setTimeout(() => {
+      Sound.stopNarration();
+      onComplete();
+    }, 1400);
+
+    timersRef.current.push(finishTimer);
+  }, [isTransitioning, onComplete]);
+
+  const startCinematic = useCallback(async () => {
+    if (cinematicStartedRef.current) return;
+
+    const video = videoRef.current;
+
+    if (!video || videoFailed) {
+      setNeedsTap(true);
+      return;
+    }
+
+    try {
+      await video.play();
+    } catch (error) {
+      console.warn("Genesis video requires player interaction.", error);
+      setNeedsTap(true);
+      return;
+    }
+
+    cinematicStartedRef.current = true;
+    setCinematicStarted(true);
+    setNeedsTap(false);
+
+    Sound.stopMusic();
+
+    musicTrackRef.current = await Sound.playCinematicTrack(
+      INTRO_MUSIC,
       {
-        volume: (profile.settings.narrationVolume ?? 50) / 100,
+        volume: 0.12,
         loop: false,
       }
     );
-  }, 600);
 
-  timersRef.current.push(narrationTimer);
-}
-
-    timersRef.current.push(setTimeout(() => setStep(1), 500));
-timersRef.current.push(setTimeout(() => setStep(2), 1800));
-timersRef.current.push(setTimeout(() => setStep(3), 3200));
-timersRef.current.push(setTimeout(() => {
-  setStep(4);
-}, 5000));
-
-timersRef.current.push(setTimeout(() => {
-  handleBegin();
-}, 15000));
-return () => {
-  timersRef.current.forEach((id) => {
-    window.clearTimeout(id);
-    window.clearInterval(id);
-  });
-
-  Sound.stopCinematicTracks(0);
-
-  narrationTrackRef.current = null;
-  musicTrackRef.current = null;
-
-  Sound.stopNarration();
-};
-      }, []);
-
-const handleSkip = useCallback(() => {
-  timersRef.current.forEach((id) => {
-    window.clearTimeout(id);
-    window.clearInterval(id);
-  });
-
-  Sound.stopCinematicTracks(0);
-
-  narrationTrackRef.current = null;
-  musicTrackRef.current = null;
-
-  Sound.stopNarration();
-  onComplete();
-}, [onComplete]);
-
-const handleBegin = useCallback(() => {
-  if (isTransitioning) return;
-
-  setIsTransitioning(true);
-
-  Sound.stopCinematicTracks(1.2);
-
-  narrationTrackRef.current = null;
-  musicTrackRef.current = null;
-
-  const finishTimer = window.setTimeout(() => {
-    Sound.stopNarration();
-    onComplete();
-  }, 1400);
-
-  timersRef.current.push(finishTimer);
-}, [isTransitioning, onComplete]);
-
-const replayNarration = async () => {
-  if (narrationTrackRef.current?.source) {
-    try {
-      narrationTrackRef.current.source.stop();
-    } catch (error) {}
-  }
-
-  narrationTrackRef.current = await Sound.playCinematicTrack(
-    INTRO_AUDIO,
-    {
-      volume: (profile.settings.narrationVolume ?? 50) / 100,
-      loop: false,
+    if (narrationOn) {
+      narrationTrackRef.current = await Sound.playCinematicTrack(
+        INTRO_AUDIO,
+        {
+          volume:
+            (profile.settings.narrationVolume ?? 50) / 100,
+          loop: false,
+        }
+      );
     }
-  );
-};
+
+    timersRef.current.push(
+      window.setTimeout(() => setStep(1), 500),
+      window.setTimeout(() => setStep(2), 1800),
+      window.setTimeout(() => setStep(3), 3200),
+      window.setTimeout(() => setStep(4), 5000),
+      window.setTimeout(() => handleBegin(), 15000)
+    );
+  }, [
+    handleBegin,
+    narrationOn,
+    profile.settings.narrationVolume,
+    videoFailed,
+  ]);
+
+  useEffect(() => {
+    Sound.stopMusic();
+
+    const loadingTimeout = window.setTimeout(() => {
+      if (!cinematicStartedRef.current) {
+        setNeedsTap(true);
+      }
+    }, 7000);
+
+    timersRef.current.push(loadingTimeout);
+
+    return () => {
+      clearTimers();
+
+      videoRef.current?.pause();
+
+      Sound.stopCinematicTracks(0);
+      Sound.stopNarration();
+
+      narrationTrackRef.current = null;
+      musicTrackRef.current = null;
+    };
+  }, [clearTimers]);
+
+  useEffect(() => {
+    if (videoReady && !cinematicStartedRef.current) {
+      startCinematic();
+    }
+  }, [videoReady, startCinematic]);
+
+  const handleSkip = useCallback(() => {
+    clearTimers();
+
+    videoRef.current?.pause();
+
+    Sound.stopCinematicTracks(0);
+    Sound.stopNarration();
+
+    narrationTrackRef.current = null;
+    musicTrackRef.current = null;
+
+    onComplete();
+  }, [clearTimers, onComplete]);
+
+  const replayNarration = async () => {
+    if (narrationTrackRef.current?.source) {
+      try {
+        narrationTrackRef.current.source.stop();
+      } catch (error) {}
+    }
+
+    narrationTrackRef.current = await Sound.playCinematicTrack(
+      INTRO_AUDIO,
+      {
+        volume:
+          (profile.settings.narrationVolume ?? 50) / 100,
+        loop: false,
+      }
+    );
+  };
 
   const toggleNarration = () => {
     if (narrationOn) {
-if (narrationTrackRef.current?.source) {
-  try {
-    narrationTrackRef.current.source.stop();
-  } catch (error) {}
-}
+      if (narrationTrackRef.current?.source) {
+        try {
+          narrationTrackRef.current.source.stop();
+        } catch (error) {}
+      }
 
-narrationTrackRef.current = null;
-Sound.stopNarration();
+      narrationTrackRef.current = null;
+      Sound.stopNarration();
       setNarrationOn(false);
-    } else {
-      setNarrationOn(true);
+      return;
+    }
+
+    setNarrationOn(true);
+
+    if (cinematicStartedRef.current) {
       replayNarration();
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[80]" style={{ background: "#000000" }}>
-      <video
-  autoPlay
-  muted
-  loop      
-  playsInline
-  preload="auto"
-  className="absolute inset-0 w-full h-full object-cover"
->
-  <source src={INTRO_VIDEO} type="video/mp4" />
-</video>
+    <div
+      className="fixed inset-0 z-[80] overflow-hidden bg-black"
+      style={{ background: "#000000" }}
+    >
+      {/* Loading poster */}
+      <picture
+        className={`absolute inset-0 transition-opacity duration-1000 ${
+          cinematicStarted ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <source
+          media="(orientation: landscape)"
+          srcSet={LANDSCAPE_POSTER}
+        />
 
-<div className="absolute inset-0 bg-black/25" />
-      {/* Dawn light overlay */}
+        <img
+          src={PORTRAIT_POSTER}
+          alt="Chronicles of Faith"
+          className="h-full w-full object-cover"
+        />
+      </picture>
+
+      {/* Dark loading readability layer */}
+      <div
+        className={`absolute inset-0 bg-slate-950/35 transition-opacity duration-700 ${
+          cinematicStarted ? "opacity-0" : "opacity-100"
+        }`}
+      />
+
+      {/* Loading content */}
+      {!cinematicStarted && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end px-6 pb-[calc(3rem+env(safe-area-inset-bottom))] text-center">
+          <div className="mb-5 h-10 w-10 animate-spin rounded-full border-2 border-amber-200/20 border-t-amber-300" />
+
+          <p className="font-serif text-lg tracking-[0.12em] text-amber-100">
+            Preparing Your Journey
+          </p>
+
+          <p className="mt-2 text-xs uppercase tracking-[0.25em] text-amber-200/50">
+            Entering Genesis
+          </p>
+
+          {needsTap && (
+            <button
+              onClick={startCinematic}
+              className="mt-6 rounded-xl border border-amber-400/60 bg-slate-950/70 px-7 py-3 font-serif text-amber-100 shadow-lg"
+            >
+              Tap to Begin
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Genesis video */}
+      <video
+        ref={videoRef}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        poster={PORTRAIT_POSTER}
+        onCanPlay={() => setVideoReady(true)}
+        onLoadedData={() => setVideoReady(true)}
+        onError={() => {
+          setVideoFailed(true);
+          setNeedsTap(true);
+        }}
+        className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
+          cinematicStarted ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <source src={INTRO_VIDEO} type="video/mp4" />
+      </video>
+
+      <div
+        className={`absolute inset-0 bg-black/25 transition-opacity duration-1000 ${
+          cinematicStarted ? "opacity-100" : "opacity-0"
+        }`}
+      />
+
+      {/* Dawn light */}
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{
-          background: "radial-gradient(ellipse at center, rgba(26,39,68,0.15) 0%, rgba(10,15,30,0.25) 70%, rgba(0,0,0,0.35) 100%)",
-          opacity: step >= 2 ? 1 : 0,
+          background:
+            "radial-gradient(ellipse at center, rgba(26,39,68,0.15) 0%, rgba(10,15,30,0.25) 70%, rgba(0,0,0,0.35) 100%)",
+          opacity: cinematicStarted && step >= 2 ? 1 : 0,
         }}
       />
+
       {/* Golden glow */}
       <div
         className="absolute inset-0 transition-opacity duration-[3000ms] ease-in-out"
         style={{
-          background: "radial-gradient(circle at center, rgba(201,168,76,0.08) 0%, transparent 50%)",
-          opacity: step >= 2 ? 1 : 0,
+          background:
+            "radial-gradient(circle at center, rgba(201,168,76,0.08) 0%, transparent 50%)",
+          opacity: cinematicStarted && step >= 2 ? 1 : 0,
         }}
       />
 
-      {/* Skip button during animation */}
-      {step < 4 && (
+      {cinematicStarted && step < 4 && (
         <button
           onClick={handleSkip}
-          className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 text-amber-100/30 hover:text-amber-100/70 transition text-sm z-20"
+          className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top))] z-20 text-sm text-amber-100/40 transition hover:text-amber-100/70"
         >
           Skip →
         </button>
       )}
 
-      {/* Narration controls */}
-      <div className="absolute top-[calc(1rem+env(safe-area-inset-top))] left-4 flex gap-2 z-20">
-        <button
-          onClick={(e) => { e.stopPropagation(); toggleNarration(); }}
-          className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
-        >
-          {narrationOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-        </button>
-        {narrationOn && (
+      {cinematicStarted && (
+        <div className="absolute left-4 top-[calc(1rem+env(safe-area-inset-top))] z-20 flex gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); replayNarration(); }}
-            className="w-9 h-9 rounded-full border border-amber-500/30 bg-slate-900/60 flex items-center justify-center text-amber-200 hover:bg-amber-500/20 transition"
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleNarration();
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-500/30 bg-slate-900/60 text-amber-200 transition hover:bg-amber-500/20"
+            aria-label={
+              narrationOn
+                ? "Turn narration off"
+                : "Turn narration on"
+            }
           >
-            <RotateCcw className="w-4 h-4" />
+            {narrationOn ? (
+              <Volume2 className="h-4 w-4" />
+            ) : (
+              <VolumeX className="h-4 w-4" />
+            )}
           </button>
-        )}
-      </div>
 
-      {/* Main content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <div className="max-w-2xl text-center">
-          {/* Logo */}
-          <div className={`flex justify-center mb-4 transition-all duration-[2000ms] ${step >= 4 ? "opacity-100 scale-100" : "opacity-0 scale-50"}`}>
-            <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 shadow-xl shadow-amber-400/30" style={{ background: "#0F1A30" }}>
-              <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait" />
-            </div>
-          </div>
-
-          {/* Title */}
-          <h1
-            className={`font-serif text-amber-200 tracking-wide transition-all duration-[2000ms] ${step >= 4 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-            style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}
-          >
-            Chronicles of Faith
-          </h1>
-          <p
-            className={`font-serif italic text-amber-100/45 mt-1 mb-8 transition-all duration-[2000ms] ${step >= 4 ? "opacity-100" : "opacity-0"}`}
-            style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)" }}
-          >
-            A Biblical Roguelike Journey
-          </p>
-
-          {/* Verse 1 (caption) */}
-          <p
-            className={`font-serif text-amber-100/90 leading-relaxed transition-opacity duration-[1500ms] ${step >= 1 ? "opacity-100" : "opacity-0"}`}
-            style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
-          >
-            &ldquo;{VERSE_1}&rdquo;
-          </p>
-
-          {/* Verse 2 (caption) */}
-          <p
-            className={`font-serif text-amber-100/90 leading-relaxed mt-4 transition-opacity duration-[1500ms] ${step >= 3 ? "opacity-100" : "opacity-0"}`}
-            style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
-          >
-            {VERSE_2}
-          </p>
-
-          {/* Reference */}
-          <p
-            className={`font-serif text-amber-300/60 italic mt-4 transition-opacity duration-[1500ms] ${step >= 3 ? "opacity-100" : "opacity-0"}`}
-            style={{ fontSize: "clamp(0.8rem, 1.5vw, 1rem)" }}
-          >
-            &mdash; {REFERENCE}
-          </p>
-{step >= 4 && (
-  <p className="mt-10 animate-fade-in font-serif text-sm italic text-amber-100/45">
-    Your journey begins...
-  </p>
-)}
+          {narrationOn && (
+            <button
+              onClick={(event) => {
+                event.stopPropagation();
+                replayNarration();
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-amber-500/30 bg-slate-900/60 text-amber-200 transition hover:bg-amber-500/20"
+              aria-label="Replay narration"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Bottom caption bar (subtitle for narration) */}
-      <div className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-0 right-0 px-6 text-center z-10 pointer-events-none">
-        {step >= 1 && step < 3 && (
-          <p className="text-amber-100/25 text-xs font-serif italic">
-            {VERSE_1}
-          </p>
-        )}
-        {step >= 3 && !showButtons && (
-          <p className="text-amber-100/25 text-xs font-serif italic">
-            {VERSE_2} &mdash; {REFERENCE}
-          </p>
-        )}
-      </div>
+      {/* Main cinematic content */}
+      {cinematicStarted && (
+        <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
+          <div className="max-w-2xl text-center">
+            <div
+              className={`mb-4 flex justify-center transition-all duration-[2000ms] ${
+                step >= 4
+                  ? "scale-100 opacity-100"
+                  : "scale-50 opacity-0"
+              }`}
+            >
+              <div
+                className="h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
+                style={{ background: "#0F1A30" }}
+              >
+                <img
+                  src={HOME_ART.cross}
+                  alt="Chronicles of Faith"
+                  className="art-portrait"
+                />
+              </div>
+            </div>
+
+            <h1
+              className={`font-serif tracking-wide text-amber-200 transition-all duration-[2000ms] ${
+                step >= 4
+                  ? "translate-y-0 opacity-100"
+                  : "-translate-y-4 opacity-0"
+              }`}
+              style={{
+                fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
+                textShadow: "0 0 30px rgba(201,168,76,0.3)",
+              }}
+            >
+              Chronicles of Faith
+            </h1>
+
+            <p
+              className={`mb-8 mt-1 font-serif italic text-amber-100/45 transition-all duration-[2000ms] ${
+                step >= 4 ? "opacity-100" : "opacity-0"
+              }`}
+              style={{
+                fontSize: "clamp(0.7rem, 1.5vw, 1rem)",
+              }}
+            >
+              A Biblical Roguelike Journey
+            </p>
+
+            <p
+              className={`font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1500ms] ${
+                step >= 1 ? "opacity-100" : "opacity-0"
+              }`}
+              style={{
+                fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
+              }}
+            >
+              &ldquo;{VERSE_1}&rdquo;
+            </p>
+
+            <p
+              className={`mt-4 font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1500ms] ${
+                step >= 3 ? "opacity-100" : "opacity-0"
+              }`}
+              style={{
+                fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
+              }}
+            >
+              {VERSE_2}
+            </p>
+
+            <p
+              className={`mt-4 font-serif italic text-amber-300/60 transition-opacity duration-[1500ms] ${
+                step >= 3 ? "opacity-100" : "opacity-0"
+              }`}
+              style={{
+                fontSize: "clamp(0.8rem, 1.5vw, 1rem)",
+              }}
+            >
+              &mdash; {REFERENCE}
+            </p>
+
+            {step >= 4 && (
+              <p className="mt-10 animate-fade-in font-serif text-sm italic text-amber-100/45">
+                Your journey begins...
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom subtitle */}
+      {cinematicStarted && (
+        <div className="pointer-events-none absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-10 px-6 text-center">
+          {step >= 1 && step < 3 && (
+            <p className="font-serif text-xs italic text-amber-100/25">
+              {VERSE_1}
+            </p>
+          )}
+
+          {step >= 3 && step < 4 && (
+            <p className="font-serif text-xs italic text-amber-100/25">
+              {VERSE_2} &mdash; {REFERENCE}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Transition into tutorial */}
       <div
         className={`pointer-events-none absolute inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-1000 ${
           isTransitioning ? "opacity-100" : "opacity-0"

@@ -47,15 +47,42 @@ export default function HeroSelect() {
     }
   };
 
-  return (
-<div
-  className="h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6"
-  style={{
-    background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
-    touchAction: "pan-x",
-    overscrollBehavior: "none",
-  }}
->
+return (
+    <>
+      <style>{`
+        @keyframes heroBackgroundDrift {
+          0% {
+            background-position: 47% center;
+          }
+
+          50% {
+            background-position: 53% center;
+          }
+
+          100% {
+            background-position: 47% center;
+          }
+        }
+
+        .hero-background-drift {
+          animation: heroBackgroundDrift 16s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div
+        className="hero-background-drift h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6"
+        style={{
+          backgroundImage:
+            hero.id === "adam"
+              ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-eden.png')"
+              : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          touchAction: "pan-x",
+          overscrollBehavior: "none",
+        }}
+      >
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">
@@ -177,5 +204,6 @@ export default function HeroSelect() {
         </button>
       </div>
     </div>
+    </>
   );
 }

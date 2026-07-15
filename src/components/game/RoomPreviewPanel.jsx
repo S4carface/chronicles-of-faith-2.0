@@ -6,14 +6,16 @@ import { cn } from "@/utils";
 export default function RoomPreviewPanel({
   node,
   recommendation,
+  difficulty,
   onEnter,
   onCancel,
 }) {
-  if (!node) return null;
+    if (!node) return null;
 
   const info = ROOM_INFO[node.type] || ROOM_INFO.mystery;
   const artUrl = getNodeArt(node);
-  const isBoss = node.type === "boss";
+  const isBoss = node.type === "boss"; 
+  const isEasyBoss =   isBoss && String(difficulty || "easy").toLowerCase() === "easy";
 
   return (
     <div
@@ -110,9 +112,11 @@ export default function RoomPreviewPanel({
       Your current HP will carry into the final battle.
     </p>
 
-    <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
-      Easy mode offers one preparation choice before the fight.
-    </p>
+{isEasyBoss && (
+  <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
+    Easy mode offers one preparation choice before the fight.
+  </p>
+)}
   </div>
 )}
         </div>
@@ -128,7 +132,7 @@ export default function RoomPreviewPanel({
                 : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
             )}
           >
-            {isBoss ? "Prepare for Boss →" : "Enter Room →"}
+            {isEasyBoss   ? "Prepare for Boss →"   : isBoss     ? "Enter Boss →"     : "Enter Room →"}
           </button>
 
           <button

@@ -27,20 +27,22 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const startAmbience = () => {
-    if (hero.id === "adam") {
-      Sound.playHeroAmbience("/audio/hero-ambience/adam-eden.mp3");
-    } else {
-      Sound.stopHeroAmbience();
-    }
-  };
+const startAmbience = () => {
+  if (hero.id === "adam") {
+    Sound.playHeroAmbience("/audio/hero-ambience/adam-eden.mp3");
+  } else if (hero.id === "noah") {
+    Sound.playHeroAmbience("/audio/hero-ambience/noah-ark.mp3");
+  } else {
+    Sound.stopHeroAmbience();
+  }
+};
 
   startAmbience();
 
   const unsubscribe = Sound.subscribeUnlock((unlocked) => {
-    if (unlocked && hero.id === "adam") {
-      startAmbience();
-    }
+if (unlocked && (hero.id === "adam" || hero.id === "noah")) {
+  startAmbience();
+}
   });
 
   return () => {

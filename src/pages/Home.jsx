@@ -26,6 +26,7 @@ export default function Home() {
   resumeStoryRun,
   storySaveError,
   showIntro,
+  triggerIntroReplay,
   handleIntroComplete,
 } = useGame();
   const navigate = useNavigate();
@@ -62,10 +63,12 @@ const launchFirstTutorialBattle = () => {
 
 const handleFirstIntroComplete = () => {
   handleIntroComplete();
+  launchFirstTutorialBattle();
 };
+
 const handleFirstTimeBegin = () => {
   Sound.sfx.click();
-  launchFirstTutorialBattle();
+  triggerIntroReplay();
 };
 const handleBeginRun = () => {
   Sound.sfx.click();

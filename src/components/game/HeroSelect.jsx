@@ -73,24 +73,36 @@ return (
 }
       `}</style>
 
-      <div
-        className="hero-background-drift h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6"
-        style={{
-backgroundImage:
-  hero.id === "adam"
-    ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-ede.PNG')"
-    : hero.id === "noah"
-      ? "linear-gradient(rgba(8,16,31,0.62), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/noah-ark.PNG')"
-      : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
-          backgroundSize: "auto 106%",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          touchAction: "pan-x",
-          overscrollBehavior: "none",
-        }}
-      >
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+<div
+  className="relative isolate h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6 bg-[#0A0F1E]"
+  style={{
+    touchAction: "pan-x",
+    overscrollBehavior: "none",
+  }}
+>
+  <AnimatePresence mode="sync">
+    <motion.div
+      key={hero.id}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.45, ease: "easeInOut" }}
+      className="hero-background-drift pointer-events-none absolute inset-0 z-0"
+      style={{
+        backgroundImage:
+          hero.id === "adam"
+            ? "linear-gradient(rgba(8,16,31,0.62), rgba(8,16,31,0.72)), url('/images/hero-backgrounds/adam-ede.PNG')"
+            : hero.id === "noah"
+              ? "linear-gradient(rgba(8,16,31,0.56), rgba(8,16,31,0.72)), url('/images/hero-backgrounds/noah-ark.PNG')"
+              : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
+        backgroundSize: "auto 106%",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    />
+  </AnimatePresence>
+        {/* Top bar */}
+      <div className="relative z-10 flex items-center justify-between mb-4 flex-shrink-0">
         <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">
           ← Menu
         </button>
@@ -103,7 +115,7 @@ backgroundImage:
 
       {/* Carousel */}
 <div
-  className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"
+  className="relative z-10 flex-1 min-h-0 flex items-center justify-center overflow-hidden"
   style={{
     touchAction: "pan-x",
     overscrollBehavior: "none",
@@ -184,7 +196,7 @@ backgroundImage:
       </div>
 
       {/* Tab indicators */}
-      <div className="flex items-center justify-center gap-2 mb-4 flex-shrink-0">
+      <div className="relative z-10 flex items-center justify-center gap-2 mb-4 flex-shrink-0">
         {HEROES.map((h, i) => (
           <button
             key={h.id}
@@ -195,7 +207,7 @@ backgroundImage:
       </div>
 
       {/* Bottom action */}
-      <div className="flex-shrink-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+      <div className="relative z-10 flex-shrink-0 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
         {unlocked && !hasAttackCards && (
           <div className="mb-3 px-4 py-2 rounded-lg border border-red-400/40 bg-red-900/20 text-red-200 text-sm text-center">
             ⚠️ This hero's deck has no attack cards!

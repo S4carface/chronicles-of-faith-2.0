@@ -76,10 +76,12 @@ return (
       <div
         className="hero-background-drift h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6"
         style={{
-          backgroundImage:
-            hero.id === "adam"
-              ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-ede.PNG')"
-              : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
+backgroundImage:
+  hero.id === "adam"
+    ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-ede.PNG')"
+    : hero.id === "noah"
+      ? "linear-gradient(rgba(8,16,31,0.62), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/noah-ark.PNG')"
+      : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
           backgroundSize: "auto 106%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

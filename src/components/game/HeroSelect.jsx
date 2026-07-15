@@ -50,23 +50,27 @@ export default function HeroSelect() {
 return (
     <>
       <style>{`
-        @keyframes heroBackgroundDrift {
-          0% {
-            background-position: 47% center;
-          }
+@keyframes heroBackgroundDrift {
+  0% {
+    background-position: 43% center;
+    background-size: auto 106%;
+  }
 
-          50% {
-            background-position: 53% center;
-          }
+  50% {
+    background-position: 57% center;
+    background-size: auto 112%;
+  }
 
-          100% {
-            background-position: 47% center;
-          }
-        }
+  100% {
+    background-position: 43% center;
+    background-size: auto 106%;
+  }
+}
 
-        .hero-background-drift {
-          animation: heroBackgroundDrift 16s ease-in-out infinite;
-        }
+.hero-background-drift {
+  animation: heroBackgroundDrift 18s ease-in-out infinite;
+  will-change: background-position, background-size;
+}
       `}</style>
 
       <div
@@ -76,7 +80,7 @@ return (
             hero.id === "adam"
               ? "linear-gradient(rgba(8,16,31,0.68), rgba(8,16,31,0.78)), url('/images/hero-backgrounds/adam-ede.PNG')"
               : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
-          backgroundSize: "cover",
+          backgroundSize: "auto 106%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           touchAction: "pan-x",

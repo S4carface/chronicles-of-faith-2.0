@@ -67,7 +67,7 @@ const handleFirstIntroComplete = () => {
 };
 
 const handleFirstTimeBegin = () => {
-  Sound.sfx.click();
+  Sound.sfx.divine();
   triggerIntroReplay();
 };
 const handleBeginRun = () => {

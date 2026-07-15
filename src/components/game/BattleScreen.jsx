@@ -973,7 +973,7 @@ const selectedCardData =
     {/* Enemy portrait */}
     <div className="relative flex flex-col items-start justify-center">
   <div className="mb-1 w-full">
-    <h2 className="font-serif text-[12px] leading-tight text-red-200 lg:text-2xl">
+    <h2 className="font-serif text-[13px] leading-none text-red-200 whitespace-nowrap lg:text-2xl">
       {enemy.name}
     </h2>
 
@@ -997,7 +997,7 @@ const selectedCardData =
       >
         {enemyArt ? (
           <div
-            className="relative h-20 w-20 overflow-hidden rounded-lg lg:h-40 lg:w-40"
+            className="relative h-24 w-24 overflow-hidden rounded-lg lg:h-44 lg:w-44"
             style={{
               background: "#0A0F1E",
               border: "2px solid rgba(201,168,76,0.45)",
@@ -1055,7 +1055,7 @@ const selectedCardData =
 
   {/* Enemy’s single next action */}
   {battleState.enemyHand?.length > 0 && !battleEnd && (
-    <div className="relative mt-1 max-w-full">
+    <div className="relative mt-0.5 max-w-full ml-2">
       {battleState.enemyHand.slice(0, 1).map((action, i) => {
         const actionType = getActionType(action);
         const intentInfo = INTENT_TYPE_MAP[actionType];
@@ -1121,7 +1121,7 @@ const selectedCardData =
   )}
 
   {/* Enemy HP */}
-  <div className="mt-1 w-full">
+  <div className="mt-1 w-[88%]">
     <div className="h-3 w-full overflow-hidden rounded-full border border-red-900/50 bg-slate-900 lg:h-4">
       <div
         className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"

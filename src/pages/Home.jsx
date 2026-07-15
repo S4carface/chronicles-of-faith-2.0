@@ -219,9 +219,65 @@ const handleNameSaved = (name) => {
           />
         ))}
 
-        <main className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+       <style>{`
+  @keyframes firstScreenLogoBreathe {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+      box-shadow: 0 0 24px rgba(201,168,76,0.18);
+    }
+
+    50% {
+      transform: translateY(-4px) scale(1.025);
+      box-shadow: 0 0 42px rgba(201,168,76,0.34);
+    }
+  }
+
+  @keyframes firstScreenButtonBreathe {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 20px rgba(201,168,76,0.16);
+    }
+
+    50% {
+      transform: scale(1.018);
+      box-shadow: 0 0 34px rgba(201,168,76,0.32);
+    }
+  }
+
+  @keyframes firstScreenShimmer {
+    0% {
+      transform: translateX(-180%) skewX(-18deg);
+    }
+
+    55%, 100% {
+      transform: translateX(360%) skewX(-18deg);
+    }
+  }
+
+  .first-screen-logo {
+    animation: firstScreenLogoBreathe 6s ease-in-out infinite;
+  }
+
+  .first-screen-button {
+    animation: firstScreenButtonBreathe 5s ease-in-out infinite;
+  }
+
+  .first-screen-button-shimmer {
+    animation: firstScreenShimmer 6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .first-screen-logo,
+    .first-screen-button,
+    .first-screen-button-shimmer {
+      animation: none;
+    }
+  }
+`}</style>
+
+<main className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
           <div
-            className="mb-5 h-24 w-24 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-lg shadow-amber-400/20"
+            className="first-screen-logo mb-5 h-24 w-24 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-lg shadow-amber-400/20"
             style={{ background: "#0F1A30" }}
           >
             <img
@@ -240,32 +296,47 @@ const handleNameSaved = (name) => {
             Chronicles of Faith
           </h1>
 
-          <p className="mt-3 font-serif text-sm italic tracking-wide text-amber-100/60 sm:text-base">
-            A Bible-inspired roguelike card game
-          </p>
+<div className="mt-4 space-y-1">
+  <p className="font-serif text-base tracking-[0.08em] text-amber-100/80 sm:text-lg">
+    Strategy. Scripture. Adventure.
+  </p>
+
+  <p className="text-xs text-amber-100/45 sm:text-sm">
+    Build your deck and journey through the Bible.
+  </p>
+</div>
 
           <div className="my-7 h-px w-32 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
 
-          <button
-            type="button"
-            onClick={handleFirstTimeBegin}
-            className="w-full rounded-xl border-2 border-amber-400/70 px-8 py-4 font-serif text-xl font-bold text-amber-100 shadow-lg shadow-amber-500/20 transition active:scale-[0.98]"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(180,140,40,0.32) 0%, rgba(120,90,20,0.24) 100%)",
-            }}
-          >
-            <span className="flex items-center justify-center gap-3">
-              <Swords className="h-6 w-6" />
-              Begin Journey
-            </span>
-          </button>
+<button
+  type="button"
+  onClick={handleFirstTimeBegin}
+  className="first-screen-button relative w-full overflow-hidden rounded-xl border-2 border-amber-400/70 px-8 py-4 font-serif text-xl font-bold text-amber-100 transition active:scale-[0.98]"
+  style={{
+    background:
+      "linear-gradient(135deg, rgba(180,140,40,0.34) 0%, rgba(120,90,20,0.26) 100%)",
+  }}
+>
+  <span
+    aria-hidden="true"
+    className="first-screen-button-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent"
+  />
 
-          <p className="mt-6 max-w-xs font-serif text-xs italic leading-relaxed text-amber-100/40">
-            “In the beginning, God created the heavens and the earth.”
-            <br />
-            Genesis 1:1
-          </p>
+  <span className="relative flex items-center justify-center gap-3">
+    <Swords className="h-6 w-6" />
+    Begin Journey
+  </span>
+</button>
+
+          <div className="mt-7 text-center">
+  <p className="font-serif text-sm tracking-wide text-amber-100/55">
+    Your adventure begins with Creation.
+  </p>
+
+  <p className="mt-1 text-[0.68rem] uppercase tracking-[0.22em] text-amber-300/35">
+    Book I · Genesis
+  </p>
+</div>
         </main>
 
         {showIntro && (

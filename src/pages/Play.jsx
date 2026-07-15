@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useGame } from "@/game/GameContext";
 import MapView from "@/components/game/MapView";
 import BattleScreen from "@/components/game/BattleScreen";
+import BossPreparation from "@/components/game/BossPreparation";
 import TreasureRoom from "@/components/game/TreasureRoom";
 import DivineIntervention from "@/components/game/DivineIntervention";
 import StoryChoiceRoom from "@/components/game/StoryChoiceRoom";
@@ -55,11 +56,15 @@ export default function Play() {
     );
   }
 
-  // Battle
-  if (run.phase === "battle") {
-    return <BattleScreen />;
-  }
+// Boss preparation
+if (run.phase === "bossPrep") {
+  return <BossPreparation />;
+}
 
+// Battle
+if (run.phase === "battle") {
+  return <BattleScreen />;
+}
   // Treasure
   if (run.phase === "treasure") {
     return <TreasureRoom />;

@@ -186,15 +186,15 @@ export default function GuidedBattleTutorial({
             <ChevronRight className="h-3 w-3" />
           </button>
         )}
-      </div>
 
-      <button
-        type="button"
-        onClick={handleSkip}
-        className="mt-1.5 w-full text-center text-[9px] text-amber-100/30 transition hover:text-amber-100/50"
-      >
-        Skip Tutorial
-      </button>
+        <button
+          type="button"
+          onClick={handleSkip}
+          className="mt-3 w-full border-t border-amber-400/15 pt-2 text-center text-[9px] text-amber-100/40 transition hover:text-amber-100/70"
+        >
+          Skip Tutorial
+        </button>
+      </div>
     </div>
   );
 }

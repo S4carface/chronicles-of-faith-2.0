@@ -394,7 +394,7 @@ if (!heroAmbienceBuffers.has(url)) {
     source.loop = true;
 
     gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(1.4, ctx.currentTime + 1.2);
+    gain.gain.linearRampToValueAtTime(2.0, ctx.currentTime + 1.0);
 
     source.connect(gain);
     gain.connect(sfxGain);

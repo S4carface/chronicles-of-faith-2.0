@@ -122,7 +122,7 @@ export default function CinematicIntro({ onComplete }) {
       window.setTimeout(() => setStep(2), 1800),
       window.setTimeout(() => setStep(3), 3200),
       window.setTimeout(() => setStep(4), 5600),
-      window.setTimeout(() => handleBegin(), 15000)
+      window.setTimeout(() => handleBegin(), 18000)
     );
   }, [
     handleBegin,
@@ -175,8 +175,31 @@ export default function CinematicIntro({ onComplete }) {
     onComplete();
   }, [clearTimers, onComplete]);
 
-  return (
-    <div
+return (
+    <>
+      <style>{`
+        @keyframes introLogoGlow {
+          0%, 100% {
+            filter: drop-shadow(0 0 8px rgba(201,168,76,0.18));
+          }
+
+          50% {
+            filter: drop-shadow(0 0 22px rgba(201,168,76,0.45));
+          }
+        }
+
+        .intro-logo {
+          animation: introLogoGlow 5s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .intro-logo {
+            animation: none;
+          }
+        }
+      `}</style>
+
+      <div
       className="fixed inset-0 z-[80] overflow-hidden bg-black"
       style={{ background: "#000000" }}
     >
@@ -347,7 +370,7 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
             </p>
 
             <p
-              className={`mt-4 font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1500ms] ${
+              className="intro-logo h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
                 step >= 3 ? "opacity-100" : "opacity-0"
               }`}
               style={{
@@ -358,7 +381,7 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
             </p>
 
             <p
-              className={`mt-4 font-serif italic text-amber-300/60 transition-opacity duration-[1500ms] ${
+              className={`mt-4 font-serif italic text-amber-300/60 transition-opacity duration-[1800ms] ${
                 step >= 3 ? "opacity-100" : "opacity-0"
               }`}
               style={{
@@ -421,7 +444,7 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
       Book I
     </p>
 
-    <p className="mt-3 font-serif text-4xl tracking-[0.18em] text-amber-100 sm:text-5xl">
+    <p className="mt-3 font-serif text-5xl tracking-[0.18em] text-amber-100 sm:text-6xl">
       Genesis
     </p>
   </div>
@@ -445,5 +468,6 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
         </div>
       </div>
     </div>
+    </>
   );
 }

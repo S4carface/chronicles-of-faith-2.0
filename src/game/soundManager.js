@@ -30,7 +30,7 @@ let unlockListeners = new Set();
 
 let heroAmbienceSource = null;
 let heroAmbienceGain = null;
-let heroAmbienceBuffer = null;
+let heroAmbienceBuffers = new Map();
 let heroAmbienceRequestId = 0;
 
 // Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
@@ -363,17 +363,18 @@ export async function playHeroAmbience(
   const requestId = heroAmbienceRequestId;
 
   try {
-    if (!heroAmbienceBuffer) {
-      const response = await fetch(url);
+if (!heroAmbienceBuffers.has(url)) {
+  const response = await fetch(url);
 
-      if (!response.ok) {
-        throw new Error(`Failed to load hero ambience: ${response.status}`);
-      }
+  if (!response.ok) {
+    throw new Error(`Failed to load hero ambience: ${response.status}`);
+  }
 
-      const arrayBuffer = await response.arrayBuffer();
-      heroAmbienceBuffer = await ctx.decodeAudioData(arrayBuffer);
-    }
+  const arrayBuffer = await response.arrayBuffer();
+  const decodedBuffer = await ctx.decodeAudioData(arrayBuffer);
 
+  heroAmbienceBuffers.set(url, decodedBuffer);
+}
     if (
       requestId !== heroAmbienceRequestId ||
       !sfxEnabled ||
@@ -385,7 +386,7 @@ export async function playHeroAmbience(
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
 
-    source.buffer = heroAmbienceBuffer;
+    source.buffer = heroAmbienceBuffers.get(url);
     source.loop = true;
 
     gain.gain.setValueAtTime(0, ctx.currentTime);

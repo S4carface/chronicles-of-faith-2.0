@@ -96,9 +96,25 @@ export default function RoomPreviewPanel({
             {info.description}
           </p>
 
-          <p className="text-xs italic leading-relaxed text-amber-100/50">
-            {info.tip}
-          </p>
+<p className="text-xs italic leading-relaxed text-amber-100/50">
+  {info.tip}
+</p>
+
+{isBoss && (
+  <div className="mt-4 rounded-xl border border-red-400/40 bg-red-950/30 p-3">
+    <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-200">
+      Boss Ahead
+    </p>
+
+    <p className="mt-1 text-sm leading-relaxed text-amber-100/80">
+      Your current HP will carry into the final battle.
+    </p>
+
+    <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
+      Easy mode offers one preparation choice before the fight.
+    </p>
+  </div>
+)}
         </div>
 
         <div className="flex flex-shrink-0 gap-3 border-t border-amber-500/15 bg-[#0F1A30]/95 p-4">
@@ -112,7 +128,7 @@ export default function RoomPreviewPanel({
                 : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
             )}
           >
-            Enter Room →
+            {isBoss ? "Prepare for Boss →" : "Enter Room →"}
           </button>
 
           <button

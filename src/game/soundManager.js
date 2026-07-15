@@ -33,6 +33,11 @@ let heroAmbienceGain = null;
 let heroAmbienceBuffers = new Map();
 let heroAmbienceRequestId = 0;
 
+let cinematicSources = [];
+let cinematicGains = [];
+let cinematicBuffers = new Map();
+let cinematicRequestId = 0;
+
 // Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
 function getCtx() {
   if (!audioCtx) {
@@ -444,6 +449,119 @@ export function stopHeroAmbience() {
 
   heroAmbienceSource = null;
   heroAmbienceGain = null;
+}
+
+export async function playCinematicTrack(
+  url,
+  {
+    volume = 1,
+    loop = false,
+  } = {}
+) {
+  const ctx = getCtx();
+
+  if (!ctx) {
+    return null;
+  }
+
+  if (!ctxIsRunning()) {
+    try {
+      await ctx.resume();
+    } catch (error) {
+      console.warn("[Audio] Cinematic audio could not resume:", error);
+      return null;
+    }
+  }
+
+  const requestId = cinematicRequestId;
+
+  try {
+    if (!cinematicBuffers.has(url)) {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to load cinematic audio: ${response.status}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const decodedBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+      cinematicBuffers.set(url, decodedBuffer);
+    }
+
+    if (requestId !== cinematicRequestId) {
+      return null;
+    }
+
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+
+    source.buffer = cinematicBuffers.get(url);
+    source.loop = loop;
+
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+
+    source.connect(gain);
+    gain.connect(ctx.destination);
+
+    source.start();
+
+    cinematicSources.push(source);
+    cinematicGains.push(gain);
+
+    source.onended = () => {
+      cinematicSources = cinematicSources.filter(
+        currentSource => currentSource !== source
+      );
+
+      cinematicGains = cinematicGains.filter(
+        currentGain => currentGain !== gain
+      );
+    };
+
+    return {
+      source,
+      gain,
+      context: ctx,
+    };
+  } catch (error) {
+    console.warn("[Audio] Cinematic track failed:", error);
+    return null;
+  }
+}
+
+export function stopCinematicTracks(fadeDuration = 0.4) {
+  cinematicRequestId += 1;
+
+  const ctx = audioCtx;
+  const sourcesToStop = [...cinematicSources];
+
+  if (ctx) {
+    cinematicGains.forEach((gain) => {
+      try {
+        gain.gain.cancelScheduledValues(ctx.currentTime);
+        gain.gain.setValueAtTime(
+          Math.max(0.0001, gain.gain.value),
+          ctx.currentTime
+        );
+        gain.gain.linearRampToValueAtTime(
+          0,
+          ctx.currentTime + fadeDuration
+        );
+      } catch (error) {}
+    });
+  }
+
+  window.setTimeout(() => {
+    sourcesToStop.forEach((source) => {
+      try {
+        source.stop();
+      } catch (error) {}
+    });
+  }, Math.ceil(fadeDuration * 1000) + 50);
+
+  cinematicSources = [];
+  cinematicGains = [];
 }
 
 // === SOUND EFFECTS ===

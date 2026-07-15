@@ -56,8 +56,11 @@ timersRef.current.push(setTimeout(() => setStep(2), 1800));
 timersRef.current.push(setTimeout(() => setStep(3), 3200));
 timersRef.current.push(setTimeout(() => {
   setStep(4);
-  setShowButtons(true);
 }, 5000));
+
+timersRef.current.push(setTimeout(() => {
+  handleBegin();
+}, 8500));
         return () => {
   timersRef.current.forEach((id) => clearTimeout(id));
 
@@ -162,7 +165,7 @@ Sound.stopNarration();
       />
 
       {/* Skip button during animation */}
-      {!showButtons && (
+      {step < 4 && (
         <button
           onClick={handleSkip}
           className="absolute top-[calc(1rem+env(safe-area-inset-top))] right-4 text-amber-100/30 hover:text-amber-100/70 transition text-sm z-20"
@@ -236,24 +239,11 @@ Sound.stopNarration();
           >
             &mdash; {REFERENCE}
           </p>
-
-          {/* Buttons */}
-          {showButtons && (
-            <div className="flex flex-col gap-3 mt-10 animate-fade-in">
-              <button
-                onClick={handleBegin}
-                className="px-10 py-3 lg:px-14 lg:py-4 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif text-lg lg:text-2xl hover:bg-amber-600/40 transition"
-              >
-                Begin Journey
-              </button>
-              <button
-                onClick={handleSkip}
-                className="px-6 py-2 text-amber-100/40 hover:text-amber-100/70 transition text-sm"
-              >
-                Skip
-              </button>
-            </div>
-          )}
+{step >= 4 && (
+  <p className="mt-10 animate-fade-in font-serif text-sm italic text-amber-100/45">
+    Your journey begins...
+  </p>
+)}
         </div>
       </div>
 

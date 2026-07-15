@@ -48,7 +48,14 @@ export default function HeroSelect() {
   };
 
   return (
-    <div className="h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
+<div
+  className="h-[100dvh] overflow-hidden flex flex-col p-4 sm:p-6"
+  style={{
+    background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
+    touchAction: "pan-x",
+    overscrollBehavior: "none",
+  }}
+>
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">
@@ -62,9 +69,13 @@ export default function HeroSelect() {
       </div>
 
       {/* Carousel */}
-      <div
-        className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"
-        onTouchStart={onDragStart}
+<div
+  className="flex-1 min-h-0 flex items-center justify-center overflow-hidden"
+  style={{
+    touchAction: "pan-x",
+    overscrollBehavior: "none",
+  }}
+  onTouchStart={onDragStart}
         onTouchEnd={onDragEnd}
         onMouseDown={onDragStart}
         onMouseUp={onDragEnd}

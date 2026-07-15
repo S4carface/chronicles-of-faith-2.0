@@ -1031,126 +1031,123 @@ const selectedCardData =
       )}
     </div>
 
-    {/* Enemy name, intent and health */}
+{/* Enemy name, intent and health */}
 <div className="flex min-w-0 flex-col items-start gap-1">
-  <h2 className="max-w-full font-serif text-[15px] leading-tight text-red-200 lg:text-3xl">
-    {enemy.name}
-  </h2>
+  <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+    <h2 className="max-w-full font-serif text-[15px] leading-tight text-red-200 lg:text-3xl">
+      {enemy.name}
+    </h2>
 
-  {enemy.isBoss && (
-    <span className="rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
-      BOSS
+    {enemy.isBoss && (
+      <span className="flex-shrink-0 rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
+        BOSS
+      </span>
+    )}
+  </div>
+
+  {enemy.bossModifier && (
+    <span className="inline-block max-w-full truncate rounded-full border border-purple-500/30 bg-purple-900/20 px-2 py-0.5 font-serif text-[9px] font-semibold text-purple-300 lg:text-sm">
+      {enemy.bossModifier.icon} {enemy.bossModifier.name}
     </span>
   )}
-</div>
 
-      {enemy.bossModifier && (
-        <div className="mt-1">
-          <span className="inline-block max-w-full truncate rounded-full border border-purple-500/30 bg-purple-900/20 px-2 py-0.5 font-serif text-[9px] font-semibold text-purple-300 lg:text-sm">
-            {enemy.bossModifier.icon} {enemy.bossModifier.name}
-          </span>
-        </div>
-      )}
+  {/* Enemy’s single next action */}
+  {battleState.enemyHand?.length > 0 && !battleEnd && (
+    <div className="relative mt-1 max-w-full">
+      {battleState.enemyHand.slice(0, 1).map((action, i) => {
+        const actionType = getActionType(action);
+        const intentInfo = INTENT_TYPE_MAP[actionType];
+        const isCurrent = currentIntentIdx === i;
+        const isResolved = currentIntentIdx > i;
+        const amount = hideIntentValues
+          ? null
+          : getIntentAmountText(action, enemy);
 
-      {/* Enemy’s single next action */}
-      {battleState.enemyHand?.length > 0 && !battleEnd && (
-  <div className="relative mt-1">
-
-          {battleState.enemyHand.slice(0, 1).map((action, i) => {
-            const actionType = getActionType(action);
-            const intentInfo = INTENT_TYPE_MAP[actionType];
-            const isCurrent = currentIntentIdx === i;
-            const isResolved = currentIntentIdx > i;
-            const amount = hideIntentValues
-              ? null
-              : getIntentAmountText(action, enemy);
-
-            return (
-              <button
-                key={i}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIntentExplain(action);
-                  Sound.sfx.click();
-                }}
-                disabled={isResolved}
-                className={`relative flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
-                  isCurrent
-                    ? `${intentInfo.border} scale-[1.02] bg-amber-500/20 shadow-md shadow-amber-400/20`
-                    : isResolved
-                      ? "border-slate-700/20 opacity-25"
-                      : `${intentInfo.border} bg-slate-900/40`
-                }`}
-              >
-              
-              {tutorialActive && tutorialStep === 2 && (
-  <TutorialGuidingLight
-  direction="down"
-  size="small"
-  className="-top-12 left-1/2 -translate-x-1/2"
-/>
-)}
-              
-                <span
-                  className="h-4 w-4 flex-shrink-0 overflow-hidden rounded-sm lg:h-6 lg:w-6"
-                  style={{ background: "#0F1A30" }}
-                >
-                  <img
-                    src={intentInfo.art}
-                    alt={intentInfo.label}
-                    className="art-portrait"
-                  />
-                </span>
-
-                <span className="min-w-0">
-                  <span
-                    className={`block truncate text-[9px] font-medium leading-tight lg:text-base ${intentInfo.color}`}
-                  >
-                    {action.name}
-                  </span>
-
-                  {amount && (
-                    <span className="block truncate text-[8px] font-bold leading-tight text-amber-100/55 lg:text-sm">
-                      {amount}
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Enemy HP */}
-      <div className="mt-2">
-        <div className="h-3 w-full overflow-hidden rounded-full border border-red-900/50 bg-slate-900 lg:h-4">
-          <div
-            className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"
-            style={{
-              width: `${
-                (battleState.enemy.currentHp /
-                  battleState.enemy.maxHp) *
-                100
-              }%`,
+        return (
+          <button
+            key={i}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIntentExplain(action);
+              Sound.sfx.click();
             }}
-          />
-        </div>
+            disabled={isResolved}
+            className={`relative flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
+              isCurrent
+                ? `${intentInfo.border} scale-[1.02] bg-amber-500/20 shadow-md shadow-amber-400/20`
+                : isResolved
+                  ? "border-slate-700/20 opacity-25"
+                  : `${intentInfo.border} bg-slate-900/40`
+            }`}
+          >
+            {tutorialActive && tutorialStep === 2 && (
+              <TutorialGuidingLight
+                direction="down"
+                size="small"
+                className="-top-12 left-1/2 -translate-x-1/2"
+              />
+            )}
 
-        <div className="mt-0.5 flex items-center gap-2">
-          <p className="text-[10px] text-red-200 lg:text-lg">
-            {battleState.enemy.currentHp}/
-            {battleState.enemy.maxHp} HP
-          </p>
-
-          {battleState.enemyBlock > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-blue-300 lg:text-lg">
-              <Shield className="h-3 w-3 lg:h-4 lg:w-4" />
-              {battleState.enemyBlock}
+            <span
+              className="h-4 w-4 flex-shrink-0 overflow-hidden rounded-sm lg:h-6 lg:w-6"
+              style={{ background: "#0F1A30" }}
+            >
+              <img
+                src={intentInfo.art}
+                alt={intentInfo.label}
+                className="art-portrait"
+              />
             </span>
-          )}
-        </div>
-      </div>
+
+            <span className="min-w-0">
+              <span
+                className={`block truncate text-[9px] font-medium leading-tight lg:text-base ${intentInfo.color}`}
+              >
+                {action.name}
+              </span>
+
+              {amount && (
+                <span className="block truncate text-[8px] font-bold leading-tight text-amber-100/55 lg:text-sm">
+                  {amount}
+                </span>
+              )}
+            </span>
+          </button>
+        );
+      })}
     </div>
+  )}
+
+  {/* Enemy HP */}
+  <div className="mt-1 w-full">
+    <div className="h-3 w-full overflow-hidden rounded-full border border-red-900/50 bg-slate-900 lg:h-4">
+      <div
+        className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-500"
+        style={{
+          width: `${
+            (battleState.enemy.currentHp /
+              battleState.enemy.maxHp) *
+            100
+          }%`,
+        }}
+      />
+    </div>
+
+    <div className="mt-0.5 flex items-center gap-2">
+      <p className="text-[10px] text-red-200 lg:text-lg">
+        {battleState.enemy.currentHp}/
+        {battleState.enemy.maxHp} HP
+      </p>
+
+      {battleState.enemyBlock > 0 && (
+        <span className="flex items-center gap-0.5 text-[10px] text-blue-300 lg:text-lg">
+          <Shield className="h-3 w-3 lg:h-4 lg:w-4" />
+          {battleState.enemyBlock}
+        </span>
+      )}
+    </div>
+  </div>
+</div>
 
     {/* Battle log on far right */}
     <div className="flex min-w-0 flex-col items-stretch">

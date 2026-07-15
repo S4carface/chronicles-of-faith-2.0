@@ -319,10 +319,10 @@ return (
                   : "scale-50 opacity-0"
               }`}
             >
-              <div
-                className="h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
-                style={{ background: "#0F1A30" }}
-              >
+        <div
+  className="intro-logo h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
+  style={{ background: "#0F1A30" }}
+>
                 <img
                   src={HOME_ART.cross}
                   alt="Chronicles of Faith"
@@ -369,16 +369,16 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
               &ldquo;{VERSE_1}&rdquo;
             </p>
 
-            <p
-              className="intro-logo h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
-                step >= 3 ? "opacity-100" : "opacity-0"
-              }`}
-              style={{
-                fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
-              }}
-            >
-              {VERSE_2}
-            </p>
+<p
+  className={`mt-4 font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1800ms] ${
+    step >= 3 ? "opacity-100" : "opacity-0"
+  }`}
+  style={{
+    fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
+  }}
+>
+  {VERSE_2}
+</p>
 
             <p
               className={`mt-4 font-serif italic text-amber-300/60 transition-opacity duration-[1800ms] ${

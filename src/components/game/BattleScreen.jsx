@@ -1435,8 +1435,8 @@ const selectedCardData =
 <div
   className={`grid w-full grid-cols-4 items-end gap-1.5 px-1 transition-transform duration-300 ease-out ${
     selectedCard !== null
-      ? "translate-y-2"
-      : "translate-y-12"
+      ? "translate-y-0"
+      : "translate-y-10"
   }`}
 >
         {battleState.hand.map((cardOrId, idx) => {

@@ -85,24 +85,21 @@ return (
       <style>{`
 @keyframes heroBackgroundDrift {
   0% {
-    background-position: 43% center;
-    background-size: auto 106%;
+    transform: scale(1.06) translateX(-1.5%);
   }
 
   50% {
-    background-position: 57% center;
-    background-size: auto 112%;
+    transform: scale(1.1) translateX(1.5%);
   }
 
   100% {
-    background-position: 43% center;
-    background-size: auto 106%;
+    transform: scale(1.06) translateX(-1.5%);
   }
 }
 
 .hero-background-drift {
   animation: heroBackgroundDrift 18s ease-in-out infinite;
-  will-change: background-position, background-size;
+  will-change: transform;
 }
 
       `}</style>
@@ -129,7 +126,7 @@ return (
             : hero.id === "noah"
               ? "linear-gradient(rgba(8,16,31,0.56), rgba(8,16,31,0.72)), url('/images/hero-backgrounds/noah-ark.PNG')"
               : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)",
-        backgroundSize: "auto 106%",
+        backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
       }}

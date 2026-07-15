@@ -244,6 +244,8 @@ const state = createBattleState(
   run.hero?.id
 );
 
+state.drawToFull = run.difficulty === "easy";
+
 if (enemy.isBoss && run.bossStartingFaith > 0) {
   state.maxEnergy += run.bossStartingFaith;
   state.energy += run.bossStartingFaith;

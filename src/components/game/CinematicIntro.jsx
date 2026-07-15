@@ -25,7 +25,7 @@ export default function CinematicIntro({ onComplete }) {
   useEffect(() => {
     Sound.stopMusic();
     const music = new Audio(INTRO_MUSIC);
-music.volume = 0.3;
+music.volume = 0.12;
 musicRef.current = music;
 
 const musicTimer = setTimeout(() => {

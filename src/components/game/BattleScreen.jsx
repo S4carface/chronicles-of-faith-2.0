@@ -969,7 +969,7 @@ const selectedCardData =
 
       {/* Battle UI 2.0: enemy left, information center, log right */}
 <div className="flex-shrink-0 px-3 pb-2 lg:px-6 lg:pt-3">
-  <div className="grid grid-cols-[80px_minmax(0,1fr)_128px] items-center gap-2 lg:grid-cols-[160px_minmax(0,1fr)_260px] lg:gap-5">
+  <div className="grid grid-cols-[96px_minmax(0,1fr)_128px] items-center gap-2 lg:grid-cols-[176px_minmax(0,1fr)_260px] lg:gap-5">
     {/* Enemy portrait */}
     <div className="relative flex flex-col items-start justify-center">
   <div className="mb-1 w-full">

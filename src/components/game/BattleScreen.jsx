@@ -234,16 +234,23 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
       }
       return;
     }
-    const state = createBattleState(
-      enemy,
-      run.playerHp,
-      run.maxHp,
-      run.deck,
-      0,
-      run.extraDraw,
-      run.hero?.id
-    );
-    if (run.shieldActive) state.shieldActive = true;
+const state = createBattleState(
+  enemy,
+  run.playerHp,
+  run.maxHp,
+  run.deck,
+  0,
+  run.extraDraw,
+  run.hero?.id
+);
+
+if (enemy.isBoss && run.bossStartingFaith > 0) {
+  state.maxEnergy += run.bossStartingFaith;
+  state.energy += run.bossStartingFaith;
+  state.log.push(
+    `🙏 Prayer grants +${run.bossStartingFaith} starting Faith.`
+  );
+}    if (run.shieldActive) state.shieldActive = true;
     if (run.buffAttack > 0) state.buffAttack = run.buffAttack;
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
     if (run.isDaily) {
@@ -259,7 +266,8 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
       state.deck = ["sling_stone", "faith_shield", "prayer", "sling_stone"];
       state.discard = [];
     }
-    setBattleState(state);
+    setBattleState(state);  
+    if (enemy.isBoss && run.bossStartingFaith > 0) {   updateRun({ bossStartingFaith: 0 }); }
   }, []);
 
   useEffect(() => {

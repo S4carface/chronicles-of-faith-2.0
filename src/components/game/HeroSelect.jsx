@@ -20,6 +20,14 @@ const unlocked = profile.unlockedHeroes.includes(hero.id);
 const hasAttackCards = hero.starterDeck.some(id => getCardById(id)?.type === "attack");
 
 useEffect(() => {
+  Sound.pauseMusicForAmbience();
+
+  return () => {
+    Sound.resumeMusicAfterAmbience("menu");
+  };
+}, []);
+
+useEffect(() => {
   const soundEffectsEnabled = profile.settings?.soundEffects !== false;
   const audio = new Audio("/audio/hero-ambience/adam-eden.mp3");
 

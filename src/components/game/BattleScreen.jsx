@@ -1032,18 +1032,17 @@ const selectedCardData =
     </div>
 
     {/* Enemy name, intent and health */}
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        <h2 className="truncate font-serif text-base leading-tight text-red-200 lg:text-3xl">
-          {enemy.name}
-        </h2>
+<div className="flex min-w-0 flex-col items-start gap-1">
+  <h2 className="max-w-full font-serif text-[15px] leading-tight text-red-200 lg:text-3xl">
+    {enemy.name}
+  </h2>
 
-        {enemy.isBoss && (
-          <span className="flex-shrink-0 rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
-            BOSS
-          </span>
-        )}
-      </div>
+  {enemy.isBoss && (
+    <span className="rounded-full border border-red-500/30 bg-red-900/30 px-1.5 py-0.5 text-[8px] font-bold tracking-widest text-red-400 lg:px-2 lg:text-xs">
+      BOSS
+    </span>
+  )}
+</div>
 
       {enemy.bossModifier && (
         <div className="mt-1">

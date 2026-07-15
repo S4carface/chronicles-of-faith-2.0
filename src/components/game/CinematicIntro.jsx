@@ -18,38 +18,40 @@ export default function CinematicIntro({ onComplete }) {
   const [showButtons, setShowButtons] = useState(false);
   const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
   const narratedRef = useRef(false);
-  const audioRef = useRef(null);
+  
+  const narrationTrackRef = useRef(null);
   const timersRef = useRef([]);
-  const musicRef = useRef(null);
+  const musicTrackRef = useRef(null);
 
   useEffect(() => {
-    Sound.stopMusic();
-    const music = new Audio(INTRO_MUSIC);
-music.volume = 0.12;
-musicRef.current = music;
+Sound.stopMusic();
 
-const musicTimer = setTimeout(() => {
-  music.play().catch(() => {
-    console.warn("Intro music could not autoplay.");
-  });
+const musicTimer = window.setTimeout(async () => {
+  musicTrackRef.current = await Sound.playCinematicTrack(
+    INTRO_MUSIC,
+    {
+      volume: 0.12,
+      loop: false,
+    }
+  );
 }, 500);
 
 timersRef.current.push(musicTimer);
-    
-    if (narrationOn && !narratedRef.current) {
+
+if (narrationOn && !narratedRef.current) {
   narratedRef.current = true;
 
-  const t = setTimeout(() => {
-    const audio = new Audio(INTRO_AUDIO);
-    audio.volume = (profile.settings.narrationVolume ?? 50) / 100;
-    audioRef.current = audio;
-
-    audio.play().catch(() => {
-      console.warn("Intro narration could not autoplay.");
-    });
+  const narrationTimer = window.setTimeout(async () => {
+    narrationTrackRef.current = await Sound.playCinematicTrack(
+      INTRO_AUDIO,
+      {
+        volume: (profile.settings.narrationVolume ?? 50) / 100,
+        loop: false,
+      }
+    );
   }, 600);
 
-  timersRef.current.push(t);
+  timersRef.current.push(narrationTimer);
 }
 
     timersRef.current.push(setTimeout(() => setStep(1), 500));
@@ -62,33 +64,31 @@ timersRef.current.push(setTimeout(() => {
 timersRef.current.push(setTimeout(() => {
   handleBegin();
 }, 15000));
-        return () => {
-  timersRef.current.forEach((id) => clearTimeout(id));
+return () => {
+  timersRef.current.forEach((id) => {
+    window.clearTimeout(id);
+    window.clearInterval(id);
+  });
 
-  audioRef.current?.pause();
-  audioRef.current = null;
+  Sound.stopCinematicTracks(0);
 
-  musicRef.current?.pause();
-  if (musicRef.current) {
-    musicRef.current.currentTime = 0;
-  }
-  musicRef.current = null;
+  narrationTrackRef.current = null;
+  musicTrackRef.current = null;
 
   Sound.stopNarration();
 };
       }, []);
 
-  const handleSkip = useCallback(() => {
-  timersRef.current.forEach((id) => clearTimeout(id));
+const handleSkip = useCallback(() => {
+  timersRef.current.forEach((id) => {
+    window.clearTimeout(id);
+    window.clearInterval(id);
+  });
 
-  audioRef.current?.pause();
-  audioRef.current = null;
+  Sound.stopCinematicTracks(0);
 
-  musicRef.current?.pause();
-  if (musicRef.current) {
-    musicRef.current.currentTime = 0;
-  }
-  musicRef.current = null;
+  narrationTrackRef.current = null;
+  musicTrackRef.current = null;
 
   Sound.stopNarration();
   onComplete();
@@ -99,59 +99,44 @@ const handleBegin = useCallback(() => {
 
   setIsTransitioning(true);
 
-  const fadeAudio = window.setInterval(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = Math.max(
-        0,
-        audioRef.current.volume - 0.08
-      );
-    }
+  Sound.stopCinematicTracks(1.2);
 
-    if (musicRef.current) {
-      musicRef.current.volume = Math.max(
-        0,
-        musicRef.current.volume - 0.025
-      );
-    }
-  }, 80);
+  narrationTrackRef.current = null;
+  musicTrackRef.current = null;
 
   const finishTimer = window.setTimeout(() => {
-    window.clearInterval(fadeAudio);
-
-    audioRef.current?.pause();
-    audioRef.current = null;
-
-    musicRef.current?.pause();
-
-    if (musicRef.current) {
-      musicRef.current.currentTime = 0;
-    }
-
-    musicRef.current = null;
-
     Sound.stopNarration();
     onComplete();
   }, 1400);
 
-  timersRef.current.push(fadeAudio, finishTimer);
+  timersRef.current.push(finishTimer);
 }, [isTransitioning, onComplete]);
 
-  const replayNarration = () => {
-  audioRef.current?.pause();
+const replayNarration = async () => {
+  if (narrationTrackRef.current?.source) {
+    try {
+      narrationTrackRef.current.source.stop();
+    } catch (error) {}
+  }
 
-  const audio = new Audio(INTRO_AUDIO);
-  audio.volume = (profile.settings.narrationVolume ?? 50) / 100;
-  audioRef.current = audio;
-
-  audio.play().catch(() => {
-    console.warn("Intro narration could not play.");
-  });
+  narrationTrackRef.current = await Sound.playCinematicTrack(
+    INTRO_AUDIO,
+    {
+      volume: (profile.settings.narrationVolume ?? 50) / 100,
+      loop: false,
+    }
+  );
 };
 
   const toggleNarration = () => {
     if (narrationOn) {
-      audioRef.current?.pause();
-audioRef.current = null;
+if (narrationTrackRef.current?.source) {
+  try {
+    narrationTrackRef.current.source.stop();
+  } catch (error) {}
+}
+
+narrationTrackRef.current = null;
 Sound.stopNarration();
       setNarrationOn(false);
     } else {

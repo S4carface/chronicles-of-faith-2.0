@@ -13,11 +13,14 @@ export const HEROES = [
       value: 1,
     },
     maxHp: 35,
-    starterDeck: [
-      "sling_stone", "sling_stone", "faith_shield", "faith_shield",
-      "prayer", "prayer", "righteous_strike", "bread_life",
-      "song_praise", "fig_leaf",
-    ],
+starterDeck: [
+  "sling_stone", "sling_stone",
+  "faith_shield", "faith_shield",
+  "prayer", "prayer",
+  "righteous_strike", "righteous_strike",
+  "bread_life",
+  "fig_leaf",
+],
     unlocked: true,
   },
   {

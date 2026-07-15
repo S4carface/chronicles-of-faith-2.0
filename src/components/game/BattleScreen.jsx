@@ -1073,7 +1073,7 @@ const selectedCardData =
               setIntentExplain(action);
               Sound.sfx.click();
             }}
-            disabled={isResolved}
+            disabled={isResolved || tutorialActive}
             className={`relative flex max-w-full items-center gap-1 rounded-md border px-1.5 py-1 text-left transition-all duration-200 ${
               isCurrent
                 ? `${intentInfo.border} scale-[1.02] bg-amber-500/20 shadow-md shadow-amber-400/20`

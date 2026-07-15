@@ -528,10 +528,13 @@ if (startAtFirstBattle && firstNode) {
       }
 
 const isBossNode = node.type === ROOM_TYPES.BOSS;
+const getsBossPreparation =
+  isBossNode && prev.difficulty === "easy";
+
 const updates = {
   map: newMap,
   currentNode: node,
-  phase: isBossNode ? "bossPrep" : phase,
+  phase: getsBossPreparation ? "bossPrep" : phase,
 };
 
       // Track "narrow path" achievement — only battle rooms
@@ -539,7 +542,7 @@ const updates = {
         updates.tookOnlyBattles = false;
       }
 
-      if (phase === ROOM_TYPES.BATTLE) {
+      if (   phase === ROOM_TYPES.BATTLE ||   (phase === ROOM_TYPES.BOSS && !getsBossPreparation) ) {
         const enemy = ENEMIES[node.enemyId];
         updates.pendingEnemyId = node.enemyId;
         updates.phase = "battle";

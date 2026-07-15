@@ -65,8 +65,7 @@ export const STARTER_DECK = [
   "faith_shield", "faith_shield",
   "fig_leaf",
   "bread_life",
-  "song_praise",
-  "righteous_strike",
+  "righteous_strike", "righteous_strike",
 ];
 
 export const STARTER_COLLECTION = STARTER_DECK.reduce((acc, id) => {

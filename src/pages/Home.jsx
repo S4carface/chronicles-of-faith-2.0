@@ -151,7 +151,6 @@ const handleNameSaved = (name) => {
   const prayerStatus = devotionPrayedToday ? "✓ Prayed" : (profile.devotionStreak > 0 ? `${profile.devotionStreak}-day streak` : null);
   const primaryItems = [
     { label: "Daily Battle", art: MENU_ART.daily, path: "/daily", desc: "One shared battle. Compete for the best score.", status: battleStatus },
-    { label: "Daily Prayer", art: HOME_ART.cross, path: "/daily-prayer", desc: "A short scripture and prayer for today.", status: prayerStatus },
     { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
     { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
     { label: "Faith Progress", art: MENU_ART.progress, path: "/faith-progress", desc: "Track your Bible learning progress", status: null },
@@ -481,10 +480,81 @@ const handleNameSaved = (name) => {
           <Swords className="w-5 h-5" />
           Start Journey
         </span>
-      </button>
+            </button>
+
+      {/* Daily Prayer spotlight */}
+      <Link
+        to="/daily-prayer"
+        onClick={() => Sound.sfx.click()}
+        className={`relative w-full max-w-md lg:max-w-[600px] mb-6 overflow-hidden rounded-xl border-2 px-4 py-4 lg:px-6 lg:py-5 transition-all duration-300 active:scale-[0.99] ${
+          devotionPrayedToday
+            ? "border-emerald-400/35 bg-emerald-900/15"
+            : "border-sky-300/45 bg-sky-900/15 shadow-lg shadow-sky-400/10 hover:border-sky-200/70 hover:bg-sky-900/25"
+        }`}
+      >
+        {!devotionPrayedToday && (
+          <div className="absolute right-3 top-3 rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
+            New Today
+          </div>
+        )}
+
+        <div className="flex items-center gap-4 text-left">
+          <div
+            className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border lg:h-16 lg:w-16 ${
+              devotionPrayedToday
+                ? "border-emerald-400/30 bg-emerald-900/20"
+                : "border-sky-300/35 bg-sky-900/25"
+            }`}
+          >
+            <Sun
+              className={`h-7 w-7 lg:h-8 lg:w-8 ${
+                devotionPrayedToday
+                  ? "text-emerald-300"
+                  : "text-sky-200"
+              }`}
+            />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <p
+              className={`font-serif text-lg font-bold lg:text-xl ${
+                devotionPrayedToday
+                  ? "text-emerald-200"
+                  : "text-sky-100"
+              }`}
+            >
+              {devotionPrayedToday
+                ? "Daily Prayer Completed"
+                : "Take a Quiet Moment"}
+            </p>
+
+            <p className="mt-1 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
+              A short scripture, reflection, and prayer for today.
+            </p>
+
+            <div className="mt-2 flex items-center gap-3">
+              <span
+                className={`text-xs font-semibold lg:text-sm ${
+                  devotionPrayedToday
+                    ? "text-emerald-300"
+                    : "text-sky-200"
+                }`}
+              >
+                {devotionPrayedToday ? "✓ Prayed Today" : "Pray Now →"}
+              </span>
+
+              {profile.devotionStreak > 0 && (
+                <span className="text-[10px] text-amber-300/60 lg:text-xs">
+                  {profile.devotionStreak}-day prayer streak
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
 
       {/* Confirmation dialog */}
-      {showConfirm && (
+            {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Start a New Run?</h2>

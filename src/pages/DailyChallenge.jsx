@@ -4,7 +4,7 @@ import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart } from "lucide-reac
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
-import { validateDeck } from "@/game/deckRules";
+
 import * as Sound from "@/game/soundManager";
 
 export default function DailyChallenge() {
@@ -29,22 +29,20 @@ export default function DailyChallenge() {
   };
 
   const handleStart = () => {
-    Sound.sfx.click();
-    const deckCheck = validateDeck(profile.activeDeck);
-    if (!deckCheck.valid) {
-      navigate("/collection");
-      return;
-    }
-    if (run && !run.isDaily) {
-      setShowConfirm(true);
-      return;
-    }
-    if (hasActiveDaily) {
-      navigate("/play");
-      return;
-    }
-    beginDaily();
-  };
+  Sound.sfx.click();
+
+  if (hasActiveDaily) {
+    navigate("/play");
+    return;
+  }
+
+  if (run && !run.isDaily) {
+    setShowConfirm(true);
+    return;
+  }
+
+  beginDaily();
+};
 
   const handleConfirmAbandon = () => {
     setShowConfirm(false);
@@ -96,9 +94,16 @@ export default function DailyChallenge() {
             <h3 className="font-serif text-amber-200 text-base lg:text-lg">Daily Battle</h3>
           </div>
 
-          <p className="text-amber-100/50 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">
-            One shared battle per day — same for everyone.
-          </p>
+          <div className="mb-4 lg:mb-6 rounded-lg border border-emerald-400/20 bg-emerald-900/10 px-3 py-3">
+  <p className="text-emerald-200/90 text-xs lg:text-sm font-semibold">
+    Equal Challenge
+  </p>
+
+  <p className="mt-1 text-amber-100/55 text-[10px] lg:text-xs">
+    Every player uses today&apos;s fixed hero, deck, enemy, difficulty, and special rule.
+    Your personal cards are not used.
+  </p>
+</div>
 
           {/* Difficulty display */}
           <div className="flex items-center justify-center gap-2 mb-1">
@@ -138,6 +143,25 @@ export default function DailyChallenge() {
               <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-amber-500/30 bg-amber-900/20 flex items-center justify-center">
                 <Coins className="w-6 h-6 text-amber-300" />
               </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/20 bg-emerald-900/10">
+  <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-emerald-500/30 bg-emerald-900/20 flex items-center justify-center">
+    <span className="text-2xl">🃏</span>
+  </div>
+
+  <div className="min-w-0">
+    <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">
+      Today&apos;s Fixed Deck
+    </p>
+
+    <p className="font-serif text-emerald-200 text-sm lg:text-base">
+      {daily.deck.length} Cards
+    </p>
+
+    <p className="text-amber-100/50 text-[10px] lg:text-xs">
+      Identical for every player
+    </p>
+  </div>
+</div>
               <div className="min-w-0">
                 <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">Today's Reward</p>
                 <p className="font-serif text-amber-100 text-sm lg:text-base">{daily.reward.gold} Gold</p>

@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   BookOpen,
-  Cards,
+  Layers3,
   Home,
   Map,
   UserRound,
@@ -13,7 +13,7 @@ const ITEMS = [
   {
     label: "Cards",
     path: "/collection",
-    icon: Cards,
+    icon: Layers3,
   },
   {
     label: "Bible",

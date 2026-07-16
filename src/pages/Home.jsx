@@ -12,6 +12,7 @@ import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
+import BottomNavigation from "@/components/game/BottomNavigation";
 
 export default function Home() {
   const {
@@ -651,12 +652,14 @@ const handleNameSaved = (name) => {
         <CinematicIntro onComplete={handleFirstIntroComplete} />
       )}
 
-      {showResume && (
+            {showResume && (
         <ResumeModal
           onResume={() => { setShowResume(false); navigate("/play"); }}
           onAbandon={() => { setShowResume(false); endRun(); }}
         />
       )}
+
+      <BottomNavigation />
     </div>
   );
 }

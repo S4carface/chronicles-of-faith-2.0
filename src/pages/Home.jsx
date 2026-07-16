@@ -12,7 +12,7 @@ import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
 import * as Sound from "@/game/soundManager";
-import BottomNavigation from "@/components/game/BottomNavigation";
+import BottomNavigation from "@/components/BottomNavigation";
 
 export default function Home() {
   const {

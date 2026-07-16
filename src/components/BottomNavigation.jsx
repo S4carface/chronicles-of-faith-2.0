@@ -40,7 +40,6 @@ const ITEMS = [
 
 const HIDDEN_PATHS = [
   "/play",
-  "/daily",
 ];
 
 export default function BottomNavigation() {

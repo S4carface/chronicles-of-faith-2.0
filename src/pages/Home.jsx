@@ -67,7 +67,14 @@ const handleFirstIntroComplete = () => {
 };
 
 const handleFirstTimeBegin = () => {
-  Sound.sfx.divine();
+  Sound.playCinematicTrack(
+    "/audio/ui/begin-journey.mp3",
+    {
+      volume: 0.9,
+      loop: false,
+    }
+  );
+
   triggerIntroReplay();
 };
 const handleBeginRun = () => {

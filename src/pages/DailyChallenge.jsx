@@ -139,11 +139,7 @@ export default function DailyChallenge() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
-              <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-amber-500/30 bg-amber-900/20 flex items-center justify-center">
-                <Coins className="w-6 h-6 text-amber-300" />
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/20 bg-emerald-900/10">
+<div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/20 bg-emerald-900/10">
   <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-emerald-500/30 bg-emerald-900/20 flex items-center justify-center">
     <span className="text-2xl">🃏</span>
   </div>
@@ -162,11 +158,22 @@ export default function DailyChallenge() {
     </p>
   </div>
 </div>
-              <div className="min-w-0">
-                <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">Today's Reward</p>
-                <p className="font-serif text-amber-100 text-sm lg:text-base">{daily.reward.gold} Gold</p>
-              </div>
-            </div>
+
+<div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
+  <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-amber-500/30 bg-amber-900/20 flex items-center justify-center">
+    <Coins className="w-6 h-6 text-amber-300" />
+  </div>
+
+  <div className="min-w-0">
+    <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">
+      Today&apos;s Reward
+    </p>
+
+    <p className="font-serif text-amber-100 text-sm lg:text-base">
+      {daily.reward.gold} Gold
+    </p>
+  </div>
+</div>
           </div>
 
           {/* Streak & Status row */}

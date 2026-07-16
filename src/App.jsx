@@ -25,7 +25,8 @@ import Codex from "./pages/Codex";
 import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
-import SpecialThanks from "@/pages/SpecialThanks";
+import SpecialThanks from "@/pages/SpecialThanks"; 
+import BottomNavigation from "@/components/game/BottomNavigation";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
   return (
    <GameProvider>
   <UnlockReveal />
+  
   <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/play" element={<Play />} />
@@ -69,6 +71,8 @@ const AuthenticatedApp = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/special-thanks" element={<SpecialThanks />} />
             </Routes>
+            
+            <BottomNavigation />
 </GameProvider>
   );
 };

@@ -26,7 +26,6 @@ import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
-// import BottomNavigation from "@/components/game/BottomNavigation";
 
 
 const AuthenticatedApp = () => {
@@ -73,7 +72,6 @@ const AuthenticatedApp = () => {
         <Route path="/special-thanks" element={<SpecialThanks />} />
   </Routes>
             
-  // <BottomNavigation />
 </GameProvider>
   );
 };

@@ -4,7 +4,6 @@ import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart } from "lucide-reac
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
-
 import * as Sound from "@/game/soundManager";
 
 export default function DailyChallenge() {

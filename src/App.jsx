@@ -26,7 +26,7 @@ import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
-import BottomNavigation from "@/components/game/BottomNavigation";
+
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -71,8 +71,6 @@ const AuthenticatedApp = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/special-thanks" element={<SpecialThanks />} />
             </Routes>
-            
-            <BottomNavigation />
 </GameProvider>
   );
 };

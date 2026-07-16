@@ -1,58 +1,37 @@
 import React from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import {
-  BookOpen,
-  Layers3,
-  Home,
-  Map,
-  UserRound,
-} from "lucide-react";
+import { NavLink } from "react-router-dom";
 import * as Sound from "@/game/soundManager";
 
 const ITEMS = [
   {
     label: "Cards",
     path: "/collection",
-    icon: Layers3,
+    symbol: "▦",
   },
   {
     label: "Bible",
     path: "/daily-prayer",
-    icon: BookOpen,
+    symbol: "✦",
   },
   {
     label: "Home",
     path: "/",
-    icon: Home,
+    symbol: "⌂",
     primary: true,
   },
   {
-    label: "Play",
+    label: "Journey",
     path: "/progress",
-    icon: Map,
+    symbol: "◇",
   },
   {
     label: "You",
     path: "/journey",
-    icon: UserRound,
+    symbol: "○",
   },
 ];
 
-const HIDDEN_PATHS = [
-  "/play",
-];
-
 export default function BottomNavigation() {
-  const location = useLocation();
-
-  const shouldHide = HIDDEN_PATHS.some(
-    (path) =>
-      location.pathname === path ||
-      location.pathname.startsWith(`${path}/`)
-  );
-
-  if (shouldHide) return null;
-
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-xl px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"
@@ -67,51 +46,43 @@ export default function BottomNavigation() {
             "0 -8px 30px rgba(0,0,0,0.45), 0 0 25px rgba(201,168,76,0.08)",
         }}
       >
-        {ITEMS.map((item) => {
-          const Icon = item.icon;
+        {ITEMS.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === "/"}
+            onClick={() => Sound.sfx.click()}
+            className="group flex min-h-14 flex-col items-center justify-end gap-1"
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`flex items-center justify-center rounded-full border font-serif transition-all ${
+                    item.primary
+                      ? "-mt-7 h-16 w-16 border-amber-300/60 bg-amber-600/30 text-2xl shadow-lg shadow-amber-500/20"
+                      : "h-9 w-9 border-transparent text-xl"
+                  } ${
+                    isActive
+                      ? "text-amber-200"
+                      : "text-amber-100/45 group-hover:text-amber-100/75"
+                  }`}
+                >
+                  {item.symbol}
+                </span>
 
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              onClick={() => Sound.sfx.click()}
-              className="group flex min-h-14 flex-col items-center justify-end gap-1"
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={`flex items-center justify-center rounded-full border transition-all ${
-                      item.primary
-                        ? "-mt-7 h-16 w-16 border-amber-300/60 bg-amber-600/30 shadow-lg shadow-amber-500/20"
-                        : "h-9 w-9 border-transparent"
-                    } ${
-                      isActive
-                        ? "text-amber-200"
-                        : "text-amber-100/45 group-hover:text-amber-100/75"
-                    }`}
-                  >
-                    <Icon
-                      className={
-                        item.primary ? "h-7 w-7" : "h-5 w-5"
-                      }
-                    />
-                  </span>
-
-                  <span
-                    className={`text-[10px] font-medium ${
-                      isActive
-                        ? "text-amber-200"
-                        : "text-amber-100/40"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
+                <span
+                  className={`text-[10px] font-medium ${
+                    isActive
+                      ? "text-amber-200"
+                      : "text-amber-100/40"
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </>
+            )}
+          </NavLink>
+        ))}
       </div>
     </nav>
   );

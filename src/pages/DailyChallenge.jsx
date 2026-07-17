@@ -55,10 +55,6 @@ export default function DailyChallenge() {
   const enemyArt = ENEMY_ART[daily.enemy.id];
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
-      <div className="absolute top-4 left-4 lg:top-6 lg:left-6 z-10">
-        <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</button>
-      </div>
 
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{

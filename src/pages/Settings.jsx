@@ -9,76 +9,6 @@ import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
 
-function VolumeSlider({ value, onChange, onCommit }) {
-  const getValueFromPointer = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const position = event.clientX - rect.left;
-    const percentage = (position / rect.width) * 100;
-
-    return Math.max(0, Math.min(100, Math.round(percentage)));
-  };
-
-  const handlePointerDown = (event) => {
-    event.preventDefault();
-
-    event.currentTarget.setPointerCapture(event.pointerId);
-
-    const nextValue = getValueFromPointer(event);
-    onChange(nextValue);
-  };
-
-  const handlePointerMove = (event) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
-      return;
-    }
-
-    event.preventDefault();
-
-    const nextValue = getValueFromPointer(event);
-    onChange(nextValue);
-  };
-
-  const handlePointerUp = (event) => {
-    event.preventDefault();
-
-    const nextValue = getValueFromPointer(event);
-    onChange(nextValue);
-    onCommit(nextValue);
-
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  };
-
-  return (
-    <div
-      role="slider"
-      aria-valuemin="0"
-      aria-valuemax="100"
-      aria-valuenow={value}
-      tabIndex={0}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      className="relative h-10 flex-1 cursor-pointer select-none"
-      style={{ touchAction: "none" }}
-    >
-      <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-slate-700" />
-
-      <div
-        className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-amber-500"
-        style={{ width: `${value}%` }}
-      />
-
-      <div
-        className="absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300 bg-amber-100 shadow-lg"
-        style={{ left: `${value}%` }}
-      />
-    </div>
-  );
-}
-
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
   const { isAuthenticated, user } = useAuth();
@@ -88,17 +18,6 @@ export default function Settings() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null); 
   const [expandedSection, setExpandedSection] = useState("player");
-const [musicVolume, setMusicVolume] = useState(
-  profile.settings.musicVolume ?? 50
-);
-
-const [sfxVolume, setSfxVolume] = useState(
-  profile.settings.sfxVolume ?? 50
-);
-
-const [narrationVolume, setNarrationVolume] = useState(
-  profile.settings.narrationVolume ?? 50
-);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -144,32 +63,38 @@ const [narrationVolume, setNarrationVolume] = useState(
 const handleMusicVolume = (vol) => {
   const value = Number(vol);
 
-  setMusicVolume(value);
   Sound.setMusicVolume(value / 100);
+
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      musicVolume: value,
+    },
+  });
 };
 
 const handleSfxVolume = (vol) => {
   const value = Number(vol);
 
-  setSfxVolume(value);
   Sound.setSfxVolume(value / 100);
+
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      sfxVolume: value,
+    },
+  });
 };
 
 const handleNarrationVolume = (vol) => {
   const value = Number(vol);
 
-  setNarrationVolume(value);
   Sound.setNarrationVolume(value / 100);
-};
 
-const saveAudioVolumes = (overrides = {}) => {
   saveProfile({
     settings: {
       ...profile.settings,
-      musicVolume,
-      sfxVolume,
-      narrationVolume,
-      ...overrides,
+      narrationVolume: value,
     },
   });
 };
@@ -304,15 +229,20 @@ const SettingsSection = ({
             </div>
             {profile.settings.music && (
               <div className="flex items-center gap-2">
-<VolumeSlider
-  value={musicVolume}
-  onChange={handleMusicVolume}
-  onCommit={(value) =>
-    saveAudioVolumes({
-      musicVolume: value,
-    })
+<input
+  type="range"
+  min="0"
+  max="100"
+  value={profile.settings.musicVolume ?? 50}
+  onChange={(e) =>
+    handleMusicVolume(parseInt(e.target.value, 10))
   }
+  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
 />
+
+<span className="text-amber-300/60 text-xs w-8 text-right">
+  {profile.settings.musicVolume ?? 50}%
+</span>
 
                 <span className="text-amber-300/60 text-xs w-8 text-right">{musicVolume}%</span>
               </div>
@@ -335,15 +265,20 @@ const SettingsSection = ({
             </div>
             {profile.settings.sfx && (
               <div className="flex items-center gap-2">
-<VolumeSlider
-  value={sfxVolume}
-  onChange={handleSfxVolume}
-  onCommit={(value) =>
-    saveAudioVolumes({
-      sfxVolume: value,
-    })
+<input
+  type="range"
+  min="0"
+  max="100"
+  value={profile.settings.sfxVolume ?? 50}
+  onChange={(e) =>
+    handleSfxVolume(parseInt(e.target.value, 10))
   }
+  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
 />
+
+<span className="text-amber-300/60 text-xs w-8 text-right">
+  {profile.settings.sfxVolume ?? 50}%
+</span>
                 <span className="text-amber-300/60 text-xs w-8 text-right">{sfxVolume}%</span>
               </div>
             )}
@@ -368,15 +303,20 @@ const SettingsSection = ({
             </div>
             {profile.settings.narration && (
               <div className="flex items-center gap-2">
-<VolumeSlider
-  value={narrationVolume}
-  onChange={handleNarrationVolume}
-  onCommit={(value) =>
-    saveAudioVolumes({
-      narrationVolume: value,
-    })
+<input
+  type="range"
+  min="0"
+  max="100"
+  value={profile.settings.narrationVolume ?? 50}
+  onChange={(e) =>
+    handleNarrationVolume(parseInt(e.target.value, 10))
   }
+  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
 />
+
+<span className="text-amber-300/60 text-xs w-8 text-right">
+  {profile.settings.narrationVolume ?? 50}%
+</span>
                 <span className="text-amber-300/60 text-xs w-8 text-right">{narrationVolume}%</span>
               </div>
             )}

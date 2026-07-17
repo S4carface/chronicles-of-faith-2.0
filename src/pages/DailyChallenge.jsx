@@ -54,10 +54,15 @@ export default function DailyChallenge() {
 
   const enemyArt = ENEMY_ART[daily.enemy.id];
 
-  return (
-
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} className="absolute pointer-events-none rounded-full" style={{
+    return (
+    <div
+      className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28 relative overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+      }}
+    >
+      {Array.from({ length: 12 }).map((_, i) => (        <div key={i} className="absolute pointer-events-none rounded-full" style={{
           width: `${2 + Math.random() * 3}px`,
           height: `${2 + Math.random() * 3}px`,
           left: `${Math.random() * 100}%`,

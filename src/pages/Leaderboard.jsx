@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+
 import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { VICTORY_ART } from "@/data/art";
@@ -91,10 +91,11 @@ const isMyEntry = (entry) => {
 
 const hasMyScore = entries.some(isMyEntry);
   return (
-    <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
-        <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
-        <div className="flex items-center gap-2">
+    <div
+  className="min-h-screen p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
+      <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+
+        <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
           <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
             <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
           </div>
@@ -218,7 +219,7 @@ const hasMyScore = entries.some(isMyEntry);
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
   <div className="truncate font-serif text-amber-100">
     {sanitizePlayerName(entry.playerName)}
   </div>

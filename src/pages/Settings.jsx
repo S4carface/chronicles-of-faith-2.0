@@ -61,14 +61,34 @@ export default function Settings() {
   };
 
   const handleMusicVolume = (vol) => {
-    saveProfile({ settings: { ...profile.settings, musicVolume: vol } });
-  };
-  const handleSfxVolume = (vol) => {
-    saveProfile({ settings: { ...profile.settings, sfxVolume: vol } });
-  };
-  const handleNarrationVolume = (vol) => {
-    saveProfile({ settings: { ...profile.settings, narrationVolume: vol } });
-  };
+  Sound.setMusicVolume(vol / 100);
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      musicVolume: vol,
+    },
+  });
+};
+
+const handleSfxVolume = (vol) => {
+  Sound.setSfxVolume(vol / 100);
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      sfxVolume: vol,
+    },
+  });
+};
+
+const handleNarrationVolume = (vol) => {
+  Sound.setNarrationVolume(vol / 100);
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      narrationVolume: vol,
+    },
+  });
+};
 
   const setEnemyAnimation = (mode) => {
     saveProfile({ settings: { ...profile.settings, enemyAnimation: mode } });
@@ -201,11 +221,17 @@ const SettingsSection = ({
             {profile.settings.music && (
               <div className="flex items-center gap-2">
                 <input
-                  type="range" min="0" max="100"
-                  value={profile.settings.musicVolume ?? 50}
-                  onChange={(e) => handleMusicVolume(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
-                />
+  type="range"
+  min="0"
+  max="100"
+  step="1"
+  value={profile.settings.musicVolume ?? 50}
+  onInput={(e) =>
+    handleMusicVolume(Number(e.currentTarget.value))
+  }
+  className="w-full h-8 cursor-pointer accent-amber-500 touch-none"
+  style={{ touchAction: "none" }}
+/>
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.musicVolume ?? 50}%</span>
               </div>
             )}
@@ -228,11 +254,17 @@ const SettingsSection = ({
             {profile.settings.sfx && (
               <div className="flex items-center gap-2">
                 <input
-                  type="range" min="0" max="100"
-                  value={profile.settings.sfxVolume ?? 50}
-                  onChange={(e) => handleSfxVolume(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
-                />
+  type="range"
+  min="0"
+  max="100"
+  step="1"
+  value={profile.settings.narrationVolume ?? 50}
+  onInput={(e) =>
+    handleNarrationVolume(Number(e.currentTarget.value))
+  }
+  className="w-full h-8 cursor-pointer accent-amber-500 touch-none"
+  style={{ touchAction: "none" }}
+/>
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.sfxVolume ?? 50}%</span>
               </div>
             )}

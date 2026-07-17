@@ -175,7 +175,13 @@ const gestureHandler = () => {
     audioUnlocked = true;
     hasUserInteracted = true;
     notifyUnlockListeners();
-    restartMusicIfNeeded();
+  }
+
+  const theme = pendingMusicTheme || musicTheme;
+
+  if (musicEnabled && !musicPausedForAmbience && theme) {
+    pendingMusicTheme = null;
+    playMusic(theme);
   }
 };
 

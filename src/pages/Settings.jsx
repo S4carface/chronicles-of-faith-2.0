@@ -567,6 +567,8 @@ const SettingsSection = ({
   </div>
 
       </SettingsSection>
+      
+      </div>
 
       {showNamePrompt && (
         <PlayerNamePrompt

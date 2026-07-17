@@ -302,8 +302,12 @@ const SettingsSection = ({
         </SettingsSection>
 
         {/* === BATTLE SECTION === */}
-        <div className="space-y-3 lg:self-start">
-          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Battle</h2>
+<SettingsSection
+  id="battle"
+  title="Battle"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
             <p className="font-serif text-amber-100 text-sm mb-1">Enemy Turn Animation</p>
             <p className="text-amber-100/40 text-[10px] mb-3">How enemy actions are displayed</p>
@@ -360,9 +364,7 @@ const SettingsSection = ({
               {guidanceLevel === "expert" && "Hides exact enemy values for a harder challenge."}
             </p>
           </div>
-        </div>
-
-
+        </SettingsSection>
 
         {/* === TUTORIAL SECTION === */}
         <div className="space-y-3">

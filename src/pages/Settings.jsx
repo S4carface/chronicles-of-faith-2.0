@@ -488,10 +488,12 @@ const SettingsSection = ({
         </SettingsSection>
 
         {/* About */}
-<div className="space-y-3 lg:col-span-2">
-  <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">
-    About
-  </h2>
+<SettingsSection
+  id="about"
+  title="About"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
 
   <Link
     to="/about"
@@ -566,7 +568,7 @@ const SettingsSection = ({
     </p>
   </div>
 </div>
-      </div>
+      </SettingsSection>
 
       {showNamePrompt && (
         <PlayerNamePrompt

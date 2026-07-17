@@ -72,6 +72,37 @@ const [narrationVolume, setNarrationVolume] = useState(
   };
 
 const handleMusicVolume = (vol) => {
+  const value = Number(vol);
+
+  setMusicVolume(value);
+  Sound.setMusicVolume(value / 100);
+};
+
+const handleSfxVolume = (vol) => {
+  const value = Number(vol);
+
+  setSfxVolume(value);
+  Sound.setSfxVolume(value / 100);
+};
+
+const handleNarrationVolume = (vol) => {
+  const value = Number(vol);
+
+  setNarrationVolume(value);
+  Sound.setNarrationVolume(value / 100);
+};
+
+const saveAudioVolumes = (overrides = {}) => {
+  saveProfile({
+    settings: {
+      ...profile.settings,
+      musicVolume,
+      sfxVolume,
+      narrationVolume,
+      ...overrides,
+    },
+  });
+};
 
   const setEnemyAnimation = (mode) => {
     saveProfile({ settings: { ...profile.settings, enemyAnimation: mode } });
@@ -209,22 +240,30 @@ const SettingsSection = ({
   max="100"
   step="1"
   value={musicVolume}
+  onInput={(e) =>
+    handleMusicVolume(e.currentTarget.value)
+  }
   onChange={(e) =>
-    handleMusicVolume(Number(e.currentTarget.value))
+    handleMusicVolume(e.currentTarget.value)
   }
   onPointerUp={(e) =>
     saveAudioVolumes({
       musicVolume: Number(e.currentTarget.value),
     })
   }
-  onBlur={(e) =>
+  onTouchEnd={(e) =>
     saveAudioVolumes({
       musicVolume: Number(e.currentTarget.value),
     })
   }
-  className="w-full h-8 cursor-pointer accent-amber-500"
+  onKeyUp={(e) =>
+    saveAudioVolumes({
+      musicVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-10 cursor-pointer accent-amber-500"
 />
-                <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.musicVolume ?? 50}%</span>
+                <span className="text-amber-300/60 text-xs w-8 text-right">{musicVolume}%</span>
               </div>
             )}
           </div>
@@ -251,22 +290,30 @@ const SettingsSection = ({
   max="100"
   step="1"
   value={sfxVolume}
+  onInput={(e) =>
+    handleSfxVolume(e.currentTarget.value)
+  }
   onChange={(e) =>
-    handleSfxVolume(Number(e.currentTarget.value))
+    handleSfxVolume(e.currentTarget.value)
   }
   onPointerUp={(e) =>
     saveAudioVolumes({
       sfxVolume: Number(e.currentTarget.value),
     })
   }
-  onBlur={(e) =>
+  onTouchEnd={(e) =>
     saveAudioVolumes({
       sfxVolume: Number(e.currentTarget.value),
     })
   }
-  className="w-full h-8 cursor-pointer accent-amber-500"
+  onKeyUp={(e) =>
+    saveAudioVolumes({
+      sfxVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-10 cursor-pointer accent-amber-500"
 />
-                <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.sfxVolume ?? 50}%</span>
+                <span className="text-amber-300/60 text-xs w-8 text-right">{sfxVolume}%</span>
               </div>
             )}
           </div>
@@ -290,28 +337,36 @@ const SettingsSection = ({
             </div>
             {profile.settings.narration && (
               <div className="flex items-center gap-2">
-   <input
+<input
   type="range"
   min="0"
   max="100"
   step="1"
   value={narrationVolume}
+  onInput={(e) =>
+    handleNarrationVolume(e.currentTarget.value)
+  }
   onChange={(e) =>
-    handleNarrationVolume(Number(e.currentTarget.value))
+    handleNarrationVolume(e.currentTarget.value)
   }
   onPointerUp={(e) =>
     saveAudioVolumes({
       narrationVolume: Number(e.currentTarget.value),
     })
   }
-  onBlur={(e) =>
+  onTouchEnd={(e) =>
     saveAudioVolumes({
       narrationVolume: Number(e.currentTarget.value),
     })
   }
-  className="w-full h-8 cursor-pointer accent-amber-500"
+  onKeyUp={(e) =>
+    saveAudioVolumes({
+      narrationVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-10 cursor-pointer accent-amber-500"
 />
-                <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.narrationVolume ?? 50}%</span>
+                <span className="text-amber-300/60 text-xs w-8 text-right">{narrationVolume}%</span>
               </div>
             )}
             {profile.settings.narration && (

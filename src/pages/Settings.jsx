@@ -367,8 +367,12 @@ const SettingsSection = ({
         </SettingsSection>
 
         {/* === TUTORIAL SECTION === */}
-        <div className="space-y-3">
-          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Tutorial</h2>
+<SettingsSection
+  id="tutorial"
+  title="Tutorial"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -386,7 +390,7 @@ const SettingsSection = ({
               </button>
             </div>
           </div>
-        </div>
+        </SettingsSection>
 
         {/* === STORY SECTION === */}
         <div className="space-y-3">

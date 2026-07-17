@@ -587,8 +587,7 @@ const handleNameSaved = (name) => {
       )}
 
 
-      <p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">
-        {/* Compact supporting links */}
+{/* Compact supporting links */}
 <div className="relative grid w-full max-w-md grid-cols-2 gap-3 lg:max-w-[600px]">
   <Link
     to="/leaderboard"
@@ -616,8 +615,10 @@ const handleNameSaved = (name) => {
     </p>
   </Link>
 </div>
-        "In the beginning, God created the heavens and the earth." — Genesis 1:1
-      </p>
+
+<p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">
+  "In the beginning, God created the heavens and the earth." — Genesis 1:1
+</p>
 
       {showNamePrompt && (
         <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />

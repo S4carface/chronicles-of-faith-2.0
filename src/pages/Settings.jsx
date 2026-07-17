@@ -96,10 +96,14 @@ const SettingsSection = ({
   return (
     <div className="space-y-3">
       <button
-        onClick={() => setExpandedSection(open ? "" : id)}
-        className="w-full flex items-center justify-between px-1"
-      >
-        <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest">
+  onClick={() => setExpandedSection(open ? "" : id)}
+  className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200 ${
+    open
+      ? "border-amber-400/50 bg-amber-500/10 shadow-lg"
+      : "border-amber-500/15 bg-slate-900/30 hover:bg-slate-800/40 hover:border-amber-400/25"
+  }`}
+>
+        <h2 className="text-amber-100 font-serif text-sm tracking-wide">
           {title}
         </h2>
 

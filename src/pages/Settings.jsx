@@ -9,6 +9,76 @@ import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
 
+function VolumeSlider({ value, onChange, onCommit }) {
+  const getValueFromPointer = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const position = event.clientX - rect.left;
+    const percentage = (position / rect.width) * 100;
+
+    return Math.max(0, Math.min(100, Math.round(percentage)));
+  };
+
+  const handlePointerDown = (event) => {
+    event.preventDefault();
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    const nextValue = getValueFromPointer(event);
+    onChange(nextValue);
+  };
+
+  const handlePointerMove = (event) => {
+    if (!event.currentTarget.hasPointerCapture(event.pointerId)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const nextValue = getValueFromPointer(event);
+    onChange(nextValue);
+  };
+
+  const handlePointerUp = (event) => {
+    event.preventDefault();
+
+    const nextValue = getValueFromPointer(event);
+    onChange(nextValue);
+    onCommit(nextValue);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  return (
+    <div
+      role="slider"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow={value}
+      tabIndex={0}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      className="relative h-10 flex-1 cursor-pointer select-none"
+      style={{ touchAction: "none" }}
+    >
+      <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-slate-700" />
+
+      <div
+        className="absolute left-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-amber-500"
+        style={{ width: `${value}%` }}
+      />
+
+      <div
+        className="absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300 bg-amber-100 shadow-lg"
+        style={{ left: `${value}%` }}
+      />
+    </div>
+  );
+}
+
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
   const { isAuthenticated, user } = useAuth();
@@ -234,35 +304,19 @@ const SettingsSection = ({
             </div>
             {profile.settings.music && (
               <div className="flex items-center gap-2">
-<input
-  type="range"
-  min="0"
-  max="100"
-  step="1"
+<VolumeSlider
   value={musicVolume}
-  onInput={(e) =>
-    handleMusicVolume(e.currentTarget.value)
-  }
-  onChange={(e) =>
-    handleMusicVolume(e.currentTarget.value)
-  }
-  onPointerUp={(e) =>
+  onChange={handleMusicVolume}
+  onCommit={(value) =>
     saveAudioVolumes({
-      musicVolume: Number(e.currentTarget.value),
+      musicVolume: value,
     })
   }
-  onTouchEnd={(e) =>
-    saveAudioVolumes({
-      musicVolume: Number(e.currentTarget.value),
-    })
-  }
-  onKeyUp={(e) =>
-    saveAudioVolumes({
-      musicVolume: Number(e.currentTarget.value),
-    })
-  }
-  className="w-full h-10 cursor-pointer accent-amber-500"
 />
+<span className="text-amber-300/60 text-xs w-8 text-right">
+  {musicVolume}%
+</span>
+
                 <span className="text-amber-300/60 text-xs w-8 text-right">{musicVolume}%</span>
               </div>
             )}
@@ -284,34 +338,14 @@ const SettingsSection = ({
             </div>
             {profile.settings.sfx && (
               <div className="flex items-center gap-2">
-<input
-  type="range"
-  min="0"
-  max="100"
-  step="1"
+<VolumeSlider
   value={sfxVolume}
-  onInput={(e) =>
-    handleSfxVolume(e.currentTarget.value)
-  }
-  onChange={(e) =>
-    handleSfxVolume(e.currentTarget.value)
-  }
-  onPointerUp={(e) =>
+  onChange={handleSfxVolume}
+  onCommit={(value) =>
     saveAudioVolumes({
-      sfxVolume: Number(e.currentTarget.value),
+      sfxVolume: value,
     })
   }
-  onTouchEnd={(e) =>
-    saveAudioVolumes({
-      sfxVolume: Number(e.currentTarget.value),
-    })
-  }
-  onKeyUp={(e) =>
-    saveAudioVolumes({
-      sfxVolume: Number(e.currentTarget.value),
-    })
-  }
-  className="w-full h-10 cursor-pointer accent-amber-500"
 />
                 <span className="text-amber-300/60 text-xs w-8 text-right">{sfxVolume}%</span>
               </div>
@@ -337,34 +371,14 @@ const SettingsSection = ({
             </div>
             {profile.settings.narration && (
               <div className="flex items-center gap-2">
-<input
-  type="range"
-  min="0"
-  max="100"
-  step="1"
+<VolumeSlider
   value={narrationVolume}
-  onInput={(e) =>
-    handleNarrationVolume(e.currentTarget.value)
-  }
-  onChange={(e) =>
-    handleNarrationVolume(e.currentTarget.value)
-  }
-  onPointerUp={(e) =>
+  onChange={handleNarrationVolume}
+  onCommit={(value) =>
     saveAudioVolumes({
-      narrationVolume: Number(e.currentTarget.value),
+      narrationVolume: value,
     })
   }
-  onTouchEnd={(e) =>
-    saveAudioVolumes({
-      narrationVolume: Number(e.currentTarget.value),
-    })
-  }
-  onKeyUp={(e) =>
-    saveAudioVolumes({
-      narrationVolume: Number(e.currentTarget.value),
-    })
-  }
-  className="w-full h-10 cursor-pointer accent-amber-500"
 />
                 <span className="text-amber-300/60 text-xs w-8 text-right">{narrationVolume}%</span>
               </div>

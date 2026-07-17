@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+
 import {
-  ArrowLeft, Pencil, Compass, Swords, BookOpen, Flame, Layers,
+  Pencil, Compass, Swords, BookOpen, Flame, Layers,
   Trophy, Skull, Crown, Coins, Target, Shield, Heart, Sparkles, Star, Clock, Award,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
@@ -60,7 +60,7 @@ function formatPlayTime(seconds) {
 
 export default function MyJourney() {
   const { profile, saveProfile } = useGame();
-  const navigate = useNavigate();
+  
   const [stats, setStats] = useState(() => getStats());
   const [showNamePrompt, setShowNamePrompt] = useState(false);
 
@@ -109,16 +109,7 @@ export default function MyJourney() {
   const masteryEmpty = totalCardPlays === 0;
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
-      {/* Header */}
-      <div className="w-full max-w-2xl flex items-center justify-between mb-4">
-        <button
-          onClick={() => { Sound.sfx.click(); navigate("/"); }}
-          className="flex items-center gap-1.5 text-amber-100/60 hover:text-amber-200 transition text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" /> Menu
-        </button>
-      </div>
+
 
       <div className="w-full max-w-2xl text-center mb-5">
         <div className="flex justify-center mb-2">

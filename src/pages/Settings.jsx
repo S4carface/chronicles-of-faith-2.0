@@ -16,7 +16,8 @@ export default function Settings() {
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showCloudModal, setShowCloudModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState(null);
+  const [syncResult, setSyncResult] = useState(null); 
+  const [expandedSection, setExpandedSection] = useState("player");
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -82,6 +83,43 @@ export default function Settings() {
   };
 
   const guidanceLevel = profile.settings.guidanceLevel || "normal";
+
+const SettingsSection = ({
+  id,
+  title,
+  children,
+  expandedSection,
+  setExpandedSection,
+}) => {
+  const open = expandedSection === id;
+
+  return (
+    <div className="space-y-3">
+      <button
+        onClick={() => setExpandedSection(open ? "" : id)}
+        className="w-full flex items-center justify-between px-1"
+      >
+        <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest">
+          {title}
+        </h2>
+
+        <span
+          className={`text-amber-300 transition-transform duration-200 ${
+            open ? "rotate-180" : ""
+          }`}
+        >
+          ▼
+        </span>
+      </button>
+
+      {open && (
+        <div className="animate-in fade-in duration-200">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
   const previewVoice = () => {
     Sound.sfx.click();

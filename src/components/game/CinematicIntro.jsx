@@ -96,7 +96,7 @@ export default function CinematicIntro({ onComplete }) {
     setCinematicStarted(true);
     setNeedsTap(false);
 
-    Sound.stopMusic();
+    Sound.pauseMusicForAmbience();
 
     musicTrackRef.current = await Sound.playCinematicTrack(
       INTRO_MUSIC,
@@ -110,8 +110,10 @@ export default function CinematicIntro({ onComplete }) {
       narrationTrackRef.current = await Sound.playCinematicTrack(
         INTRO_AUDIO,
         {
-          volume:
-            (profile.settings.narrationVolume ?? 50) / 100,
+          volume: Math.min(
+  1,
+  ((profile.settings.narrationVolume ?? 70) / 100) * 1.4
+),
           loop: false,
         }
       );
@@ -132,7 +134,7 @@ export default function CinematicIntro({ onComplete }) {
   ]);
 
   useEffect(() => {
-    Sound.stopMusic();
+    Sound.pauseMusicForAmbience();
 
     const loadingTimeout = window.setTimeout(() => {
       if (!cinematicStartedRef.current) {
@@ -168,6 +170,7 @@ export default function CinematicIntro({ onComplete }) {
 
     Sound.stopCinematicTracks(0);
     Sound.stopNarration();
+    Sound.resumeMusicAfterAmbience("battle");
 
     narrationTrackRef.current = null;
     musicTrackRef.current = null;

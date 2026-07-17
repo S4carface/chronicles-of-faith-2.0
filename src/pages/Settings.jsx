@@ -103,7 +103,35 @@ export default function Settings() {
       </div>
 
       <div className="max-w-md lg:max-w-3xl w-full space-y-5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
-        {/* === AUDIO SECTION === */}
+               {/* === PLAYER SECTION === */}
+        <div className="space-y-3">
+          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Player</h2>
+          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Type className="w-4 h-4 text-amber-300/70" />
+              <div>
+                <p className="font-serif text-amber-100 text-sm">Player Name</p>
+                <p className="text-amber-100/40 text-[10px]">Shown on the leaderboard</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={sanitizePlayerName(profile.playerName)}
+                readOnly
+                placeholder="Enter your name"
+                className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
+              />
+              <button
+                onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Change Name
+              </button>
+            </div>
+          </div>
+        </div>
+         {/* === AUDIO SECTION === */}
         <div className="space-y-3">
           <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Audio</h2>
 
@@ -287,34 +315,7 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* === PLAYER SECTION === */}
-        <div className="space-y-3">
-          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Player</h2>
-          <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
-            <div className="flex items-center gap-2 mb-3">
-              <Type className="w-4 h-4 text-amber-300/70" />
-              <div>
-                <p className="font-serif text-amber-100 text-sm">Player Name</p>
-                <p className="text-amber-100/40 text-[10px]">Shown on the leaderboard</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={sanitizePlayerName(profile.playerName)}
-                readOnly
-                placeholder="Enter your name"
-                className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
-              />
-              <button
-                onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Change Name
-              </button>
-            </div>
-          </div>
-        </div>
+
 
         {/* === TUTORIAL SECTION === */}
         <div className="space-y-3">

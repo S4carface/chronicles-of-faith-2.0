@@ -15,7 +15,12 @@ const MAIN_THEME_URL = "/audio/music/chronicles-main-theme.mp3";
 let audioCtx = null;
 let musicGain = null;
 let sfxGain = null;
-let musicAudio = null;
+let mainThemeBuffer = null;
+let mainThemeLoadPromise = null;
+let mainThemeSource = null;
+let mainThemeStartedAt = 0;
+let mainThemePausedAt = 0;
+let mainThemeRequestId = 0;
 let musicEnabled = true;
 let sfxEnabled = true;
 let musicVol = 0.5;
@@ -65,7 +70,7 @@ function getCtx() {
     try {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       musicGain = audioCtx.createGain();
-      musicGain.gain.value = 0.15 * musicVol;
+      musicGain.gain.value = getMainThemeVolume();
       musicGain.connect(audioCtx.destination);
       sfxGain = audioCtx.createGain();
       sfxGain.gain.value = 0.3 * sfxVol;
@@ -83,6 +88,127 @@ function ctxIsRunning() {
   const ctx = getCtx();
   if (!ctx) return false;
   return ctx.state === "running";
+}
+async function loadMainThemeBuffer() {
+  const ctx = getCtx();
+
+  if (!ctx) {
+    return null;
+  }
+
+  if (mainThemeBuffer) {
+    return mainThemeBuffer;
+  }
+
+  if (!mainThemeLoadPromise) {
+    mainThemeLoadPromise = fetch(MAIN_THEME_URL)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load main theme: ${response.status}`
+          );
+        }
+
+        return response.arrayBuffer();
+      })
+      .then((arrayBuffer) => ctx.decodeAudioData(arrayBuffer))
+      .then((decodedBuffer) => {
+        mainThemeBuffer = decodedBuffer;
+        return decodedBuffer;
+      })
+      .catch((error) => {
+        console.warn("[Audio] Main theme failed:", error);
+        mainThemeLoadPromise = null;
+        return null;
+      });
+  }
+
+  return mainThemeLoadPromise;
+}
+
+function stopMainTheme({ preservePosition = true } = {}) {
+  mainThemeRequestId += 1;
+
+  if (
+    preservePosition &&
+    mainThemeSource &&
+    audioCtx &&
+    mainThemeBuffer?.duration
+  ) {
+    mainThemePausedAt =
+      (audioCtx.currentTime - mainThemeStartedAt) %
+      mainThemeBuffer.duration;
+  } else if (!preservePosition) {
+    mainThemePausedAt = 0;
+  }
+
+  const source = mainThemeSource;
+  mainThemeSource = null;
+
+  if (!source) {
+    return;
+  }
+
+  try {
+    source.onended = null;
+    source.stop();
+  } catch (error) {}
+
+  try {
+    source.disconnect();
+  } catch (error) {}
+}
+
+async function startMainTheme() {
+  const ctx = getCtx();
+
+  if (
+    !ctx ||
+    ctx.state !== "running" ||
+    !musicEnabled ||
+    musicPausedForAmbience
+  ) {
+    return false;
+  }
+
+  if (mainThemeSource) {
+    return true;
+  }
+
+  const requestId = ++mainThemeRequestId;
+  const buffer = await loadMainThemeBuffer();
+
+  if (
+    !buffer ||
+    requestId !== mainThemeRequestId ||
+    !musicEnabled ||
+    musicPausedForAmbience ||
+    !ctxIsRunning()
+  ) {
+    return false;
+  }
+
+  const source = ctx.createBufferSource();
+  const offset =
+    buffer.duration > 0
+      ? mainThemePausedAt % buffer.duration
+      : 0;
+
+  source.buffer = buffer;
+  source.loop = true;
+  source.connect(musicGain);
+  source.start(0, offset);
+
+  mainThemeSource = source;
+  mainThemeStartedAt = ctx.currentTime - offset;
+
+  source.onended = () => {
+    if (mainThemeSource === source) {
+      mainThemeSource = null;
+    }
+  };
+
+  return true;
 }
 
 // Notify all subscribers of unlock state changes
@@ -173,9 +299,7 @@ function pauseMusicLoop() {
   });
   currentMusicNodes = [];
 
-  if (musicAudio) {
-    musicAudio.pause();
-  }
+  stopMainTheme({ preservePosition: true });
 }
 
 export function initGlobalUnlockListener() {
@@ -327,16 +451,26 @@ export function setSfxEnabled(enabled) {
 export function setMusicVolume(vol) {
   musicVol = normalizeMusicVolume(vol);
 
-  if (musicAudio) {
-    musicAudio.volume = getMainThemeVolume();
-  }
   if (musicGain) {
     const ctx = getCtx();
+
     if (ctx) {
+      const targetVolume =
+        duckedGain !== null
+          ? getMainThemeVolume(0.2)
+          : getMainThemeVolume();
+
       try {
         musicGain.gain.cancelScheduledValues(ctx.currentTime);
-        musicGain.gain.linearRampToValueAtTime(0.15 * vol, ctx.currentTime + 0.1);
-      } catch (e) {}
+        musicGain.gain.setValueAtTime(
+          musicGain.gain.value,
+          ctx.currentTime
+        );
+        musicGain.gain.linearRampToValueAtTime(
+          targetVolume,
+          ctx.currentTime + 0.1
+        );
+      } catch (error) {}
     }
   }
 }
@@ -360,47 +494,56 @@ export function setNarrationVolume(vol) {
 
 // Lower background music to ~20% during narration
 export function duckMusic() {
-  if (musicAudio) {
-    musicAudio.volume = getMainThemeVolume(0.2);
+  if (!musicGain || duckedGain !== null) {
+    return;
   }
 
-  if (musicGain && duckedGain === null) {
-    const ctx = getCtx();
-    if (!ctx) return;
+  const ctx = getCtx();
 
-    duckedGain = musicGain.gain.value;
-
-    try {
-      musicGain.gain.linearRampToValueAtTime(
-        duckedGain * 0.2,
-        ctx.currentTime + 0.3
-      );
-    } catch (e) {}
+  if (!ctx) {
+    return;
   }
+
+  duckedGain = getMainThemeVolume();
+
+  try {
+    musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    musicGain.gain.setValueAtTime(
+      musicGain.gain.value,
+      ctx.currentTime
+    );
+    musicGain.gain.linearRampToValueAtTime(
+      getMainThemeVolume(0.2),
+      ctx.currentTime + 0.3
+    );
+  } catch (error) {}
 }
 
 export function unDuckMusic() {
-  if (musicAudio) {
-    musicAudio.volume = getMainThemeVolume();
+  if (!musicGain || duckedGain === null) {
+    return;
   }
 
-  if (musicGain && duckedGain !== null) {
-    const ctx = getCtx();
+  const ctx = getCtx();
 
-    if (!ctx) {
-      duckedGain = null;
-      return;
-    }
-
-    try {
-      musicGain.gain.linearRampToValueAtTime(
-        duckedGain,
-        ctx.currentTime + 0.5
-      );
-    } catch (e) {}
-
+  if (!ctx) {
     duckedGain = null;
+    return;
   }
+
+  try {
+    musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    musicGain.gain.setValueAtTime(
+      musicGain.gain.value,
+      ctx.currentTime
+    );
+    musicGain.gain.linearRampToValueAtTime(
+      getMainThemeVolume(),
+      ctx.currentTime + 0.5
+    );
+  } catch (error) {}
+
+  duckedGain = null;
 }
 
 function playTone(freq, duration, type = "sine", vol = 0.3, target = null) {
@@ -765,9 +908,7 @@ export function stopMusic() {
     musicTimeoutId = null;
   }
 
-  if (musicAudio) {
-    musicAudio.pause();
-  }
+  stopMainTheme({ preservePosition: true });
 }
 
 export function pauseMusicForAmbience() {
@@ -973,29 +1114,35 @@ function _startMusic(theme) {
 // Public: play a music theme. If audio isn't unlocked yet (mobile, no gesture),
 // store as pending — it starts on the first user gesture / unlock.
 export function playMusic(theme) {
-  if (!musicEnabled) return;
-
-  if (musicPausedForAmbience) {
-    musicTheme = theme;
-    pendingMusicTheme = theme;
+  if (!musicEnabled) {
     return;
   }
 
   musicTheme = theme;
-  pendingMusicTheme = null;
 
-  if (!musicAudio) {
-    musicAudio = new Audio(MAIN_THEME_URL);
-    musicAudio.loop = true;
-    musicAudio.preload = "auto";
+  if (musicPausedForAmbience) {
+    pendingMusicTheme = theme;
+    return;
   }
 
-  musicAudio.volume = getMainThemeVolume(0.2);
+  const ctx = getCtx();
 
-  if (!musicAudio.paused) return;
-
-  musicAudio.play().catch(() => {
+  if (!ctx || ctx.state !== "running") {
     pendingMusicTheme = theme;
+    return;
+  }
+
+  pendingMusicTheme = null;
+
+  startMainTheme().then((started) => {
+    if (
+      !started &&
+      musicEnabled &&
+      !musicPausedForAmbience &&
+      !mainThemeSource
+    ) {
+      pendingMusicTheme = theme;
+    }
   });
 }
 

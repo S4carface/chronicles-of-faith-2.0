@@ -93,10 +93,8 @@ const hasMyScore = entries.some(isMyEntry);
   return (
     <div
   className="min-h-screen p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
-
-        <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
-          <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
+<div className="flex items-center gap-2">
+  <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50">          <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
             <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
           </div>
           <h1 className="font-serif text-2xl text-amber-200 sm:text-3xl">   Leaderboard </h1>
@@ -219,7 +217,7 @@ const hasMyScore = entries.some(isMyEntry);
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="mb-8 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                    <div className="flex items-center gap-2">
   <div className="truncate font-serif text-amber-100">
     {sanitizePlayerName(entry.playerName)}
   </div>

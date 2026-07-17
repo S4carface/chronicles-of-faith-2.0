@@ -233,7 +233,7 @@ const SettingsSection = ({
     // citations are verbalized: "Genesis 1:1-3" → "Genesis chapter 1, verses 1 through 3"
     Sound.speakNarration(
       "In the beginning, God created the heavens and the earth. Genesis 1:1-3.",
-      (profile.settings.narrationVolume ?? 50) / 100,
+      narrationVolume / 100,
       profile.settings.narrationVoice
     );
   };
@@ -313,9 +313,6 @@ const SettingsSection = ({
     })
   }
 />
-<span className="text-amber-300/60 text-xs w-8 text-right">
-  {musicVolume}%
-</span>
 
                 <span className="text-amber-300/60 text-xs w-8 text-right">{musicVolume}%</span>
               </div>

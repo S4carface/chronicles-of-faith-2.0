@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+
 import { useGame } from "@/game/GameContext";
 import { CARDS } from "@/data/cards";
 import CollectionTab from "@/components/game/CollectionTab";
@@ -19,14 +19,14 @@ export default function Collection() {
   const activeDeck = profile.activeDeck || [];
 
   return (
-    <div className="min-h-screen p-4 lg:p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="flex items-center justify-between mb-6">
-        <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
+    <div className="min-h-screen p-4 lg:p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
+      <div className="flex justify-center mb-6">
+
         <div className="text-center">
           <h1 className="text-2xl lg:text-3xl font-serif text-amber-200">My Cards & Deck</h1>
           <p className="text-amber-100/50 text-xs mt-1">Collection: {ownedCount} / {totalCount} · Active Deck: {activeDeck.length} / 10</p>
         </div>
-        <div className="w-16" />
+        
       </div>
 
       {/* Overall progress bar */}

@@ -90,34 +90,47 @@ const isMyEntry = (entry) => {
 };
 
 const hasMyScore = entries.some(isMyEntry);
-  return (
-    <div
-  className="min-h-screen p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-<div className="flex items-center gap-2">
-  <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50">          <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50" style={{ background: "#0F1A30" }}>
-            <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
-          </div>
-          <h1 className="font-serif text-2xl text-amber-200 sm:text-3xl">   Leaderboard </h1>
+return (
+  <div
+    className="min-h-screen p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28"
+    style={{
+      background:
+        "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)",
+    }}
+  >
+    <div className="mb-8 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <div
+          className="w-7 h-7 rounded-full overflow-hidden border-2 border-amber-400/50"
+          style={{ background: "#0F1A30" }}
+        >
+          <img src={VICTORY_ART.crest} alt="" className="art-portrait" />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-  onClick={handleChangeName}
-  className="flex items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-900/20 px-3 py-2 text-xs font-medium text-amber-200 transition hover:bg-amber-800/30"
-  title="Change Name"
->
-  <Pencil className="h-3.5 w-3.5" />
-  <span>Name</span>
-</button>
-          <button
-            onClick={handleRefresh}
-            className="w-9 h-9 rounded-lg border border-amber-400/30 bg-amber-900/20 flex items-center justify-center text-amber-200 hover:bg-amber-800/30 transition"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          </button>
-        </div>
+
+        <h1 className="font-serif text-2xl text-amber-200 sm:text-3xl">
+          Leaderboard
+        </h1>
       </div>
 
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleChangeName}
+          className="flex items-center gap-1.5 rounded-lg border border-amber-400/30 bg-amber-900/20 px-3 py-2 text-xs font-medium text-amber-200 transition hover:bg-amber-800/30"
+          title="Change Name"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          <span>Name</span>
+        </button>
+
+        <button
+          onClick={handleRefresh}
+          className="w-9 h-9 rounded-lg border border-amber-400/30 bg-amber-900/20 flex items-center justify-center text-amber-200 hover:bg-amber-800/30 transition"
+          title="Refresh"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
+    </div>
       <div className="flex items-center justify-center gap-1.5 mb-4 text-amber-100/40 text-xs">
         <Globe className="w-3.5 h-3.5 text-emerald-400/60" />
         <span>Scores are shared online across players.</span>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Volume2, VolumeX, Mic, Type, Settings as SettingsIcon, GraduationCap, Play, Pencil, Cloud, User, Film } from "lucide-react";
+import {   Volume2,   VolumeX,   Mic,   Type,   Settings as SettingsIcon,   GraduationCap,   Play,   Pencil,   Cloud,   User,   Film,   ChevronDown, } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
@@ -103,13 +103,11 @@ const SettingsSection = ({
           {title}
         </h2>
 
-        <span
-          className={`text-amber-300 transition-transform duration-200 ${
-            open ? "rotate-180" : ""
-          }`}
-        >
-          ▼
-        </span>
+        <ChevronDown
+  className={`h-5 w-5 text-amber-300 transition-transform duration-200 ${
+    open ? "rotate-180" : ""
+  }`}
+/>
       </button>
 
       {open && (

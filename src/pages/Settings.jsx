@@ -18,6 +18,17 @@ export default function Settings() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null); 
   const [expandedSection, setExpandedSection] = useState("player");
+const [musicVolume, setMusicVolume] = useState(
+  profile.settings.musicVolume ?? 50
+);
+
+const [sfxVolume, setSfxVolume] = useState(
+  profile.settings.sfxVolume ?? 50
+);
+
+const [narrationVolume, setNarrationVolume] = useState(
+  profile.settings.narrationVolume ?? 50
+);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -60,35 +71,7 @@ export default function Settings() {
     Sound.sfx.click();
   };
 
-  const handleMusicVolume = (vol) => {
-  Sound.setMusicVolume(vol / 100);
-  saveProfile({
-    settings: {
-      ...profile.settings,
-      musicVolume: vol,
-    },
-  });
-};
-
-const handleSfxVolume = (vol) => {
-  Sound.setSfxVolume(vol / 100);
-  saveProfile({
-    settings: {
-      ...profile.settings,
-      sfxVolume: vol,
-    },
-  });
-};
-
-const handleNarrationVolume = (vol) => {
-  Sound.setNarrationVolume(vol / 100);
-  saveProfile({
-    settings: {
-      ...profile.settings,
-      narrationVolume: vol,
-    },
-  });
-};
+const handleMusicVolume = (vol) => {
 
   const setEnemyAnimation = (mode) => {
     saveProfile({ settings: { ...profile.settings, enemyAnimation: mode } });
@@ -220,17 +203,26 @@ const SettingsSection = ({
             </div>
             {profile.settings.music && (
               <div className="flex items-center gap-2">
-                <input
+<input
   type="range"
   min="0"
   max="100"
   step="1"
-  value={profile.settings.musicVolume ?? 50}
-  onInput={(e) =>
+  value={musicVolume}
+  onChange={(e) =>
     handleMusicVolume(Number(e.currentTarget.value))
   }
-  className="w-full h-8 cursor-pointer accent-amber-500 touch-none"
-  style={{ touchAction: "none" }}
+  onPointerUp={(e) =>
+    saveAudioVolumes({
+      musicVolume: Number(e.currentTarget.value),
+    })
+  }
+  onBlur={(e) =>
+    saveAudioVolumes({
+      musicVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-8 cursor-pointer accent-amber-500"
 />
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.musicVolume ?? 50}%</span>
               </div>
@@ -253,17 +245,26 @@ const SettingsSection = ({
             </div>
             {profile.settings.sfx && (
               <div className="flex items-center gap-2">
-                <input
+<input
   type="range"
   min="0"
   max="100"
   step="1"
-  value={profile.settings.narrationVolume ?? 50}
-  onInput={(e) =>
-    handleNarrationVolume(Number(e.currentTarget.value))
+  value={sfxVolume}
+  onChange={(e) =>
+    handleSfxVolume(Number(e.currentTarget.value))
   }
-  className="w-full h-8 cursor-pointer accent-amber-500 touch-none"
-  style={{ touchAction: "none" }}
+  onPointerUp={(e) =>
+    saveAudioVolumes({
+      sfxVolume: Number(e.currentTarget.value),
+    })
+  }
+  onBlur={(e) =>
+    saveAudioVolumes({
+      sfxVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-8 cursor-pointer accent-amber-500"
 />
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.sfxVolume ?? 50}%</span>
               </div>
@@ -289,12 +290,27 @@ const SettingsSection = ({
             </div>
             {profile.settings.narration && (
               <div className="flex items-center gap-2">
-                <input
-                  type="range" min="0" max="100"
-                  value={profile.settings.narrationVolume ?? 50}
-                  onChange={(e) => handleNarrationVolume(parseInt(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-full appearance-none cursor-pointer accent-amber-500"
-                />
+   <input
+  type="range"
+  min="0"
+  max="100"
+  step="1"
+  value={narrationVolume}
+  onChange={(e) =>
+    handleNarrationVolume(Number(e.currentTarget.value))
+  }
+  onPointerUp={(e) =>
+    saveAudioVolumes({
+      narrationVolume: Number(e.currentTarget.value),
+    })
+  }
+  onBlur={(e) =>
+    saveAudioVolumes({
+      narrationVolume: Number(e.currentTarget.value),
+    })
+  }
+  className="w-full h-8 cursor-pointer accent-amber-500"
+/>
                 <span className="text-amber-300/60 text-xs w-8 text-right">{profile.settings.narrationVolume ?? 50}%</span>
               </div>
             )}

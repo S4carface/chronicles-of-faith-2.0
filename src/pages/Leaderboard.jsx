@@ -131,7 +131,7 @@ return (
         </button>
       </div>
     </div>
-      <div className="flex items-center justify-center gap-1.5 mb-4 text-amber-100/40 text-xs">
+      <div className="mb-6 flex items-center justify-center gap-1.5 text-xs text-amber-100/40">
         <Globe className="w-3.5 h-3.5 text-emerald-400/60" />
         <span>Scores are shared online across players.</span>
       </div>

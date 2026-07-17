@@ -8,7 +8,44 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
+const SettingsSection = ({
+  id,
+  title,
+  children,
+  expandedSection,
+  setExpandedSection,
+}) => {
+  const open = expandedSection === id;
 
+  return (
+    <div className="space-y-3">
+      <button
+  onClick={() => setExpandedSection(open ? "" : id)}
+  className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200 ${
+    open
+      ? "border-amber-400/50 bg-amber-500/10 shadow-lg"
+      : "border-amber-500/15 bg-slate-900/30 hover:bg-slate-800/40 hover:border-amber-400/25"
+  }`}
+>
+        <h2 className="text-amber-100 font-serif text-sm tracking-wide">
+          {title}
+        </h2>
+
+        <ChevronDown
+  className={`h-5 w-5 text-amber-300 transition-transform duration-200 ${
+    open ? "rotate-180" : ""
+  }`}
+/>
+      </button>
+
+      {open && (
+        <div className="animate-in fade-in duration-200">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 export default function Settings() {
   const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
   const { isAuthenticated, user } = useAuth();
@@ -113,44 +150,7 @@ const handleNarrationVolume = (vol) => {
 
   const guidanceLevel = profile.settings.guidanceLevel || "normal";
 
-const SettingsSection = ({
-  id,
-  title,
-  children,
-  expandedSection,
-  setExpandedSection,
-}) => {
-  const open = expandedSection === id;
 
-  return (
-    <div className="space-y-3">
-      <button
-  onClick={() => setExpandedSection(open ? "" : id)}
-  className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 transition-all duration-200 ${
-    open
-      ? "border-amber-400/50 bg-amber-500/10 shadow-lg"
-      : "border-amber-500/15 bg-slate-900/30 hover:bg-slate-800/40 hover:border-amber-400/25"
-  }`}
->
-        <h2 className="text-amber-100 font-serif text-sm tracking-wide">
-          {title}
-        </h2>
-
-        <ChevronDown
-  className={`h-5 w-5 text-amber-300 transition-transform duration-200 ${
-    open ? "rotate-180" : ""
-  }`}
-/>
-      </button>
-
-      {open && (
-        <div className="animate-in fade-in duration-200">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
 
   const previewVoice = () => {
     Sound.sfx.click();

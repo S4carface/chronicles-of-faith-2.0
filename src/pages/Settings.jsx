@@ -158,7 +158,7 @@ const SettingsSection = ({
     // citations are verbalized: "Genesis 1:1-3" → "Genesis chapter 1, verses 1 through 3"
     Sound.speakNarration(
       "In the beginning, God created the heavens and the earth. Genesis 1:1-3.",
-      narrationVolume / 100,
+      (profile.settings.narrationVolume ?? 50) / 100,
       profile.settings.narrationVoice
     );
   };
@@ -244,7 +244,7 @@ const SettingsSection = ({
   {profile.settings.musicVolume ?? 50}%
 </span>
 
-                <span className="text-amber-300/60 text-xs w-8 text-right">{musicVolume}%</span>
+                
               </div>
             )}
           </div>
@@ -279,7 +279,7 @@ const SettingsSection = ({
 <span className="text-amber-300/60 text-xs w-8 text-right">
   {profile.settings.sfxVolume ?? 50}%
 </span>
-                <span className="text-amber-300/60 text-xs w-8 text-right">{sfxVolume}%</span>
+                
               </div>
             )}
           </div>
@@ -317,7 +317,7 @@ const SettingsSection = ({
 <span className="text-amber-300/60 text-xs w-8 text-right">
   {profile.settings.narrationVolume ?? 50}%
 </span>
-                <span className="text-amber-300/60 text-xs w-8 text-right">{narrationVolume}%</span>
+                
               </div>
             )}
             {profile.settings.narration && (

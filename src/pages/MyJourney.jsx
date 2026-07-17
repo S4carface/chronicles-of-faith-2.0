@@ -109,7 +109,6 @@ export default function MyJourney() {
   const masteryEmpty = totalCardPlays === 0;
 
   return (
-
 <div
   className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28"
   style={{

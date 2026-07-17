@@ -142,8 +142,12 @@ const SettingsSection = ({
 
       <div className="max-w-md lg:max-w-3xl w-full space-y-5 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-6">
                {/* === PLAYER SECTION === */}
-        <div className="space-y-3">
-          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Player</h2>
+<SettingsSection
+  id="player"
+  title="Player"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
             <div className="flex items-center gap-2 mb-3">
               <Type className="w-4 h-4 text-amber-300/70" />
@@ -167,8 +171,9 @@ const SettingsSection = ({
                 <Pencil className="w-3.5 h-3.5" /> Change Name
               </button>
             </div>
-          </div>
-        </div>
+                    </div>
+</SettingsSection>
+
          {/* === AUDIO SECTION === */}
         <div className="space-y-3">
           <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Audio</h2>

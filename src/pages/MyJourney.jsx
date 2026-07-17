@@ -59,7 +59,7 @@ function formatPlayTime(seconds) {
 }
 
 export default function MyJourney() {
-  const { profile, saveProfile } = useGame();
+  const { profile } = useGame();
   
   const [stats, setStats] = useState(() => getStats());
   const [showNamePrompt, setShowNamePrompt] = useState(false);
@@ -110,6 +110,12 @@ export default function MyJourney() {
 
   return (
 
+<div
+  className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28"
+  style={{
+    background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)"
+  }}
+>
 
       <div className="w-full max-w-2xl text-center mb-5">
         <div className="flex justify-center mb-2">

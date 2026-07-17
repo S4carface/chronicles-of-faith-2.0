@@ -419,8 +419,12 @@ const SettingsSection = ({
         </SettingsSection>
 
         {/* === ACCOUNT SECTION === */}
-        <div className="space-y-3">
-          <h2 className="text-amber-300/70 font-serif text-xs uppercase tracking-widest px-1">Account / Cloud Save</h2>
+<SettingsSection
+  id="account"
+  title="Account / Cloud Save"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
           <div className="p-4 rounded-xl border-2 border-amber-500/15" style={{ background: "rgba(15,26,48,0.6)" }}>
             {isAuthenticated ? (
               <div>
@@ -481,7 +485,7 @@ const SettingsSection = ({
               </div>
             )}
           </div>
-        </div>
+        </SettingsSection>
 
         {/* About */}
 <div className="space-y-3 lg:col-span-2">

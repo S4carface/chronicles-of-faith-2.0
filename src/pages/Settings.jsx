@@ -565,7 +565,7 @@ const SettingsSection = ({
       Version 1.0 — Genesis
     </p>
   </div>
-</div>
+
       </SettingsSection>
 
       {showNamePrompt && (

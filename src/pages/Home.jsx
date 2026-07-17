@@ -586,61 +586,36 @@ const handleNameSaved = (name) => {
         </div>
       )}
 
-      {/* Primary menu — four main tiles */}
-      <div className="relative w-full max-w-md lg:max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 gap-1.5 lg:gap-4">
-        {primaryItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={() => Sound.sfx.click()}
-            className="flex items-center gap-3 px-3 py-2 lg:px-6 lg:py-5 rounded-lg border border-amber-500/15 hover:border-amber-400/40 hover:bg-amber-500/5 hover:shadow-md hover:shadow-amber-500/10 transition-all duration-200 active:scale-[0.99] group"
-            style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.45) 0%, rgba(15,26,48,0.45) 100%)" }}
-          >
-            <div className="flex-shrink-0 w-8 h-8 lg:w-14 lg:h-14 rounded-md overflow-hidden border border-amber-500/20 group-hover:border-amber-400/40 transition-colors" style={{ background: "#0F1A30" }}>
-              <img src={item.art} alt={item.label} className="art-portrait" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="font-serif text-amber-100 text-[13px] lg:text-lg leading-tight">{item.label}</div>
-              <div className="text-amber-100/40 text-[10px] lg:text-sm leading-tight">{item.desc}</div>
-            </div>
-            {item.status && (
-              <span className="flex-shrink-0 text-amber-300/60 text-[10px] lg:text-sm font-medium font-serif tracking-wide">
-                {item.status}
-              </span>
-            )}
-          </Link>
-        ))}
-      </div>
-
-      {/* Secondary menu — "More" section, visually subdued */}
-      <div className="relative w-full max-w-md lg:max-w-[1100px] mt-4 lg:mt-6">
-        <p className="text-amber-100/30 text-[10px] lg:text-xs uppercase tracking-widest font-serif text-center mb-2">More</p>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 lg:gap-2 opacity-70 hover:opacity-100 transition-opacity">
-          {secondaryItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => Sound.sfx.click()}
-              className="flex items-center gap-2.5 px-3 py-1.5 lg:px-5 lg:py-3 rounded-lg border border-amber-500/10 hover:border-amber-400/30 hover:bg-amber-500/5 transition-all duration-200 active:scale-[0.99] group"
-            >
-              <div className="flex-shrink-0 w-6 h-6 lg:w-10 lg:h-10 rounded-md overflow-hidden border border-amber-500/15 group-hover:border-amber-400/30 transition-colors" style={{ background: "#0F1A30" }}>
-                <img src={item.art} alt={item.label} className="art-portrait" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-serif text-amber-100/80 text-[12px] lg:text-base leading-tight">{item.label}</div>
-                <div className="text-amber-100/30 text-[9px] lg:text-sm leading-tight">{item.desc}</div>
-              </div>
-              {item.status && (
-                <span className="flex-shrink-0 text-amber-300/50 text-[9px] lg:text-xs font-medium font-serif tracking-wide">
-                  {item.status}
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
-      </div>
 
       <p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">
+        {/* Compact supporting links */}
+<div className="relative grid w-full max-w-md grid-cols-2 gap-3 lg:max-w-[600px]">
+  <Link
+    to="/leaderboard"
+    onClick={() => Sound.sfx.click()}
+    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-3 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
+  >
+    <p className="font-serif text-sm text-amber-100 lg:text-base">
+      Leaderboard
+    </p>
+    <p className="mt-1 text-[10px] text-amber-100/40 lg:text-xs">
+      Compare daily scores
+    </p>
+  </Link>
+
+  <Link
+    to="/settings"
+    onClick={() => Sound.sfx.click()}
+    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-3 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
+  >
+    <p className="font-serif text-sm text-amber-100 lg:text-base">
+      Settings
+    </p>
+    <p className="mt-1 text-[10px] text-amber-100/40 lg:text-xs">
+      Audio and options
+    </p>
+  </Link>
+</div>
         "In the beginning, God created the heavens and the earth." — Genesis 1:1
       </p>
 

@@ -10,9 +10,12 @@
 
 import { prepareTextForNarration, verbalizeScriptureReference, pickVoice } from "@/game/scriptureVoice";
 
+const MAIN_THEME_URL = "/audio/music/chronicles-main-theme.mp3";
+
 let audioCtx = null;
 let musicGain = null;
 let sfxGain = null;
+let musicAudio = null;
 let musicEnabled = true;
 let sfxEnabled = true;
 let musicVol = 0.5;
@@ -124,10 +127,12 @@ function tryResumeAfterReturn() {
 // Restart the music loop if it should be playing but isn't
 function restartMusicIfNeeded() {
   if (!musicEnabled || musicPausedForAmbience) return;
-    const theme = pendingMusicTheme || musicTheme;
-  if (theme && !musicTimeoutId) {
+
+  const theme = pendingMusicTheme || musicTheme;
+
+  if (theme) {
     pendingMusicTheme = null;
-    _startMusic(theme);
+    playMusic(theme);
   }
 }
 
@@ -138,10 +143,21 @@ function pauseMusicLoop() {
     clearTimeout(musicTimeoutId);
     musicTimeoutId = null;
   }
-  if (musicTheme) pendingMusicTheme = pendingMusicTheme || musicTheme;
-  // Also stop oscillators that are still ringing
-  currentMusicNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
+
+  if (musicTheme) {
+    pendingMusicTheme = musicTheme;
+  }
+
+  currentMusicNodes.forEach((node) => {
+    try {
+      node.stop();
+    } catch {}
+  });
   currentMusicNodes = [];
+
+  if (musicAudio) {
+    musicAudio.pause();
+  }
 }
 
 export function initGlobalUnlockListener() {
@@ -261,18 +277,19 @@ export function subscribeUnlock(cb) {
 
 export function setMusicEnabled(enabled) {
   musicEnabled = enabled;
+
   if (!enabled) {
     stopMusic();
     pendingMusicTheme = null;
-  } else {
-    // If audio is unlocked and we have a theme, play it
-if (!musicPausedForAmbience && audioUnlocked && ctxIsRunning()) {
+    return;
+  }
+
+  if (musicPausedForAmbience) return;
+
   const theme = musicTheme || pendingMusicTheme;
-  if (theme) _startMusic(theme);
-      } else if (pendingMusicTheme || musicTheme) {
-      // Store pending; will start on unlock
-      pendingMusicTheme = pendingMusicTheme || musicTheme;
-    }
+
+  if (theme) {
+    playMusic(theme);
   }
 }
 
@@ -285,6 +302,10 @@ export function setSfxEnabled(enabled) {
 }
 export function setMusicVolume(vol) {
   musicVol = vol;
+
+  if (musicAudio) {
+    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+  }
   if (musicGain) {
     const ctx = getCtx();
     if (ctx) {
@@ -315,23 +336,45 @@ export function setNarrationVolume(vol) {
 
 // Lower background music to ~20% during narration
 export function duckMusic() {
+  if (musicAudio) {
+    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.13));
+  }
+
   if (musicGain && duckedGain === null) {
     const ctx = getCtx();
     if (!ctx) return;
+
     duckedGain = musicGain.gain.value;
+
     try {
-      musicGain.gain.linearRampToValueAtTime(duckedGain * 0.2, ctx.currentTime + 0.5);
+      musicGain.gain.linearRampToValueAtTime(
+        duckedGain * 0.2,
+        ctx.currentTime + 0.3
+      );
     } catch (e) {}
   }
 }
 
 export function unDuckMusic() {
+  if (musicAudio) {
+    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+  }
+
   if (musicGain && duckedGain !== null) {
     const ctx = getCtx();
-    if (!ctx) { duckedGain = null; return; }
+
+    if (!ctx) {
+      duckedGain = null;
+      return;
+    }
+
     try {
-      musicGain.gain.linearRampToValueAtTime(duckedGain, ctx.currentTime + 0.5);
+      musicGain.gain.linearRampToValueAtTime(
+        duckedGain,
+        ctx.currentTime + 0.5
+      );
     } catch (e) {}
+
     duckedGain = null;
   }
 }
@@ -666,7 +709,7 @@ export const sfx = {
   },
   divine: () => {
     unlockAudio();
-    [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playTone(f, 0.35, "sine", 0.1), i * 45));
+    [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playTone(f, 0.35, "sine", 0.18), i * 45));
   },
   achievement: () => {
     [659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playTone(f, 0.2, "triangle", 0.12), i * 90));
@@ -674,7 +717,7 @@ export const sfx = {
   unlockReveal: () => {
     unlockAudio();
     [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 0.3, "sine", 0.1), i * 100));
-    setTimeout(() => playTone(1319, 0.5, "sine", 0.06), 400);
+    setTimeout(() => playTone(1319, 0.5, "sine", 0.12), 400);
   },
   trivia_correct: () => {
     [523, 659, 784].forEach((f, i) => setTimeout(() => playTone(f, 0.12, "sine", 0.12), i * 70));
@@ -686,12 +729,20 @@ export const sfx = {
 };
 
 export function stopMusic() {
-  currentMusicNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
+  currentMusicNodes.forEach((node) => {
+    try {
+      node.stop();
+    } catch {}
+  });
   currentMusicNodes = [];
 
   if (musicTimeoutId) {
     clearTimeout(musicTimeoutId);
     musicTimeoutId = null;
+  }
+
+  if (musicAudio) {
+    musicAudio.pause();
   }
 }
 
@@ -906,18 +957,22 @@ export function playMusic(theme) {
     return;
   }
 
-  // Ensure context exists
-  getCtx();
-  // Don't restart if the same theme is already playing — prevents music
-  // restarting from the beginning on route changes within the same theme.
-  if (musicTheme === theme && musicTimeoutId !== null) return;
+  musicTheme = theme;
+  pendingMusicTheme = null;
 
-  if (!audioUnlocked || !ctxIsRunning()) {
-    // Queue for when audio is unlocked
-    pendingMusicTheme = theme;
-    return;
+  if (!musicAudio) {
+    musicAudio = new Audio(MAIN_THEME_URL);
+    musicAudio.loop = true;
+    musicAudio.preload = "auto";
   }
-  _startMusic(theme);
+
+  musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+
+  if (!musicAudio.paused) return;
+
+  musicAudio.play().catch(() => {
+    pendingMusicTheme = theme;
+  });
 }
 
 // === VOICE NARRATION via SpeechSynthesis API ===

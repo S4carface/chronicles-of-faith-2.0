@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import * as Sound from "@/game/soundManager";
 
 const ITEMS = [
@@ -20,9 +20,9 @@ const ITEMS = [
     primary: true,
   },
   {
-    label: "Journey",
-    path: "/progress",
-    symbol: "◇",
+    label: "Daily",
+    path: "/daily",
+    symbol: "◆",
   },
   {
     label: "You",
@@ -31,7 +31,21 @@ const ITEMS = [
   },
 ];
 
+const HIDDEN_PATHS = ["/play"];
+
 export default function BottomNavigation() {
+  const location = useLocation();
+
+  const shouldHide = HIDDEN_PATHS.some(
+    (path) =>
+      location.pathname === path ||
+      location.pathname.startsWith(`${path}/`)
+  );
+
+  if (shouldHide) {
+    return null;
+  }
+
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-xl px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom))]"

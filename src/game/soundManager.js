@@ -19,6 +19,24 @@ let musicAudio = null;
 let musicEnabled = true;
 let sfxEnabled = true;
 let musicVol = 0.5;
+function normalizeMusicVolume(vol) {
+  const value = Number(vol);
+
+  if (!Number.isFinite(value)) {
+    return 0.5;
+  }
+
+  const normalized = value > 1 ? value / 100 : value;
+
+  return Math.max(0, Math.min(1, normalized));
+}
+
+function getMainThemeVolume(multiplier = 1) {
+  return Math.max(
+    0,
+    Math.min(1, normalizeMusicVolume(musicVol) * 0.18 * multiplier)
+  );
+}
 let sfxVol = 0.5;
 let narrationVol = 0.5;
 let currentMusicNodes = [];
@@ -307,10 +325,10 @@ export function setSfxEnabled(enabled) {
   }
 }
 export function setMusicVolume(vol) {
-  musicVol = vol;
+  musicVol = normalizeMusicVolume(vol);
 
   if (musicAudio) {
-    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+    musicAudio.volume = getMainThemeVolume();
   }
   if (musicGain) {
     const ctx = getCtx();
@@ -343,7 +361,7 @@ export function setNarrationVolume(vol) {
 // Lower background music to ~20% during narration
 export function duckMusic() {
   if (musicAudio) {
-    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.13));
+    musicAudio.volume = getMainThemeVolume(0.2);
   }
 
   if (musicGain && duckedGain === null) {
@@ -363,7 +381,7 @@ export function duckMusic() {
 
 export function unDuckMusic() {
   if (musicAudio) {
-    musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+    musicAudio.volume = getMainThemeVolume();
   }
 
   if (musicGain && duckedGain !== null) {
@@ -972,7 +990,7 @@ export function playMusic(theme) {
     musicAudio.preload = "auto";
   }
 
-  musicAudio.volume = Math.max(0, Math.min(1, musicVol * 0.65));
+  musicAudio.volume = getMainThemeVolume(0.2);
 
   if (!musicAudio.paused) return;
 

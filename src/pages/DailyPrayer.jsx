@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Heart, Sun, Volume2, Square, Check, Flame, Coins } from "lucide-react";
+
+import { BookOpen, Heart, Sun, Volume2, Square, Check, Flame, Coins } from "lucide-react";
 import { getDailyReflection } from "@/data/dailyReflections";
 import { recordVerseRead, recordDevotionRead } from "@/game/playerStats";
 import { speakNarration, stopNarration } from "@/game/soundManager";
@@ -12,7 +12,7 @@ const PRAYER_GOLD_REWARD = 5;
 
 export default function DailyPrayer() {
   const { profile, saveProfile } = useGame();
-  const navigate = useNavigate();
+  
   const reflection = getDailyReflection();
   const [reading, setReading] = useState(false);
   const [justMarked, setJustMarked] = useState(false);
@@ -64,12 +64,12 @@ export default function DailyPrayer() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-10 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2A2E 0%, #0A0F1E 80%)" }}>
+    <div className="min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28 relative overflow-hidden" style={{ background: "radial-gradient(ellipse at center, #1A2A2E 0%, #0A0F1E 80%)" }}>
       {/* Soft floating particles — peaceful feel */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
           width: `${2 + Math.random() * 3}px`,
-          height: `${2 + Math.random() * 3}px}`,
+          height: `${2 + Math.random() * 3}px`,
           left: `${Math.random() * 100}%`,
           top: `${Math.random() * 100}%`,
           background: `rgba(251,191,36,${0.15 + Math.random() * 0.2})`,
@@ -78,11 +78,7 @@ export default function DailyPrayer() {
         }} />
       ))}
 
-      <div className="absolute top-4 left-4 lg:top-6 lg:left-6 z-10">
-        <button onClick={() => { Sound.sfx.click(); navigate("/"); }} className="text-amber-100/60 hover:text-amber-200 transition text-sm flex items-center gap-1.5">
-          <ArrowLeft className="w-4 h-4" /> Menu
-        </button>
-      </div>
+
 
       <div className="relative w-full max-w-md lg:max-w-lg text-center">
         {/* Icon */}

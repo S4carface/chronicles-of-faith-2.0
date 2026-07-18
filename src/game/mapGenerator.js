@@ -29,7 +29,7 @@ export function pickN(rng, arr, n) {
 export const DIFFICULTY_PRESETS = {
   easy: { fogOfWar: false, rewardChance: 0.55, label: "Easy", desc: "All rooms visible. More rewards.", icon: "🌱" },
   normal: { fogOfWar: true, rewardChance: 0.40, label: "Normal", desc: "Fog of war. Decent rewards.", icon: "⚔️" },
-  hard: { fogOfWar: true, rewardChance: 0.55, label: "Hard", desc: "Fog of war. More rewards, tougher.", icon: "🔥" },
+  hard: {   fogOfWar: true,   rewardChance: 0.55,   label: "Hard",   desc: "One life. Any defeat ends this book run. Permanent progress is kept.",   icon: "🔥", },
 };
 
 // Generate a branching map with difficulty-based room distribution

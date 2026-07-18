@@ -10,10 +10,12 @@ const PLAYER_ID_KEY = "cof_player_id";
 export function getPlayerId() {
   try {
     let id = localStorage.getItem(PLAYER_ID_KEY);
+
     if (!id) {
-      id = "p-" + Date.now() + "-" + Math.random().toString(36).slice(2, 12);
+      id = `p-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
       localStorage.setItem(PLAYER_ID_KEY, id);
     }
+
     return id;
   } catch {
     return "p-unknown";
@@ -21,54 +23,85 @@ export function getPlayerId() {
 }
 
 /**
- * Deduplicate scores by playerId (fallback to playerName),
- * keeping only the highest score per player.
+ * Return the Monday date for the current UTC week.
+ * Example: "2026-07-13".
+ */
+export function getCurrentWeekId(date = new Date()) {
+  const weekStart = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  );
+
+  const day = weekStart.getUTCDay() || 7;
+  weekStart.setUTCDate(weekStart.getUTCDate() - day + 1);
+
+  return weekStart.toISOString().slice(0, 10);
+}
+
+function normalizePlayerName(name) {
+  return sanitizePlayerName(name)
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+/**
+ * Keep only the highest score for each visible player name.
+ * playerId is used as a fallback for anonymous players.
  */
 export function deduplicateByPlayer(scores) {
-  const bestByName = new Map();
+  const bestByPlayer = new Map();
 
   for (const scoreEntry of scores) {
-    const safeName = sanitizePlayerName(scoreEntry.playerName);
-
-    const normalizedName = safeName
-      .trim()
-      .replace(/\s+/g, " ")
-      .toLowerCase();
+    const normalizedName = normalizePlayerName(scoreEntry.playerName);
 
     const key =
       normalizedName && normalizedName !== "anonymous pilgrim"
         ? normalizedName
         : scoreEntry.playerId || scoreEntry.id;
 
-    const existing = bestByName.get(key);
+    const existing = bestByPlayer.get(key);
 
     if (
       !existing ||
       Number(scoreEntry.score || 0) > Number(existing.score || 0)
     ) {
-      bestByName.set(key, scoreEntry);
+      bestByPlayer.set(key, scoreEntry);
     }
   }
 
-  return Array.from(bestByName.values()).sort(
+  return Array.from(bestByPlayer.values()).sort(
     (a, b) => Number(b.score || 0) - Number(a.score || 0)
   );
 }
 
+function buildCategoryQuery(payload, playerField, playerValue) {
+  const query = {
+    [playerField]: playerValue,
+    mode: payload.mode,
+  };
+
+  if (payload.mode === "daily") {
+    query.dailyChallengeId = payload.dailyChallengeId;
+  }
+
+  return query;
+}
+
 /**
- * Submit a score to the cloud LeaderboardScore entity.
- * Deduplicates by playerId + mode + dailyChallengeId — only the best score is kept.
- * If the new score is lower than the existing best, the previous score is kept.
- * Returns { success: boolean, action?: string, error?: string }
+ * Submit one leaderboard category.
+ *
+ * Story mode stores the player's all-time best.
+ * Weekly story scores use a reserved weekly challenge key.
+ * Daily mode stores the player's best Daily Battle score for that date.
  */
 export async function submitBestScore(scoreData) {
   const playerId = getPlayerId();
-  // Never submit invalid names to the leaderboard — sanitize first
   const safeName = sanitizePlayerName(scoreData.playerName);
+
   const payload = {
     playerName: safeName,
     playerId,
-    score: scoreData.score,
+    score: Number(scoreData.score || 0),
     mode: scoreData.mode || "story",
     chapter: scoreData.chapter || "Genesis",
     hero: scoreData.hero || "Adam",
@@ -83,88 +116,166 @@ export async function submitBestScore(scoreData) {
   };
 
   try {
-    // Query for existing score by same player for same category
-    const query = { playerId, mode: payload.mode };
-    if (payload.mode === "daily") {
-      query.dailyChallengeId = payload.dailyChallengeId;
+    let existing = await base44.entities.LeaderboardScore.filter(
+      buildCategoryQuery(payload, "playerId", playerId),
+      "-score",
+      1
+    );
+
+    // Reuse the visible player name when local storage was cleared,
+    // the app was reinstalled, or the player used another device.
+    if (
+      (!existing || existing.length === 0) &&
+      safeName !== "Anonymous Pilgrim"
+    ) {
+      existing = await base44.entities.LeaderboardScore.filter(
+        buildCategoryQuery(payload, "playerName", safeName),
+        "-score",
+        1
+      );
     }
-    let existing = await base44.entities.LeaderboardScore.filter(   query,   "-score",   1 );  // A player may receive a new local playerId after clearing storage, // changing browsers, or reinstalling. Reuse the existing visible name // so the leaderboard still keeps only one best entry for that name. if (   (!existing || existing.length === 0) &&   safeName !== "Anonymous Pilgrim" ) {   const nameQuery = {     playerName: safeName,     mode: payload.mode,   };    if (payload.mode === "daily") {     nameQuery.dailyChallengeId = payload.dailyChallengeId;   }    existing = await base44.entities.LeaderboardScore.filter(     nameQuery,     "-score",     1   ); }
 
     if (existing && existing.length > 0) {
-      const prev = existing[0];
-      if (payload.score > prev.score) {
-        await base44.entities.LeaderboardScore.update(prev.id, {
-          score: payload.score,
-          playerName: payload.playerName,
-          chapter: payload.chapter,
-          hero: payload.hero,
-          difficulty: payload.difficulty,
-          roomsCleared: payload.roomsCleared,
-          battlesWon: payload.battlesWon,
-          triviaCorrect: payload.triviaCorrect,
-          result: payload.result,
-          retriesUsed: payload.retriesUsed,
-          scorePenalty: payload.scorePenalty,
+      const previous = existing[0];
+
+      if (payload.score > Number(previous.score || 0)) {
+        await base44.entities.LeaderboardScore.update(previous.id, {
+          ...payload,
+          playerId,
         });
-        return { success: true, action: "updated" };
+
+        return {
+          success: true,
+          action: "updated",
+        };
       }
-      // Same score but name changed (e.g. player adds a name to an Anonymous score)
-      if (payload.score === prev.score && safeName !== "Anonymous Pilgrim" && prev.playerName !== safeName) {
-        await base44.entities.LeaderboardScore.update(prev.id, {
-          playerName: payload.playerName,
+
+      if (
+        safeName !== "Anonymous Pilgrim" &&
+        previous.playerName !== safeName
+      ) {
+        await base44.entities.LeaderboardScore.update(previous.id, {
+          playerName: safeName,
+          playerId,
         });
-        return { success: true, action: "named" };
+
+        return {
+          success: true,
+          action: "named",
+        };
       }
-      return { success: true, action: "kept_previous" };
+
+      return {
+        success: true,
+        action: "kept_previous",
+      };
     }
 
     await base44.entities.LeaderboardScore.create(payload);
-    return { success: true, action: "created" };
-  } catch (e) {
-    return { success: false, error: e?.message || "Network error" };
+
+    return {
+      success: true,
+      action: "created",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || "Network error",
+    };
   }
 }
 
 /**
- * Fetch leaderboard scores from cloud, deduplicated by player.
+ * Every completed story run is submitted independently to:
+ *
+ * 1. All Time — highest score ever.
+ * 2. This Week — highest score during the current week.
+ */
+export async function submitStoryScores(scoreData) {
+  const weekId = getCurrentWeekId();
+
+  const [allTimeResult, weeklyResult] = await Promise.all([
+    submitBestScore({
+      ...scoreData,
+      mode: "story",
+    }),
+
+    submitBestScore({
+      ...scoreData,
+      mode: "daily",
+      dailyChallengeId: `weekly-${weekId}`,
+    }),
+  ]);
+
+  return {
+    success: allTimeResult.success && weeklyResult.success,
+    allTimeResult,
+    weeklyResult,
+    error: allTimeResult.error || weeklyResult.error,
+  };
+}
+
+/**
+ * Fetch leaderboard scores from the cloud.
+ *
  * tab: "all" | "weekly" | "daily"
  */
 export async function fetchLeaderboard(tab) {
-  let results;
+  let results = [];
+
   if (tab === "daily") {
     const today = new Date().toISOString().slice(0, 10);
+
     results = await base44.entities.LeaderboardScore.filter(
-      { mode: "daily", dailyChallengeId: today },
+      {
+        mode: "daily",
+        dailyChallengeId: today,
+      },
+      "-score",
+      100
+    );
+  } else if (tab === "weekly") {
+    results = await base44.entities.LeaderboardScore.filter(
+      {
+        mode: "daily",
+        dailyChallengeId: `weekly-${getCurrentWeekId()}`,
+      },
       "-score",
       100
     );
   } else {
     results = await base44.entities.LeaderboardScore.filter(
-      { mode: "story" },
+      {
+        mode: "story",
+      },
       "-score",
       100
     );
-    if (tab === "weekly") {
-      const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      results = (results || []).filter(
-        (e) => new Date(e.created_date).getTime() > weekAgo
-      );
-    }
   }
+
   return deduplicateByPlayer(results || []);
 }
 
 /**
- * Get a player's rank on the daily leaderboard for a given challenge date.
+ * Get the current player's Daily Battle rank.
  */
 export async function getDailyRank(dailyChallengeId) {
   const playerId = getPlayerId();
+
   const scores = await base44.entities.LeaderboardScore.filter(
-    { mode: "daily", dailyChallengeId },
+    {
+      mode: "daily",
+      dailyChallengeId,
+    },
     "-score",
     100
   );
+
   const deduped = deduplicateByPlayer(scores || []);
-  const idx = deduped.findIndex((s) => s.playerId === playerId);
-  return idx >= 0 ? idx + 1 : null;
+
+  const index = deduped.findIndex(
+    (score) => score.playerId === playerId
+  );
+
+  return index >= 0 ? index + 1 : null;
 }

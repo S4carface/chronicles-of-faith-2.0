@@ -12,8 +12,6 @@ import { HOME_ART } from "@/data/art";
 const VERSE_1 =
   "In the beginning, God created the heavens and the earth.";
 const VERSE_2 =
-  "Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.";
-const VERSE_3 =
   "And God said, 'Let there be light,' and there was light.";
 const REFERENCE = "Genesis 1:1-3";
 
@@ -21,8 +19,7 @@ const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export const VERSE_1_START_MS = 480;
-export const VERSE_2_START_MS = 3592;
-export const VERSE_3_START_MS = 9810;
+export const VERSE_2_START_MS = 6512;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
 const AUDIO_END_FALLBACK_GRACE_MS = 4000;
@@ -193,8 +190,7 @@ export default function CinematicIntro({ onComplete }) {
     }
 
     const setScriptureForTime = (elapsedMs) => {
-      if (elapsedMs >= VERSE_3_START_MS) setStep(5);
-      else if (elapsedMs >= VERSE_2_START_MS) setStep(3);
+      if (elapsedMs >= VERSE_2_START_MS) setStep(3);
       else if (elapsedMs >= VERSE_1_START_MS) setStep(1);
     };
 
@@ -210,8 +206,7 @@ export default function CinematicIntro({ onComplete }) {
     } else {
       timersRef.current.push(
         window.setTimeout(() => setStep(1), VERSE_1_START_MS),
-        window.setTimeout(() => setStep(3), VERSE_2_START_MS),
-        window.setTimeout(() => setStep(5), VERSE_3_START_MS)
+        window.setTimeout(() => setStep(3), VERSE_2_START_MS)
       );
     }
 
@@ -384,6 +379,7 @@ return (
       <video
         ref={videoRef}
         muted
+        loop
         playsInline
         preload="auto"
         poster={PORTRAIT_POSTER}
@@ -426,7 +422,7 @@ return (
         style={{
           background:
             "radial-gradient(circle at center, rgba(201,168,76,0.08) 0%, transparent 50%)",
-          opacity: cinematicStarted && step >= 5 ? 1 : 0,
+          opacity: cinematicStarted && step >= 3 ? 1 : 0,
         }}
       />
 
@@ -455,25 +451,15 @@ return (
               </p>
 
               <p
-                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-opacity duration-700 ${
-                  step === 3 ? "opacity-100" : "opacity-0"
-                }`}
-                style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
-              >
-                &ldquo;{VERSE_2}&rdquo;
-                <span className="mt-4 block text-sm italic text-amber-300/60">Genesis 1:2</span>
-              </p>
-
-              <p
                 className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-700 ${
-                  step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                  step === 3 ? "scale-100 opacity-100" : "scale-95 opacity-0"
                 }`}
                 style={{
                   fontSize: "clamp(1.15rem, 2.6vw, 1.75rem)",
                   textShadow: "0 0 28px rgba(251,191,36,0.35)",
                 }}
               >
-                &ldquo;{VERSE_3}&rdquo;
+                &ldquo;{VERSE_2}&rdquo;
                 <span className="mt-4 block text-sm font-normal italic text-amber-300/70">Genesis 1:3</span>
               </p>
             </div>
@@ -491,14 +477,8 @@ return (
           )}
 
           {step === 3 && (
-            <p className="font-serif text-xs italic text-amber-100/25">
-              {VERSE_2}
-            </p>
-          )}
-
-          {step === 5 && (
             <p className="font-serif text-xs italic text-amber-100/30">
-              {VERSE_3} &mdash; {REFERENCE}
+              {VERSE_2} &mdash; {REFERENCE}
             </p>
           )}
         </div>

@@ -6,26 +6,22 @@ const STEPS = [
   {
     title: "Your Health",
     text: "This is your Health. If it reaches 0, you lose the battle. Tap Got it.",
-    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Faith",
     text: "Faith pays for cards and refills every turn. Tap Got it.",
-    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Enemy Intent",
     text: "This shows the serpent's next action. Tap Got it.",
-    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Attack",
     text: "Tap the Sling Stone card.",
     selectedText: "Tap Play Card. Attacks automatically target the serpent.",
-    anchor: "top",
     actionable: true,
     requiredCardId: "sling_stone",
   },
@@ -33,30 +29,22 @@ const STEPS = [
     title: "Defense",
     text: "Tap the Faith Shield card.",
     selectedText: "Tap Play Card to gain Block against the shown intent.",
-    anchor: "top",
     actionable: true,
     requiredCardId: "faith_shield",
   },
   {
     title: "End Your Turn",
     text: "Tap End Turn. The serpent will perform the intent shown above.",
-    anchor: "top",
     actionable: true,
   },
   {
     title: "Finish the Battle",
     text: "Tap Sling Stone for the final attack.",
     selectedText: "Tap Play Card to defeat the serpent.",
-    anchor: "top",
     actionable: true,
     requiredCardId: "sling_stone",
   },
 ];
-
-const ANCHOR_CLASSES = {
-  top: "top-[calc(36%+env(safe-area-inset-top))]",
-  bottom: "bottom-[calc(33%+env(safe-area-inset-bottom))]",
-};
 
 export const TUTORIAL_TOTAL_STEPS = STEPS.length;
 
@@ -91,12 +79,10 @@ export default function GuidedBattleTutorial({
 
   return (
     <div
-      className={`fixed left-1/2 z-[56] w-[86vw] max-w-[340px] -translate-x-1/2 animate-fade-in ${
-        ANCHOR_CLASSES[current.anchor]
-      }`}
+      className="fixed left-1/2 top-[calc(36%+env(safe-area-inset-top))] z-[56] max-h-[168px] w-[84vw] max-w-[320px] -translate-x-1/2 animate-fade-in overflow-y-auto overscroll-contain"
     >
       <div
-        className="relative rounded-xl border-2 border-amber-400/50 px-3 py-2.5 shadow-xl shadow-amber-400/20"
+        className="relative rounded-xl border-2 border-amber-400/50 px-2.5 py-2 shadow-[0_0_24px_rgba(251,191,36,0.2)]"
         style={{
           background:
             "linear-gradient(135deg, rgba(26,39,68,0.9) 0%, rgba(15,26,48,0.9) 100%)",
@@ -113,16 +99,16 @@ export default function GuidedBattleTutorial({
         </button>
 
         {/* Progress */}
-        <div className="mb-1.5 pr-5">
-          <span className="block text-[9px] font-bold uppercase tracking-widest text-amber-300/55">
+        <div className="mb-1 pr-5">
+          <span className="block text-[8px] font-bold uppercase tracking-[0.14em] text-amber-300/55">
             Step {step + 1} of {STEPS.length}
           </span>
 
-          <div className="mt-1 flex gap-1">
+          <div className="mt-0.5 flex gap-1">
             {STEPS.map((_, index) => (
               <span
                 key={index}
-                className={`h-1 flex-1 rounded-full ${
+                className={`h-0.5 flex-1 rounded-full ${
                   index <= step
                     ? "bg-amber-400/80"
                     : "bg-amber-100/15"
@@ -132,16 +118,16 @@ export default function GuidedBattleTutorial({
           </div>
         </div>
 
-        <h3 className="mb-0.5 font-serif text-sm text-amber-100">
+        <h3 className="mb-0 font-serif text-[13px] leading-tight text-amber-100">
           {current.title}
         </h3>
 
-        <p className="mb-2 text-[11px] leading-snug text-amber-100/70">
+        <p className="mb-1.5 text-[10px] leading-snug text-amber-100/70">
           {instructionText}
         </p>
 
         {current.actionable ? (
-          <div className="flex items-center gap-1.5 text-[10px] italic text-amber-300/60">
+          <div className="flex items-center gap-1.5 text-[9px] italic text-amber-300/60">
             <Loader2 className="h-3 w-3 animate-spin" />
 
             <span>
@@ -155,7 +141,7 @@ export default function GuidedBattleTutorial({
             type="button"
             onClick={handleAcknowledge}
             data-tutorial-action="acknowledge"
-            className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-400/50 bg-amber-600/20 px-3 py-1.5 text-xs font-bold text-amber-100 transition hover:bg-amber-600/40"
+            className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-400/50 bg-amber-600/20 px-3 py-1 text-[10px] font-bold text-amber-100 transition hover:bg-amber-600/40"
           >
             Got it
             <ChevronRight className="h-3 w-3" />
@@ -166,7 +152,7 @@ export default function GuidedBattleTutorial({
           type="button"
           onClick={handleSkip}
           data-tutorial-action="skip"
-          className="mt-2 w-full border-t border-amber-400/15 pt-1.5 text-center text-[9px] text-amber-100/45 transition hover:text-amber-100/70"
+          className="mt-1 min-h-6 w-full border-t border-amber-400/15 pt-1 text-center text-[9px] text-amber-100/45 transition hover:text-amber-100/70"
         >
           Continue Without Tips
         </button>

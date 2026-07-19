@@ -53,19 +53,19 @@ const STEPS = [
 
 const POSITION_CLASSES = {
   health:
-    "top-[32%] left-3 lg:left-8",
+    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
 
   faith:
-    "top-[47%] right-3 lg:right-8",
+    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
 
   intent:
-    "top-[26%] right-3 lg:right-8",
+    "bottom-[calc(11rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2",
 
   "card-action":
-    "bottom-[25%] right-3 lg:right-8",
+    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
 
   "end-turn":
-    "top-[47%] right-3 lg:right-8",
+    "bottom-[calc(11rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2",
 };
 
 export const TUTORIAL_TOTAL_STEPS = STEPS.length;
@@ -132,6 +132,7 @@ export default function GuidedBattleTutorial({
         <button
           type="button"
           onClick={handleSkip}
+          data-tutorial-action="skip"
           className="absolute right-1.5 top-1.5 text-amber-100/30 transition hover:text-amber-200"
           aria-label="Skip tutorial"
         >
@@ -180,6 +181,7 @@ export default function GuidedBattleTutorial({
           <button
             type="button"
             onClick={handleAcknowledge}
+            data-tutorial-action="acknowledge"
             className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-400/50 bg-amber-600/20 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-600/40"
           >
             Got it
@@ -190,6 +192,7 @@ export default function GuidedBattleTutorial({
         <button
           type="button"
           onClick={handleSkip}
+          data-tutorial-action="skip"
           className="mt-3 w-full border-t border-amber-400/15 pt-2 text-center text-[9px] text-amber-100/40 transition hover:text-amber-100/70"
         >
           Continue Without Tips

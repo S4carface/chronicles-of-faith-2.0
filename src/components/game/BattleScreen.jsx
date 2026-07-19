@@ -149,6 +149,7 @@ export default function BattleScreen() {
   const [tutorialActive, setTutorialActive] = useState(isTutorialBattle);
   const [tutorialCompleteMsg, setTutorialCompleteMsg] = useState(false);
   const tutorialStepRef = useRef(0);
+  const tutorialProtectionRef = useRef(isTutorialBattle);
   
   const advanceTutorial = () => {
     const next = tutorialStepRef.current + 1;
@@ -176,6 +177,7 @@ export default function BattleScreen() {
 };
 
 const handleTutorialSkip = () => {
+  tutorialProtectionRef.current = false;
   tutorialStepRef.current = TUTORIAL_TOTAL_STEPS;
   setTutorialStep(TUTORIAL_TOTAL_STEPS);
   setTutorialActive(false);
@@ -187,6 +189,7 @@ const handleTutorialDismiss = () => {
 
 const handleTutorialRetry = () => {
   Sound.sfx.click();
+  tutorialProtectionRef.current = true;
 
   const state = createBattleState(
     enemy,
@@ -543,6 +546,25 @@ if (!tutorialActive) {
     runEnemyTurn(endedState, enemyAnim);
   };
 
+  const resolveGuidedTutorialState = (state) => {
+    if (
+      !isTutorialBattle ||
+      !tutorialProtectionRef.current ||
+      tutorialStepRef.current < TUTORIAL_TOTAL_STEPS
+    ) {
+      return state;
+    }
+
+    return {
+      ...state,
+      playerHp: Math.max(1, state.playerHp),
+      enemy: {
+        ...state.enemy,
+        currentHp: 0,
+      },
+    };
+  };
+
   const handleUndoEndTurn = () => {
     if (undoTimeoutRef.current) {
       clearTimeout(undoTimeoutRef.current);
@@ -558,7 +580,7 @@ if (!tutorialActive) {
   const runEnemyTurn = (endedState, enemyAnim) => {
     // Skip mode — instant resolve
     if (enemyAnim === "skip") {
-      const enemyState = enemyTurn(endedState);
+      const enemyState = resolveGuidedTutorialState(enemyTurn(endedState));
       setBattleState(enemyState);
       const end = checkBattleEnd(enemyState);
       if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
@@ -573,7 +595,7 @@ if (!tutorialActive) {
         setEnemyAttackAnim(true);
       }, 300);
       setTimeout(() => {
-        const enemyState = enemyTurn(endedState);
+        const enemyState = resolveGuidedTutorialState(enemyTurn(endedState));
         setEnemyAttackAnim(false);
         setPlayerShake(true);
         setPlayerFlash(true);
@@ -669,7 +691,8 @@ if (!tutorialActive) {
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
-          setBattleState(step.state);
+          const resolvedStepState = resolveGuidedTutorialState(step.state);
+          setBattleState(resolvedStepState);
 
           // Counter retaliation effects — shield flash + damage number + deflect sound
           if (step.counterHit > 0) {
@@ -690,11 +713,11 @@ if (!tutorialActive) {
           }
 
           // Check for defeat
-          if (step.state.playerHp <= 0) {
+          if (resolvedStepState.playerHp <= 0) {
             setTimeout(() => {
               clearTransient();
               setBattleEnd("defeat");
-              handleBattleEnd("defeat", step.state);
+              handleBattleEnd("defeat", resolvedStepState);
               setAnimating(false);
               setCurrentIntentIdx(-1);
             }, 600);
@@ -702,11 +725,11 @@ if (!tutorialActive) {
           }
 
           // Check for victory (counter/thorns kill enemy)
-          if (step.state.enemy.currentHp <= 0) {
+          if (resolvedStepState.enemy.currentHp <= 0) {
             setTimeout(() => {
               clearTransient();
               setBattleEnd("victory");
-              handleBattleEnd("victory", step.state);
+              handleBattleEnd("victory", resolvedStepState);
               setAnimating(false);
               setCurrentIntentIdx(-1);
             }, 600);
@@ -792,7 +815,7 @@ if (!tutorialActive) {
       setTutorialActive(false);
       saveProfile({ tutorialSeen: true });
       setTutorialCompleteMsg(true);
-    } else {
+    } else if (!tutorialProtectionRef.current) {
       Sound.sfx.defeat();
       Sound.playMusic("defeat");
     }
@@ -906,6 +929,32 @@ const selectedCardData =
 
   const tutorialAllowsEndTurn =
     !tutorialActive || tutorialStep === 5;
+
+  const handleTutorialInteractionCapture = (event) => {
+    if (!tutorialActive) return;
+
+    const action = event.target.closest?.("[data-tutorial-action]")?.dataset
+      ?.tutorialAction;
+    const selectedRequiredCard =
+      selectedCardData?.id === tutorialRequiredCardId;
+
+    const allowedActions = new Set(["skip"]);
+
+    if (tutorialStep <= 2) {
+      allowedActions.add("acknowledge");
+    } else if (tutorialStep === 3 || tutorialStep === 4) {
+      allowedActions.add(
+        selectedRequiredCard ? "play-card" : "required-card"
+      );
+    } else if (tutorialStep === 5) {
+      allowedActions.add("end-turn");
+    }
+
+    if (!action || !allowedActions.has(action)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
   return (
   <>
     <style>{`
@@ -941,6 +990,7 @@ const selectedCardData =
 
     <div
   className="fixed inset-0 flex flex-col overflow-hidden select-none"
+  onClickCapture={handleTutorialInteractionCapture}
   style={{
     background:
       "linear-gradient(180deg, #1A0A0A 0%, #2A1212 50%, #1A0A0A 100%)",
@@ -1369,6 +1419,7 @@ const selectedCardData =
 
             <button
               onClick={handleEndTurnClick}
+              data-tutorial-action={tutorialActive && tutorialStep === 5 ? "end-turn" : undefined}
               disabled={isEnemyTurn || !tutorialAllowsEndTurn}
                         className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
               tutorialActive && tutorialStep === 5
@@ -1494,6 +1545,7 @@ const selectedCardData =
           return (
             <div
               key={idx}
+              data-tutorial-action={isRequiredTutorialCard ? "required-card" : undefined}
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
                   ? "z-30 translate-y-0 scale-100"
@@ -1565,6 +1617,11 @@ const selectedCardData =
       (tutorialStep === 4 && selCard.id === "faith_shield")
     )
   }
+  tutorialLocked={
+    tutorialActive &&
+    (tutorialStep === 3 || tutorialStep === 4) &&
+    tutorialRequiredCardId === selCard.id
+  }
 />
         );
       })()}
@@ -1606,7 +1663,7 @@ const selectedCardData =
         </div>
       )}
 
-      {battleEnd === "defeat" && run.isTutorial && (
+      {battleEnd === "defeat" && run.isTutorial && !tutorialProtectionRef.current && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}>
           <div className="max-w-xs text-center">
             <Skull className="mx-auto mb-4 h-16 w-16 text-red-400/50" />

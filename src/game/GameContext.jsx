@@ -458,18 +458,17 @@ const startTutorialRun = useCallback(() => {
       }
     }
 const startAtFirstBattle = options.startAtFirstBattle === true;
-const firstNode =
-  map[0]?.find(node => node.type === ROOM_TYPES.BATTLE) ||
-  map[0]?.[0] ||
-  null;
+const firstBattleNode = map
+  .flat()
+  .find(node => node.type === ROOM_TYPES.BATTLE) || null;
 
-// Easy Genesis always opens with the regular serpent encounter.
-if (!isDaily && difficulty === "easy" && firstNode?.type === ROOM_TYPES.BATTLE) {
-  Object.assign(firstNode, { enemyId: "serpent" });
+// Easy Genesis always uses the regular serpent for its first battle encounter.
+if (!isDaily && difficulty === "easy" && firstBattleNode) {
+  Object.assign(firstBattleNode, { enemyId: "serpent" });
 }
 
-if (startAtFirstBattle && firstNode) {
-  firstNode.visited = true;
+if (startAtFirstBattle && firstBattleNode) {
+  firstBattleNode.visited = true;
 }
     setRun({
       hero,
@@ -493,13 +492,13 @@ if (startAtFirstBattle && firstNode) {
       usedLegendary: false,
       neverLostHp: true,
       storyChoices: [],
-      currentNode: startAtFirstBattle ? firstNode : null,
+      currentNode: startAtFirstBattle ? firstBattleNode : null,
       phase: startAtFirstBattle ? "battle" : "map",
       runStartTime: Date.now(), // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
       pendingReward: null,
       narrationText: "In the beginning, there was nothing... Then God said, 'Let there be light.' And there was light. — Genesis 1:1-3",
       narrationSummary: "God creates light and begins bringing order from nothing.",
-      pendingEnemyId: startAtFirstBattle ? firstNode?.enemyId || null : null,
+      pendingEnemyId: startAtFirstBattle ? firstBattleNode?.enemyId || null : null,
       currentBattleState: null,
       buffAttack: 0,
       shieldActive: false,

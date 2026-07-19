@@ -192,7 +192,7 @@ export default function GuidedBattleTutorial({
           onClick={handleSkip}
           className="mt-3 w-full border-t border-amber-400/15 pt-2 text-center text-[9px] text-amber-100/40 transition hover:text-amber-100/70"
         >
-          Skip Tutorial
+          Continue Without Tips
         </button>
       </div>
     </div>

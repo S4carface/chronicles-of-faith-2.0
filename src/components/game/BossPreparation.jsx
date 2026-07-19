@@ -1,12 +1,12 @@
 import React from "react";
 import { useGame } from "@/game/GameContext";
-import { ENEMIES } from "@/data/enemies";
+import { getEnemyForDifficulty } from "@/data/enemies";
 import * as Sound from "@/game/soundManager";
 
 export default function BossPreparation() {
   const { run, updateRun } = useGame();
 
-  const boss = ENEMIES[run.pendingEnemyId || run.currentNode?.enemyId];
+  const boss = getEnemyForDifficulty(run.pendingEnemyId || run.currentNode?.enemyId, run.difficulty);
   const isEasy = run.difficulty === "easy";
 
   const enterBoss = (choice) => {

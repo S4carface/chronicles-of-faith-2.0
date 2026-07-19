@@ -13,7 +13,7 @@ import {
   drawCards,
   HAND_LIMIT
 } from "@/game/battleEngine";
-import { ENEMIES } from "@/data/enemies";
+import { ENEMIES, getEnemyForDifficulty } from "@/data/enemies";
 import Card, { getCardEffectText } from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
@@ -28,6 +28,7 @@ import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
 import useResponsive from "@/hooks/useResponsive";
 import { CARD_ART, ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+import SafeImage from "@/components/ui/SafeImage";
 import { recordBattleWon, recordBattleLost, recordCardPlayed, recordDamage, recordBlock, recordHealing } from "@/game/playerStats";
 import { applyBossModifier } from "@/data/bossModifiers";
 
@@ -104,8 +105,8 @@ export default function BattleScreen() {
   const navigate = useNavigate();
   const isTutorialBattle = run.isTutorial === true;
   const tutorialEnemy = isTutorialBattle ? { ...ENEMIES.serpent, hp: 12, attacks: [{ name: "Venomous Bite", damage: 5, icon: "🦷" }] } : null;
-  const baseEnemy = run.dailyEnemy || (isTutorialBattle ? tutorialEnemy : ENEMIES[run.pendingEnemyId]);
-  const enemy = (run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
+  const baseEnemy = run.dailyEnemy || (isTutorialBattle ? tutorialEnemy : getEnemyForDifficulty(run.pendingEnemyId, run.difficulty));
+  const enemy = (run.difficulty !== "easy" && run.bossModifier && baseEnemy?.isBoss) ? applyBossModifier(baseEnemy, run.bossModifier) : baseEnemy;
   useEffect(() => {
   if (enemy?.id) {
     recordEnemyEncounter(enemy.id);
@@ -1068,7 +1069,7 @@ const selectedCardData =
                 "0 0 20px rgba(201,168,76,0.15), inset 0 0 30px rgba(8,12,24,0.8)",
             }}
           >
-            <img
+            <SafeImage
               src={enemyArt}
               alt={enemy.name}
               className="art-portrait"

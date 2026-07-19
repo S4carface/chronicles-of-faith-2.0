@@ -6,6 +6,8 @@ import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
 import RoomTooltip from "@/components/game/RoomTooltip";
 import * as Sound from "@/game/soundManager";
+import { preloadImages } from "@/lib/imageAssets";
+import SafeImage from "@/components/ui/SafeImage";
 
 export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp, difficulty }) {
   const [previewNode, setPreviewNode] = useState(null);
@@ -15,7 +17,8 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
 
   useEffect(() => {
     Sound.playMusic("map");
-  }, []);
+    preloadImages(map.flat().filter((node) => visibleSet.has(node.id)).map(getNodeArt));
+  }, [map, visibleSet]);
 
   const hpRatio = playerHp && maxHp ? playerHp / maxHp : 1;
   const isLowHp = hpRatio < 0.4;
@@ -98,7 +101,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             )}
                             style={{ filter: "blur(1px)", opacity: 0.4 }}
                           >
-                            <img src={PLACEHOLDER_ART} alt="" className="art-portrait opacity-30" />
+                            <SafeImage src={PLACEHOLDER_ART} alt="Hidden room" className="art-portrait opacity-30" />
                           </div>
                           <span className="text-[9px] mt-1.5 h-6" />
                         </div>
@@ -127,7 +130,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                           {isCleared && !isBoss ? (
                             <span className="text-emerald-400 text-lg lg:text-2xl font-bold">✓</span>
                           ) : (
-                            <img src={getNodeArt(node)} alt={ROOM_LABELS[node.type]} className="art-portrait" />
+                            <SafeImage src={getNodeArt(node)} alt={ROOM_LABELS[node.type]} className="art-portrait" />
                           )}
                           {recommendation && isAvailable && !isCleared && (
                             <span className={cn(

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { HEROES, HERO_MAP } from "@/data/heroes";
 import { CARDS, CARD_MAP, getCardById } from "@/data/cards";
-import { ENEMIES, ENEMY_POOL, BOSSES } from "@/data/enemies";
+import { ENEMIES, ENEMY_POOL, BOSSES, EASY_ENEMY_POOL, EASY_BOSS_POOL } from "@/data/enemies";
 import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
@@ -437,11 +437,11 @@ const startTutorialRun = useCallback(() => {
     for (const layer of map) {
       for (const node of layer) {
         if (node.type === ROOM_TYPES.BATTLE) {
-          const enemyId = pick(enemyRng, ENEMY_POOL);
+          const enemyId = pick(enemyRng, difficulty === "easy" ? EASY_ENEMY_POOL : ENEMY_POOL);
           node.enemyId = enemyId;
         }
         if (node.type === ROOM_TYPES.BOSS) {
-  node.enemyId = pick(enemyRng, BOSSES);
+  node.enemyId = pick(enemyRng, difficulty === "easy" ? EASY_BOSS_POOL : BOSSES);
   node.bossModifier = pick(enemyRng, BOSS_MODIFIER_IDS);
 }
         if (node.type === ROOM_TYPES.TREASURE) {
@@ -457,7 +457,7 @@ const startTutorialRun = useCallback(() => {
           const types = [ROOM_TYPES.BATTLE, ROOM_TYPES.TREASURE, ROOM_TYPES.STORY, ROOM_TYPES.DIVINE];
           const realType = pick(enemyRng, types);
           node.mysteryType = realType;
-          if (realType === ROOM_TYPES.BATTLE) node.enemyId = pick(enemyRng, ENEMY_POOL);
+          if (realType === ROOM_TYPES.BATTLE) node.enemyId = pick(enemyRng, difficulty === "easy" ? EASY_ENEMY_POOL : ENEMY_POOL);
           if (realType === ROOM_TYPES.TREASURE) node.treasureReward = pick(enemyRng, TREASURE_REWARDS);
           if (realType === ROOM_TYPES.STORY) node.storyChoice = pick(enemyRng, STORY_CHOICES);
           if (realType === ROOM_TYPES.DIVINE) node.divineBlessings = pickN(enemyRng, DIVINE_BLESSINGS, 3);

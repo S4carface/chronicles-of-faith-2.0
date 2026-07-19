@@ -15,6 +15,8 @@ import RestRoom from "@/components/game/RestRoom";
 import HeroSelect from "@/components/game/HeroSelect";
 import DailyTrivia from "@/components/game/DailyTrivia";
 import DailyResultScreen from "@/components/game/DailyResultScreen";
+import ImmediateImageGate from "@/components/ui/ImmediateImageGate";
+import { CARD_ART, ENEMY_ART, BLESSING_ART, ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
 
 export default function Play() {
   const { run, selectNode, endRun, saveAndExit } = useGame();
@@ -63,7 +65,17 @@ if (run.phase === "bossPrep") {
 
 // Battle
 if (run.phase === "battle") {
-  return <BattleScreen />;
+  return (
+    <ImmediateImageGate
+      sources={[
+        ENEMY_ART[run.pendingEnemyId || run.dailyEnemy?.id],
+        ...run.deck.map((cardId) => CARD_ART[cardId] || PLACEHOLDER_ART),
+      ]}
+      label="Preparing the next trial…"
+    >
+      <BattleScreen />
+    </ImmediateImageGate>
+  );
 }
   // Treasure
   if (run.phase === "treasure") {
@@ -72,7 +84,19 @@ if (run.phase === "battle") {
 
   // Divine intervention
   if (run.phase === "divine") {
-    return <DivineIntervention />;
+    return (
+      <ImmediateImageGate
+        sources={[
+          ROOM_ART.divine,
+          ...(run.currentNode?.divineBlessings || []).map(
+            (blessing) => BLESSING_ART[blessing.id] || PLACEHOLDER_ART
+          ),
+        ]}
+        label="Preparing the blessing…"
+      >
+        <DivineIntervention />
+      </ImmediateImageGate>
+    );
   }
 
   // Story choice

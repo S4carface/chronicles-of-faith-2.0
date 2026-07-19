@@ -549,8 +549,7 @@ if (!tutorialActive) {
   const resolveGuidedTutorialState = (state) => {
     if (
       !isTutorialBattle ||
-      !tutorialProtectionRef.current ||
-      tutorialStepRef.current < TUTORIAL_TOTAL_STEPS
+      !tutorialProtectionRef.current
     ) {
       return state;
     }
@@ -558,10 +557,6 @@ if (!tutorialActive) {
     return {
       ...state,
       playerHp: Math.max(1, state.playerHp),
-      enemy: {
-        ...state.enemy,
-        currentHp: 0,
-      },
     };
   };
 
@@ -922,10 +917,12 @@ const selectedCardData =
       ? "sling_stone"
       : tutorialActive && tutorialStep === 4
         ? "faith_shield"
+        : tutorialActive && tutorialStep === 6
+          ? "sling_stone"
         : null;
 
   const tutorialAllowsCardSelection =
-    !tutorialActive || tutorialStep === 3 || tutorialStep === 4;
+    !tutorialActive || tutorialStep === 3 || tutorialStep === 4 || tutorialStep === 6;
 
   const tutorialAllowsEndTurn =
     !tutorialActive || tutorialStep === 5;
@@ -942,7 +939,7 @@ const selectedCardData =
 
     if (tutorialStep <= 2) {
       allowedActions.add("acknowledge");
-    } else if (tutorialStep === 3 || tutorialStep === 4) {
+    } else if (tutorialStep === 3 || tutorialStep === 4 || tutorialStep === 6) {
       allowedActions.add(
         selectedRequiredCard ? "play-card" : "required-card"
       );
@@ -1614,12 +1611,13 @@ const selectedCardData =
     tutorialActive &&
     (
       (tutorialStep === 3 && selCard.id === "sling_stone") ||
-      (tutorialStep === 4 && selCard.id === "faith_shield")
+      (tutorialStep === 4 && selCard.id === "faith_shield") ||
+      (tutorialStep === 6 && selCard.id === "sling_stone")
     )
   }
   tutorialLocked={
     tutorialActive &&
-    (tutorialStep === 3 || tutorialStep === 4) &&
+    (tutorialStep === 3 || tutorialStep === 4 || tutorialStep === 6) &&
     tutorialRequiredCardId === selCard.id
   }
 />

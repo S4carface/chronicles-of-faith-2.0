@@ -488,11 +488,11 @@ return (
               </p>
 
               <p
-                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100 transition-all duration-100 ${
+                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-all duration-100 ${
                   step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
                 }`}
                 style={{
-                  fontSize: "clamp(1.15rem, 2.6vw, 1.75rem)",
+                  fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
                   textShadow: "0 0 28px rgba(251,191,36,0.35)",
                 }}
               >

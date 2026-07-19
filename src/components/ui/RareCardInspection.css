@@ -1,0 +1,199 @@
+.rare-inspection-scene {
+  width: min(82vw, 320px);
+  perspective: 1000px;
+}
+
+.rare-inspection-hit-area {
+  width: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+
+.rare-inspection-hit-area:active { cursor: grabbing; }
+
+.rare-inspection-card {
+  --rare-tilt-x: 0deg;
+  --rare-tilt-y: 0deg;
+  --rare-art-x: 0px;
+  --rare-art-y: 0px;
+  --rare-glare-x: 50%;
+  --rare-glare-y: 50%;
+  --rare-shadow-x: 0px;
+  --rare-shadow-y: 18px;
+  --rare-edge-angle: 135deg;
+  --rare-glare-opacity: 0.24;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 11 / 16;
+  border: 2px solid #6c9eeb;
+  border-radius: 18px;
+  background: #091426;
+  box-shadow:
+    var(--rare-shadow-x) var(--rare-shadow-y) 42px rgba(1, 6, 18, 0.86),
+    0 0 34px rgba(62, 126, 219, 0.38),
+    0 0 0 1px rgba(176, 210, 255, 0.38);
+  transform: rotateX(var(--rare-tilt-x)) rotateY(var(--rare-tilt-y));
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow;
+  isolation: isolate;
+}
+
+.rare-inspection-card__art,
+.rare-inspection-card__scrim,
+.rare-inspection-card__frame,
+.rare-inspection-card__content,
+.rare-inspection-card__foil,
+.rare-inspection-card__glare,
+.rare-inspection-card__edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.rare-inspection-card__art {
+  inset: -2%;
+  z-index: 0;
+  transform: translate3d(var(--rare-art-x), var(--rare-art-y), 12px) scale(1.045);
+  will-change: transform;
+}
+
+.rare-inspection-card__scrim {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(3, 9, 21, 0.16) 0%, transparent 46%, rgba(4, 10, 24, 0.94) 73%, #071122 100%),
+    linear-gradient(90deg, rgba(5, 15, 32, 0.34), transparent 16%, transparent 84%, rgba(5, 15, 32, 0.34));
+  transform: translateZ(16px);
+}
+
+.rare-inspection-card__frame {
+  z-index: 2;
+  inset: 7px;
+  border: 1px solid rgba(142, 187, 255, 0.72);
+  box-shadow:
+    inset 0 0 0 2px rgba(10, 28, 58, 0.72),
+    inset 0 0 24px rgba(64, 133, 224, 0.3);
+  transform: translateZ(22px);
+}
+
+.rare-inspection-card__content {
+  z-index: 4;
+  transform: translateZ(30px);
+  color: #f7f1df;
+}
+
+.rare-inspection-card__cost {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(184, 216, 255, 0.82);
+  border-radius: 999px;
+  background: rgba(5, 16, 35, 0.9);
+  box-shadow: 0 0 18px rgba(62, 126, 219, 0.34);
+  font-weight: 800;
+}
+
+.rare-inspection-card__rarity {
+  position: absolute;
+  right: 14px;
+  top: 16px;
+  border: 1px solid rgba(117, 170, 244, 0.68);
+  border-radius: 999px;
+  background: rgba(5, 16, 35, 0.84);
+  padding: 5px 10px;
+  color: #c5dcff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.rare-inspection-card__copy {
+  position: absolute;
+  inset: auto 20px 18px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.82);
+}
+
+.rare-inspection-card__copy h3 {
+  color: #e5efff;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.rare-inspection-card__type {
+  margin-top: 5px;
+  color: #9dc4ff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.rare-inspection-card__effect {
+  margin-top: 10px;
+  border-block: 1px solid rgba(116, 165, 232, 0.24);
+  padding: 9px 3px;
+  color: rgba(244, 248, 255, 0.9);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.rare-inspection-card__verse {
+  margin-top: 8px;
+  color: rgba(190, 215, 250, 0.75);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-style: italic;
+}
+
+.rare-inspection-card__foil {
+  z-index: 5;
+  background:
+    conic-gradient(from var(--rare-edge-angle) at var(--rare-glare-x) var(--rare-glare-y), transparent, rgba(91, 145, 229, 0.15), rgba(187, 133, 217, 0.11), rgba(91, 204, 218, 0.1), transparent 42%),
+    linear-gradient(var(--rare-edge-angle), transparent 25%, rgba(156, 201, 255, 0.17) 44%, rgba(255, 225, 173, 0.09) 52%, transparent 68%);
+  mix-blend-mode: soft-light;
+  opacity: 0.7;
+  transform: translateZ(34px);
+}
+
+.rare-inspection-card__glare {
+  z-index: 6;
+  background: radial-gradient(circle at var(--rare-glare-x) var(--rare-glare-y), rgba(255, 255, 247, 0.48) 0%, rgba(127, 184, 255, 0.18) 16%, rgba(97, 91, 188, 0.08) 31%, transparent 52%);
+  mix-blend-mode: screen;
+  opacity: var(--rare-glare-opacity);
+  transform: translateZ(38px);
+  will-change: opacity, background-position;
+}
+
+.rare-inspection-card__edge {
+  z-index: 7;
+  inset: 2px;
+  border: 1px solid rgba(202, 225, 255, 0.66);
+  background: linear-gradient(var(--rare-edge-angle), rgba(221, 236, 255, 0.28), transparent 22%, transparent 72%, rgba(67, 115, 192, 0.22));
+  box-shadow: inset 0 0 20px rgba(87, 151, 235, 0.24);
+  mix-blend-mode: screen;
+  transform: translateZ(42px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rare-inspection-card,
+  .rare-inspection-card__art,
+  .rare-inspection-card__scrim,
+  .rare-inspection-card__frame,
+  .rare-inspection-card__content,
+  .rare-inspection-card__foil,
+  .rare-inspection-card__glare,
+  .rare-inspection-card__edge {
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .rare-inspection-card__glare { opacity: 0.18; }
+}

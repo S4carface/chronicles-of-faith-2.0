@@ -63,6 +63,7 @@ let cinematicSources = [];
 let cinematicGains = [];
 let cinematicBuffers = new Map();
 let cinematicRequestId = 0;
+const manuallyStoppedCinematicSources = new WeakSet();
 
 // Lazily create the AudioContext + gain nodes. Does NOT resume on mobile.
 function getCtx() {
@@ -715,6 +716,7 @@ export async function playCinematicTrack(
     source.connect(gain);
     gain.connect(ctx.destination);
 
+    const expectedEndTime = ctx.currentTime + (source.buffer?.duration || 0);
     source.start();
 
     cinematicSources.push(source);
@@ -729,7 +731,17 @@ export async function playCinematicTrack(
         currentGain => currentGain !== gain
       );
 
-      onEnded?.();
+      const endedNaturally =
+        !manuallyStoppedCinematicSources.has(source) &&
+        !source.loop &&
+        ctx.state !== "closed" &&
+        ctx.currentTime >= expectedEndTime - 0.1;
+
+      manuallyStoppedCinematicSources.delete(source);
+
+      if (endedNaturally) {
+        onEnded?.();
+      }
     };
 
     return {
@@ -749,6 +761,7 @@ export function stopCinematicTracks(fadeDuration = 0.4) {
 
   const ctx = audioCtx;
   const sourcesToStop = [...cinematicSources];
+  sourcesToStop.forEach(source => manuallyStoppedCinematicSources.add(source));
 
   if (ctx) {
     cinematicGains.forEach((gain) => {

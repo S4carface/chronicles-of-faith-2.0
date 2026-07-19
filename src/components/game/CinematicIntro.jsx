@@ -12,14 +12,14 @@ import { HOME_ART } from "@/data/art";
 const VERSE_1 =
   "In the beginning, God created the heavens and the earth.";
 const VERSE_3 =
-  "And God said, 'Let there be light,' and there was light.";
+  "And God said, “Let there be light,” and there was light.";
 const REFERENCE = "Genesis 1:1-3";
 
 const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export const VERSE_1_START_MS = 480;
-export const VERSE_3_START_MS = 3200;
+export const VERSE_3_START_MS = 3500;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
 const VIDEO_RETRY_TIMEOUT_MS = 6000;
@@ -488,7 +488,7 @@ return (
               </p>
 
               <p
-                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-100 ${
+                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100 transition-all duration-100 ${
                   step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
                 }`}
                 style={{
@@ -496,7 +496,7 @@ return (
                   textShadow: "0 0 28px rgba(251,191,36,0.35)",
                 }}
               >
-                &ldquo;{VERSE_3}&rdquo;
+                And God said, &ldquo;<strong>Let there be light</strong>,&rdquo; and there was light.
                 <span className="mt-4 block text-sm font-normal italic text-amber-300/70">Genesis 1:3</span>
               </p>
             </div>

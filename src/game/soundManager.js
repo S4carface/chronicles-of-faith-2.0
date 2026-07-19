@@ -716,7 +716,8 @@ export async function playCinematicTrack(
     source.connect(gain);
     gain.connect(ctx.destination);
 
-    const expectedEndTime = ctx.currentTime + (source.buffer?.duration || 0);
+    const startedAt = ctx.currentTime;
+    const expectedEndTime = startedAt + (source.buffer?.duration || 0);
     source.start();
 
     cinematicSources.push(source);
@@ -748,6 +749,7 @@ export async function playCinematicTrack(
       source,
       gain,
       context: ctx,
+      startedAt,
       duration: source.buffer?.duration ?? null,
     };
   } catch (error) {

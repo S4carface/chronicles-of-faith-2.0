@@ -20,8 +20,13 @@ const REFERENCE = "Genesis 1:1-3";
 const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
-const DEFAULT_NARRATION_DURATION_MS = 13000;
+export const VERSE_1_START_MS = 480;
+export const VERSE_2_START_MS = 3592;
+export const VERSE_3_START_MS = 9810;
+export const NARRATION_END_MS = 13632;
+export const TITLE_CARD_HOLD_MS = 3600;
 const AUDIO_END_FALLBACK_GRACE_MS = 4000;
+const VIDEO_RETRY_TIMEOUT_MS = 6000;
 
 const PORTRAIT_POSTER = "/images/intro/intro_poster.PNG";
 const LANDSCAPE_POSTER = "/images/intro/intro-poster-2.0.PNG";
@@ -34,6 +39,7 @@ export default function CinematicIntro({ onComplete }) {
   const [cinematicStarted, setCinematicStarted] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false); 
   const [bookCardStage, setBookCardStage] = useState(0);
   const [narrationOn, setNarrationOn] = useState(
@@ -48,6 +54,7 @@ export default function CinematicIntro({ onComplete }) {
   const isTransitioningRef = useRef(false);
   const completedRef = useRef(false);
   const lifecycleRef = useRef(0);
+  const scriptureFrameRef = useRef(null);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => {
@@ -56,6 +63,10 @@ export default function CinematicIntro({ onComplete }) {
     });
 
     timersRef.current = [];
+    if (scriptureFrameRef.current) {
+      window.cancelAnimationFrame(scriptureFrameRef.current);
+      scriptureFrameRef.current = null;
+    }
   }, []);
 
  const handleBegin = useCallback(() => {
@@ -79,12 +90,31 @@ export default function CinematicIntro({ onComplete }) {
     completedRef.current = true;
     Sound.stopNarration();
     onComplete();
-  }, 3600);
+  }, TITLE_CARD_HOLD_MS);
 
   timersRef.current.push(chapterTimer, finishTimer);
 }, [onComplete]);
 
-  const startCinematic = useCallback(async () => {
+  const waitForVideo = useCallback((video) => {
+    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const timeout = window.setTimeout(() => finish(reject), VIDEO_RETRY_TIMEOUT_MS);
+      const finish = (callback) => {
+        window.clearTimeout(timeout);
+        video.removeEventListener("canplay", onReady);
+        video.removeEventListener("error", onError);
+        callback();
+      };
+      const onReady = () => finish(resolve);
+      const onError = () => finish(reject);
+      video.addEventListener("canplay", onReady, { once: true });
+      video.addEventListener("error", onError, { once: true });
+    });
+  }, []);
+
+  const startCinematic = useCallback(async (userInitiated = false) => {
     if (cinematicStartedRef.current) return;
     const lifecycleId = lifecycleRef.current;
 
@@ -95,13 +125,27 @@ export default function CinematicIntro({ onComplete }) {
       return;
     }
 
-    if (!videoFailed) {
+    let usePosterFallback = videoFailed;
+    if (!usePosterFallback) {
       try {
+        await waitForVideo(video);
         await video.play();
       } catch (error) {
-        console.warn("Genesis video requires player interaction.", error);
-        setNeedsTap(true);
-        return;
+        if (!userInitiated) {
+          console.warn("Genesis video requires player interaction.", error);
+          setNeedsTap(true);
+          return;
+        }
+
+        try {
+          video.load();
+          await waitForVideo(video);
+          await video.play();
+        } catch (retryError) {
+          console.warn("Genesis video could not be played; using its poster.", retryError);
+          usePosterFallback = true;
+          setVideoFailed(true);
+        }
       }
     }
 
@@ -148,21 +192,35 @@ export default function CinematicIntro({ onComplete }) {
       return;
     }
 
-    const narrationDurationMs = Math.round(
-      (narrationTrack?.duration || DEFAULT_NARRATION_DURATION_MS / 1000) * 1000
-    );
+    const setScriptureForTime = (elapsedMs) => {
+      if (elapsedMs >= VERSE_3_START_MS) setStep(5);
+      else if (elapsedMs >= VERSE_2_START_MS) setStep(3);
+      else if (elapsedMs >= VERSE_1_START_MS) setStep(1);
+    };
+
+    if (narrationTrack?.context && Number.isFinite(narrationTrack.startedAt)) {
+      const updateScripture = () => {
+        if (completedRef.current || isTransitioningRef.current) return;
+        setScriptureForTime(
+          (narrationTrack.context.currentTime - narrationTrack.startedAt) * 1000
+        );
+        scriptureFrameRef.current = window.requestAnimationFrame(updateScripture);
+      };
+      scriptureFrameRef.current = window.requestAnimationFrame(updateScripture);
+    } else {
+      timersRef.current.push(
+        window.setTimeout(() => setStep(1), VERSE_1_START_MS),
+        window.setTimeout(() => setStep(3), VERSE_2_START_MS),
+        window.setTimeout(() => setStep(5), VERSE_3_START_MS)
+      );
+    }
 
     timersRef.current.push(
-      window.setTimeout(() => setStep(1), 300),
-      window.setTimeout(() => setStep(2), narrationDurationMs * 0.34),
-      window.setTimeout(() => setStep(3), narrationDurationMs * 0.39),
-      window.setTimeout(() => setStep(4), narrationDurationMs * 0.66),
-      window.setTimeout(() => setStep(5), narrationDurationMs * 0.71),
       window.setTimeout(
-        () => handleBegin(),
+        handleBegin,
         narrationTrack
-          ? narrationDurationMs + AUDIO_END_FALLBACK_GRACE_MS
-          : narrationDurationMs + 1000
+          ? NARRATION_END_MS + AUDIO_END_FALLBACK_GRACE_MS
+          : NARRATION_END_MS
       )
     );
   }, [
@@ -170,6 +228,7 @@ export default function CinematicIntro({ onComplete }) {
     narrationOn,
     profile.settings.narrationVolume,
     videoFailed,
+    waitForVideo,
   ]);
 
   useEffect(() => {
@@ -181,6 +240,7 @@ export default function CinematicIntro({ onComplete }) {
     setIsTransitioning(false);
     setBookCardStage(0);
     setStep(0);
+    setVideoPlaying(false);
 
     Sound.pauseMusicForAmbience();
 
@@ -212,7 +272,7 @@ export default function CinematicIntro({ onComplete }) {
 
   useEffect(() => {
     if (videoReady && !cinematicStartedRef.current) {
-      startCinematic();
+      startCinematic(false);
     }
   }, [videoReady, startCinematic]);
 
@@ -264,7 +324,7 @@ return (
       {/* Loading poster */}
       <picture
         className={`absolute inset-0 transition-opacity duration-1000 ${
-          cinematicStarted ? "opacity-0" : "opacity-100"
+          videoPlaying && !videoFailed ? "opacity-0" : "opacity-100"
         }`}
       >
         <source
@@ -282,7 +342,7 @@ return (
       {/* Dark loading readability layer */}
       <div
         className={`absolute inset-0 bg-slate-950/35 transition-opacity duration-700 ${
-          cinematicStarted ? "opacity-0" : "opacity-100"
+          videoPlaying && !videoFailed ? "opacity-0" : "opacity-100"
         }`}
       />
 
@@ -302,7 +362,7 @@ return (
           {needsTap && (
             <div className="mt-6 flex flex-col items-center gap-3">
               <button
-                onClick={startCinematic}
+                onClick={() => startCinematic(true)}
                 className="rounded-xl border border-amber-400/60 bg-slate-950/70 px-7 py-3 font-serif text-amber-100 shadow-lg"
               >
                 {videoFailed ? "Continue" : "Tap to Begin"}
@@ -328,13 +388,17 @@ return (
         preload="auto"
         poster={PORTRAIT_POSTER}
         onCanPlay={() => setVideoReady(true)}
-        onLoadedData={() => setVideoReady(true)}
+        onLoadedMetadata={() => {
+          if (videoRef.current?.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+            setVideoReady(true);
+          }
+        }}
+        onPlaying={() => setVideoPlaying(true)}
         onError={() => {
-          setVideoFailed(true);
-          setVideoReady(true);
+          if (!cinematicStartedRef.current) setNeedsTap(true);
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-          cinematicStarted ? "opacity-100" : "opacity-0"
+          videoPlaying && !videoFailed ? "opacity-100" : "opacity-0"
         }`}
       >
         <source src={INTRO_VIDEO} type="video/mp4" />

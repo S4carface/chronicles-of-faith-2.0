@@ -27,13 +27,43 @@ import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
 import BottomNavigation from "@/components/BottomNavigation"; 
+import { useEffect, useState } from "react";
+import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
 
+const PROFILE_STORAGE_KEY = "chronicles_of_faith_v1";
+
+function tutorialWasCompletedAtStartup() {
+  try {
+    const storedProfile = localStorage.getItem(PROFILE_STORAGE_KEY);
+    return storedProfile
+      ? JSON.parse(storedProfile)?.tutorialSeen === true
+      : false;
+  } catch {
+    return false;
+  }
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const [tutorialCompleted] = useState(tutorialWasCompletedAtStartup);
+  const [criticalAssetsReady, setCriticalAssetsReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    preloadCriticalFirstRunAssets().finally(() => {
+      if (mounted) setCriticalAssetsReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingAuth) {
+  if (
+    isLoadingAuth ||
+    isLoadingPublicSettings ||
+    (!tutorialCompleted && !criticalAssetsReady)
+  ) {
   return <LoadingScreen />;
 }
 

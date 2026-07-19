@@ -1763,7 +1763,7 @@ const selectedCardData =
       )}
 
       {/* Guided first-battle tutorial */}
-      {tutorialActive && tutorialStep < TUTORIAL_TOTAL_STEPS && !battleEnd && !tutorialCompleteMsg && !isEnemyTurn && (
+      {tutorialActive && tutorialStep < TUTORIAL_TOTAL_STEPS && !battleEnd && !tutorialCompleteMsg && (
         <GuidedBattleTutorial
   step={tutorialStep}
   onAcknowledge={handleTutorialAcknowledge}

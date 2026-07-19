@@ -516,7 +516,10 @@ if (!tutorialActive) {
     if (animating || battleState.turn !== "player" || battleEnd) return;
     const enemyAnim = profile.settings.enemyAnimation || "step";
     const gLevel = profile.settings.guidanceLevel || "normal";
-    const canUndo = (profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips) && enemyAnim !== "skip";
+    const canUndo =
+      !isTutorialBattle &&
+      (profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips) &&
+      enemyAnim !== "skip";
 
     const preEndSnapshot = battleState;
     const endedState = endPlayerTurn(battleState);

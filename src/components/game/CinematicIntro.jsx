@@ -22,7 +22,6 @@ export const VERSE_1_START_MS = 480;
 export const VERSE_3_START_MS = 7700;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
-const AUDIO_END_FALLBACK_GRACE_MS = 4000;
 const VIDEO_RETRY_TIMEOUT_MS = 6000;
 
 const PORTRAIT_POSTER = "/images/intro/intro_poster.PNG";
@@ -44,7 +43,7 @@ export default function CinematicIntro({ onComplete }) {
   );
 
   const videoRef = useRef(null);
-  const narrationTrackRef = useRef(null);
+  const audioRef = useRef(null);
   const musicTrackRef = useRef(null);
   const timersRef = useRef([]);
   const cinematicStartedRef = useRef(false);
@@ -52,6 +51,8 @@ export default function CinematicIntro({ onComplete }) {
   const completedRef = useRef(false);
   const lifecycleRef = useRef(0);
   const scriptureFrameRef = useRef(null);
+  const activeScriptureRef = useRef(0);
+  const fallbackStartedRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => {
@@ -75,7 +76,8 @@ export default function CinematicIntro({ onComplete }) {
 
   Sound.stopCinematicTracks(1.2);
 
-  narrationTrackRef.current = null;
+  audioRef.current?.pause();
+  audioRef.current = null;
   musicTrackRef.current = null;
 
   const chapterTimer = window.setTimeout(() => {
@@ -168,56 +170,85 @@ export default function CinematicIntro({ onComplete }) {
       return;
     }
 
-    let narrationTrack = null;
-
-    if (narrationOn) {
-      narrationTrackRef.current = await Sound.playCinematicTrack(
-        INTRO_AUDIO,
-        {
-          volume: Math.min(
-  1,
-  ((profile.settings.narrationVolume ?? 70) / 100) * 1.4
-),
-          loop: false,
-          onEnded: handleBegin,
-        }
+    const activateScripture = (nextStep, currentTime) => {
+      if (activeScriptureRef.current === nextStep) return;
+      activeScriptureRef.current = nextStep;
+      setStep(nextStep);
+      console.info(
+        `[Genesis Intro] Scripture ${nextStep === 1 ? "Genesis 1:1" : "Genesis 1:3"} activated at audio.currentTime=${currentTime.toFixed(3)}s`
       );
-      narrationTrack = narrationTrackRef.current;
-    }
-
-    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
-      return;
-    }
-
-    const setScriptureForTime = (elapsedMs) => {
-      if (elapsedMs >= VERSE_3_START_MS) setStep(5);
-      else if (elapsedMs >= VERSE_1_START_MS) setStep(1);
     };
 
-    if (narrationTrack?.context && Number.isFinite(narrationTrack.startedAt)) {
-      const updateScripture = () => {
-        if (completedRef.current || isTransitioningRef.current) return;
-        setScriptureForTime(
-          (narrationTrack.context.currentTime - narrationTrack.startedAt) * 1000
-        );
-        scriptureFrameRef.current = window.requestAnimationFrame(updateScripture);
-      };
-      scriptureFrameRef.current = window.requestAnimationFrame(updateScripture);
-    } else {
+    const updateScriptureFromAudio = () => {
+      const audio = audioRef.current;
+      if (
+        !audio ||
+        audio.paused ||
+        audio.ended ||
+        completedRef.current ||
+        isTransitioningRef.current
+      ) {
+        scriptureFrameRef.current = null;
+        return;
+      }
+
+      const elapsedMs = audio.currentTime * 1000;
+      if (elapsedMs >= VERSE_3_START_MS) activateScripture(5, audio.currentTime);
+      else if (elapsedMs >= VERSE_1_START_MS) activateScripture(1, audio.currentTime);
+
+      scriptureFrameRef.current = window.requestAnimationFrame(updateScriptureFromAudio);
+    };
+
+    const startFallbackTiming = () => {
+      if (fallbackStartedRef.current) return;
+      fallbackStartedRef.current = true;
+      console.info("[Genesis Intro] Fallback subtitle timing active: true");
       timersRef.current.push(
-        window.setTimeout(() => setStep(1), VERSE_1_START_MS),
-        window.setTimeout(() => setStep(5), VERSE_3_START_MS)
+        window.setTimeout(() => activateScripture(1, VERSE_1_START_MS / 1000), VERSE_1_START_MS),
+        window.setTimeout(() => activateScripture(5, VERSE_3_START_MS / 1000), VERSE_3_START_MS),
+        window.setTimeout(handleBegin, NARRATION_END_MS)
       );
+    };
+
+    if (narrationOn) {
+      const audio = new Audio(INTRO_AUDIO);
+      audio.preload = "auto";
+      audio.volume = Math.min(
+        1,
+        ((profile.settings.narrationVolume ?? 70) / 100) * 1.4
+      );
+      audioRef.current = audio;
+
+      const stopTracking = () => {
+        if (scriptureFrameRef.current) {
+          window.cancelAnimationFrame(scriptureFrameRef.current);
+          scriptureFrameRef.current = null;
+        }
+      };
+      audio.addEventListener("playing", () => {
+        console.info(
+          `[Genesis Intro] audio playing at currentTime=${audio.currentTime.toFixed(3)}s; fallback timing active: false`
+        );
+        stopTracking();
+        scriptureFrameRef.current = window.requestAnimationFrame(updateScriptureFromAudio);
+      });
+      audio.addEventListener("pause", stopTracking);
+      audio.addEventListener("waiting", stopTracking);
+      audio.addEventListener("stalled", stopTracking);
+      audio.addEventListener("ended", handleBegin, { once: true });
+      audio.addEventListener("error", startFallbackTiming, { once: true });
+
+      try {
+        await audio.play();
+      } catch (error) {
+        console.warn("[Genesis Intro] Narration playback failed; using fallback timing.", error);
+        startFallbackTiming();
+      }
+    } else {
+      startFallbackTiming();
     }
 
-    timersRef.current.push(
-      window.setTimeout(
-        handleBegin,
-        narrationTrack
-          ? NARRATION_END_MS + AUDIO_END_FALLBACK_GRACE_MS
-          : NARRATION_END_MS
-      )
-    );
+    if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
   }, [
     handleBegin,
     narrationOn,
@@ -235,6 +266,8 @@ export default function CinematicIntro({ onComplete }) {
     setIsTransitioning(false);
     setBookCardStage(0);
     setStep(0);
+    activeScriptureRef.current = 0;
+    fallbackStartedRef.current = false;
     setVideoPlaying(false);
 
     Sound.pauseMusicForAmbience();
@@ -256,11 +289,12 @@ export default function CinematicIntro({ onComplete }) {
       clearTimers();
 
       videoRef.current?.pause();
+      audioRef.current?.pause();
+      audioRef.current = null;
 
       Sound.stopCinematicTracks(0);
       Sound.stopNarration();
 
-      narrationTrackRef.current = null;
       musicTrackRef.current = null;
     };
   }, [clearTimers]);
@@ -277,12 +311,13 @@ export default function CinematicIntro({ onComplete }) {
     clearTimers();
 
     videoRef.current?.pause();
+    audioRef.current?.pause();
+    audioRef.current = null;
 
     Sound.stopCinematicTracks(0);
     Sound.stopNarration();
     Sound.resumeMusicAfterAmbience("battle");
 
-    narrationTrackRef.current = null;
     musicTrackRef.current = null;
 
     onComplete();

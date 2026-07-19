@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
-import { getCardById, CARDS } from "@/data/cards";
+import { getCardById } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { ROOM_TYPES } from "@/data/genesisRooms";
 import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART, getNodeArt } from "@/data/art";
-import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, canAddToDeck, getMaxCopies, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
+import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -13,20 +13,8 @@ import DeckFullModal from "@/components/game/DeckFullModal";
 import { getCardEffectText } from "@/components/game/Card";
 import { preloadImages } from "@/lib/imageAssets";
 import SafeImage from "@/components/ui/SafeImage";
-
-const RARITY_BORDER = {
-  common: "border-sky-400/60",
-  uncommon: "border-purple-400/70",
-  rare: "border-emerald-400/70",
-  legendary: "border-amber-300/80",
-};
-
-const RARITY_GLOW = {
-  common: "shadow-md shadow-sky-500/10",
-  uncommon: "shadow-lg shadow-purple-500/20",
-  rare: "shadow-lg shadow-emerald-500/25",
-  legendary: "shadow-xl shadow-amber-400/40",
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 export default function RewardScreen() {
   const { run, completeRoom, updateRun, profile, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
@@ -197,19 +185,14 @@ export default function RewardScreen() {
 function RewardCardDisplay({ card, ownedCount, onClick }) {
   const alreadyOwned = ownedCount > 0;
   const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
-  const rarityLabel =
-    card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
+  const rarity = getCardRarity(card.rarity);
 
   return (
     <div
       onClick={onClick}
       className="min-w-0 cursor-pointer transition active:scale-95 hover:scale-[1.02]"
     >
-      <div
-        className={`relative w-full aspect-[3/4] rounded-xl border-2 ${
-          RARITY_BORDER[card.rarity]
-        } ${RARITY_GLOW[card.rarity]} overflow-hidden bg-slate-950`}
-      >
+      <RarityCardFrame rarity={rarity.key} className="relative w-full aspect-[3/4] rounded-xl border-2 overflow-hidden bg-slate-950">
         <SafeImage
           src={CARD_ART[card.id] || PLACEHOLDER_ART}
           alt={card.name}
@@ -239,18 +222,8 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
             {card.name}
           </h3>
 
-          <p
-            className={`mt-1 text-[8px] sm:text-[10px] uppercase font-bold tracking-wide ${
-              card.rarity === "legendary"
-                ? "text-amber-300"
-                : card.rarity === "rare"
-                  ? "text-emerald-300"
-                  : card.rarity === "uncommon"
-                    ? "text-purple-300"
-                    : "text-sky-300"
-            }`}
-          >
-            {rarityLabel}
+          <p className="mt-1 text-[8px] sm:text-[10px] uppercase font-bold tracking-wide" style={{ color: rarity.labelColor }}>
+            {rarity.displayName}
           </p>
 
           <div className="mt-2 border-t border-amber-500/20 pt-2">
@@ -259,7 +232,7 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
             </p>
           </div>
         </div>
-      </div>
+      </RarityCardFrame>
 
       {alreadyOwned && (
         <div className="text-center mt-1">

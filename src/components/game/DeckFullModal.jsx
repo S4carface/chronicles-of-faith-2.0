@@ -4,12 +4,8 @@ import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 import { getCardEffectText } from "@/components/game/Card";
 import { RUN_DECK_MAX } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
-
-const RARITY_BORDER = {
-  common: "border-sky-400/60",
-  rare: "border-emerald-400/70",
-  legendary: "border-amber-300/80",
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 export default function DeckFullModal({ rewardCardId, runDeck, onReplace, onSendToCollection, onSkip }) {
   const [mode, setMode] = useState("choose"); // "choose" | "replace"
@@ -33,16 +29,19 @@ export default function DeckFullModal({ rewardCardId, runDeck, onReplace, onSend
             {runDeck.map((cardId, idx) => {
               const dc = getCardById(cardId);
               if (!dc) return null;
+              const rarity = getCardRarity(dc.rarity);
               return (
                 <button
                   key={idx}
                   onClick={() => handleSelectReplace(idx)}
-                  className={`p-2 rounded-lg border ${RARITY_BORDER[dc.rarity] || "border-slate-600"} bg-slate-800/60 hover:bg-slate-700/60 transition text-center`}
+                  className="p-2 rounded-lg border bg-slate-800/60 hover:bg-slate-700/60 transition text-center"
+                  style={{ borderColor: rarity.borderColor, boxShadow: `0 0 10px ${rarity.glowColor}` }}
                 >
                   <div className="w-12 h-12 rounded overflow-hidden mx-auto mb-1" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
                     <img src={CARD_ART[dc.id] || PLACEHOLDER_ART} alt={dc.name} className="art-portrait" />
                   </div>
                   <p className="text-amber-100 text-[10px] font-serif leading-tight">{dc.name}</p>
+                  <p className="text-[8px] font-bold uppercase" style={{ color: rarity.labelColor }}>{rarity.displayName}</p>
                   <p className="text-amber-300/40 text-[8px]">{dc.cost} ✨</p>
                 </button>
               );
@@ -59,6 +58,8 @@ export default function DeckFullModal({ rewardCardId, runDeck, onReplace, onSend
     );
   }
 
+  const rarity = getCardRarity(card.rarity);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }}>
       <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6 animate-fade-in" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
@@ -67,14 +68,15 @@ export default function DeckFullModal({ rewardCardId, runDeck, onReplace, onSend
           Your run deck is full ({RUN_DECK_MAX} cards). Replace a card or send this card to your collection.
         </p>
 
-        <div className={`mx-auto w-28 h-44 rounded-lg border-2 ${RARITY_BORDER[card.rarity]} bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between mb-4`}>
+        <RarityCardFrame rarity={rarity.key} className="mx-auto w-28 h-44 rounded-lg border-2 bg-gradient-to-b from-slate-800 to-slate-900 p-2 flex flex-col items-center justify-between mb-4">
           <div className="text-xs text-amber-300/60 w-full text-right">{card.cost} ✨</div>
           <div className="w-14 h-14 rounded-lg overflow-hidden" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
             <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
           </div>
           <div className="text-xs font-serif text-amber-100 text-center">{card.name}</div>
+          <div className="text-[8px] font-bold uppercase" style={{ color: rarity.labelColor }}>{rarity.displayName}</div>
           <div className="text-[8px] text-amber-300/40 text-center">{getCardEffectText(card)}</div>
-        </div>
+        </RarityCardFrame>
 
         <div className="space-y-2">
           <button

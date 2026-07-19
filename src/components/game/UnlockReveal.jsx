@@ -1,36 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
-import { getCardById } from "@/data/cards";
 import { HERO_MAP } from "@/data/heroes";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
-import { CARD_ART, HERO_ART, VICTORY_ART, PLACEHOLDER_ART, ENEMY_ART } from "@/data/art";
+import { HERO_ART, VICTORY_ART, PLACEHOLDER_ART, ENEMY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 import CardReveal from "@/components/game/CardReveal";
 
-const RARITY_STYLES = {
-  common: { label: "Common", color: "text-sky-300", border: "border-sky-400/50", glow: "rgba(56,189,248,0.4)" },
-  rare: { label: "Rare", color: "text-emerald-300", border: "border-emerald-400/60", glow: "rgba(52,211,153,0.5)" },
-  legendary: { label: "Legendary", color: "text-amber-300", border: "border-amber-300/70", glow: "rgba(251,191,36,0.6)" },
-};
-
 function buildContent(unlock) {
   if (!unlock) return null;
-
-  if (unlock.type === "card") {
-    const card = getCardById(unlock.cardId);
-    if (!card) return null;
-    const r = RARITY_STYLES[card.rarity] || RARITY_STYLES.common;
-    return {
-      label: "New Card Unlocked",
-      art: CARD_ART[card.id] || PLACEHOLDER_ART,
-      name: card.name,
-      subtitle: r.label,
-      subtitleColor: r.color,
-      verse: card.verse,
-      borderColor: r.border,
-      glowColor: r.glow,
-    };
-  }
 
   if (unlock.type === "hero") {
     const hero = HERO_MAP[unlock.heroId];

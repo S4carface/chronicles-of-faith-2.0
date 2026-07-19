@@ -1,0 +1,158 @@
+.rarity-card-frame {
+  --rarity-tilt-x: 0deg;
+  --rarity-tilt-y: 0deg;
+  --rarity-light-x: 50%;
+  --rarity-light-y: 50%;
+  --rarity-shadow-x: 0px;
+  position: relative;
+  isolation: isolate;
+  border-color: var(--rarity-border) !important;
+  box-shadow:
+    var(--rarity-shadow-x) 10px 24px rgba(2, 7, 18, 0.45),
+    0 0 var(--rarity-glow-size) var(--rarity-glow);
+  transform-style: preserve-3d;
+}
+
+.rarity-card-frame--motion {
+  transform: perspective(1050px) rotateX(var(--rarity-tilt-x)) rotateY(var(--rarity-tilt-y));
+  will-change: transform;
+}
+
+.rarity-card-frame--selected {
+  translate: 0 -0.65rem;
+  scale: 1.045;
+  box-shadow:
+    var(--rarity-shadow-x) 12px 28px rgba(2, 7, 18, 0.55),
+    0 0 0 3px color-mix(in srgb, var(--rarity-accent) 72%, #f3d477),
+    0 0 28px var(--rarity-glow) !important;
+}
+
+.game-card--playable:hover {
+  translate: 0 -0.45rem;
+  scale: 1.025;
+}
+
+.game-card--playable:active {
+  scale: 0.97;
+}
+
+.game-card.rarity-card-frame--selected:hover {
+  translate: 0 -0.65rem;
+  scale: 1.045;
+}
+
+.rarity-card-frame__foil,
+.rarity-card-frame__glint,
+.rarity-card-frame__rim,
+.rarity-card-frame__particles {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.rarity-card-frame__foil {
+  background:
+    linear-gradient(115deg, transparent 24%, rgba(116, 188, 255, 0.12) 40%, rgba(224, 174, 244, 0.1) 49%, rgba(255, 225, 151, 0.12) 58%, transparent 74%),
+    radial-gradient(circle at var(--rarity-light-x) var(--rarity-light-y), rgba(255, 248, 221, 0.16), transparent 34%);
+  background-size: 180% 180%, 100% 100%;
+  background-position: var(--rarity-light-x) var(--rarity-light-y), center;
+  mix-blend-mode: soft-light;
+  opacity: var(--rarity-foil);
+}
+
+.rarity-card-frame__glint {
+  background: linear-gradient(125deg, transparent 32%, rgba(255, 249, 225, 0.18) 48%, rgba(255, 220, 143, 0.08) 53%, transparent 68%);
+  background-size: 220% 220%;
+  background-position: var(--rarity-light-x) var(--rarity-light-y);
+  mix-blend-mode: screen;
+  opacity: var(--rarity-glint-opacity);
+  will-change: transform, opacity;
+}
+
+.rarity-card-frame--rare .rarity-card-frame__glint {
+  animation: rarity-foil-sweep 7.2s ease-in-out infinite;
+}
+
+.rarity-card-frame--epic .rarity-card-frame__glint {
+  animation: rarity-foil-sweep 6.4s ease-in-out infinite;
+}
+
+.rarity-card-frame--legendary .rarity-card-frame__glint {
+  animation: rarity-foil-sweep 5.8s ease-in-out infinite;
+}
+
+.rarity-card-frame__rim {
+  inset: 1px;
+  border: 1px solid color-mix(in srgb, var(--rarity-border) 68%, transparent);
+  box-shadow: inset 0 0 10px color-mix(in srgb, var(--rarity-glow) 70%, transparent);
+  opacity: var(--rarity-rim-opacity);
+}
+
+.rarity-card-frame--legendary {
+  animation: rarity-legendary-pulse 5.8s ease-in-out infinite;
+}
+
+.rarity-card-frame__particles {
+  inset: 5%;
+  background-image:
+    radial-gradient(circle at 14% 24%, rgba(255, 229, 153, 0.62) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 82% 34%, rgba(255, 236, 184, 0.52) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 68% 82%, rgba(255, 211, 108, 0.48) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 29% 70%, rgba(255, 240, 198, 0.42) 0 1px, transparent 1.6px);
+  opacity: 0.45;
+  animation: rarity-particle-breathe 4.6s ease-in-out infinite;
+}
+
+.rarity-card-frame--showcase {
+  animation: rarity-showcase-idle 6s ease-in-out infinite;
+}
+
+@keyframes rarity-showcase-idle {
+  0%, 100% { scale: 1; rotate: -1.2deg; }
+  50% { scale: 1.015; rotate: 1.2deg; }
+}
+
+@keyframes rarity-foil-sweep {
+  0%, 16% { transform: translate3d(-24%, 0, 2px); opacity: var(--rarity-glint-low); }
+  42% { transform: translate3d(0, 0, 2px); opacity: var(--rarity-glint-high); }
+  68%, 100% { transform: translate3d(24%, 0, 2px); opacity: var(--rarity-glint-low); }
+}
+
+@keyframes rarity-legendary-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.035); }
+}
+
+@keyframes rarity-particle-breathe {
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rarity-card-frame,
+  .rarity-card-frame--motion,
+  .rarity-card-frame--legendary,
+  .rarity-card-frame--showcase,
+  .rarity-card-frame__particles {
+    animation: none !important;
+    transform: none !important;
+    scale: 1 !important;
+    translate: 0 !important;
+    rotate: 0deg !important;
+    filter: none !important;
+    will-change: auto;
+  }
+
+  .rarity-card-frame__foil,
+  .rarity-card-frame__glint,
+  .rarity-card-frame--rare .rarity-card-frame__glint,
+  .rarity-card-frame--epic .rarity-card-frame__glint,
+  .rarity-card-frame--legendary .rarity-card-frame__glint {
+    animation: none !important;
+    transform: none !important;
+    background-position: center;
+    opacity: var(--rarity-reduced-foil);
+  }
+}

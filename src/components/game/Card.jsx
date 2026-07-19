@@ -3,37 +3,8 @@ import { Lock } from "lucide-react";
 import { cn } from "@/utils";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 import SafeImage from "@/components/ui/SafeImage";
-
-const RARITY_STYLES = {
-  common: {
-    border: "border-sky-400/60",
-    glow: "shadow-md shadow-sky-500/10",
-    bg: "from-sky-800/50 to-slate-800",
-    label: "text-sky-200",
-    badge: "bg-sky-600/40",
-  },
-    uncommon: {
-    border: "border-purple-400/70",
-    glow: "shadow-lg shadow-purple-500/20",
-    bg: "from-purple-800/40 to-slate-800",
-    label: "text-purple-200",
-    badge: "bg-purple-600/40",
-  },
-  rare: {
-    border: "border-emerald-400/70",
-    glow: "shadow-lg shadow-emerald-500/25",
-    bg: "from-emerald-800/40 to-slate-800",
-    label: "text-emerald-200",
-    badge: "bg-emerald-600/40",
-  },
-  legendary: {
-    border: "border-amber-300/80",
-    glow: "shadow-xl shadow-amber-400/40",
-    bg: "from-amber-700/30 via-yellow-700/20 to-slate-800",
-    label: "text-amber-100",
-    badge: "bg-amber-500/30",
-  },
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 const TYPE_LABELS = {
   attack: { text: "Attack", color: "text-red-300" },
@@ -79,7 +50,7 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
   if (!card) return null;
-  const style = RARITY_STYLES[card.rarity] || RARITY_STYLES.common;
+  const rarity = getCardRarity(card.rarity);
 
   const startPress = () => {
     longPressed.current = false;
@@ -99,7 +70,9 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
   const effectText = getCardEffectText(card);
 
   return (
-    <div
+    <RarityCardFrame
+      rarity={rarity.key}
+      selected={selected}
       onClick={handleClick}
       onTouchStart={startPress}
       onTouchEnd={cancelPress}
@@ -108,14 +81,10 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
       onMouseUp={cancelPress}
       onMouseLeave={cancelPress}
       className={cn(
-        "relative rounded-lg border-2 overflow-hidden cursor-pointer transition-all duration-300 select-none",
-        style.border,
-        style.glow,
-        style.bg,
-        "bg-gradient-to-b",
-        playable && "hover:-translate-y-2 hover:scale-[1.03] active:scale-95",
-        selected && playable && "-translate-y-3 ring-4 ring-amber-300 scale-[1.05] shadow-2xl shadow-amber-400/60 z-20 brightness-110",
-        selected && !playable && "-translate-y-2 ring-4 ring-amber-400/40 scale-[1.03] z-10",
+        "game-card relative rounded-lg border-2 overflow-hidden cursor-pointer transition-[translate,scale,box-shadow,filter,opacity] duration-300 select-none bg-gradient-to-b from-[#172440] to-[#0c1528]",
+        playable && "game-card--playable",
+        selected && playable && "z-20 brightness-110",
+        selected && !playable && "z-10",
         !playable && onClick && "opacity-60",
 inHand
   ? "mx-auto h-40 w-full max-w-[8rem] min-w-0"
@@ -126,13 +95,13 @@ inHand && "flex-shrink-0"
       )}
     >
       {/* Cost badge */}
-      <div className={cn("absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm z-10", small ? "w-7 h-7 text-sm" : "w-8 h-8 text-base", style.badge, "border", style.border)}>
+      <div className={cn("absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm z-10 border bg-slate-950/75", small ? "w-7 h-7 text-sm" : "w-8 h-8 text-base")} style={{ borderColor: rarity.borderColor }}>
         <span className="text-white">{card.cost}</span>
       </div>
 
       {/* Rarity badge */}
-      <div className={cn("absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide z-10", small ? "text-[8px]" : "text-[9px]", style.badge)}>
-        {card.rarity}
+      <div className={cn("absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded uppercase font-bold tracking-wide z-10 bg-slate-950/78 border", small ? "text-[8px]" : "text-[9px]")} style={{ color: rarity.labelColor, borderColor: rarity.borderColor }}>
+        {rarity.displayName}
       </div>
 
       {/* Card artwork */}
@@ -161,7 +130,7 @@ inHand
       </div>
 
       {/* Card name */}
-      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[9px]" : "text-sm", style.label)}>
+      <div className={cn("text-center font-bold px-1 leading-tight font-serif", small ? "text-[9px]" : "text-sm")} style={{ color: rarity.labelColor }}>
         {card.name}
       </div>
 
@@ -178,9 +147,9 @@ inHand
       )}
 
       {/* Verse */}
-      <div className={cn("text-center text-[8px] mt-auto py-1 border-t border-white/10 italic", small ? "text-[7px]" : "text-[9px]", style.label)}>
+      <div className={cn("text-center text-[8px] mt-auto py-1 border-t border-white/10 italic", small ? "text-[7px]" : "text-[9px]")} style={{ color: rarity.labelColor }}>
         {card.verse}
       </div>
-    </div>
+    </RarityCardFrame>
   );
 }

@@ -843,7 +843,11 @@ if (!tutorialActive) {
     }
     if (result === "victory") {
       recordEnemyDefeat(enemy.id);
-      Sound.sfx.victory();
+      if (enemy.isBoss) {
+        Sound.prepareGenesisCompletionAudio();
+      } else {
+        Sound.sfx.victory();
+      }
       const goldReward = enemy.isBoss ? 30 : 10 + Math.floor(Math.random() * 5);
       if (run.pendingEnemyId === "serpent" && run.roomsCleared === 0) {
         unlockAchievement("serpent_slayer");
@@ -870,7 +874,7 @@ if (!tutorialActive) {
           gold: run.gold + goldReward,
         });
       }
-      Sound.playMusic("victory");
+      if (!enemy.isBoss) Sound.playMusic("victory");
     } else {
       Sound.sfx.defeat();
       Sound.playMusic("defeat");

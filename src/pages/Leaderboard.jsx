@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 
 import { ScrollText, Calendar, Clock, Globe, RefreshCw, WifiOff, Pencil } from "lucide-react";
 import { useGame } from "@/game/GameContext";
@@ -92,12 +93,22 @@ const isMyEntry = (entry) => {
 const hasMyScore = entries.some(isMyEntry);
 return (
   <div
-    className="min-h-screen p-6 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28"
+    className="min-h-screen px-4 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 sm:pt-[calc(1.5rem+env(safe-area-inset-top))] pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28"
     style={{
       background:
         "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)",
     }}
   >
+    <div className="mb-4">
+      <Link
+        to="/"
+        aria-label="Return to Main Menu"
+        className="inline-flex min-h-11 items-center rounded-lg border border-amber-400/40 bg-slate-950/70 px-3.5 py-2 text-sm font-medium text-amber-200 shadow-md shadow-black/20 transition hover:bg-amber-900/30 active:scale-[0.98]"
+      >
+        ← Main Menu
+      </Link>
+    </div>
+
     <div className="mb-8 flex items-center justify-between gap-3">
       <div className="flex items-center gap-2">
         <div

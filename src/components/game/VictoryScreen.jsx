@@ -58,10 +58,12 @@ export default function VictoryScreen() {
     const frame = requestAnimationFrame(() => setStageVisible(true));
     if (!audioStarted.current) {
       audioStarted.current = true;
-      Sound.stopMusic();
-      Sound.playOneShotMusic("/audio/genesis_victory.mp3");
+      Sound.playGenesisCompletionCue("/audio/genesis_victory.mp3");
     }
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      Sound.stopGenesisCompletionCue();
+    };
   }, [backgroundReady]);
 
   useEffect(() => {

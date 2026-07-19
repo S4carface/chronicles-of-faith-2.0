@@ -61,7 +61,8 @@ export default function RewardScreen() {
   });
 
   useEffect(() => {
-    if (showNarration) Sound.playMusic("victory");
+    if (isBoss) Sound.prepareGenesisCompletionAudio();
+    else if (showNarration) Sound.playMusic("victory");
     preloadImages([
       ...rewards.map((cardId) => CARD_ART[cardId] || PLACEHOLDER_ART),
       ...run.map.flat().map(getNodeArt),

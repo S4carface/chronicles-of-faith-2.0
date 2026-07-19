@@ -21,7 +21,8 @@ let mainThemeSource = null;
 let mainThemeStartedAt = 0;
 let mainThemePausedAt = 0;
 let mainThemeRequestId = 0;
-let oneShotMusicElement = null;
+let genesisCompletionAudio = null;
+let genesisCompletionAudioActive = false;
 let musicEnabled = true;
 let sfxEnabled = true;
 let musicVol = 0.5;
@@ -272,7 +273,7 @@ function tryResumeAfterReturn() {
 
 // Restart the music loop if it should be playing but isn't
 function restartMusicIfNeeded() {
-  if (!musicEnabled || musicPausedForAmbience) return;
+  if (!musicEnabled || musicPausedForAmbience || genesisCompletionAudioActive) return;
 
   const theme = pendingMusicTheme || musicTheme;
 
@@ -323,7 +324,7 @@ const gestureHandler = () => {
 
   const theme = pendingMusicTheme || musicTheme;
 
-  if (musicEnabled && !musicPausedForAmbience && theme) {
+  if (musicEnabled && !musicPausedForAmbience && !genesisCompletionAudioActive && theme) {
     pendingMusicTheme = null;
     playMusic(theme);
   }
@@ -915,12 +916,16 @@ export const sfx = {
   },
 };
 
-export function stopMusic() {
-  if (oneShotMusicElement) {
-    oneShotMusicElement.pause();
-    oneShotMusicElement.removeAttribute("src");
-    oneShotMusicElement.load();
-    oneShotMusicElement = null;
+export function stopMusic({ resetTheme = false } = {}) {
+  if (genesisCompletionAudio) {
+    const { audio, onEnded, onError } = genesisCompletionAudio;
+    audio.removeEventListener("ended", onEnded);
+    audio.removeEventListener("error", onError);
+    audio.pause();
+    audio.currentTime = 0;
+    audio.removeAttribute("src");
+    audio.load();
+    genesisCompletionAudio = null;
   }
   currentMusicNodes.forEach((node) => {
     try {
@@ -934,29 +939,47 @@ export function stopMusic() {
     musicTimeoutId = null;
   }
 
-  stopMainTheme({ preservePosition: true });
+  stopMainTheme({ preservePosition: !resetTheme });
+  if (resetTheme) {
+    musicTheme = null;
+    pendingMusicTheme = null;
+    mainThemePausedAt = 0;
+  }
 }
 
-export function playOneShotMusic(src) {
-  stopMusic();
+export function prepareGenesisCompletionAudio() {
+  genesisCompletionAudioActive = true;
+  stopMusic({ resetTheme: true });
+}
+
+export function playGenesisCompletionCue(src = "/audio/genesis_victory.mp3") {
+  if (genesisCompletionAudio?.audio) return genesisCompletionAudio.audio;
+  prepareGenesisCompletionAudio();
   if (!musicEnabled || !src) return null;
 
   try {
     const audio = new Audio(src);
-    oneShotMusicElement = audio;
     audio.loop = false;
     audio.preload = "auto";
-    audio.volume = Math.max(0, Math.min(1, normalizeMusicVolume(musicVol) * 0.45));
+    audio.volume = Math.max(0, Math.min(1, normalizeMusicVolume(musicVol) * 0.4));
     const clear = () => {
-      if (oneShotMusicElement === audio) oneShotMusicElement = null;
+      if (genesisCompletionAudio?.audio === audio) genesisCompletionAudio = null;
     };
-    audio.addEventListener("ended", clear, { once: true });
-    audio.addEventListener("error", clear, { once: true });
+    const onEnded = clear;
+    const onError = clear;
+    genesisCompletionAudio = { audio, onEnded, onError };
+    audio.addEventListener("ended", onEnded, { once: true });
+    audio.addEventListener("error", onError, { once: true });
     audio.play().catch(clear);
     return audio;
   } catch {
     return null;
   }
+}
+
+export function stopGenesisCompletionCue() {
+  stopMusic({ resetTheme: true });
+  genesisCompletionAudioActive = false;
 }
 
 export function pauseMusicForAmbience() {
@@ -1162,7 +1185,7 @@ function _startMusic(theme) {
 // Public: play a music theme. If audio isn't unlocked yet (mobile, no gesture),
 // store as pending — it starts on the first user gesture / unlock.
 export function playMusic(theme) {
-  if (!musicEnabled) {
+  if (!musicEnabled || genesisCompletionAudioActive) {
     return;
   }
 

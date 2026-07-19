@@ -424,6 +424,21 @@ return (
               : "translate-y-3 opacity-0"
           }`}
         >
+          <div
+            className="mx-auto mb-4 h-14 w-14 overflow-hidden rounded-full border border-amber-400/35 shadow-lg shadow-amber-400/15"
+            style={{ background: "#0F1A30" }}
+          >
+            <img
+              src={HOME_ART.cross}
+              alt="Chronicles of Faith"
+              className="art-portrait"
+            />
+          </div>
+
+          <p className="mb-4 font-serif text-lg tracking-[0.16em] text-amber-200/80">
+            Chronicles of Faith
+          </p>
+
           <div className="mx-auto mb-5 h-px w-32 bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
  <div className="relative flex min-h-[9rem] min-w-[18rem] items-center justify-center">

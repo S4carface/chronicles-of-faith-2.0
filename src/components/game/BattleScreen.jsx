@@ -115,7 +115,6 @@ export default function BattleScreen() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [battleEnd, setBattleEnd] = useState(null);
   const [animating, setAnimating] = useState(false);
-  const playableEndTurnWarningShownRef = useRef(false);
   const [hero, setHero] = useState(run.hero);
   const [covenantShieldUsed, setCovenantShieldUsed] = useState(false);
   const [scriptureOnlyBattle, setScriptureOnlyBattle] = useState(true);
@@ -479,7 +478,7 @@ if (!tutorialActive) {
   if (
     gLevel !== "expert" &&
     profile.settings.playableEndTurnWarning !== false &&
-    !playableEndTurnWarningShownRef.current
+    profile.settings.playableEndTurnWarningSeen !== true
   ) {
     const hasPlayable = battleState.hand.some(cardId => {
       const card = resolveCard(cardId);
@@ -498,7 +497,12 @@ if (!tutorialActive) {
     });
 
     if (hasPlayable) {
-      playableEndTurnWarningShownRef.current = true;
+      saveProfile({
+        settings: {
+          ...profile.settings,
+          playableEndTurnWarningSeen: true,
+        },
+      });
       setEndTurnConfirm({ type: "playable" });
       return;
     }

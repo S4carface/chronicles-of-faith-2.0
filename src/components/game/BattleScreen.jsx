@@ -99,7 +99,7 @@ function simplifyLogEntry(entry) {
 }
 
 export default function BattleScreen() {
-  const {   run,   startRun,   updateRun,   saveBattleState,   setPhase,   completeRoom,   unlockAchievement,   profile,   saveProfile,   endRun,   saveAndExit,   recordEnemyEncounter,   recordEnemyDefeat, } = useGame();
+  const {   run,   updateRun,   saveBattleState,   setPhase,   completeRoom,   unlockAchievement,   profile,   saveProfile,   endRun,   saveAndExit,   recordEnemyEncounter,   recordEnemyDefeat, } = useGame();
   const { isDesktop } = useResponsive();
   const navigate = useNavigate();
   const isTutorialBattle = run.isTutorial === true;
@@ -130,7 +130,6 @@ export default function BattleScreen() {
   const [showAbandonConfirm, setShowAbandonConfirm] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [longPressCard, setLongPressCard] = useState(null);
-  const [showGuideCallouts, setShowGuideCallouts] = useState(false);
   const [showHelpTips, setShowHelpTips] = useState(false);
   const [currentIntentIdx, setCurrentIntentIdx] = useState(-1);
   const [floatingText, setFloatingText] = useState(null);
@@ -155,6 +154,10 @@ export default function BattleScreen() {
     const next = tutorialStepRef.current + 1;
     tutorialStepRef.current = next;
     setTutorialStep(next);
+
+    if (next >= TUTORIAL_TOTAL_STEPS) {
+      setTutorialActive(false);
+    }
   };
 
   const handleTutorialAcknowledge = () => {
@@ -162,33 +165,54 @@ export default function BattleScreen() {
     advanceTutorial();
   };
 
- const finishTutorialAndStartGenesis = () => {
+ const finishTutorial = () => {
   Sound.sfx.click();
 
   setTutorialActive(false);
   setTutorialCompleteMsg(false);
 
-  saveProfile({ tutorialSeen: true });
-
-  // Destroy the temporary tutorial run.
   endRun();
-
-  // Start a completely fresh Genesis campaign.
-  setTimeout(() => {
-    startRun("adam", false, null, {
-      difficulty: "easy",
-    });
-
-    navigate("/play");
-  }, 0);
+  navigate("/");
 };
 
 const handleTutorialSkip = () => {
-  finishTutorialAndStartGenesis();
+  tutorialStepRef.current = TUTORIAL_TOTAL_STEPS;
+  setTutorialStep(TUTORIAL_TOTAL_STEPS);
+  setTutorialActive(false);
 };
 
 const handleTutorialDismiss = () => {
-  finishTutorialAndStartGenesis();
+  finishTutorial();
+};
+
+const handleTutorialRetry = () => {
+  Sound.sfx.click();
+
+  const state = createBattleState(
+    enemy,
+    run.maxHp,
+    run.maxHp,
+    run.deck,
+    0,
+    run.extraDraw,
+    run.hero?.id
+  );
+
+  state.drawToFull = true;
+  state.hand = ["sling_stone", "faith_shield", "prayer"];
+  state.deck = ["sling_stone", "faith_shield", "prayer", "sling_stone"];
+  state.discard = [];
+
+  tutorialStepRef.current = 0;
+  setTutorialStep(0);
+  setTutorialActive(true);
+  setTutorialCompleteMsg(false);
+  setBattleEnd(null);
+  setSelectedCard(null);
+  setAnimating(false);
+  setUndoData(null);
+  setBattleState(state);
+  Sound.playMusic("battle");
 };
 
   useEffect(() => {
@@ -286,11 +310,6 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
       if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     };
   }, []);
-
-  const handleGuideComplete = () => {
-    setShowGuideCallouts(false);
-    saveProfile({ tutorialSeen: true });
-  };
 
   const handlePlayCard = (handIndex) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
@@ -536,9 +555,6 @@ if (!tutorialActive) {
       setBattleState(enemyState);
       const end = checkBattleEnd(enemyState);
       if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
-      if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS && !end) {
-        setTimeout(() => setTutorialCompleteMsg(true), 300);
-      }
       return;
     }
 
@@ -562,9 +578,6 @@ if (!tutorialActive) {
         }, 400);
         const end = checkBattleEnd(enemyState);
         if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
-        if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS && !end) {
-          setTimeout(() => setTutorialCompleteMsg(true), 300);
-        }
         setAnimating(false);
       }, 800);
       return;
@@ -590,9 +603,6 @@ if (!tutorialActive) {
         clearTransient();
         setAnimating(false);
         setCurrentIntentIdx(-1);
-        if (tutorialActive && tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS) {
-          setTimeout(() => setTutorialCompleteMsg(true), 300);
-        }
         return;
       }
 
@@ -746,18 +756,6 @@ if (!tutorialActive) {
     handleBattleEnd(end, step.state);
   }
 
-  // The guided tutorial ends after the enemy completes its first turn.
-  // Without this, tutorial restrictions remain active and soft-lock battle.
-  if (
-    tutorialActive &&
-    tutorialStepRef.current >= TUTORIAL_TOTAL_STEPS &&
-    !end
-  ) {
-    setTimeout(() => {
-      setTutorialCompleteMsg(true);
-    }, 300);
-  }
-
   return;
 }
     };
@@ -785,6 +783,7 @@ if (!tutorialActive) {
 
       setBattleEnd(null);
       setTutorialActive(false);
+      saveProfile({ tutorialSeen: true });
       setTutorialCompleteMsg(true);
     } else {
       Sound.sfx.defeat();
@@ -1596,6 +1595,24 @@ const selectedCardData =
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {battleEnd === "defeat" && run.isTutorial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}>
+          <div className="max-w-xs text-center">
+            <Skull className="mx-auto mb-4 h-16 w-16 text-red-400/50" />
+            <h2 className="mb-3 font-serif text-4xl text-red-300">Try Again</h2>
+            <p className="mb-6 text-sm text-amber-100/70">
+              Defeat the serpent to complete the tutorial.
+            </p>
+            <button
+              onClick={handleTutorialRetry}
+              className="rounded-lg border-2 border-amber-400/60 bg-amber-600/20 px-8 py-3 font-serif text-lg text-amber-100 transition hover:bg-amber-600/40 active:scale-95"
+            >
+              Retry Tutorial
+            </button>
           </div>
         </div>
       )}

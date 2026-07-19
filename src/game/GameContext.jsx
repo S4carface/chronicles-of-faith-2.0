@@ -108,6 +108,7 @@ export function GameProvider({ children }) {
   const [storySaveError, setStorySaveError] = useState(false);
   const [unlockQueue, setUnlockQueue] = useState([]);
   const [showIntro, setShowIntro] = useState(false);
+  const [introPurpose, setIntroPurpose] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -255,12 +256,14 @@ const recordEnemyDefeat = useCallback((enemyId) => {
     setUnlockQueue(q => [...q, unlock]);
   }, []);
 
-  const triggerIntroReplay = useCallback(() => {
+  const triggerIntroReplay = useCallback((purpose = "replay") => {
+    setIntroPurpose(purpose);
     setShowIntro(true);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
     setShowIntro(false);
+    setIntroPurpose(null);
     saveProfile({ introSeen: true });
   }, [saveProfile]);
 
@@ -349,8 +352,6 @@ const startTutorialRun = useCallback(() => {
 
   if (!hero) return;
 
-  clearStoryRun();
-  setSavedStoryExists(false);
   setStorySaveError(false);
 
   setRun({
@@ -461,6 +462,11 @@ const firstNode =
   map[0]?.find(node => node.type === ROOM_TYPES.BATTLE) ||
   map[0]?.[0] ||
   null;
+
+// Easy Genesis always opens with the regular serpent encounter.
+if (!isDaily && difficulty === "easy" && firstNode?.type === ROOM_TYPES.BATTLE) {
+  Object.assign(firstNode, { enemyId: "serpent" });
+}
 
 if (startAtFirstBattle && firstNode) {
   firstNode.visited = true;
@@ -738,12 +744,12 @@ if (node.enemyId === "babel_tower") {
   }, []);
 
   const endRun = useCallback(() => {
-    const wasDaily = run?.isDaily;
+    const preservesStorySave = run?.isDaily || run?.isTutorial;
     if (run?.runStartTime) {
       recordPlayTime((Date.now() - run.runStartTime) / 1000);
     }
     setRun(null);
-    if (!wasDaily) {
+    if (!preservesStorySave) {
       clearStoryRun();
       setSavedStoryExists(false);
     }
@@ -856,6 +862,7 @@ if (node.enemyId === "babel_tower") {
     dismissUnlock,
     queueUnlock,
     showIntro,
+    introPurpose,
     triggerIntroReplay,
     handleIntroComplete,
     Sound,

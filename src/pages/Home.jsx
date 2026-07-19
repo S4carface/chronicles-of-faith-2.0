@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Swords, Pencil, Sun, Info } from "lucide-react";
+import { Swords, Pencil, Sun } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
@@ -19,7 +19,6 @@ export default function Home() {
   profile,
   run,
   endRun,
-  startRun,
   startTutorialRun,
   saveProfile,
   Sound: Snd,
@@ -27,6 +26,7 @@ export default function Home() {
   resumeStoryRun,
   storySaveError,
   showIntro,
+  introPurpose,
   triggerIntroReplay,
   handleIntroComplete,
 } = useGame();
@@ -62,24 +62,30 @@ const launchFirstTutorialBattle = () => {
   navigate("/play");
 };
 
-const handleFirstIntroComplete = () => {
+const handleIntroFinished = () => {
+  const shouldStartTutorial =
+    introPurpose === "onboarding" && !profile.tutorialSeen;
+
   handleIntroComplete();
-  launchFirstTutorialBattle();
+
+  if (shouldStartTutorial) {
+    launchFirstTutorialBattle();
+  }
 };
 
-const handleFirstTimeBegin = () => {
-  Sound.playCinematicTrack(
-    "/audio/ui/begin-journey.mp3",
-    {
-      volume: 0.9,
-      loop: false,
-    }
-  );
-
-  triggerIntroReplay();
-};
 const handleBeginRun = () => {
   Sound.sfx.click();
+
+  if (run || savedStoryExists) {
+    setShowConfirm(true);
+    return;
+  }
+
+  // First-time onboarding begins only after the player presses Play.
+  if (!profile.tutorialSeen) {
+    triggerIntroReplay("onboarding");
+    return;
+  }
 
   const deckCheck = validateDeck(profile.activeDeck);
 
@@ -87,17 +93,6 @@ const handleBeginRun = () => {
     navigate("/collection");
     return;
   }
-
-  if (run || savedStoryExists) {
-    setShowConfirm(true);
-    return;
-  }
-
-  // First-time player: launch Easy tutorial battle immediately
-  if (!profile.tutorialSeen) {
-  launchFirstTutorialBattle();
-  return;
-}
 
   // Returning player: use selected difficulty and normal run flow
   navigate("/play");
@@ -126,8 +121,7 @@ const handleBeginRun = () => {
 
   setTimeout(() => {
     if (!profile.tutorialSeen) {
-      startTutorialRun();
-      navigate("/play");
+      triggerIntroReplay("onboarding");
       return;
     }
 
@@ -194,164 +188,6 @@ const handleNameSaved = (name) => {
     status: null,
   },
 ];
-  // First-time experience:
-  // Keep the opening screen focused on one action until the tutorial is complete.
-  if (!profile.tutorialSeen) {
-    return (
-      <div
-        className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
-        }}
-      >
-        {/* Subtle sacred gold particles */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div
-            key={i}
-            className="pointer-events-none absolute rounded-full"
-            style={{
-              width: `${2 + Math.random() * 2}px`,
-              height: `${2 + Math.random() * 2}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              background: `rgba(201,168,76,${
-                0.15 + Math.random() * 0.25
-              })`,
-              animation: `float ${
-                5 + Math.random() * 5
-              }s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 4}s`,
-            }}
-          />
-        ))}
-
-       <style>{`
-  @keyframes firstScreenLogoBreathe {
-    0%, 100% {
-      transform: translateY(0) scale(1);
-      box-shadow: 0 0 24px rgba(201,168,76,0.18);
-    }
-
-    50% {
-      transform: translateY(-4px) scale(1.025);
-      box-shadow: 0 0 42px rgba(201,168,76,0.34);
-    }
-  }
-
-  @keyframes firstScreenButtonBreathe {
-    0%, 100% {
-      transform: scale(1);
-      box-shadow: 0 0 20px rgba(201,168,76,0.16);
-    }
-
-    50% {
-      transform: scale(1.018);
-      box-shadow: 0 0 34px rgba(201,168,76,0.32);
-    }
-  }
-
-  @keyframes firstScreenShimmer {
-    0% {
-      transform: translateX(-180%) skewX(-18deg);
-    }
-
-    55%, 100% {
-      transform: translateX(360%) skewX(-18deg);
-    }
-  }
-
-  .first-screen-logo {
-    animation: firstScreenLogoBreathe 6s ease-in-out infinite;
-  }
-
-  .first-screen-button {
-    animation: firstScreenButtonBreathe 5s ease-in-out infinite;
-  }
-
-  .first-screen-button-shimmer {
-    animation: firstScreenShimmer 6s ease-in-out infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .first-screen-logo,
-    .first-screen-button,
-    .first-screen-button-shimmer {
-      animation: none;
-    }
-  }
-`}</style>
-
-<main className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
-          <div
-            className="first-screen-logo mb-5 h-24 w-24 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-lg shadow-amber-400/20"
-            style={{ background: "#0F1A30" }}
-          >
-            <img
-              src={HOME_ART.cross}
-              alt="Chronicles of Faith"
-              className="art-portrait"
-            />
-          </div>
-
-          <h1
-            className="font-serif text-4xl leading-tight tracking-wide text-amber-200 sm:text-5xl"
-            style={{
-              textShadow: "0 0 30px rgba(201,168,76,0.3)",
-            }}
-          >
-            Chronicles of Faith
-          </h1>
-
-<div className="mt-4 space-y-1">
-  <p className="font-serif text-base tracking-[0.08em] text-amber-100/80 sm:text-lg">
-    Strategy. Scripture. Adventure.
-  </p>
-
-  <p className="text-xs text-amber-100/45 sm:text-sm">
-    Build your deck and journey through the Bible.
-  </p>
-</div>
-
-          <div className="my-7 h-px w-32 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
-
-<button
-  type="button"
-  onClick={handleFirstTimeBegin}
-  className="first-screen-button relative w-full overflow-hidden rounded-xl border-2 border-amber-400/70 px-8 py-4 font-serif text-xl font-bold text-amber-100 transition active:scale-[0.98]"
-  style={{
-    background:
-      "linear-gradient(135deg, rgba(180,140,40,0.34) 0%, rgba(120,90,20,0.26) 100%)",
-  }}
->
-  <span
-    aria-hidden="true"
-    className="first-screen-button-shimmer pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-amber-100/20 to-transparent"
-  />
-
-  <span className="relative flex items-center justify-center gap-3">
-    <Swords className="h-6 w-6" />
-    Begin Journey
-  </span>
-</button>
-
-          <div className="mt-7 text-center">
-  <p className="font-serif text-sm tracking-wide text-amber-100/55">
-    Your adventure begins with Creation.
-  </p>
-
-  <p className="mt-1 text-[0.68rem] uppercase tracking-[0.22em] text-amber-300/35">
-    Book I · Genesis
-  </p>
-</div>
-        </main>
-
-        {showIntro && (
-          <CinematicIntro onComplete={handleFirstIntroComplete} />
-        )}
-      </div>
-    );
-  }
   return (
     <div
   className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden"
@@ -625,7 +461,7 @@ const handleNameSaved = (name) => {
       )}
 
       {showIntro && (
-        <CinematicIntro onComplete={handleFirstIntroComplete} />
+        <CinematicIntro onComplete={handleIntroFinished} />
       )}
 
             {showResume && (

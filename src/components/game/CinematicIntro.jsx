@@ -41,6 +41,7 @@ export default function CinematicIntro({ onComplete }) {
   const musicTrackRef = useRef(null);
   const timersRef = useRef([]);
   const cinematicStartedRef = useRef(false);
+  const isTransitioningRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => {
@@ -52,8 +53,9 @@ export default function CinematicIntro({ onComplete }) {
   }, []);
 
  const handleBegin = useCallback(() => {
-  if (isTransitioning) return;
+  if (isTransitioningRef.current) return;
 
+  isTransitioningRef.current = true;
   setIsTransitioning(true);
   setBookCardStage(1);
 
@@ -72,7 +74,7 @@ export default function CinematicIntro({ onComplete }) {
   }, 3600);
 
   timersRef.current.push(chapterTimer, finishTimer);
-}, [isTransitioning, onComplete]);
+}, [onComplete]);
 
   const startCinematic = useCallback(async () => {
     if (cinematicStartedRef.current) return;
@@ -245,12 +247,22 @@ return (
           </p>
 
           {needsTap && (
-            <button
-              onClick={startCinematic}
-              className="mt-6 rounded-xl border border-amber-400/60 bg-slate-950/70 px-7 py-3 font-serif text-amber-100 shadow-lg"
-            >
-              Tap to Begin
-            </button>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                onClick={videoFailed ? handleSkip : startCinematic}
+                className="rounded-xl border border-amber-400/60 bg-slate-950/70 px-7 py-3 font-serif text-amber-100 shadow-lg"
+              >
+                {videoFailed ? "Continue" : "Tap to Begin"}
+              </button>
+              {!videoFailed && (
+                <button
+                  onClick={handleSkip}
+                  className="text-xs text-amber-100/50 transition hover:text-amber-100/80"
+                >
+                  Skip Intro →
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -259,15 +271,15 @@ return (
       <video
         ref={videoRef}
         muted
-        loop
         playsInline
         preload="auto"
         poster={PORTRAIT_POSTER}
         onCanPlay={() => setVideoReady(true)}
         onLoadedData={() => setVideoReady(true)}
+        onEnded={handleBegin}
         onError={() => {
           setVideoFailed(true);
-          setNeedsTap(true);
+          handleSkip();
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
           cinematicStarted ? "opacity-100" : "opacity-0"

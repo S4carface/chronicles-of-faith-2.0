@@ -20,7 +20,7 @@ const RARITY_BORDER = {
   legendary: "border-amber-300/80",
 };
 
-export default function CardPreviewPanel({   card,   playable,   blocked,   battleState,   onPlay,   onCancel,   showTutorialPlayGuide = false, }) {
+export default function CardPreviewPanel({   card,   playable,   blocked,   battleState,   onPlay,   onCancel,   showTutorialPlayGuide = false, tutorialLocked = false, }) {
   if (!card) return null;
   const typeInfo = TYPE_INFO[card.type] || TYPE_INFO.attack;
   const effectText = getCardEffectText(card);
@@ -40,7 +40,7 @@ return (
           <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 animate-fade-in" style={{ background: "rgba(8,12,24,0.98)", borderTop: "2px solid rgba(201,168,76,0.3)" }}>
         <div className="px-3 pt-2.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
           
-{card.verse && card.scriptureText && (
+{!tutorialLocked && card.verse && card.scriptureText && (
   <div className="mb-2 rounded-md border border-amber-500/20 bg-slate-900/45 px-3 py-2">
     <div className="mb-1 flex items-center justify-center gap-1.5">
       <BookOpen className="h-3 w-3 text-amber-300/70" />
@@ -57,7 +57,7 @@ return (
 )}
 
           <div className="flex gap-2.5">
-            <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95">Cancel</button>
+            <button onClick={onCancel} disabled={tutorialLocked} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-30">Cancel</button>
             <div className="relative flex-[2]">
   {showTutorialPlayGuide && canPlay && (
     <TutorialGuidingLight
@@ -69,6 +69,7 @@ return (
 
   <button
     onClick={onPlay}
+    data-tutorial-action={tutorialLocked ? "play-card" : undefined}
     disabled={!canPlay}
     className={`w-full rounded-lg border-2 py-3 text-base font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
       showTutorialPlayGuide
@@ -93,7 +94,7 @@ return (
         <div className="w-full rounded-xl border-2 border-amber-500/30 overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.95) 0%, rgba(15,26,48,0.95) 100%)" }}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-amber-500/15">
             <span className="text-amber-300/60 text-[10px] uppercase tracking-wide font-bold">Selected Card</span>
-            <button onClick={onCancel} className="w-7 h-7 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60 hover:text-amber-200">
+            <button onClick={onCancel} disabled={tutorialLocked} className="w-7 h-7 rounded-full border border-amber-500/20 bg-slate-800/40 flex items-center justify-center text-amber-100/60 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-30">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -122,8 +123,8 @@ return (
             </div>
           </div>
              <div className="px-4 pb-4 flex gap-3">
-             <button onClick={onCancel} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm">Cancel</button>
-             <button onClick={onPlay} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
+             <button onClick={onCancel} disabled={tutorialLocked} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm disabled:cursor-not-allowed disabled:opacity-30">Cancel</button>
+             <button onClick={onPlay} data-tutorial-action={tutorialLocked ? "play-card" : undefined} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
             </div>
           {blockReason && (
             <div className="px-4 pb-4">

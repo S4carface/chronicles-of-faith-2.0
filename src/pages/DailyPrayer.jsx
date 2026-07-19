@@ -85,9 +85,9 @@ export default function DailyPrayer() {
         <Link
           to="/"
           aria-label="Return to Main Menu"
-          className="inline-flex min-h-11 items-center rounded-lg border border-amber-400/40 bg-slate-950/70 px-3.5 py-2 text-sm font-medium text-amber-200 shadow-md shadow-black/20 transition hover:bg-amber-900/30 active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center text-amber-100/60 hover:text-amber-200 transition text-sm"
         >
-          ← Main Menu
+          ← Menu
         </Link>
       </div>
 

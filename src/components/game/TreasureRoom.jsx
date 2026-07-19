@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
+import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
 import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import DeckFullModal from "@/components/game/DeckFullModal";
+import { CARD_ART } from "@/data/art";
+import { preloadImages } from "@/lib/imageAssets";
+import SafeImage from "@/components/ui/SafeImage";
 
 export default function TreasureRoom() {
   const { run, profile, updateRun, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
@@ -14,14 +17,20 @@ export default function TreasureRoom() {
   const [claimed, setClaimed] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [deckFullCard, setDeckFullCard] = useState(null);
+  const [assetsReady, setAssetsReady] = useState(false);
 
   // Generate treasure card using treasure drop rates
   const [rewardCardId] = useState(() => generateTreasureCard(Math.random) || "sling_stone");
   const card = getCardById(rewardCardId);
 
   useEffect(() => {
-    Sound.playMusic("divine");
-  }, []);
+    Sound.stopMusic();
+    let active = true;
+    preloadImages([ROOM_ART.treasure, CARD_ART[rewardCardId]]).finally(() => {
+      if (active) setAssetsReady(true);
+    });
+    return () => { active = false; };
+  }, [rewardCardId]);
 
   const handleClaim = () => {
     Sound.sfx.reward();
@@ -39,7 +48,7 @@ export default function TreasureRoom() {
     }
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(rewardCardId);
-      completeRoom(node.id);
+      preloadImages(run.map.flat().map(getNodeArt)).then(() => completeRoom(node.id));
     } else {
       setDeckFullCard(rewardCardId);
     }
@@ -48,20 +57,31 @@ export default function TreasureRoom() {
   const handleDeckFullReplace = (index) => {
     replaceCardInRun(index, deckFullCard);
     setDeckFullCard(null);
-    completeRoom(node.id);
+    preloadImages(run.map.flat().map(getNodeArt)).then(() => completeRoom(node.id));
   };
 
   const handleDeckFullSendToCollection = () => {
     setDeckFullCard(null);
-    completeRoom(node.id);
+    preloadImages(run.map.flat().map(getNodeArt)).then(() => completeRoom(node.id));
   };
 
   const handleDeckFullSkip = () => {
     setDeckFullCard(null);
-    completeRoom(node.id);
+    preloadImages(run.map.flat().map(getNodeArt)).then(() => completeRoom(node.id));
   };
 
   if (!card) return null;
+
+  if (!assetsReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#1A2744] to-[#0A0F1E] text-amber-200">
+        <div className="rounded-xl border border-amber-400/35 bg-[#0F1A30]/90 px-6 py-4 text-center shadow-[0_0_24px_rgba(251,191,36,0.15)]">
+          <span className="text-2xl text-amber-300/60">✦</span>
+          <p className="mt-2 font-serif">Preparing your gift…</p>
+        </div>
+      </div>
+    );
+  }
 
   const collection = profile.cardCollection || {};
   const alreadyOwned = (collection[rewardCardId] || 0) > 0;
@@ -73,7 +93,7 @@ export default function TreasureRoom() {
       <div className="text-center mb-8">
         <div className="mb-4 flex justify-center animate-bounce">
           <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/30" style={{ background: "#0F1A30" }}>
-            <img src={ROOM_ART.treasure || PLACEHOLDER_ART} alt="Treasure" className="art-portrait" />
+            <SafeImage src={ROOM_ART.treasure || PLACEHOLDER_ART} alt="Treasure" className="art-portrait" />
           </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">A Gift from Above</h2>
@@ -95,7 +115,8 @@ export default function TreasureRoom() {
         }`}>{rarityLabel}</span>
       </div>
 
-      <div className={claimed ? "animate-pulse" : ""} onClick={() => { Sound.sfx.click(); setShowDetail(true); }} style={{ cursor: "pointer" }}>
+      <style>{`@keyframes sacredCardReveal { from { opacity: 0; transform: scale(.96); filter: drop-shadow(0 0 0 rgba(251,191,36,0)); } to { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 14px rgba(251,191,36,.28)); } }`}</style>
+      <div className={claimed ? "animate-pulse" : ""} onClick={() => { Sound.sfx.click(); setShowDetail(true); }} style={{ cursor: "pointer", animation: "sacredCardReveal 400ms ease-out both" }}>
         <Card card={card} />
       </div>
 

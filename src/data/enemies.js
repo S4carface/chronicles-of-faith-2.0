@@ -315,3 +315,27 @@ export const ENEMY_POOL = [
   "laban_deceit",
 ];
 export const BOSSES = [   "the_flood",   "sodom_gomorrah",   "babel_tower", ];
+
+export const EASY_ENEMY_POOL = [
+  "serpent",
+  "famine_canaan",
+  "laban_deceit",
+  "pride_babel",
+];
+
+export const EASY_BOSS_POOL = ["the_flood"];
+
+const EASY_ENEMY_OVERRIDES = {
+  serpent: { hp: 22, attack: { name: "Venomous Bite", damage: 5, icon: "🦷" } },
+  famine_canaan: { hp: 24, attack: { name: "Empty Harvest", damage: 5, icon: "🌾" } },
+  laban_deceit: { hp: 26, attack: { name: "Broken Promise", damage: 5, icon: "📜" } },
+  pride_babel: { hp: 28, attack: { name: "Boastful Pride", damage: 5, icon: "📢" } },
+  the_flood: { hp: 42, attack: { name: "Rising Waters", damage: 7, icon: "💧" } },
+};
+
+export function getEnemyForDifficulty(enemyId, difficulty) {
+  const enemy = ENEMIES[enemyId];
+  const easy = EASY_ENEMY_OVERRIDES[enemyId];
+  if (!enemy || difficulty !== "easy" || !easy) return enemy;
+  return { ...enemy, hp: easy.hp, attacks: [easy.attack] };
+}

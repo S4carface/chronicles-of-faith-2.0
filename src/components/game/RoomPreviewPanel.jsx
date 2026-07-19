@@ -2,6 +2,7 @@ import React from "react";
 import { ROOM_INFO } from "@/data/genesisRooms";
 import { getNodeArt } from "@/data/art";
 import { cn } from "@/utils";
+import SafeImage from "@/components/ui/SafeImage";
 
 export default function RoomPreviewPanel({
   node,
@@ -51,7 +52,7 @@ export default function RoomPreviewPanel({
               )}
               style={{ background: "#0F1A30" }}
             >
-              <img
+              <SafeImage
                 src={artUrl}
                 alt={info.title}
                 className="h-full w-full select-none object-cover"

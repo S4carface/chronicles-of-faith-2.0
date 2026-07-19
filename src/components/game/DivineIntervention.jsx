@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Shield, BookOpen, Swords, Sparkles } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import { BLESSING_ART, ROOM_ART, PLACEHOLDER_ART } from "@/data/art";
+import { BLESSING_ART, ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
 import * as Sound from "@/game/soundManager";
+import { preloadImages } from "@/lib/imageAssets";
+import SafeImage from "@/components/ui/SafeImage";
 
 // Each blessing gets a distinct accent color + category label, but all share
 // the same card structure, border style, typography, and spacing.
@@ -77,6 +79,10 @@ export default function DivineIntervention() {
     if (run.divineEncounters + 1 >= 3) {
       unlockAchievement("divine_favor");
     }
+    preloadImages([
+      ROOM_ART.divine,
+      ...blessings.map((blessing) => BLESSING_ART[blessing.id] || PLACEHOLDER_ART),
+    ]);
   }, []);
 
   const handleChoose = (blessing) => {
@@ -102,8 +108,9 @@ export default function DivineIntervention() {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     Sound.sfx.click();
+    await preloadImages(run.map.flat().map(getNodeArt));
     completeRoom(node.id);
   };
 
@@ -130,7 +137,7 @@ export default function DivineIntervention() {
       <div className="relative text-center mb-8">
         <div className="mb-4 flex justify-center">
           <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-amber-400/30" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-            <img src={ROOM_ART.divine || PLACEHOLDER_ART} alt="Divine" className="art-portrait" />
+            <SafeImage src={ROOM_ART.divine || PLACEHOLDER_ART} alt="Divine" className="art-portrait" />
           </div>
         </div>
         <h2 className="text-4xl font-serif text-yellow-200">Divine Intervention</h2>
@@ -168,7 +175,7 @@ export default function DivineIntervention() {
               {/* Blessing artwork */}
               <div className={`mb-3 flex justify-center`}>
                 <div className={`w-24 h-24 rounded-lg overflow-hidden border-2 ${style.artBorder}`} style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-                  <img src={BLESSING_ART[blessing.id] || PLACEHOLDER_ART} alt={blessing.name} className="art-portrait" />
+                  <SafeImage src={BLESSING_ART[blessing.id] || PLACEHOLDER_ART} alt={blessing.name} className="art-portrait" />
                 </div>
               </div>
 

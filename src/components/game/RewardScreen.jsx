@@ -3,7 +3,7 @@ import { useGame } from "@/game/GameContext";
 import { getCardById, CARDS } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { ROOM_TYPES } from "@/data/genesisRooms";
-import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART } from "@/data/art";
+import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART, getNodeArt } from "@/data/art";
 import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, canAddToDeck, getMaxCopies, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
@@ -11,6 +11,8 @@ import TriviaModal from "@/components/game/TriviaModal";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import DeckFullModal from "@/components/game/DeckFullModal";
 import { getCardEffectText } from "@/components/game/Card";
+import { preloadImages } from "@/lib/imageAssets";
+import SafeImage from "@/components/ui/SafeImage";
 
 const RARITY_BORDER = {
   common: "border-sky-400/60",
@@ -60,14 +62,20 @@ export default function RewardScreen() {
 
   useEffect(() => {
     if (showNarration) Sound.playMusic("victory");
+    preloadImages([
+      ...rewards.map((cardId) => CARD_ART[cardId] || PLACEHOLDER_ART),
+      ...run.map.flat().map(getNodeArt),
+    ]);
   }, []);
+
+  const prepareMap = () => preloadImages(run.map.flat().map(getNodeArt));
 
   const handleNarrationComplete = () => {
     setShowNarration(false);
     setShowTrivia(true);
   };
 
-  const handleTriviaComplete = (result) => {
+  const handleTriviaComplete = async (result) => {
     setShowTrivia(false);
     if (result && result.correct) {
       if (result.cardId) {
@@ -76,8 +84,10 @@ export default function RewardScreen() {
           addCardToRunDeck(result.cardId);
         }
       }
+      await preloadImages(rewards.map((cardId) => CARD_ART[cardId] || PLACEHOLDER_ART));
       setShowRewards(true);
     } else {
+      await prepareMap();
       completeRoom(run.currentNode.id);
     }
   };
@@ -95,26 +105,29 @@ export default function RewardScreen() {
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(cardId);
       setDetailCard(null);
-      completeRoom(run.currentNode.id);
+      prepareMap().then(() => completeRoom(run.currentNode.id));
     } else {
       setDeckFullCard(cardId);
       setDetailCard(null);
     }
   };
 
-  const handleDeckFullReplace = (index) => {
+  const handleDeckFullReplace = async (index) => {
     replaceCardInRun(index, deckFullCard);
     setDeckFullCard(null);
+    await prepareMap();
     completeRoom(run.currentNode.id);
   };
 
-  const handleDeckFullSendToCollection = () => {
+  const handleDeckFullSendToCollection = async () => {
     setDeckFullCard(null);
+    await prepareMap();
     completeRoom(run.currentNode.id);
   };
 
-  const handleDeckFullSkip = () => {
+  const handleDeckFullSkip = async () => {
     setDeckFullCard(null);
+    await prepareMap();
     completeRoom(run.currentNode.id);
   };
 
@@ -133,7 +146,7 @@ export default function RewardScreen() {
       <div className="text-center mb-6">
         <div className="mb-3 flex justify-center">
           <div className="w-12 h-12 rounded-full border border-amber-400/40 overflow-hidden animate-icon-float" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}>
-            <img src={VICTORY_ART.crest} alt="Reward" className="art-portrait" />
+            <SafeImage src={VICTORY_ART.crest} alt="Reward" className="art-portrait" />
           </div>
         </div>
         <h2 className="text-3xl font-serif text-amber-200">Choose Your Reward</h2>
@@ -196,7 +209,7 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
           RARITY_BORDER[card.rarity]
         } ${RARITY_GLOW[card.rarity]} overflow-hidden bg-slate-950`}
       >
-        <img
+        <SafeImage
           src={CARD_ART[card.id] || PLACEHOLDER_ART}
           alt={card.name}
           className="absolute inset-0 w-full h-full object-cover"

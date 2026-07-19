@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Lock } from "lucide-react";
 import { cn } from "@/utils";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
+import SafeImage from "@/components/ui/SafeImage";
 
 const RARITY_STYLES = {
   common: {
@@ -146,7 +147,7 @@ inHand
   )}
   style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
 >
-  <img
+  <SafeImage
     src={artUrl || PLACEHOLDER_ART}
     alt={card.name}
     className="absolute inset-0 w-full h-full object-cover"

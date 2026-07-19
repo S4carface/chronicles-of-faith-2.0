@@ -12,12 +12,16 @@ import { HOME_ART } from "@/data/art";
 const VERSE_1 =
   "In the beginning, God created the heavens and the earth.";
 const VERSE_2 =
+  "Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.";
+const VERSE_3 =
   "And God said, 'Let there be light,' and there was light.";
 const REFERENCE = "Genesis 1:1-3";
 
 const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
+const DEFAULT_NARRATION_DURATION_MS = 13000;
+const AUDIO_END_FALLBACK_GRACE_MS = 4000;
 
 const PORTRAIT_POSTER = "/images/intro/intro_poster.PNG";
 const LANDSCAPE_POSTER = "/images/intro/intro-poster-2.0.PNG";
@@ -42,6 +46,7 @@ export default function CinematicIntro({ onComplete }) {
   const timersRef = useRef([]);
   const cinematicStartedRef = useRef(false);
   const isTransitioningRef = useRef(false);
+  const completedRef = useRef(false);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => {
@@ -53,7 +58,7 @@ export default function CinematicIntro({ onComplete }) {
   }, []);
 
  const handleBegin = useCallback(() => {
-  if (isTransitioningRef.current) return;
+  if (isTransitioningRef.current || completedRef.current) return;
 
   isTransitioningRef.current = true;
   setIsTransitioning(true);
@@ -69,6 +74,8 @@ export default function CinematicIntro({ onComplete }) {
   }, 1800);
 
   const finishTimer = window.setTimeout(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     Sound.stopNarration();
     onComplete();
   }, 3600);
@@ -108,6 +115,8 @@ export default function CinematicIntro({ onComplete }) {
       }
     );
 
+    let narrationTrack = null;
+
     if (narrationOn) {
       narrationTrackRef.current = await Sound.playCinematicTrack(
         INTRO_AUDIO,
@@ -117,16 +126,28 @@ export default function CinematicIntro({ onComplete }) {
   ((profile.settings.narrationVolume ?? 70) / 100) * 1.4
 ),
           loop: false,
+          onEnded: handleBegin,
         }
       );
+      narrationTrack = narrationTrackRef.current;
     }
 
+    const narrationDurationMs = Math.round(
+      (narrationTrack?.duration || DEFAULT_NARRATION_DURATION_MS / 1000) * 1000
+    );
+
     timersRef.current.push(
-      window.setTimeout(() => setStep(1), 500),
-      window.setTimeout(() => setStep(2), 1800),
-      window.setTimeout(() => setStep(3), 3200),
-      window.setTimeout(() => setStep(4), 5600),
-      window.setTimeout(() => handleBegin(), 18000)
+      window.setTimeout(() => setStep(1), 300),
+      window.setTimeout(() => setStep(2), narrationDurationMs * 0.34),
+      window.setTimeout(() => setStep(3), narrationDurationMs * 0.39),
+      window.setTimeout(() => setStep(4), narrationDurationMs * 0.66),
+      window.setTimeout(() => setStep(5), narrationDurationMs * 0.71),
+      window.setTimeout(
+        () => handleBegin(),
+        narrationTrack
+          ? narrationDurationMs + AUDIO_END_FALLBACK_GRACE_MS
+          : narrationDurationMs + 1000
+      )
     );
   }, [
     handleBegin,
@@ -147,6 +168,7 @@ export default function CinematicIntro({ onComplete }) {
     timersRef.current.push(loadingTimeout);
 
     return () => {
+      completedRef.current = true;
       clearTimers();
 
       videoRef.current?.pause();
@@ -166,6 +188,8 @@ export default function CinematicIntro({ onComplete }) {
   }, [videoReady, startCinematic]);
 
   const handleSkip = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     clearTimers();
 
     videoRef.current?.pause();
@@ -276,7 +300,6 @@ return (
         poster={PORTRAIT_POSTER}
         onCanPlay={() => setVideoReady(true)}
         onLoadedData={() => setVideoReady(true)}
-        onEnded={handleBegin}
         onError={() => {
           setVideoFailed(true);
           handleSkip();
@@ -300,7 +323,7 @@ return (
         style={{
           background:
             "radial-gradient(ellipse at center, rgba(26,39,68,0.15) 0%, rgba(10,15,30,0.25) 70%, rgba(0,0,0,0.35) 100%)",
-          opacity: cinematicStarted && step >= 2 ? 1 : 0,
+          opacity: cinematicStarted && step >= 3 ? 1 : 0,
         }}
       />
 
@@ -310,11 +333,11 @@ return (
         style={{
           background:
             "radial-gradient(circle at center, rgba(201,168,76,0.08) 0%, transparent 50%)",
-          opacity: cinematicStarted && step >= 2 ? 1 : 0,
+          opacity: cinematicStarted && step >= 5 ? 1 : 0,
         }}
       />
 
-      {cinematicStarted && step < 4 && (
+      {cinematicStarted && !isTransitioning && (
         <button
           onClick={handleSkip}
           className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top))] z-20 text-sm text-amber-100/40 transition hover:text-amber-100/70"
@@ -327,88 +350,40 @@ return (
       {cinematicStarted && (
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
           <div className="max-w-2xl text-center">
-            <div
-    className={`mb-4 flex justify-center transition-opacity duration-[2600ms] ${
-  step >= 4 ? "opacity-100" : "opacity-0"
-}`}
-            >
-        <div
-  className="intro-logo h-16 w-16 overflow-hidden rounded-full border-2 border-amber-400/40 shadow-xl shadow-amber-400/30 lg:h-20 lg:w-20"
-  style={{ background: "#0F1A30" }}
->
-                <img
-                  src={HOME_ART.cross}
-                  alt="Chronicles of Faith"
-                  className="art-portrait"
-                />
-              </div>
+            <div className="grid min-h-[15rem] place-items-center">
+              <p
+                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-opacity duration-700 ${
+                  step === 1 ? "opacity-100" : "opacity-0"
+                }`}
+                style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
+              >
+                &ldquo;{VERSE_1}&rdquo;
+                <span className="mt-4 block text-sm italic text-amber-300/60">Genesis 1:1</span>
+              </p>
+
+              <p
+                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-opacity duration-700 ${
+                  step === 3 ? "opacity-100" : "opacity-0"
+                }`}
+                style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
+              >
+                &ldquo;{VERSE_2}&rdquo;
+                <span className="mt-4 block text-sm italic text-amber-300/60">Genesis 1:2</span>
+              </p>
+
+              <p
+                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-700 ${
+                  step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                }`}
+                style={{
+                  fontSize: "clamp(1.15rem, 2.6vw, 1.75rem)",
+                  textShadow: "0 0 28px rgba(251,191,36,0.35)",
+                }}
+              >
+                &ldquo;{VERSE_3}&rdquo;
+                <span className="mt-4 block text-sm font-normal italic text-amber-300/70">Genesis 1:3</span>
+              </p>
             </div>
-
-            <h1
-     className={`font-serif tracking-wide text-amber-200 transition-opacity duration-[2600ms] ${
-  step >= 4 ? "opacity-100" : "opacity-0"
-}`}
-              style={{
-                fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
-                textShadow: "0 0 30px rgba(201,168,76,0.3)",
-              }}
-            >
-              Chronicles of Faith
-            </h1>
-
-            <p
-              className={`mb-8 mt-1 font-serif italic text-amber-100/45 transition-all duration-[2600ms] ${
-                step >= 4 ? "opacity-100" : "opacity-0"
-              }`}
-              style={{
-                fontSize: "clamp(0.7rem, 1.5vw, 1rem)",
-              }}
-            >
-              A Biblical Roguelike Journey
-            </p>
-
-            <p
-className={`font-serif text-amber-100/90 leading-relaxed transition-all duration-[1800ms] ${
-  step >= 1
-    ? "opacity-100"
-    : "opacity-0"
-}`}
-              style={{
-                fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
-              }}
-            >
-              &ldquo;{VERSE_1}&rdquo;
-            </p>
-
-<p
-  className={`mt-4 font-serif leading-relaxed text-amber-100/90 transition-opacity duration-[1800ms] ${
-    step >= 3 ? "opacity-100" : "opacity-0"
-  }`}
-  style={{
-    fontSize: "clamp(1rem, 2.2vw, 1.5rem)",
-  }}
->
-  {VERSE_2}
-</p>
-
-            <p
-              className={`mt-4 font-serif italic text-amber-300/60 transition-opacity duration-[1800ms] ${
-                step >= 3 ? "opacity-100" : "opacity-0"
-              }`}
-              style={{
-                fontSize: "clamp(0.8rem, 1.5vw, 1rem)",
-              }}
-            >
-              &mdash; {REFERENCE}
-            </p>
-
-<p
-  className={`mt-10 min-h-[1.25rem] font-serif text-sm italic text-amber-100/45 transition-opacity duration-1000 ${
-    step >= 4 ? "opacity-100" : "opacity-0"
-  }`}
->
-  Your journey begins...
-</p>
           </div>
         </div>
       )}
@@ -416,15 +391,21 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
       {/* Bottom subtitle */}
       {cinematicStarted && (
         <div className="pointer-events-none absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-10 px-6 text-center">
-          {step >= 1 && step < 3 && (
+          {step === 1 && (
             <p className="font-serif text-xs italic text-amber-100/25">
               {VERSE_1}
             </p>
           )}
 
-          {step >= 3 && step < 4 && (
+          {step === 3 && (
             <p className="font-serif text-xs italic text-amber-100/25">
-              {VERSE_2} &mdash; {REFERENCE}
+              {VERSE_2}
+            </p>
+          )}
+
+          {step === 5 && (
+            <p className="font-serif text-xs italic text-amber-100/30">
+              {VERSE_3} &mdash; {REFERENCE}
             </p>
           )}
         </div>
@@ -443,6 +424,21 @@ className={`font-serif text-amber-100/90 leading-relaxed transition-all duration
               : "translate-y-3 opacity-0"
           }`}
         >
+          <div
+            className="mx-auto mb-4 h-14 w-14 overflow-hidden rounded-full border border-amber-400/35 shadow-lg shadow-amber-400/15"
+            style={{ background: "#0F1A30" }}
+          >
+            <img
+              src={HOME_ART.cross}
+              alt="Chronicles of Faith"
+              className="art-portrait"
+            />
+          </div>
+
+          <p className="mb-4 font-serif text-lg tracking-[0.16em] text-amber-200/80">
+            Chronicles of Faith
+          </p>
+
           <div className="mx-auto mb-5 h-px w-32 bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
 
  <div className="relative flex min-h-[9rem] min-w-[18rem] items-center justify-center">

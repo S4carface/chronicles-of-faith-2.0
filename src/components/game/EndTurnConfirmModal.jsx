@@ -1,7 +1,7 @@
 import React from "react";
 import { AlertTriangle, Play } from "lucide-react";
 
-export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, onCancel }) {
+export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, onCancel, onDisablePlayableWarning }) {
   const isSelected = type === "selected";
 
   return (
@@ -44,7 +44,7 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
         ) : (
           <>
             <p className="text-center text-amber-100 text-sm leading-relaxed mb-5">
-              You still have playable cards. End turn?
+              Playable cards remain. End turn?
             </p>
             <div className="space-y-2.5">
               <button
@@ -58,6 +58,12 @@ export default function EndTurnConfirmModal({ type, onPlaySelected, onEndTurn, o
                 className="w-full px-5 py-2.5 rounded-lg border-2 border-amber-400/50 bg-amber-600/20 text-amber-100 font-medium text-sm hover:bg-amber-600/30 transition"
               >
                 End Turn
+              </button>
+              <button
+                onClick={onDisablePlayableWarning}
+                className="w-full px-5 py-2 text-xs text-amber-100/50 transition hover:text-amber-100/80"
+              >
+                Don&apos;t Show Again
               </button>
             </div>
           </>

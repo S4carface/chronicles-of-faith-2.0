@@ -454,8 +454,6 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
     Sound.sfx.click();
 
     const gLevel = profile.settings.guidanceLevel || "normal";
-    const isEasyOrGuided = profile.difficulty === "easy" || gLevel === "guided" || profile.settings.guidanceTips;
-    const isHardOrExpert = profile.difficulty === "hard" || gLevel === "expert";
 
     // Normal End Turn warnings are disabled during the guided tutorial.
 // The tutorial instruction is the only guidance the player should follow.
@@ -477,11 +475,11 @@ if (!tutorialActive) {
   }
 
   // Warning 2: playable cards remain
-  if (!isHardOrExpert) {
-    const enemyAttacking = (battleState.enemyHand || []).some(
-      action => action.damage > 0
-    );
-
+  if (
+    gLevel !== "expert" &&
+    profile.settings.playableEndTurnWarning !== false &&
+    profile.settings.playableEndTurnWarningSeen !== true
+  ) {
     const hasPlayable = battleState.hand.some(cardId => {
       const card = resolveCard(cardId);
 
@@ -498,7 +496,13 @@ if (!tutorialActive) {
       return playable && !blocked;
     });
 
-    if (enemyAttacking && hasPlayable) {
+    if (hasPlayable) {
+      saveProfile({
+        settings: {
+          ...profile.settings,
+          playableEndTurnWarningSeen: true,
+        },
+      });
       setEndTurnConfirm({ type: "playable" });
       return;
     }
@@ -1671,6 +1675,16 @@ const selectedCardData =
             if (selectedCard !== null) handlePlayCard(selectedCard);
           }}
           onEndTurn={() => {
+            setEndTurnConfirm(null);
+            performEndTurn();
+          }}
+          onDisablePlayableWarning={() => {
+            saveProfile({
+              settings: {
+                ...profile.settings,
+                playableEndTurnWarning: false,
+              },
+            });
             setEndTurnConfirm(null);
             performEndTurn();
           }}

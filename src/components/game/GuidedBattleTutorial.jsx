@@ -78,9 +78,17 @@ export default function GuidedBattleTutorial({
   };
 
   return (
-    <div
-      className="fixed left-1/2 top-[calc(36%+env(safe-area-inset-top))] z-[56] max-h-[168px] w-[84vw] max-w-[320px] -translate-x-1/2 animate-fade-in overflow-y-auto overscroll-contain"
-    >
+    <>
+      <style>{`
+        @keyframes guidedTutorialPanelFade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+      <div
+        className="fixed left-1/2 top-[calc(36%+env(safe-area-inset-top))] z-[56] max-h-[168px] w-[84vw] max-w-[320px] -translate-x-1/2 overflow-y-auto overscroll-contain"
+        style={{ animation: "guidedTutorialPanelFade 125ms ease-out both" }}
+      >
       <div
         className="relative rounded-xl border-2 border-amber-400/50 px-2.5 py-2 shadow-[0_0_24px_rgba(251,191,36,0.2)]"
         style={{
@@ -157,6 +165,7 @@ export default function GuidedBattleTutorial({
           Continue Without Tips
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

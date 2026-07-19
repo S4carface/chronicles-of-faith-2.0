@@ -108,6 +108,7 @@ export function GameProvider({ children }) {
   const [storySaveError, setStorySaveError] = useState(false);
   const [unlockQueue, setUnlockQueue] = useState([]);
   const [showIntro, setShowIntro] = useState(false);
+  const [introPurpose, setIntroPurpose] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -255,12 +256,14 @@ const recordEnemyDefeat = useCallback((enemyId) => {
     setUnlockQueue(q => [...q, unlock]);
   }, []);
 
-  const triggerIntroReplay = useCallback(() => {
+  const triggerIntroReplay = useCallback((purpose = "replay") => {
+    setIntroPurpose(purpose);
     setShowIntro(true);
   }, []);
 
   const handleIntroComplete = useCallback(() => {
     setShowIntro(false);
+    setIntroPurpose(null);
     saveProfile({ introSeen: true });
   }, [saveProfile]);
 
@@ -349,8 +352,6 @@ const startTutorialRun = useCallback(() => {
 
   if (!hero) return;
 
-  clearStoryRun();
-  setSavedStoryExists(false);
   setStorySaveError(false);
 
   setRun({
@@ -457,13 +458,17 @@ const startTutorialRun = useCallback(() => {
       }
     }
 const startAtFirstBattle = options.startAtFirstBattle === true;
-const firstNode =
-  map[0]?.find(node => node.type === ROOM_TYPES.BATTLE) ||
-  map[0]?.[0] ||
-  null;
+const firstBattleNode = map
+  .flat()
+  .find(node => node.type === ROOM_TYPES.BATTLE) || null;
 
-if (startAtFirstBattle && firstNode) {
-  firstNode.visited = true;
+// Easy Genesis always uses the regular serpent for its first battle encounter.
+if (!isDaily && difficulty === "easy" && firstBattleNode) {
+  Object.assign(firstBattleNode, { enemyId: "serpent" });
+}
+
+if (startAtFirstBattle && firstBattleNode) {
+  firstBattleNode.visited = true;
 }
     setRun({
       hero,
@@ -487,13 +492,13 @@ if (startAtFirstBattle && firstNode) {
       usedLegendary: false,
       neverLostHp: true,
       storyChoices: [],
-      currentNode: startAtFirstBattle ? firstNode : null,
+      currentNode: startAtFirstBattle ? firstBattleNode : null,
       phase: startAtFirstBattle ? "battle" : "map",
       runStartTime: Date.now(), // map, battle, treasure, divine, story, mystery, narration, trivia, reward, victory, defeat
       pendingReward: null,
       narrationText: "In the beginning, there was nothing... Then God said, 'Let there be light.' And there was light. — Genesis 1:1-3",
       narrationSummary: "God creates light and begins bringing order from nothing.",
-      pendingEnemyId: startAtFirstBattle ? firstNode?.enemyId || null : null,
+      pendingEnemyId: startAtFirstBattle ? firstBattleNode?.enemyId || null : null,
       currentBattleState: null,
       buffAttack: 0,
       shieldActive: false,
@@ -738,12 +743,12 @@ if (node.enemyId === "babel_tower") {
   }, []);
 
   const endRun = useCallback(() => {
-    const wasDaily = run?.isDaily;
+    const preservesStorySave = run?.isDaily || run?.isTutorial;
     if (run?.runStartTime) {
       recordPlayTime((Date.now() - run.runStartTime) / 1000);
     }
     setRun(null);
-    if (!wasDaily) {
+    if (!preservesStorySave) {
       clearStoryRun();
       setSavedStoryExists(false);
     }
@@ -856,6 +861,7 @@ if (node.enemyId === "babel_tower") {
     dismissUnlock,
     queueUnlock,
     showIntro,
+    introPurpose,
     triggerIntroReplay,
     handleIntroComplete,
     Sound,

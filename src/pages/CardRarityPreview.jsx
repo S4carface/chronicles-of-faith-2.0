@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import Card from "@/components/game/Card";
 import { getCardById } from "@/data/cards";
 import { ACTIVE_CARD_RARITIES, getCardRarity } from "@/data/cardRarity";
+import RareCardInspection from "@/components/ui/RareCardInspection";
 
 const SAMPLE_DEFINITIONS = {
   common: { cardId: "sling_stone" },
@@ -77,14 +78,14 @@ export default function CardRarityPreview() {
 
       {inspectedSample && (
         <div
-          className="fixed inset-0 z-[70] overflow-y-auto bg-[#050914]/90 px-4 py-[max(1.5rem,env(safe-area-inset-top))] backdrop-blur-md [touch-action:pan-y]"
+          className="fixed inset-0 z-[70] overflow-y-auto bg-black/95 px-3 py-[max(1rem,env(safe-area-inset-top))] backdrop-blur-lg [touch-action:pan-y]"
           onClick={() => setInspectedSample(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`Inspect ${inspectedSample.card.name}`}
         >
           <div className="flex min-h-full items-center justify-center py-8">
-            <div className="relative flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-amber-400/20 bg-[#0c162b]/95 px-5 py-7 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className={`relative flex w-full flex-col items-center gap-4 rounded-2xl border border-amber-400/20 bg-[#081124]/95 px-4 py-6 shadow-2xl ${inspectedSample.key === "rare" ? "max-w-md" : "max-w-sm"}`} onClick={(event) => event.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setInspectedSample(null)}
@@ -101,9 +102,13 @@ export default function CardRarityPreview() {
                 <h2 className="mt-1 font-serif text-xl text-amber-100">{inspectedSample.card.name}</h2>
               </div>
 
-              <Card card={inspectedSample.card} playable />
+              {inspectedSample.key === "rare" ? (
+                <RareCardInspection card={inspectedSample.card} />
+              ) : (
+                <Card card={inspectedSample.card} playable />
+              )}
 
-              <p className="text-xs leading-5 text-amber-100/55">Move across the card to inspect the foil and depth. Tap outside or use Close to dismiss.</p>
+              <p className="text-xs leading-5 text-amber-100/60">{inspectedSample.key === "rare" ? "Drag across the card to inspect its finish." : "Move across the card to inspect the foil and depth."} Tap outside or use Close to dismiss.</p>
               <button type="button" onClick={() => setInspectedSample(null)} className="min-h-11 rounded-lg border border-amber-400/30 px-6 text-sm font-semibold text-amber-100/75 hover:bg-amber-400/10">Close</button>
             </div>
           </div>

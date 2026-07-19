@@ -21,6 +21,7 @@ let mainThemeSource = null;
 let mainThemeStartedAt = 0;
 let mainThemePausedAt = 0;
 let mainThemeRequestId = 0;
+let oneShotMusicElement = null;
 let musicEnabled = true;
 let sfxEnabled = true;
 let musicVol = 0.5;
@@ -915,6 +916,12 @@ export const sfx = {
 };
 
 export function stopMusic() {
+  if (oneShotMusicElement) {
+    oneShotMusicElement.pause();
+    oneShotMusicElement.removeAttribute("src");
+    oneShotMusicElement.load();
+    oneShotMusicElement = null;
+  }
   currentMusicNodes.forEach((node) => {
     try {
       node.stop();
@@ -928,6 +935,28 @@ export function stopMusic() {
   }
 
   stopMainTheme({ preservePosition: true });
+}
+
+export function playOneShotMusic(src) {
+  stopMusic();
+  if (!musicEnabled || !src) return null;
+
+  try {
+    const audio = new Audio(src);
+    oneShotMusicElement = audio;
+    audio.loop = false;
+    audio.preload = "auto";
+    audio.volume = Math.max(0, Math.min(1, normalizeMusicVolume(musicVol) * 0.45));
+    const clear = () => {
+      if (oneShotMusicElement === audio) oneShotMusicElement = null;
+    };
+    audio.addEventListener("ended", clear, { once: true });
+    audio.addEventListener("error", clear, { once: true });
+    audio.play().catch(clear);
+    return audio;
+  } catch {
+    return null;
+  }
 }
 
 export function pauseMusicForAmbience() {

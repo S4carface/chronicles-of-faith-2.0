@@ -99,6 +99,10 @@ export const VICTORY_ART = {
   crest: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/f57a721c8_generated_image.png",
 };
 
+export const GENESIS_COMPLETION_ART = {
+  background: "/images/completion/genesis-complete.png",
+};
+
 export const UI_ART = {
   trivia: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/674a33d82_generated_image.png",
 };

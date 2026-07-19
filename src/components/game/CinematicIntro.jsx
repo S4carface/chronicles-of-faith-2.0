@@ -19,7 +19,7 @@ const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export const VERSE_1_START_MS = 480;
-export const VERSE_3_START_MS = 9100;
+export const VERSE_3_START_MS = 8200;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
 const AUDIO_END_FALLBACK_GRACE_MS = 4000;
@@ -451,7 +451,7 @@ return (
               </p>
 
               <p
-                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-700 ${
+                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-250 ${
                   step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
                 }`}
                 style={{

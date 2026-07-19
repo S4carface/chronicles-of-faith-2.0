@@ -6,30 +6,26 @@ const STEPS = [
   {
     title: "Your Health",
     text: "This is your Health. If it reaches 0, you lose the battle. Tap Got it.",
-    position: "health",
-    arrow: "up",
+    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Faith",
     text: "Faith pays for cards and refills every turn. Tap Got it.",
-    position: "faith",
-    arrow: "up",
+    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Enemy Intent",
     text: "This shows the serpent's next action. Tap Got it.",
-    position: "intent",
-    arrow: "up",
+    anchor: "bottom",
     actionable: false,
   },
   {
     title: "Attack",
     text: "Tap the Sling Stone card.",
     selectedText: "Tap Play Card. Attacks automatically target the serpent.",
-    position: "card-action",
-    arrow: "down",
+    anchor: "top",
     actionable: true,
     requiredCardId: "sling_stone",
   },
@@ -37,35 +33,29 @@ const STEPS = [
     title: "Defense",
     text: "Tap the Faith Shield card.",
     selectedText: "Tap Play Card to gain Block against the shown intent.",
-    position: "card-action",
-    arrow: "down",
+    anchor: "top",
     actionable: true,
     requiredCardId: "faith_shield",
   },
   {
     title: "End Your Turn",
     text: "Tap End Turn. The serpent will perform the intent shown above.",
-    position: "end-turn",
-    arrow: "up",
+    anchor: "top",
     actionable: true,
+  },
+  {
+    title: "Finish the Battle",
+    text: "Tap Sling Stone for the final attack.",
+    selectedText: "Tap Play Card to defeat the serpent.",
+    anchor: "top",
+    actionable: true,
+    requiredCardId: "sling_stone",
   },
 ];
 
-const POSITION_CLASSES = {
-  health:
-    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
-
-  faith:
-    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
-
-  intent:
-    "bottom-[calc(11rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2",
-
-  "card-action":
-    "top-[calc(3.5rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2",
-
-  "end-turn":
-    "bottom-[calc(11rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2",
+const ANCHOR_CLASSES = {
+  top: "top-[calc(36%+env(safe-area-inset-top))]",
+  bottom: "bottom-[calc(33%+env(safe-area-inset-bottom))]",
 };
 
 export const TUTORIAL_TOTAL_STEPS = STEPS.length;
@@ -89,8 +79,6 @@ export default function GuidedBattleTutorial({
       ? current.selectedText
       : current.text;
 
-  const isArrowUp = current.arrow === "up";
-
   const handleAcknowledge = () => {
     Sound.sfx.click();
     onAcknowledge();
@@ -103,32 +91,17 @@ export default function GuidedBattleTutorial({
 
   return (
     <div
-      className={`fixed z-[56] w-[220px] max-w-[calc(100vw-1.5rem)] animate-fade-in ${
-        POSITION_CLASSES[current.position]
+      className={`fixed left-1/2 z-[56] w-[86vw] max-w-[340px] -translate-x-1/2 animate-fade-in ${
+        ANCHOR_CLASSES[current.anchor]
       }`}
     >
       <div
-        className="relative rounded-xl border-2 border-amber-400/50 p-3.5 shadow-xl shadow-amber-400/20"
+        className="relative rounded-xl border-2 border-amber-400/50 px-3 py-2.5 shadow-xl shadow-amber-400/20"
         style={{
           background:
-            "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
+            "linear-gradient(135deg, rgba(26,39,68,0.9) 0%, rgba(15,26,48,0.9) 100%)",
         }}
       >
-        {/* Arrow toward the control being explained */}
-        <div
-          className={`absolute left-1/2 -translate-x-1/2 ${
-            isArrowUp ? "-top-2" : "-bottom-2"
-          }`}
-          style={{
-            width: 0,
-            height: 0,
-            borderLeft: "8px solid transparent",
-            borderRight: "8px solid transparent",
-            [isArrowUp ? "borderBottom" : "borderTop"]:
-              "8px solid rgba(201,168,76,0.65)",
-          }}
-        />
-
         <button
           type="button"
           onClick={handleSkip}
@@ -140,12 +113,12 @@ export default function GuidedBattleTutorial({
         </button>
 
         {/* Progress */}
-        <div className="mb-2 pr-5">
+        <div className="mb-1.5 pr-5">
           <span className="block text-[9px] font-bold uppercase tracking-widest text-amber-300/55">
             Step {step + 1} of {STEPS.length}
           </span>
 
-          <div className="mt-1.5 flex gap-1">
+          <div className="mt-1 flex gap-1">
             {STEPS.map((_, index) => (
               <span
                 key={index}
@@ -159,11 +132,11 @@ export default function GuidedBattleTutorial({
           </div>
         </div>
 
-        <h3 className="mb-1 font-serif text-sm text-amber-100">
+        <h3 className="mb-0.5 font-serif text-sm text-amber-100">
           {current.title}
         </h3>
 
-        <p className="mb-3 text-[11px] leading-relaxed text-amber-100/60">
+        <p className="mb-2 text-[11px] leading-snug text-amber-100/70">
           {instructionText}
         </p>
 
@@ -182,7 +155,7 @@ export default function GuidedBattleTutorial({
             type="button"
             onClick={handleAcknowledge}
             data-tutorial-action="acknowledge"
-            className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-400/50 bg-amber-600/20 px-3 py-2 text-xs font-bold text-amber-100 transition hover:bg-amber-600/40"
+            className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-400/50 bg-amber-600/20 px-3 py-1.5 text-xs font-bold text-amber-100 transition hover:bg-amber-600/40"
           >
             Got it
             <ChevronRight className="h-3 w-3" />
@@ -193,7 +166,7 @@ export default function GuidedBattleTutorial({
           type="button"
           onClick={handleSkip}
           data-tutorial-action="skip"
-          className="mt-3 w-full border-t border-amber-400/15 pt-2 text-center text-[9px] text-amber-100/40 transition hover:text-amber-100/70"
+          className="mt-2 w-full border-t border-amber-400/15 pt-1.5 text-center text-[9px] text-amber-100/45 transition hover:text-amber-100/70"
         >
           Continue Without Tips
         </button>

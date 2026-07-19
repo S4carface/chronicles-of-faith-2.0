@@ -47,6 +47,7 @@ export default function CinematicIntro({ onComplete }) {
   const cinematicStartedRef = useRef(false);
   const isTransitioningRef = useRef(false);
   const completedRef = useRef(false);
+  const lifecycleRef = useRef(0);
 
   const clearTimers = useCallback(() => {
     timersRef.current.forEach((id) => {
@@ -85,19 +86,26 @@ export default function CinematicIntro({ onComplete }) {
 
   const startCinematic = useCallback(async () => {
     if (cinematicStartedRef.current) return;
+    const lifecycleId = lifecycleRef.current;
 
     const video = videoRef.current;
 
-    if (!video || videoFailed) {
+    if (!video) {
       setNeedsTap(true);
       return;
     }
 
-    try {
-      await video.play();
-    } catch (error) {
-      console.warn("Genesis video requires player interaction.", error);
-      setNeedsTap(true);
+    if (!videoFailed) {
+      try {
+        await video.play();
+      } catch (error) {
+        console.warn("Genesis video requires player interaction.", error);
+        setNeedsTap(true);
+        return;
+      }
+    }
+
+    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
       return;
     }
 
@@ -115,6 +123,10 @@ export default function CinematicIntro({ onComplete }) {
       }
     );
 
+    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
+      return;
+    }
+
     let narrationTrack = null;
 
     if (narrationOn) {
@@ -130,6 +142,10 @@ export default function CinematicIntro({ onComplete }) {
         }
       );
       narrationTrack = narrationTrackRef.current;
+    }
+
+    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
+      return;
     }
 
     const narrationDurationMs = Math.round(
@@ -157,6 +173,15 @@ export default function CinematicIntro({ onComplete }) {
   ]);
 
   useEffect(() => {
+    const lifecycleId = ++lifecycleRef.current;
+    completedRef.current = false;
+    cinematicStartedRef.current = false;
+    isTransitioningRef.current = false;
+    setCinematicStarted(false);
+    setIsTransitioning(false);
+    setBookCardStage(0);
+    setStep(0);
+
     Sound.pauseMusicForAmbience();
 
     const loadingTimeout = window.setTimeout(() => {
@@ -168,7 +193,11 @@ export default function CinematicIntro({ onComplete }) {
     timersRef.current.push(loadingTimeout);
 
     return () => {
+      if (lifecycleRef.current === lifecycleId) {
+        lifecycleRef.current += 1;
+      }
       completedRef.current = true;
+      cinematicStartedRef.current = false;
       clearTimers();
 
       videoRef.current?.pause();
@@ -273,7 +302,7 @@ return (
           {needsTap && (
             <div className="mt-6 flex flex-col items-center gap-3">
               <button
-                onClick={videoFailed ? handleSkip : startCinematic}
+                onClick={startCinematic}
                 className="rounded-xl border border-amber-400/60 bg-slate-950/70 px-7 py-3 font-serif text-amber-100 shadow-lg"
               >
                 {videoFailed ? "Continue" : "Tap to Begin"}
@@ -302,7 +331,7 @@ return (
         onLoadedData={() => setVideoReady(true)}
         onError={() => {
           setVideoFailed(true);
-          handleSkip();
+          setVideoReady(true);
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
           cinematicStarted ? "opacity-100" : "opacity-0"

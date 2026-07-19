@@ -69,6 +69,10 @@ if (!parsed.activeDeck) {
       }
       // Migrate leaderboard name-prompt-seen flag
       if (parsed.leaderboardNamePromptSeen === undefined) parsed.leaderboardNamePromptSeen = false;
+      if (!parsed.settings) parsed.settings = {};
+      if (parsed.settings.playableEndTurnWarning === undefined) {
+        parsed.settings.playableEndTurnWarning = true;
+      }
 
 // Codex migration
 if (!Array.isArray(parsed.encounteredEnemies)) parsed.encounteredEnemies = [];
@@ -83,7 +87,7 @@ return parsed;
     activeDeck: [...STARTER_DECK],
     collectedCards: Object.keys(STARTER_COLLECTION),
     achievements: [],
-    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal" },
+    settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal", playableEndTurnWarning: true },
     dailyStreak: 0,
     lastDailyDate: null,
     devotionStreak: 0,

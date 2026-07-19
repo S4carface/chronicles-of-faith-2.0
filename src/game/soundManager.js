@@ -666,6 +666,7 @@ export async function playCinematicTrack(
   {
     volume = 1,
     loop = false,
+    onEnded = null,
   } = {}
 ) {
   const ctx = getCtx();
@@ -727,12 +728,15 @@ export async function playCinematicTrack(
       cinematicGains = cinematicGains.filter(
         currentGain => currentGain !== gain
       );
+
+      onEnded?.();
     };
 
     return {
       source,
       gain,
       context: ctx,
+      duration: source.buffer?.duration ?? null,
     };
   } catch (error) {
     console.warn("[Audio] Cinematic track failed:", error);

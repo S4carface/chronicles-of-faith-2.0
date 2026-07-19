@@ -11,8 +11,10 @@ import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
+import { preloadImage } from "@/lib/imageAssets";
 import * as Sound from "@/game/soundManager";
 
+const HOME_BACKGROUND = "/images/home/home-celestial.png";
 
 export default function Home() {
   const {
@@ -34,6 +36,7 @@ export default function Home() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showResume, setShowResume] = useState(false);
+  const [homeBackgroundReady, setHomeBackgroundReady] = useState(false);
   const savedRunInfo = useMemo(() => {
     if (!savedStoryExists) return null;
     const saved = loadStoryRun();
@@ -56,6 +59,18 @@ export default function Home() {
     if (run && getSavedRoute() === "/play") {
       setShowResume(true);
     }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    preloadImage(HOME_BACKGROUND).then((loaded) => {
+      if (isMounted && loaded) setHomeBackgroundReady(true);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 const launchFirstTutorialBattle = () => {
   startTutorialRun();
@@ -192,12 +207,17 @@ const handleNameSaved = (name) => {
     <div
   className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden"
   style={{
-    background:
-      "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+    backgroundColor: "#0A0F1E",
+    backgroundImage: homeBackgroundReady
+      ? `linear-gradient(180deg, rgba(5, 12, 29, 0.28) 0%, rgba(7, 15, 34, 0.48) 42%, rgba(4, 10, 24, 0.7) 100%), url("${HOME_BACKGROUND}")`
+      : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+    backgroundPosition: "center 18%",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "cover",
   }}
 >
       {/* Floating particles */}
-      {Array.from({ length: 18 }).map((_, i) => (
+      {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
           width: `${2 + Math.random() * 3}px`,
           height: `${2 + Math.random() * 3}px`,

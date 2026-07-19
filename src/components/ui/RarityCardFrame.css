@@ -16,6 +16,7 @@
 .rarity-card-frame--motion {
   transform: perspective(1050px) rotateX(var(--rarity-tilt-x)) rotateY(var(--rarity-tilt-y));
   will-change: transform;
+  touch-action: pan-y;
 }
 
 .rarity-card-frame--selected {

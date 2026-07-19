@@ -45,7 +45,7 @@ export function getCardEffectText(card) {
   }
 }
 
-export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand, blocked }) {
+export default function Card({ card, onClick, onLongPress, playable, selected, small, inHand, blocked, className }) {
   const artUrl = CARD_ART[card.id];
   const pressTimer = useRef(null);
   const longPressed = useRef(false);
@@ -86,12 +86,13 @@ export default function Card({ card, onClick, onLongPress, playable, selected, s
         selected && playable && "z-20 brightness-110",
         selected && !playable && "z-10",
         !playable && onClick && "opacity-60",
-inHand
-  ? "mx-auto h-40 w-full max-w-[8rem] min-w-0"
-  : small
-    ? "w-28 h-44 landscape:w-24 landscape:h-36"
-    : "w-44 h-64 landscape:w-36 landscape:h-52",
-inHand && "flex-shrink-0"
+        inHand
+          ? "mx-auto h-40 w-full max-w-[8rem] min-w-0"
+          : small
+            ? "w-28 h-44 landscape:w-24 landscape:h-36"
+            : "w-44 h-64 landscape:w-36 landscape:h-52",
+        inHand && "flex-shrink-0",
+        className,
       )}
     >
       {/* Cost badge */}

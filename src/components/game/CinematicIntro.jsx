@@ -19,7 +19,7 @@ const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
 const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export const VERSE_1_START_MS = 480;
-export const VERSE_3_START_MS = 8200;
+export const VERSE_3_START_MS = 7700;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
 const AUDIO_END_FALLBACK_GRACE_MS = 4000;
@@ -441,8 +441,10 @@ return (
           <div className="max-w-2xl text-center">
             <div className="grid min-h-[15rem] place-items-center">
               <p
-                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-opacity duration-700 ${
-                  step === 1 ? "opacity-100" : "opacity-0"
+                className={`[grid-area:1/1] font-serif leading-relaxed text-amber-100/90 transition-opacity ${
+                  step === 1
+                    ? "duration-700 opacity-100"
+                    : "duration-100 opacity-0"
                 }`}
                 style={{ fontSize: "clamp(1rem, 2.2vw, 1.5rem)" }}
               >
@@ -451,7 +453,7 @@ return (
               </p>
 
               <p
-                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-250 ${
+                className={`[grid-area:1/1] font-serif font-semibold leading-relaxed text-amber-100 transition-all duration-100 ${
                   step === 5 ? "scale-100 opacity-100" : "scale-95 opacity-0"
                 }`}
                 style={{

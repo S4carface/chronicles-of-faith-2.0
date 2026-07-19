@@ -27,6 +27,7 @@ import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
 import PremiumCardPreview from "@/pages/PremiumCardPreview";
+import CardRarityPreview from "@/pages/CardRarityPreview";
 import BottomNavigation from "@/components/BottomNavigation"; 
 import { useEffect, useState } from "react";
 import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/special-thanks" element={<SpecialThanks />} />
         <Route path="/dev/premium-card-showcase" element={<PremiumCardPreview />} />
+        <Route path="/dev/card-rarity-preview" element={<CardRarityPreview />} />
 </Routes>
 
 <BottomNavigation />

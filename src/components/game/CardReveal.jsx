@@ -3,30 +3,8 @@ import { getCardById } from "@/data/cards";
 import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
-
-const RARITY_STYLES = {
-  common: {
-    label: "Common",
-    color: "text-sky-300",
-    border: "border-sky-400/50",
-    glow: "rgba(56,189,248,0.4)",
-    particleColor: "rgba(56,189,248",
-  },
-  rare: {
-    label: "Rare",
-    color: "text-emerald-300",
-    border: "border-emerald-400/60",
-    glow: "rgba(52,211,153,0.5)",
-    particleColor: "rgba(52,211,153",
-  },
-  legendary: {
-    label: "Legendary",
-    color: "text-amber-300",
-    border: "border-amber-300/70",
-    glow: "rgba(251,191,36,0.6)",
-    particleColor: "rgba(251,191,36",
-  },
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 const TYPE_LABELS = {
   attack: "Attack",
@@ -36,21 +14,29 @@ const TYPE_LABELS = {
 };
 
 // Timing profiles — common is simpler/faster, rare+legendary more dramatic
-function getTiming(rarity) {
-  if (rarity === "legendary") return { rise: 900, hold: 1600, fade: 500, particles: 24 };
-  if (rarity === "rare") return { rise: 700, hold: 1300, fade: 400, particles: 18 };
-  return { rise: 450, hold: 800, fade: 300, particles: 8 };
+function getTiming(rarity, reduceMotion) {
+  const timing = rarity === "legendary"
+    ? { rise: 900, hold: 1600, fade: 500, particles: 18 }
+    : rarity === "epic"
+      ? { rise: 760, hold: 1400, fade: 420, particles: 14 }
+      : rarity === "rare"
+        ? { rise: 650, hold: 1250, fade: 380, particles: 10 }
+        : rarity === "uncommon"
+          ? { rise: 520, hold: 950, fade: 320, particles: 4 }
+          : { rise: 420, hold: 800, fade: 280, particles: 0 };
+  return reduceMotion ? { ...timing, rise: 0, fade: 0, particles: 0 } : timing;
 }
 
 export default function CardReveal({ unlock, onDismiss }) {
   const card = getCardById(unlock.cardId);
   const [phase, setPhase] = useState("rise"); // rise -> hold -> fade -> done
   const [riseProgress, setRiseProgress] = useState(0);
+  const [reduceMotion] = useState(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   const rarity = card?.rarity || "common";
-  const r = RARITY_STYLES[rarity] || RARITY_STYLES.common;
-  const timing = getTiming(rarity);
-  const isEpic = rarity === "rare" || rarity === "legendary";
+  const r = getCardRarity(rarity);
+  const timing = getTiming(rarity, reduceMotion);
+  const isEpic = rarity === "rare" || rarity === "epic" || rarity === "legendary";
   const art = CARD_ART[card?.id] || PLACEHOLDER_ART;
   const typeLabel = TYPE_LABELS[card?.type] || card?.type || "Card";
 
@@ -103,7 +89,8 @@ export default function CardReveal({ unlock, onDismiss }) {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(ellipse at center, ${r.glow}${isEpic ? "33" : "18"} 0%, transparent ${isEpic ? 65 : 50}%)`,
+          background: `radial-gradient(ellipse at center, ${r.glowColor} 0%, transparent ${isEpic ? 65 : 50}%)`,
+          opacity: isEpic ? 0.65 : 0.35,
         }}
       />
 
@@ -117,8 +104,9 @@ export default function CardReveal({ unlock, onDismiss }) {
             height: `${2 + Math.random() * (isEpic ? 5 : 3)}px`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            background: `${r.particleColor},${0.3 + Math.random() * 0.4})`,
-            boxShadow: `0 0 ${4 + Math.random() * 8}px ${r.particleColor},0.5)`,
+            background: r.accentColor,
+            opacity: 0.3 + Math.random() * 0.4,
+            boxShadow: `0 0 ${4 + Math.random() * 8}px ${r.glowColor}`,
             animation: `float ${3 + Math.random() * 3}s ease-in-out infinite`,
             animationDelay: `${Math.random() * 2}s`,
           }}
@@ -136,41 +124,42 @@ export default function CardReveal({ unlock, onDismiss }) {
       >
         <p
           className="text-xs font-bold uppercase tracking-[0.2em] mb-3 font-serif"
-          style={{ color: r.color, opacity: 0.8 }}
+          style={{ color: r.labelColor, opacity: 0.8 }}
         >
           New Card Unlocked
         </p>
 
         {/* Card art with sacred glow */}
-        <div
-          className={`relative w-32 h-32 lg:w-36 lg:h-36 rounded-2xl border-2 ${r.border} overflow-hidden mb-4`}
+        <RarityCardFrame
+          rarity={r.key}
+          className={`relative w-32 h-32 lg:w-36 lg:h-36 rounded-2xl border-2 overflow-hidden mb-4 ${r.rewardRevealClass}`}
           style={{
             boxShadow: isEpic
-              ? `0 0 50px ${r.glow}, 0 0 100px ${r.glow}55, inset 0 0 20px ${r.glow}66`
-              : `0 0 24px ${r.glow}88`,
+              ? `0 0 50px ${r.glowColor}, 0 0 90px ${r.glowColor}`
+              : `0 0 24px ${r.glowColor}`,
             background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)",
           }}
         >
           <img src={art} alt={card.name} className="art-portrait" />
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ boxShadow: `inset 0 0 16px ${r.glow}55` }}
+            style={{ boxShadow: `inset 0 0 16px ${r.glowColor}` }}
           />
           {/* Cost badge */}
           <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-400/30">
             {card.cost} ✨
           </span>
           {/* Rarity badge */}
-          <span className={`absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-slate-900/70 ${r.color} border ${r.border}`}>
-            {r.label}
+          <span className="absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-slate-900/80 border" style={{ color: r.labelColor, borderColor: r.borderColor }}>
+            {r.displayName}
           </span>
-        </div>
+        </RarityCardFrame>
 
         <h2 className="text-2xl font-serif text-amber-100 text-center mb-1">{card.name}</h2>
 
         {/* Type + rarity line */}
-        <p className={`text-sm font-medium ${r.color} text-center mb-2`}>
-          {typeLabel} · {r.label}
+        <p className="text-sm font-medium text-center mb-2" style={{ color: r.labelColor }}>
+          {typeLabel} · {r.displayName}
         </p>
 
         {/* Effect summary */}

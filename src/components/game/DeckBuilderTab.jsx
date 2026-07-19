@@ -1,16 +1,11 @@
 import React, { useMemo } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
-import { validateDeck, getDeckStats, DECK_SIZE } from "@/game/deckRules";
+import { validateDeck, DECK_SIZE } from "@/game/deckRules";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
-
-const RARITY_BORDER = {
-  common: "border-sky-400/60",
-  uncommon: "border-purple-400/70",
-  rare: "border-emerald-400/70",
-  legendary: "border-amber-300/80",
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 const TYPE_COLORS = {
   attack: "text-red-300",
@@ -70,16 +65,18 @@ export default function DeckBuilderTab() {
           {activeDeck.map((cardId, idx) => {
             const card = getCardById(cardId);
             if (!card) return null;
+            const rarity = getCardRarity(card.rarity);
             return (
               <div key={idx} className="flex flex-col items-center">
-                <div className={`w-20 h-36 rounded-lg border-2 ${RARITY_BORDER[card.rarity] || "border-slate-600"} bg-gradient-to-b from-slate-800 to-slate-900 p-1.5 flex flex-col items-center justify-between overflow-hidden`}>
+                <RarityCardFrame rarity={rarity.key} enableTilt={false} className="w-20 h-36 rounded-lg border-2 bg-gradient-to-b from-slate-800 to-slate-900 p-1.5 flex flex-col items-center justify-between overflow-hidden">
                   <div className="text-[8px] text-amber-300/60 w-full text-right">{card.cost} ✨</div>
                   <div className="w-12 h-12 rounded overflow-hidden" style={{ background: "#0F1A30" }}>
                     <img src={CARD_ART[card.id] || PLACEHOLDER_ART} alt={card.name} className="art-portrait" />
                   </div>
                   <div className="text-[9px] font-serif text-amber-100 text-center leading-tight">{card.name}</div>
+                  <div className="text-[7px] uppercase font-bold" style={{ color: rarity.labelColor }}>{rarity.displayName}</div>
                   <div className={`text-[7px] uppercase font-bold ${TYPE_COLORS[card.type] || "text-amber-300/50"}`}>{card.type}</div>
-                </div>
+                </RarityCardFrame>
                 <button
                   onClick={() => { Sound.sfx.click(); removeFromActiveDeck(idx); }}
                   className="mt-1 text-[10px] text-red-300/70 hover:text-red-200 border border-red-400/20 hover:border-red-400/40 px-2 py-0.5 rounded transition"

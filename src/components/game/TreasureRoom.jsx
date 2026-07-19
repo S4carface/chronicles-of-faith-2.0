@@ -10,6 +10,7 @@ import DeckFullModal from "@/components/game/DeckFullModal";
 import { CARD_ART } from "@/data/art";
 import { preloadImages } from "@/lib/imageAssets";
 import SafeImage from "@/components/ui/SafeImage";
+import { getCardRarity } from "@/data/cardRarity";
 
 export default function TreasureRoom() {
   const { run, profile, updateRun, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
@@ -86,7 +87,7 @@ export default function TreasureRoom() {
   const collection = profile.cardCollection || {};
   const alreadyOwned = (collection[rewardCardId] || 0) > 0;
   const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
-  const rarityLabel = card.rarity.charAt(0).toUpperCase() + card.rarity.slice(1);
+  const rarity = getCardRarity(card.rarity);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 100%)" }}>
@@ -104,15 +105,7 @@ export default function TreasureRoom() {
 
       {/* Rarity label */}
       <div className="mb-3 text-center">
-        <span className={`inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${
-          card.rarity === "legendary"
-  ? "border-amber-400/50 bg-amber-900/20 text-amber-300"
-  : card.rarity === "rare"
-    ? "border-emerald-400/50 bg-emerald-900/20 text-emerald-300"
-    : card.rarity === "uncommon"
-      ? "border-purple-400/50 bg-purple-900/20 text-purple-300"
-      : "border-sky-400/50 bg-sky-900/20 text-sky-300"
-        }`}>{rarityLabel}</span>
+        <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border bg-slate-950/45" style={{ borderColor: rarity.borderColor, color: rarity.labelColor, boxShadow: `0 0 12px ${rarity.glowColor}` }}>{rarity.displayName}</span>
       </div>
 
       <style>{`@keyframes sacredCardReveal { from { opacity: 0; transform: scale(.96); filter: drop-shadow(0 0 0 rgba(251,191,36,0)); } to { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 14px rgba(251,191,36,.28)); } }`}</style>

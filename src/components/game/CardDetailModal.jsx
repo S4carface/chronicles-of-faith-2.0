@@ -1,33 +1,8 @@
 import React from "react";
 import { getCardEffectText } from "@/components/game/Card";
 import { CARD_ART, PLACEHOLDER_ART } from "@/data/art";
-
-const RARITY_INFO = {
-  common: {
-    label: "Common",
-    color: "text-sky-200",
-    border: "border-sky-400/60",
-    borderColor: "rgba(56,189,248,0.4)",
-  },
-  uncommon: {
-    label: "Uncommon",
-    color: "text-purple-200",
-    border: "border-purple-400/70",
-    borderColor: "rgba(192,132,252,0.45)",
-  },
-  rare: {
-    label: "Rare",
-    color: "text-emerald-200",
-    border: "border-emerald-400/70",
-    borderColor: "rgba(52,211,153,0.4)",
-  },
-  legendary: {
-    label: "Legendary",
-    color: "text-amber-100",
-    border: "border-amber-300/80",
-    borderColor: "rgba(252,211,77,0.5)",
-  },
-};
+import RarityCardFrame from "@/components/ui/RarityCardFrame";
+import { getCardRarity } from "@/data/cardRarity";
 
 export default function CardDetailModal({
   card,
@@ -37,7 +12,7 @@ export default function CardDetailModal({
 }) {
   if (!card) return null;
 
-  const rarity = RARITY_INFO[card.rarity] || RARITY_INFO.common;
+  const rarity = getCardRarity(card.rarity);
   const effectText = getCardEffectText(card);
   const artUrl = CARD_ART[card.id] || PLACEHOLDER_ART;
 
@@ -58,9 +33,10 @@ export default function CardDetailModal({
       >
         <div className="flex items-center justify-between mb-3">
           <div
-            className={`text-xs uppercase tracking-widest font-bold ${rarity.color}`}
+            className="text-xs uppercase tracking-widest font-bold"
+            style={{ color: rarity.labelColor }}
           >
-            {rarity.label}
+            {rarity.displayName}
           </div>
 
           <button
@@ -72,9 +48,7 @@ export default function CardDetailModal({
         </div>
 
         <div className="flex justify-center mb-4">
-          <div
-            className={`relative w-56 aspect-[3/4] rounded-xl border-2 ${rarity.border} overflow-hidden bg-slate-950`}
-          >
+          <RarityCardFrame rarity={rarity.key} className="relative w-56 aspect-[3/4] rounded-xl border-2 overflow-hidden bg-slate-950">
             <img
               src={artUrl}
               alt={card.name}
@@ -92,8 +66,8 @@ export default function CardDetailModal({
                 {card.name}
               </h2>
 
-              <p className={`mt-1 text-xs uppercase font-bold ${rarity.color}`}>
-                {rarity.label}
+              <p className="mt-1 text-xs uppercase font-bold" style={{ color: rarity.labelColor }}>
+                {rarity.displayName}
               </p>
 
               {card.verse && (
@@ -102,7 +76,7 @@ export default function CardDetailModal({
                 </p>
               )}
             </div>
-          </div>
+          </RarityCardFrame>
         </div>
 
         <div className="rounded-lg border border-amber-500/20 bg-slate-900/50 p-3 mb-3">

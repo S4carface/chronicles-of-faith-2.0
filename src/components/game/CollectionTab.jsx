@@ -5,6 +5,7 @@ import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import { canAddToDeck, getMaxCopies, DECK_SIZE } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
+import { ACTIVE_CARD_RARITIES, getCardRarity } from "@/data/cardRarity";
 
 export default function CollectionTab() {
   const { profile, addToActiveDeck, removeCardFromDeck } = useGame();
@@ -66,20 +67,23 @@ export default function CollectionTab() {
       )}
 
       {/* Filter */}
-      <div className="flex justify-center gap-2 mb-4">
-        {["all", "common", "uncommon", "rare", "legendary"].map(f => (
+      <div className="flex flex-wrap justify-center gap-2 mb-4">
+        {["all", ...ACTIVE_CARD_RARITIES].map(f => {
+          const rarity = f === "all" ? null : getCardRarity(f);
+          return (
           <button
             key={f}
             onClick={() => { setFilter(f); Sound.sfx.click(); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition ${
+            className={`px-3 py-1.5 rounded-lg border text-xs font-medium capitalize transition ${
               filter === f
-                ? "bg-amber-500/20 border border-amber-400/50 text-amber-200"
-                : "border border-amber-500/10 text-amber-100/60 hover:text-amber-100/70"
+                ? "bg-slate-900/65"
+                : "border-amber-500/10 text-amber-100/60 hover:text-amber-100/70"
             }`}
+            style={filter === f && rarity ? { borderColor: rarity.borderColor, color: rarity.labelColor, backgroundColor: `${rarity.collectionFilterColor}1f` } : undefined}
           >
-            {f}
+            {rarity?.displayName || "All"}
           </button>
-        ))}
+        );})}
       </div>
 
       {ownedCards.length === 0 && (

@@ -5,6 +5,7 @@ import { getCardPlayabilityReason } from "@/game/statusExplanations";
 import { cn } from "@/utils";
 import { Sparkles, X, Swords, Shield, BookOpen, Wand2 } from "lucide-react";
 import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
+import { getCardRarity } from "@/data/cardRarity";
 
 const TYPE_INFO = {
   attack: { text: "Attack", color: "text-red-300", icon: Swords, border: "border-red-400/30" },
@@ -13,19 +14,12 @@ const TYPE_INFO = {
   miracle: { text: "Miracle", color: "text-yellow-200", icon: Wand2, border: "border-yellow-400/30" },
 };
 
-const RARITY_BORDER = {
-  common: "border-sky-400/60",
-  uncommon: "border-purple-400/70",
-  rare: "border-emerald-400/70",
-  legendary: "border-amber-300/80",
-};
-
 export default function CardPreviewPanel({   card,   playable,   blocked,   battleState,   onPlay,   onCancel,   showTutorialPlayGuide = false, tutorialLocked = false, }) {
   if (!card) return null;
   const typeInfo = TYPE_INFO[card.type] || TYPE_INFO.attack;
   const effectText = getCardEffectText(card);
   const artUrl = CARD_ART[card.id];
-  const rarityBorder = RARITY_BORDER[card.rarity] || RARITY_BORDER.common;
+  const rarity = getCardRarity(card.rarity);
   const TypeIcon = typeInfo.icon;
 
   // Derive the exact reason this card can't be played (silence vs. faith)
@@ -99,7 +93,7 @@ return (
             </button>
           </div>
           <div className="flex items-center gap-3 px-4 py-3">
-            <div className={cn("flex-shrink-0 rounded-md border-2 overflow-hidden", rarityBorder)}>
+            <div className="flex-shrink-0 rounded-md border-2 overflow-hidden" style={{ borderColor: rarity.borderColor, boxShadow: `0 0 14px ${rarity.glowColor}` }}>
               <div className="relative w-16 h-16 overflow-hidden" style={{ background: "linear-gradient(160deg, #1a2744, #0f1a30)" }}>
                 <span className="absolute top-0 left-0 w-5 h-5 rounded-full bg-amber-500/30 border border-amber-300/60 flex items-center justify-center text-white text-[10px] font-bold z-10">{card.cost}</span>
                 {artUrl ? <img src={artUrl} alt={card.name} className="art-portrait" /> : <span className="text-2xl flex items-center justify-center w-full h-full">{card.icon}</span>}
@@ -113,6 +107,7 @@ return (
                 </span>
                 <span className="text-amber-300/40 text-xs">·</span>
                 <span className="flex items-center gap-0.5 text-amber-300/60 text-xs"><Sparkles className="w-3 h-3" />{card.cost} Faith</span>
+                <span className="text-[10px] font-bold uppercase" style={{ color: rarity.labelColor }}>{rarity.displayName}</span>
               </div>
             </div>
           </div>

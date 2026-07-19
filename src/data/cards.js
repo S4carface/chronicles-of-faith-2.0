@@ -12,7 +12,9 @@ export const RARITIES = {
   COMMON: "common",
   UNCOMMON: "uncommon",
   RARE: "rare",
+  EPIC: "epic",
   LEGENDARY: "legendary",
+  MYTHIC: "mythic",
 };
 
 export const CARDS = [

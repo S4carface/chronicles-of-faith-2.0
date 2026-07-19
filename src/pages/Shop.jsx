@@ -14,6 +14,7 @@ import { useGame } from "@/game/GameContext";
 import { CARDS } from "@/data/cards";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
+import { getCardRarity } from "@/data/cardRarity";
 
 const ICON_MAP = {
   common: Inbox,
@@ -156,6 +157,7 @@ export default function Shop() {
           const canAfford = gold >= item.cost;
           const canPurchase = isUnlocked && canAfford;
           const Icon = ICON_MAP[item.icon] || Package;
+          const rarity = getCardRarity(item.rarity);
           return (
             <div
   key={item.id}
@@ -165,37 +167,16 @@ export default function Shop() {
   style={{
     background:
       "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)",
-    borderColor:
-      item.rarity === "legendary"
-        ? "rgba(252,211,77,0.5)"
-        : item.rarity === "rare"
-          ? "rgba(52,211,153,0.5)"
-          : item.rarity === "uncommon"
-            ? "rgba(192,132,252,0.5)"
-            : "rgba(56,189,248,0.5)",
+    borderColor: rarity.borderColor,
+    boxShadow: `0 0 16px ${rarity.glowColor}`,
   }}
 >
               <div className="flex justify-center mb-3">
-                <div className={`w-14 h-14 rounded-lg flex items-center justify-center border ${
-                  item.rarity === "legendary"
-  ? "border-amber-400/40 bg-amber-500/10"
-  : item.rarity === "rare"
-    ? "border-emerald-400/40 bg-emerald-500/10"
-    : item.rarity === "uncommon"
-      ? "border-purple-400/40 bg-purple-500/10"
-      : "border-sky-400/40 bg-sky-500/10"
-                }`}>
+                <div className="w-14 h-14 rounded-lg flex items-center justify-center border bg-slate-950/30" style={{ borderColor: rarity.borderColor, backgroundColor: `${rarity.shopBadgeColor}18` }}>
                   {isUnlocked ? (
   <Icon
-    className={`w-7 h-7 ${
-      item.rarity === "legendary"
-        ? "text-amber-300"
-        : item.rarity === "rare"
-          ? "text-emerald-300"
-          : item.rarity === "uncommon"
-            ? "text-purple-300"
-            : "text-sky-300"
-    }`}
+    className="w-7 h-7"
+    style={{ color: rarity.labelColor }}
   />
 ) : (
   <LockKeyhole className="w-7 h-7 text-slate-400" />
@@ -203,6 +184,7 @@ export default function Shop() {
                 </div>
               </div>
               <h3 className="font-serif text-amber-100 text-lg mb-1">{item.name}</h3>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em]" style={{ color: rarity.labelColor }}>{rarity.displayName}</p>
               <p className="text-amber-100/50 text-xs mb-3">{item.desc}</p>
               <button
   onClick={() => handleBuy(item)}

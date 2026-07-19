@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 import { BookOpen, Heart, Sun, Volume2, Square, Check, Flame, Coins } from "lucide-react";
 import { getDailyReflection } from "@/data/dailyReflections";
@@ -79,6 +80,16 @@ export default function DailyPrayer() {
       ))}
 
 
+
+      <div className="relative z-10 mb-4 w-full max-w-md lg:max-w-lg">
+        <Link
+          to="/"
+          aria-label="Return to Main Menu"
+          className="inline-flex min-h-11 items-center rounded-lg border border-amber-400/40 bg-slate-950/70 px-3.5 py-2 text-sm font-medium text-amber-200 shadow-md shadow-black/20 transition hover:bg-amber-900/30 active:scale-[0.98]"
+        >
+          ← Main Menu
+        </Link>
+      </div>
 
       <div className="relative w-full max-w-md lg:max-w-lg text-center">
         {/* Icon */}

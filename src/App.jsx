@@ -27,13 +27,26 @@ import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
 import BottomNavigation from "@/components/BottomNavigation"; 
+import { useEffect, useState } from "react";
+import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
 
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const [criticalAssetsReady, setCriticalAssetsReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    preloadCriticalFirstRunAssets().finally(() => {
+      if (mounted) setCriticalAssetsReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingAuth) {
+  if (isLoadingAuth || !criticalAssetsReady) {
   return <LoadingScreen />;
 }
 

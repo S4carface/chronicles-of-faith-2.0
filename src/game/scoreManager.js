@@ -237,6 +237,15 @@ export async function submitBestScore(scoreData) {
       isNewBest: true,
     };
   } catch (error) {
+    // Never swallow this silently — a failed create/update here is exactly
+    // why a category can go missing from the leaderboard with no visible
+    // trace. The caller still gets a graceful {success:false} to render,
+    // but the failure is always visible in the console for debugging.
+    console.error("[scoreManager] LeaderboardScore submission failed", {
+      mode: payload.mode,
+      dailyChallengeId: payload.dailyChallengeId,
+      error,
+    });
     return {
       success: false,
       error: error?.message || "Network error",
@@ -245,10 +254,24 @@ export async function submitBestScore(scoreData) {
 }
 
 /**
- * Every completed story run is submitted independently to:
+ * Every completed story run is submitted independently to two categories:
  *
- * 1. All Time — highest score ever.
- * 2. This Week — highest score during the current week.
+ * 1. All Time (mode: "story") — one row per player, the highest score ever.
+ *    A lower score never overwrites it.
+ * 2. This Week (mode: "daily", dailyChallengeId: "weekly-<mondayDate>") —
+ *    one row per player, the highest score during the current calendar
+ *    week (UTC, resets Monday). Reuses the "daily" mode + dailyChallengeId
+ *    pair because the LeaderboardScore entity's `mode` field is a fixed
+ *    enum of only "story"/"daily" (see base44/entities/LeaderboardScore.jsonc)
+ *    — there is no third "weekly" mode value available. The "weekly-"
+ *    prefix can never collide with a real daily challenge id (those are
+ *    always plain "YYYY-MM-DD"), so this filter is unambiguous as long as
+ *    submission and retrieval both call getCurrentWeekId() to build it,
+ *    which they do (see fetchLeaderboard below).
+ *
+ * Both submissions are independently awaited (Promise.all over two calls
+ * that each catch their own errors) so a failure in one category can never
+ * prevent or mask the result of the other.
  */
 export async function submitStoryScores(scoreData) {
   const weekId = getCurrentWeekId();
@@ -266,10 +289,19 @@ export async function submitStoryScores(scoreData) {
     }),
   ]);
 
+  if (!allTimeResult.success || !weeklyResult.success) {
+    console.error("[scoreManager] submitStoryScores had a partial or full failure", {
+      weekId,
+      allTimeResult,
+      weeklyResult,
+    });
+  }
+
   return {
     success: allTimeResult.success && weeklyResult.success,
     allTimeResult,
     weeklyResult,
+    weekId,
     error: allTimeResult.error || weeklyResult.error,
   };
 }

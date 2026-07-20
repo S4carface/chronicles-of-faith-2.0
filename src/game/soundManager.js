@@ -25,6 +25,21 @@ let genesisCompletionAudio = null;
 let genesisCompletionAudioActive = false;
 let musicEnabled = true;
 let sfxEnabled = true;
+
+// Settings can arrive as real booleans (normal app flow) or, defensively,
+// as strings — a manually-edited localStorage value, or a legacy/corrupted
+// save. `Boolean("false")` is true, which would silently invert the user's
+// preference, so every enabled-flag setter/read funnels through this.
+export function toBoolean(value, fallback = true) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") {
+    if (value.toLowerCase() === "false") return false;
+    if (value.toLowerCase() === "true") return true;
+  }
+  if (value === undefined || value === null) return fallback;
+  return Boolean(value);
+}
+
 let musicVol = 0.5;
 function normalizeMusicVolume(vol) {
   const value = Number(vol);
@@ -404,6 +419,31 @@ export function isAudioUnlocked() {
   return audioUnlocked;
 }
 
+// Awaitable variant of unlockAudio() — actually waits for ctx.resume() to
+// settle instead of returning a stale synchronous flag. Callers that need to
+// know *before* attempting playback whether audio is really unlockable right
+// now (e.g. deciding whether to gate narration behind a "Tap to Begin"
+// prompt) should use this instead of the fire-and-forget unlockAudio().
+export async function ensureAudioUnlocked() {
+  if (audioUnlocked && ctxIsRunning()) return true;
+  const ctx = getCtx();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") {
+    try {
+      await ctx.resume();
+    } catch (e) {
+      console.warn("[Audio] ensureAudioUnlocked: resume() failed:", e);
+    }
+  }
+  if (ctx.state === "running") {
+    audioUnlocked = true;
+    hasUserInteracted = true;
+    notifyUnlockListeners();
+    return true;
+  }
+  return false;
+}
+
 // UI uses this to decide whether to show a "Tap to enable/resume sound" button.
 // Returns true when: music is enabled, but the AudioContext is not running
 // (either never unlocked, or suspended after returning from background).
@@ -427,6 +467,7 @@ export function subscribeUnlock(cb) {
 }
 
 export function setMusicEnabled(enabled) {
+  enabled = toBoolean(enabled);
   musicEnabled = enabled;
 
   if (!enabled) {
@@ -445,6 +486,7 @@ export function setMusicEnabled(enabled) {
 }
 
 export function setSfxEnabled(enabled) {
+  enabled = toBoolean(enabled);
   sfxEnabled = enabled;
 
   if (!enabled) {
@@ -1223,11 +1265,19 @@ export function playMusic(theme) {
 // Re-export so existing imports still work
 export { verbalizeScriptureReference };
 
-export function speakNarration(text, volume, voicePreference) {
-  if (!window.speechSynthesis) return;
+// onStateChange (optional) is called with "start" | "end" | "error" so
+// callers like the Settings "Preview Voice" button can show a Playing
+// indicator without duplicating the SpeechSynthesis setup. Returns the
+// created utterance, or null if narration could not be started (existing
+// callers that ignore the return value are unaffected).
+export function speakNarration(text, volume, voicePreference, onStateChange) {
+  if (!window.speechSynthesis) {
+    onStateChange?.("error", new Error("speechSynthesis unavailable"));
+    return null;
+  }
   stopNarration();
   const vol = volume !== undefined ? volume : narrationVol;
-  if (vol <= 0) return;
+  if (vol <= 0) return null;
 
   // Lower background music while the narrator speaks
   duckMusic();
@@ -1244,13 +1294,21 @@ export function speakNarration(text, volume, voicePreference) {
       utterance.voice = voice;
     }
 
+    utterance.onstart = () => onStateChange?.("start");
     // Restore music volume when narration ends or errors
-    utterance.onend = () => unDuckMusic();
-    utterance.onerror = () => unDuckMusic();
+    utterance.onend = () => { unDuckMusic(); onStateChange?.("end"); };
+    utterance.onerror = (e) => {
+      console.warn("[Audio] speakNarration playback error:", e.error || e);
+      unDuckMusic();
+      onStateChange?.("error", e);
+    };
     window.speechSynthesis.speak(utterance);
+    return utterance;
   } catch (e) {
     console.warn("[Audio] speakNarration error:", e);
     unDuckMusic();
+    onStateChange?.("error", e);
+    return null;
   }
 }
 

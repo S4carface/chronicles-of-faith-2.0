@@ -13,6 +13,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
 import NewSeasonAnnouncement from "@/components/game/NewSeasonAnnouncement";
+import AudioUnlockButton from "@/components/game/AudioUnlockButton";
 import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
@@ -141,6 +142,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
    <GameProvider>
+  <AudioUnlockButton />
   <UnlockReveal />
   <NewSeasonAnnouncement />
 

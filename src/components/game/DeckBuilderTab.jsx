@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { Swords, Shield, BookOpen, Heart, X } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { validateDeck, DECK_SIZE } from "@/game/deckRules";
@@ -51,10 +52,10 @@ export default function DeckBuilderTab() {
 
       {/* Deck balance */}
       <div className="max-w-2xl mx-auto mb-4 grid grid-cols-4 gap-2">
-        <BalanceCard label="Attack" value={stats.attack} max={4} color="text-red-300" />
-        <BalanceCard label="Defense" value={stats.defense} max={4} color="text-blue-300" />
-        <BalanceCard label="Scripture" value={stats.scripture} color="text-emerald-300" />
-        <BalanceCard label="Healing" value={stats.healing} max={3} color="text-yellow-200" />
+        <BalanceCard icon={Swords} label="Attack" value={stats.attack} max={4} color="text-red-300" />
+        <BalanceCard icon={Shield} label="Defense" value={stats.defense} max={4} color="text-blue-300" />
+        <BalanceCard icon={BookOpen} label="Scripture" value={stats.scripture} color="text-emerald-300" />
+        <BalanceCard icon={Heart} label="Healing" value={stats.healing} max={3} color="text-yellow-200" />
       </div>
 
       {/* Deck cards with remove buttons */}
@@ -79,9 +80,10 @@ export default function DeckBuilderTab() {
                 </RarityCardFrame>
                 <button
                   onClick={() => { Sound.sfx.click(); removeFromActiveDeck(idx); }}
-                  className="mt-1 text-[10px] text-red-300/70 hover:text-red-200 border border-red-400/20 hover:border-red-400/40 px-2 py-0.5 rounded transition"
+                  aria-label={`Remove ${card.name} from deck`}
+                  className="mt-1 flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-red-400/20 px-2 text-[11px] text-red-300/70 transition hover:border-red-400/40 hover:text-red-200"
                 >
-                  ✕ Remove
+                  <X className="h-3 w-3" /> Remove
                 </button>
               </div>
             );
@@ -92,9 +94,10 @@ export default function DeckBuilderTab() {
   );
 }
 
-function BalanceCard({ label, value, max, color }) {
+function BalanceCard({ icon: Icon, label, value, max, color }) {
   return (
     <div className="text-center p-2 rounded-lg border border-amber-500/10 bg-slate-900/30">
+      <Icon className={`mx-auto mb-1 h-4 w-4 ${color}`} />
       <p className={`text-lg font-bold ${color}`}>{value}{max ? `/${max}` : ""}</p>
       <p className="text-amber-100/40 text-[9px] uppercase tracking-wide">{label}</p>
     </div>

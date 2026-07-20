@@ -116,19 +116,19 @@ export default function CollectionTab() {
                 <span className="text-amber-100/50">In deck: <span className={`font-bold ${inDeck >= maxCopies ? "text-amber-300" : "text-amber-200"}`}>{inDeck}</span>/{maxCopies}</span>
               </div>
 
-              {/* Add / Remove buttons — large enough for mobile */}
+              {/* Add / Remove buttons — 44px minimum tap target for mobile */}
               <div className="flex gap-1.5 w-full">
                 <button
                   onClick={() => handleRemove(card.id)}
                   disabled={inDeck === 0}
-                  className="flex-1 min-h-[36px] text-sm font-bold py-1.5 px-2 rounded-lg border border-red-400/30 bg-red-900/20 text-red-200 hover:bg-red-800/30 transition active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
+                  className="flex-1 min-h-11 text-base font-bold py-1.5 px-2 rounded-lg border border-red-400/30 bg-red-900/20 text-red-200 hover:bg-red-800/30 transition active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed"
                   aria-label={`Remove ${card.name} from deck`}
                 >
                   −
                 </button>
                 <button
                   onClick={() => handleAdd(card.id)}
-                  className="flex-1 min-h-[36px] text-sm font-bold py-1.5 px-2 rounded-lg border border-amber-400/50 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 transition active:scale-95"
+                  className="flex-1 min-h-11 text-base font-bold py-1.5 px-2 rounded-lg border border-amber-400/50 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40 transition active:scale-95"
                   aria-label={`Add ${card.name} to deck`}
                 >
                   +

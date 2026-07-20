@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Copy, BookOpen, Church, Sun, CircleUser } from "lucide-react";
+import { Copy, BookOpen, Home as HomeIcon, Sun, CircleUser } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
@@ -18,7 +18,7 @@ const ITEMS = [
   {
     label: "Home",
     path: "/",
-    icon: Church,
+    icon: HomeIcon,
     primary: true,
   },
   {
@@ -89,28 +89,28 @@ export default function BottomNavigation() {
                   <>
                     <span
                       className={`flex items-center justify-center rounded-full transition-all duration-200 ${
-                        item.primary ? "-mt-3 h-11 w-11" : "h-9 w-9"
+                        item.primary ? "h-10 w-10" : "h-9 w-9"
                       } ${
                         isActive
-                          ? "bg-amber-400/15 ring-1 ring-amber-300/50 shadow-[0_0_14px_rgba(201,168,76,0.35)]"
+                          ? "bg-amber-400/15 ring-1 ring-amber-300/50 shadow-[0_0_12px_rgba(201,168,76,0.28)]"
                           : "ring-1 ring-transparent"
                       }`}
                     >
                       <Icon
-                        className={`${item.primary ? "h-[22px] w-[22px]" : "h-5 w-5"} transition-colors ${
+                        className={`${item.primary ? "h-[21px] w-[21px]" : "h-5 w-5"} transition-colors ${
                           isActive
                             ? "text-amber-200"
-                            : "text-amber-100/45 group-hover:text-amber-100/70"
+                            : "text-amber-100/60 group-hover:text-amber-100/80"
                         }`}
                         strokeWidth={2}
                       />
                     </span>
 
                     <span
-                      className={`text-[9px] font-medium tracking-wide transition-colors ${
+                      className={`text-[10px] font-medium tracking-wide transition-colors ${
                         isActive
                           ? "text-amber-200"
-                          : "text-amber-100/40 group-hover:text-amber-100/60"
+                          : "text-amber-100/55 group-hover:text-amber-100/70"
                       }`}
                     >
                       {item.label}

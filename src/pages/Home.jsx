@@ -7,6 +7,7 @@ import ResumeModal from "@/components/game/ResumeModal";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
 import FixedViewportPage from "@/components/FixedViewportPage";
+import StickyActionDock from "@/components/StickyActionDock";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
@@ -215,7 +216,7 @@ const handleNameSaved = (name) => {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:pb-16"
+      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-16"
     >
       {/* Floating particles */}
       {Array.from({ length: 8 }).map((_, i) => (
@@ -322,21 +323,6 @@ const handleNameSaved = (name) => {
         </div>
       )}
 
-      {/* Play button — primary CTA */}
-      <button
-        onClick={handleBeginRun}
-        className="relative w-full max-w-md lg:max-w-[600px] mb-3 px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
-        style={{
-          fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
-          background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
-        }}
-      >
-        <span className="flex items-center justify-center gap-2">
-          <Swords className="w-5 h-5" />
-          Start Journey
-        </span>
-            </button>
-
       {/* Daily Prayer — compact status strip once completed, full invite otherwise */}
       {devotionPrayedToday ? (
         <Link
@@ -441,6 +427,26 @@ const handleNameSaved = (name) => {
 <p className="relative text-amber-100/40 text-[10px] mt-3 font-serif italic text-center max-w-md">
   "In the beginning, God created the heavens and the earth." — Genesis 1:1
 </p>
+
+      {/* Flexible filler — keeps the sticky action pinned to the bottom of the
+          viewport even when the content above doesn't fill it */}
+      <div className="flex-1" aria-hidden="true" />
+
+      <StickyActionDock className="mx-auto w-full max-w-md lg:max-w-[600px]">
+        <button
+          onClick={handleBeginRun}
+          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+          style={{
+            fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
+            background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
+          }}
+        >
+          <span className="flex items-center justify-center gap-2">
+            <Swords className="w-5 h-5" />
+            Start Journey
+          </span>
+        </button>
+      </StickyActionDock>
 
       {showNamePrompt && (
         <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />

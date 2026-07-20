@@ -92,7 +92,7 @@ export default function BottomNavigation() {
                     <span
                       className={`relative flex items-center justify-center transition-transform duration-200 motion-reduce:transition-none ${
                         item.primary ? "h-10 w-10" : "h-9 w-9"
-                      } ${isActive ? "-translate-y-0.5" : "translate-y-0"}`}
+                      } ${isActive ? "-translate-y-1" : "translate-y-0"}`}
                     >
                       {/* Medallion halo — sits behind the icon so it can expand without resizing the glyph */}
                       <span

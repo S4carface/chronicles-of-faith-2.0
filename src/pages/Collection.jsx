@@ -43,24 +43,28 @@ export default function Collection() {
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex justify-center gap-2 mb-6">
+      {/* Segmented control — one shared track instead of two separately-bordered pills */}
+      <div className="mx-auto mb-6 flex max-w-xs rounded-xl border border-amber-500/15 bg-slate-900/30 p-1" role="tablist">
         <button
+          role="tab"
+          aria-selected={tab === "collection"}
           onClick={() => { setTab("collection"); Sound.sfx.click(); }}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition ${
+          className={`min-h-11 flex-1 rounded-lg text-sm font-medium transition ${
             tab === "collection"
-              ? "bg-amber-500/20 border border-amber-400/50 text-amber-200"
-              : "border border-amber-500/10 text-amber-100/60 hover:text-amber-100/70"
+              ? "bg-amber-500/20 text-amber-200 shadow-sm"
+              : "text-amber-100/60 hover:text-amber-100/80"
           }`}
         >
           Collection
         </button>
         <button
+          role="tab"
+          aria-selected={tab === "deck"}
           onClick={() => { setTab("deck"); Sound.sfx.click(); }}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition ${
+          className={`min-h-11 flex-1 rounded-lg text-sm font-medium transition ${
             tab === "deck"
-              ? "bg-amber-500/20 border border-amber-400/50 text-amber-200"
-              : "border border-amber-500/10 text-amber-100/60 hover:text-amber-100/70"
+              ? "bg-amber-500/20 text-amber-200 shadow-sm"
+              : "text-amber-100/60 hover:text-amber-100/80"
           }`}
         >
           Active Deck

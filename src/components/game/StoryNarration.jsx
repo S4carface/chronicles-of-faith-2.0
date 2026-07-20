@@ -137,36 +137,39 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
             </div>
           )}
 
-          {/* Three choices: Read Full Passage, Listen, Continue */}
-          <div className="flex flex-col gap-3 max-w-sm mx-auto">
+          {/* Secondary row: Read Full Passage (outline) + Listen (compact icon control) */}
+          <div className="flex max-w-sm mx-auto gap-2">
             <button
               onClick={handleReadFull}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 border-amber-400/50 bg-amber-600/15 text-amber-100 font-serif text-base hover:bg-amber-600/30 transition"
+              className="flex flex-1 items-center justify-center gap-1.5 min-h-11 px-4 py-2.5 rounded-lg border border-amber-400/30 bg-slate-800/40 text-amber-100/80 font-serif text-sm hover:bg-slate-800/60 transition"
             >
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="w-3.5 h-3.5" />
               Read Full Passage
             </button>
             {narrationOn && (
               <button
                 onClick={handleListen}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg border-2 transition ${
+                aria-label={isListening ? "Listening" : "Listen to passage"}
+                className={`flex flex-shrink-0 items-center justify-center gap-1.5 min-h-11 px-4 py-2.5 rounded-lg border transition ${
                   isListening
                     ? "border-sky-400/60 bg-sky-900/30 text-sky-100"
-                    : "border-sky-400/40 bg-sky-900/15 text-sky-200 hover:bg-sky-800/30"
-                } font-serif text-base`}
+                    : "border-sky-400/25 bg-slate-800/40 text-sky-200/80 hover:bg-sky-900/20"
+                } font-serif text-sm`}
               >
-                <Headphones className="w-4 h-4" />
+                <Headphones className="w-3.5 h-3.5" />
                 {isListening ? "Listening..." : "Listen"}
               </button>
             )}
-            <button
-              onClick={handleContinue}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-amber-400/20 bg-slate-800/40 text-amber-100/60 font-serif text-base hover:bg-slate-800/60 transition"
-            >
-              Continue
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
+
+          {/* Primary action — Continue clearly represents progression */}
+          <button
+            onClick={handleContinue}
+            className="flex items-center justify-center gap-2 max-w-sm mx-auto mt-3 w-full px-8 py-3.5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-lg hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+          >
+            Continue
+            <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
       )}
 

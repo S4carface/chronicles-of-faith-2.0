@@ -15,9 +15,7 @@ const VERSE_3 =
   "And God said, “Let there be light,” and there was light.";
 const REFERENCE = "Genesis 1:1-3";
 
-const INTRO_AUDIO = "/audio/cid_intro-2.0.m4a";
 const INTRO_VIDEO = "/video/genesis_intro.mp4";
-const INTRO_MUSIC = "/audio/genesis_intro_music_15s.mp3";
 export const VERSE_1_START_MS = 480;
 export const VERSE_3_START_MS = 3500;
 export const NARRATION_END_MS = 13632;
@@ -31,7 +29,6 @@ export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();
 
   const [step, setStep] = useState(0);
-  const [videoReady, setVideoReady] = useState(false);
   const [cinematicStarted, setCinematicStarted] = useState(false);
   const [needsTap, setNeedsTap] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
@@ -44,7 +41,6 @@ export default function CinematicIntro({ onComplete }) {
 
   const videoRef = useRef(null);
   const audioRef = useRef(null);
-  const musicTrackRef = useRef(null);
   const timersRef = useRef([]);
   const cinematicStartedRef = useRef(false);
   const isTransitioningRef = useRef(false);
@@ -74,11 +70,12 @@ export default function CinematicIntro({ onComplete }) {
   setIsTransitioning(true);
   setBookCardStage(1);
 
-  Sound.stopCinematicTracks(1.2);
-
-  audioRef.current?.pause();
+  // Narration has just ended (or the fallback timing elapsed) — fade the
+  // intro music out as we move to the title card. stopGenesisIntro() stops
+  // both the music and the recorded narration together; it's the only
+  // place either gets stopped outside of skip/unmount.
+  Sound.stopGenesisIntro({ fadeDuration: 1.2 });
   audioRef.current = null;
-  musicTrackRef.current = null;
 
   const chapterTimer = window.setTimeout(() => {
     setBookCardStage(2);
@@ -87,7 +84,6 @@ export default function CinematicIntro({ onComplete }) {
   const finishTimer = window.setTimeout(() => {
     if (completedRef.current) return;
     completedRef.current = true;
-    Sound.stopNarration();
     onComplete();
   }, TITLE_CARD_HOLD_MS);
 
@@ -117,15 +113,14 @@ export default function CinematicIntro({ onComplete }) {
     if (cinematicStartedRef.current) return;
     const lifecycleId = lifecycleRef.current;
 
-    const video = videoRef.current;
-
     // Mobile browsers (iOS Safari in particular) block a non-muted Audio
-    // element's play() unless it's adjacent to a real user gesture. Rather
-    // than attempting narration blind and discovering the rejection after
-    // the fact, confirm the AudioContext can actually resume before
-    // proceeding on the automatic (non-tap) path. If it can't, show the
-    // existing "Tap to Begin" prompt so the eventual play() call happens
-    // inside a genuine tap instead of silently failing.
+    // element's play() unless it's adjacent to a real user gesture. The
+    // Start Journey / Replay Intro tap already called Sound.startGenesisIntro()
+    // (see GameContext.triggerIntroReplay), which issued the resume() and
+    // began the intro music — this just confirms it actually succeeded
+    // before revealing scripture/attempting narration. If it didn't, show
+    // the existing "Tap to Begin" prompt so the eventual play() call
+    // happens inside a genuine tap instead of failing silently.
     if (!userInitiated) {
       const unlocked = await Sound.ensureAudioUnlocked();
       if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
@@ -137,47 +132,34 @@ export default function CinematicIntro({ onComplete }) {
       await Sound.ensureAudioUnlocked();
     }
 
-    if (!video) {
-      setNeedsTap(true);
-      return;
-    }
-
     cinematicStartedRef.current = true;
     setCinematicStarted(true);
     setNeedsTap(false);
 
-    // Video is a visual layer only, attempted independently below — a slow
+    // Video is a visual layer only, attempted independently — a slow
     // network or failed decode must never delay or block narration/music,
-    // which are the parts scripture playback actually depends on.
-    (async () => {
-      if (videoFailed) return;
-      try {
-        await waitForVideo(video);
-        await video.play();
-      } catch (error) {
+    // which are the parts scripture playback actually depends on. Intro
+    // music itself is NOT started here — it was already requested from the
+    // Start Journey tap (Sound.startGenesisIntro()), so it's audible during
+    // "Preparing Your Journey" instead of waiting on this component to mount.
+    const video = videoRef.current;
+    if (video) {
+      (async () => {
+        if (videoFailed) return;
         try {
-          video.load();
           await waitForVideo(video);
           await video.play();
-        } catch (retryError) {
-          console.warn("[Genesis Intro] Video could not be played; using its poster.", retryError);
-          if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+        } catch (error) {
+          try {
+            video.load();
+            await waitForVideo(video);
+            await video.play();
+          } catch (retryError) {
+            console.warn("[Genesis Intro] Video could not be played; using its poster.", retryError);
+            if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+          }
         }
-      }
-    })();
-
-    Sound.pauseMusicForAmbience();
-
-    musicTrackRef.current = await Sound.playCinematicTrack(
-      INTRO_MUSIC,
-      {
-        volume: 0.12,
-        loop: false,
-      }
-    );
-
-    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
-      return;
+      })();
     }
 
     const activateScripture = (nextStep, currentTime) => {
@@ -220,52 +202,34 @@ export default function CinematicIntro({ onComplete }) {
       );
     };
 
+    // Scripture text becomes visible now (cinematicStarted, set above) — the
+    // real recorded narration (/audio/cid_intro-2.0.m4a) starts in the same
+    // breath, on its own HTMLAudioElement, never touching the music's Web
+    // Audio buffer source. See playGenesisIntroNarration in soundManager.js.
     if (narrationOn) {
-      const audio = new Audio(INTRO_AUDIO);
-      audio.preload = "auto";
-      audio.volume = Math.min(
-        1,
-        ((profile.settings.narrationVolume ?? 70) / 100) * 1.4
-      );
-      audioRef.current = audio;
-
-      const stopTracking = () => {
-        if (scriptureFrameRef.current) {
-          window.cancelAnimationFrame(scriptureFrameRef.current);
-          scriptureFrameRef.current = null;
-        }
-      };
-      audio.addEventListener("playing", () => {
-        console.info(
-          `[Genesis Intro] audio playing at currentTime=${audio.currentTime.toFixed(3)}s; fallback timing active: false`
-        );
-        stopTracking();
-        scriptureFrameRef.current = window.requestAnimationFrame(updateScriptureFromAudio);
+      const audio = Sound.playGenesisIntroNarration({
+        onEvent: (event) => {
+          if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
+          if (event === "playing") {
+            if (scriptureFrameRef.current) {
+              window.cancelAnimationFrame(scriptureFrameRef.current);
+            }
+            scriptureFrameRef.current = window.requestAnimationFrame(updateScriptureFromAudio);
+          } else if (event === "ended") {
+            handleBegin();
+          } else if (event === "error" || event === "skipped") {
+            startFallbackTiming();
+          }
+        },
       });
-      audio.addEventListener("pause", stopTracking);
-      audio.addEventListener("waiting", stopTracking);
-      audio.addEventListener("stalled", stopTracking);
-      audio.addEventListener("ended", handleBegin, { once: true });
-      audio.addEventListener("error", startFallbackTiming, { once: true });
-
-      try {
-        await audio.play();
-      } catch (error) {
-        console.warn("[Genesis Intro] Narration playback failed; using fallback timing.", error);
-        startFallbackTiming();
-      }
+      audioRef.current = audio;
+      if (!audio) startFallbackTiming();
     } else {
       startFallbackTiming();
     }
 
     if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
-  }, [
-    handleBegin,
-    narrationOn,
-    profile.settings.narrationVolume,
-    videoFailed,
-    waitForVideo,
-  ]);
+  }, [handleBegin, narrationOn, videoFailed, waitForVideo]);
 
   useEffect(() => {
     const lifecycleId = ++lifecycleRef.current;
@@ -299,21 +263,23 @@ export default function CinematicIntro({ onComplete }) {
       clearTimers();
 
       videoRef.current?.pause();
-      audioRef.current?.pause();
+      // A genuine unmount (intro finished, skipped, or the player navigated
+      // away) — not an ordinary re-render, since this effect's only
+      // dependency (clearTimers) is a stable useCallback([]) reference and
+      // therefore only runs its setup/cleanup on true mount/unmount.
+      Sound.stopGenesisIntro({ fadeDuration: 0 });
       audioRef.current = null;
-
-      Sound.stopCinematicTracks(0);
-      Sound.stopNarration();
-
-      musicTrackRef.current = null;
     };
   }, [clearTimers]);
 
+  // Reveal scripture and begin narration as soon as the AudioContext unlock
+  // (already requested from the Start Journey/Replay tap) is confirmed —
+  // not gated on video readiness, so a slow video download never delays
+  // music or narration. See startCinematic() above.
   useEffect(() => {
-    if (videoReady && !cinematicStartedRef.current) {
-      startCinematic(false);
-    }
-  }, [videoReady, startCinematic]);
+    startCinematic(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSkip = useCallback(() => {
     if (completedRef.current) return;
@@ -321,14 +287,9 @@ export default function CinematicIntro({ onComplete }) {
     clearTimers();
 
     videoRef.current?.pause();
-    audioRef.current?.pause();
+    Sound.stopGenesisIntro({ fadeDuration: 0 });
     audioRef.current = null;
-
-    Sound.stopCinematicTracks(0);
-    Sound.stopNarration();
     Sound.resumeMusicAfterAmbience("battle");
-
-    musicTrackRef.current = null;
 
     onComplete();
   }, [clearTimers, onComplete]);
@@ -428,12 +389,6 @@ return (
         playsInline
         preload="auto"
         poster={PORTRAIT_POSTER}
-        onCanPlay={() => setVideoReady(true)}
-        onLoadedMetadata={() => {
-          if (videoRef.current?.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-            setVideoReady(true);
-          }
-        }}
         onPlaying={() => setVideoPlaying(true)}
         onError={() => {
           if (!cinematicStartedRef.current) setNeedsTap(true);

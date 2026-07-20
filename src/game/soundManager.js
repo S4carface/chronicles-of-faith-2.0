@@ -71,6 +71,19 @@ let audioUnlocked = false;
 let hasUserInteracted = false; // true once the player has ever unlocked audio via a gesture
 let unlockListeners = new Set();
 
+// Whether the "Tap to Begin" opening gate has already been dismissed during
+// this page load. Deliberately module-scope (not sessionStorage): a true
+// page reload re-evaluates every module, so this naturally resets exactly
+// when the browser gives the app a fresh (suspended) AudioContext, while
+// ordinary in-app navigation (no reload) never touches it.
+let openingGateDismissed = false;
+export function isOpeningGateDismissed() {
+  return openingGateDismissed;
+}
+export function dismissOpeningGate() {
+  openingGateDismissed = true;
+}
+
 let heroAmbienceSource = null;
 let heroAmbienceGain = null;
 let heroAmbienceBuffers = new Map();
@@ -861,8 +874,86 @@ function genesisIntroDevLog(...args) {
   if (import.meta.env?.DEV) console.info("[Genesis Intro Audio]", ...args);
 }
 
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
 export function isGenesisIntroMusicActive() {
   return !!genesisIntroMusicHandle;
+}
+
+// Whether the intro music has already been fetched + decoded into a reusable
+// Web Audio buffer — true once preloadGenesisIntroAssets() (or a prior
+// playCinematicTrack() call for this URL) has completed. Used by tests and
+// dev diagnostics to confirm the tap-to-audible path skips the network/decode
+// step rather than paying for it after the gesture.
+export function isGenesisIntroMusicBufferReady() {
+  return cinematicBuffers.has(GENESIS_INTRO_MUSIC_URL);
+}
+
+// Creates (if needed) and starts loading the recorded narration element.
+// Safe to call long before any user gesture — HTMLMediaElement.load() does
+// not require unlocked audio, only .play() does. Shared by the early
+// app-init preload and the tap handler so neither duplicates the element.
+function ensureNarrationAudioElement() {
+  if (genesisNarrationAudio) return genesisNarrationAudio;
+  const audio = new Audio(GENESIS_INTRO_NARRATION_URL);
+  audio.preload = "auto";
+  audio.addEventListener("error", () => {
+    console.error(
+      "[Genesis Intro Audio] Narration asset failed to load",
+      GENESIS_INTRO_NARRATION_URL,
+      audio.error
+    );
+  });
+  audio.load();
+  genesisNarrationAudio = audio;
+  return audio;
+}
+
+let genesisIntroPreloadPromise = null;
+
+/**
+ * Pre-decodes the Genesis intro music into a reusable Web Audio buffer and
+ * pre-loads the narration element, ahead of any tap. Decoding does not
+ * require an unlocked/running AudioContext — only starting playback does —
+ * so this is safe to call as soon as the app initializes.
+ *
+ * This is what keeps tap-to-audible latency low: without it, the first
+ * playCinematicTrack() call for the intro music would have to fetch + decode
+ * the mp3 from scratch *after* the tap, which is the dominant source of the
+ * "cinematic already visible, music still silent" gap this preload closes.
+ */
+export function preloadGenesisIntroAssets() {
+  if (genesisIntroPreloadPromise) return genesisIntroPreloadPromise;
+  const startedAt = nowMs();
+  genesisIntroDevLog("Preloading Genesis intro assets ahead of first tap", { startedAt });
+
+  ensureNarrationAudioElement();
+
+  const ctx = getCtx();
+  genesisIntroPreloadPromise = !ctx
+    ? Promise.resolve()
+    : fetch(GENESIS_INTRO_MUSIC_URL)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Failed to load intro music: ${response.status}`);
+          }
+          return response.arrayBuffer();
+        })
+        .then((arrayBuffer) => ctx.decodeAudioData(arrayBuffer))
+        .then((decodedBuffer) => {
+          cinematicBuffers.set(GENESIS_INTRO_MUSIC_URL, decodedBuffer);
+          genesisIntroDevLog("Intro music buffer ready", {
+            url: GENESIS_INTRO_MUSIC_URL,
+            elapsedMs: (nowMs() - startedAt).toFixed(1),
+          });
+        })
+        .catch((error) => {
+          genesisIntroDevLog("Intro music pre-decode failed — will fetch on tap instead", error);
+        });
+
+  return genesisIntroPreloadPromise;
 }
 
 /**
@@ -875,7 +966,7 @@ export function isGenesisIntroMusicActive() {
  */
 export async function startGenesisIntro() {
   const requestId = ++genesisIntroRequestId;
-  const tapAt = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const tapAt = nowMs();
   const ctxStateBefore = audioCtx?.state ?? "(not created yet)";
 
   genesisIntroDevLog("Start Journey tap — requesting Genesis intro audio", {
@@ -890,7 +981,7 @@ export async function startGenesisIntro() {
     unlocked,
     stateBefore: ctxStateBefore,
     stateAfter: audioCtx?.state,
-    elapsedMs: (( typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+    elapsedMs: (nowMs() - tapAt).toFixed(1),
   });
 
   if (requestId !== genesisIntroRequestId) return; // superseded by a newer call
@@ -901,19 +992,7 @@ export async function startGenesisIntro() {
 
   // Preload the recorded narration immediately so it's ready by the time the
   // first scripture line appears. Never shares an Audio object with music.
-  if (!genesisNarrationAudio) {
-    const audio = new Audio(GENESIS_INTRO_NARRATION_URL);
-    audio.preload = "auto";
-    audio.addEventListener("error", () => {
-      console.error(
-        "[Genesis Intro Audio] Narration asset failed to load",
-        GENESIS_INTRO_NARRATION_URL,
-        audio.error
-      );
-    });
-    audio.load();
-    genesisNarrationAudio = audio;
-  }
+  ensureNarrationAudioElement();
 
   if (!musicEnabled) {
     genesisIntroDevLog("Music disabled in settings — narration will still preload/play on its own.");
@@ -924,7 +1003,8 @@ export async function startGenesisIntro() {
 
   genesisIntroDevLog("Requesting intro music", {
     url: GENESIS_INTRO_MUSIC_URL,
-    sinceTapMs: ((typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+    sinceTapMs: (nowMs() - tapAt).toFixed(1),
+    bufferAlreadyDecoded: cinematicBuffers.has(GENESIS_INTRO_MUSIC_URL),
   });
 
   const handle = await playCinematicTrack(GENESIS_INTRO_MUSIC_URL, {
@@ -942,7 +1022,7 @@ export async function startGenesisIntro() {
   genesisIntroMusicHandle = handle;
   genesisIntroDevLog("Intro music playback started", {
     started: !!handle,
-    sinceTapMs: ((typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+    sinceTapMs: (nowMs() - tapAt).toFixed(1),
     effectiveVolume: GENESIS_INTRO_MUSIC_VOLUME,
   });
 }
@@ -1037,7 +1117,8 @@ export function playGenesisIntroNarration({ onEvent } = {}) {
  * Stops both the intro music and the recorded narration cleanly. Called on
  * intro completion, skip, or unmount — never from an ordinary re-render.
  */
-export function stopGenesisIntro({ fadeDuration = 0.4 } = {}) {
+export function stopGenesisIntro({ fadeDuration = 0.4, reason = "unspecified" } = {}) {
+  genesisIntroDevLog("stopGenesisIntro", { reason, fadeDuration });
   genesisIntroRequestId += 1; // invalidate any in-flight startGenesisIntro()/narration
   genesisNarrationDucked = false;
   genesisIntroMusicHandle = null;

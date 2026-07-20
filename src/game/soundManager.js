@@ -837,6 +837,218 @@ export function stopCinematicTracks(fadeDuration = 0.4) {
   cinematicGains = [];
 }
 
+// === Genesis intro sequence ===
+// Centralizes the intro music + recorded narration so BOTH the Start
+// Journey/Replay Intro tap handler (GameContext.triggerIntroReplay) and the
+// CinematicIntro component operate on the same instances, instead of each
+// independently starting their own. This is what makes music start from the
+// tap (not a later Genesis-screen effect gated on video readiness) while
+// still letting CinematicIntro track playback position for its scripture
+// timeline. Narration plays on a separate HTMLAudioElement from the music's
+// Web Audio buffer source — starting one never touches, stops, or restarts
+// the other.
+const GENESIS_INTRO_MUSIC_URL = "/audio/genesis_intro_music_15s.mp3";
+const GENESIS_INTRO_NARRATION_URL = "/audio/cid_intro-2.0.m4a";
+const GENESIS_INTRO_MUSIC_VOLUME = 0.12;
+const GENESIS_INTRO_DUCK_RATIO = 0.3; // ~30% of configured volume while narration plays
+
+let genesisIntroRequestId = 0;
+let genesisIntroMusicHandle = null; // { source, gain, context, startedAt, duration }
+let genesisNarrationAudio = null;
+let genesisNarrationDucked = false;
+
+function genesisIntroDevLog(...args) {
+  if (import.meta.env?.DEV) console.info("[Genesis Intro Audio]", ...args);
+}
+
+export function isGenesisIntroMusicActive() {
+  return !!genesisIntroMusicHandle;
+}
+
+/**
+ * Called directly from the Start Journey / Replay Intro gesture handler
+ * (GameContext.triggerIntroReplay) — not awaited by its caller, but the
+ * AudioContext.resume() call it issues happens synchronously within the
+ * same tap, which is what iOS Safari's autoplay policy actually requires.
+ * Idempotent per intro session via genesisIntroRequestId: a second call
+ * (e.g. a fast double-tap) supersedes rather than duplicates the first.
+ */
+export async function startGenesisIntro() {
+  const requestId = ++genesisIntroRequestId;
+  const tapAt = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const ctxStateBefore = audioCtx?.state ?? "(not created yet)";
+
+  genesisIntroDevLog("Start Journey tap — requesting Genesis intro audio", {
+    requestId,
+    ctxStateBefore,
+    musicEnabled,
+    narrationVol,
+  });
+
+  const unlocked = await ensureAudioUnlocked();
+  genesisIntroDevLog("AudioContext resume result", {
+    unlocked,
+    stateBefore: ctxStateBefore,
+    stateAfter: audioCtx?.state,
+    elapsedMs: (( typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+  });
+
+  if (requestId !== genesisIntroRequestId) return; // superseded by a newer call
+  if (!unlocked) {
+    genesisIntroDevLog("Could not unlock from this gesture — CinematicIntro's Tap to Begin will retry.");
+    return;
+  }
+
+  // Preload the recorded narration immediately so it's ready by the time the
+  // first scripture line appears. Never shares an Audio object with music.
+  if (!genesisNarrationAudio) {
+    const audio = new Audio(GENESIS_INTRO_NARRATION_URL);
+    audio.preload = "auto";
+    audio.addEventListener("error", () => {
+      console.error(
+        "[Genesis Intro Audio] Narration asset failed to load",
+        GENESIS_INTRO_NARRATION_URL,
+        audio.error
+      );
+    });
+    audio.load();
+    genesisNarrationAudio = audio;
+  }
+
+  if (!musicEnabled) {
+    genesisIntroDevLog("Music disabled in settings — narration will still preload/play on its own.");
+    return;
+  }
+
+  pauseMusicForAmbience(); // stop the normal ambient loop underneath, if any
+
+  genesisIntroDevLog("Requesting intro music", {
+    url: GENESIS_INTRO_MUSIC_URL,
+    sinceTapMs: ((typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+  });
+
+  const handle = await playCinematicTrack(GENESIS_INTRO_MUSIC_URL, {
+    volume: GENESIS_INTRO_MUSIC_VOLUME,
+    loop: false,
+  });
+
+  if (requestId !== genesisIntroRequestId) {
+    if (handle) {
+      try { handle.source.stop(); } catch (error) {}
+    }
+    return;
+  }
+
+  genesisIntroMusicHandle = handle;
+  genesisIntroDevLog("Intro music playback started", {
+    started: !!handle,
+    sinceTapMs: ((typeof performance !== "undefined" ? performance.now() : Date.now()) - tapAt).toFixed(1),
+    effectiveVolume: GENESIS_INTRO_MUSIC_VOLUME,
+  });
+}
+
+function duckGenesisIntroMusic() {
+  if (!genesisIntroMusicHandle || genesisNarrationDucked) return;
+  genesisNarrationDucked = true;
+  const { gain, context } = genesisIntroMusicHandle;
+  try {
+    gain.gain.cancelScheduledValues(context.currentTime);
+    gain.gain.setValueAtTime(gain.gain.value, context.currentTime);
+    gain.gain.linearRampToValueAtTime(
+      GENESIS_INTRO_MUSIC_VOLUME * GENESIS_INTRO_DUCK_RATIO,
+      context.currentTime + 0.3
+    );
+  } catch (error) {}
+}
+
+function unduckGenesisIntroMusic() {
+  if (!genesisIntroMusicHandle || !genesisNarrationDucked) return;
+  genesisNarrationDucked = false;
+  const { gain, context } = genesisIntroMusicHandle;
+  try {
+    gain.gain.cancelScheduledValues(context.currentTime);
+    gain.gain.setValueAtTime(gain.gain.value, context.currentTime);
+    gain.gain.linearRampToValueAtTime(GENESIS_INTRO_MUSIC_VOLUME, context.currentTime + 0.6);
+  } catch (error) {}
+}
+
+/**
+ * Play the real recorded narration (/audio/cid_intro-2.0.m4a) — never
+ * text-to-speech, never the Settings preview voice. Reuses the element
+ * preloaded by startGenesisIntro() when available. Ducks the intro music
+ * (not the main theme) while speaking and restores it on end/error/stop.
+ * Returns the Audio element so CinematicIntro can track .currentTime for
+ * its own scripture-reveal timeline (VERSE_1_START_MS / VERSE_3_START_MS) —
+ * the actual sync mechanism is unchanged, only who owns the element moved.
+ */
+export function playGenesisIntroNarration({ onEvent } = {}) {
+  if (!narrationVol || narrationVol <= 0) {
+    genesisIntroDevLog("Narration volume is 0 — not playing recorded narration.");
+    onEvent?.("skipped");
+    return null;
+  }
+
+  const audio = genesisNarrationAudio || new Audio(GENESIS_INTRO_NARRATION_URL);
+  genesisNarrationAudio = audio;
+  // Matches the recorded narration's historical loudness boost (it was
+  // mixed quieter than a typical voiceover) — narrationVol is already the
+  // 0-1 normalized setting, so this mirrors the previous
+  // (narrationVolume/100) * 1.4 calculation exactly.
+  audio.volume = Math.max(0, Math.min(1, narrationVol * 1.4));
+  try {
+    audio.currentTime = 0;
+  } catch (error) {}
+
+  duckGenesisIntroMusic();
+
+  const cleanup = () => unduckGenesisIntroMusic();
+
+  audio.addEventListener("ended", () => { onEvent?.("ended"); cleanup(); }, { once: true });
+  audio.addEventListener(
+    "error",
+    () => {
+      console.error("[Genesis Intro Audio] Narration playback error", {
+        src: GENESIS_INTRO_NARRATION_URL,
+        error: audio.error,
+      });
+      onEvent?.("error", audio.error);
+      cleanup();
+    },
+    { once: true }
+  );
+  audio.addEventListener("playing", () => {
+    genesisIntroDevLog("Narration playing", { currentTime: audio.currentTime, volume: audio.volume });
+    onEvent?.("playing");
+  });
+
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise.catch((error) => {
+      console.error("[Genesis Intro Audio] Narration play() rejected", error);
+      onEvent?.("error", error);
+      cleanup();
+    });
+  }
+
+  return audio;
+}
+
+/**
+ * Stops both the intro music and the recorded narration cleanly. Called on
+ * intro completion, skip, or unmount — never from an ordinary re-render.
+ */
+export function stopGenesisIntro({ fadeDuration = 0.4 } = {}) {
+  genesisIntroRequestId += 1; // invalidate any in-flight startGenesisIntro()/narration
+  genesisNarrationDucked = false;
+  genesisIntroMusicHandle = null;
+  stopCinematicTracks(fadeDuration);
+
+  if (genesisNarrationAudio) {
+    try { genesisNarrationAudio.pause(); } catch (error) {}
+    genesisNarrationAudio = null;
+  }
+}
+
 // === SOUND EFFECTS ===
 // Card type-specific sound families + enemy action sounds.
 // Every sfx call attempts to unlock audio (these are triggered by user gestures).

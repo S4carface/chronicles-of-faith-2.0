@@ -264,6 +264,13 @@ const recordEnemyDefeat = useCallback((enemyId) => {
   }, []);
 
   const triggerIntroReplay = useCallback((purpose = "replay") => {
+    // Fire-and-forget: this issues AudioContext.resume() synchronously within
+    // the same tap that called triggerIntroReplay (Start Journey / Replay
+    // Intro), which is what mobile Safari's autoplay policy requires. The
+    // rest of the chain (music decode/start, narration preload) resolves
+    // asynchronously without blocking this state update. See
+    // startGenesisIntro() in soundManager.js.
+    Sound.startGenesisIntro();
     setIntroPurpose(purpose);
     setShowIntro(true);
   }, []);

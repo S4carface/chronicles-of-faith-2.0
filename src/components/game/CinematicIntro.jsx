@@ -8,6 +8,7 @@ import React, {
 import * as Sound from "@/game/soundManager";
 import { useGame } from "@/game/GameContext";
 import { HOME_ART } from "@/data/art";
+import { waitForMediaReady, isMediaTimeoutError } from "@/lib/waitForMediaReady";
 
 const VERSE_1 =
   "In the beginning, God created the heavens and the earth.";
@@ -20,10 +21,22 @@ export const VERSE_1_START_MS = 480;
 export const VERSE_3_START_MS = 3500;
 export const NARRATION_END_MS = 13632;
 export const TITLE_CARD_HOLD_MS = 3600;
-const VIDEO_RETRY_TIMEOUT_MS = 6000;
+// The intro's music/narration now start from the Start Journey tap itself
+// (see soundManager.startGenesisIntro()), competing for mobile bandwidth
+// with the video's own preload/fetch instead of the video having exclusive
+// priority the way it did before that fix. A generous first-wait budget
+// gives it every realistic chance to reach "canplay" on its own; the
+// second attempt (after an explicit reload) is a genuine last resort for a
+// real network/decode error, not just a still-loading video.
+const VIDEO_READY_TIMEOUT_MS = 12000;
+const VIDEO_RETRY_TIMEOUT_MS = 8000;
 
 const PORTRAIT_POSTER = "/images/intro/intro_poster.PNG";
 const LANDSCAPE_POSTER = "/images/intro/intro-poster-2.0.PNG";
+
+function videoDevLog(...args) {
+  if (import.meta.env?.DEV) console.info("[Genesis Intro Video]", ...args);
+}
 
 export default function CinematicIntro({ onComplete }) {
   const { profile } = useGame();
@@ -90,25 +103,6 @@ export default function CinematicIntro({ onComplete }) {
   timersRef.current.push(chapterTimer, finishTimer);
 }, [onComplete]);
 
-  const waitForVideo = useCallback((video) => {
-    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
-      const timeout = window.setTimeout(() => finish(reject), VIDEO_RETRY_TIMEOUT_MS);
-      const finish = (callback) => {
-        window.clearTimeout(timeout);
-        video.removeEventListener("canplay", onReady);
-        video.removeEventListener("error", onError);
-        callback();
-      };
-      const onReady = () => finish(resolve);
-      const onError = () => finish(reject);
-      video.addEventListener("canplay", onReady, { once: true });
-      video.addEventListener("error", onError, { once: true });
-    });
-  }, []);
-
   const startCinematic = useCallback(async (userInitiated = false) => {
     if (cinematicStartedRef.current) return;
     const lifecycleId = lifecycleRef.current;
@@ -144,22 +138,44 @@ export default function CinematicIntro({ onComplete }) {
     // "Preparing Your Journey" instead of waiting on this component to mount.
     const video = videoRef.current;
     if (video) {
+      videoDevLog("play requested", { src: INTRO_VIDEO, readyState: video.readyState });
       (async () => {
         if (videoFailed) return;
         try {
-          await waitForVideo(video);
+          await waitForMediaReady(video, { timeoutMs: VIDEO_READY_TIMEOUT_MS });
           await video.play();
         } catch (error) {
-          try {
-            video.load();
-            await waitForVideo(video);
-            await video.play();
-          } catch (retryError) {
-            console.warn("[Genesis Intro] Video could not be played; using its poster.", retryError);
-            if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+          // A genuine decode/network error justifies reloading — there's
+          // nothing buffered to lose. A mere timeout does not: calling
+          // video.load() would discard whatever progress it already made
+          // toward becoming playable, making a merely-slow connection's
+          // outcome strictly worse than just waiting a bit longer.
+          if (isMediaTimeoutError(error)) {
+            videoDevLog("did not become ready in time — waiting longer without reloading", error);
+            try {
+              await waitForMediaReady(video, { timeoutMs: VIDEO_RETRY_TIMEOUT_MS });
+              await video.play();
+            } catch (retryError) {
+              console.warn("[Genesis Intro] Video still not ready; using its poster.", retryError);
+              videoDevLog("error", retryError, "— falling back to poster");
+              if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+            }
+          } else {
+            videoDevLog("error — retrying with reload", error);
+            try {
+              video.load();
+              await waitForMediaReady(video, { timeoutMs: VIDEO_RETRY_TIMEOUT_MS });
+              await video.play();
+            } catch (retryError) {
+              console.warn("[Genesis Intro] Video could not be played; using its poster.", retryError);
+              videoDevLog("error", retryError, "— falling back to poster");
+              if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+            }
           }
         }
       })();
+    } else {
+      videoDevLog("play requested but video element ref was not attached");
     }
 
     const activateScripture = (nextStep, currentTime) => {
@@ -229,7 +245,7 @@ export default function CinematicIntro({ onComplete }) {
     }
 
     if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
-  }, [handleBegin, narrationOn, videoFailed, waitForVideo]);
+  }, [handleBegin, narrationOn, videoFailed]);
 
   useEffect(() => {
     const lifecycleId = ++lifecycleRef.current;
@@ -245,6 +261,7 @@ export default function CinematicIntro({ onComplete }) {
     setVideoPlaying(false);
 
     Sound.pauseMusicForAmbience();
+    videoDevLog("video element mounted", { src: INTRO_VIDEO });
 
     const loadingTimeout = window.setTimeout(() => {
       if (!cinematicStartedRef.current) {
@@ -258,6 +275,12 @@ export default function CinematicIntro({ onComplete }) {
       if (lifecycleRef.current === lifecycleId) {
         lifecycleRef.current += 1;
       }
+      const cleanupReason = completedRef.current
+        ? "already completed"
+        : isTransitioningRef.current
+          ? "title card transition"
+          : "unmount (skip or navigate away)";
+      videoDevLog("cleanup", { reason: cleanupReason });
       completedRef.current = true;
       cinematicStartedRef.current = false;
       clearTimers();
@@ -384,13 +407,25 @@ return (
       {/* Genesis video */}
       <video
         ref={videoRef}
+        autoPlay
         muted
         loop
         playsInline
         preload="auto"
         poster={PORTRAIT_POSTER}
-        onPlaying={() => setVideoPlaying(true)}
-        onError={() => {
+        onLoadStart={() => videoDevLog("loadstart")}
+        onLoadedMetadata={() => videoDevLog("loadedmetadata")}
+        onLoadedData={() => videoDevLog("loadeddata")}
+        onCanPlay={() => videoDevLog("canplay")}
+        onPlaying={() => {
+          videoDevLog("playing");
+          setVideoPlaying(true);
+        }}
+        onPause={() => videoDevLog("pause")}
+        onStalled={() => videoDevLog("stalled")}
+        onEnded={() => videoDevLog("ended")}
+        onError={(e) => {
+          videoDevLog("error", e.currentTarget.error);
           if (!cinematicStartedRef.current) setNeedsTap(true);
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${

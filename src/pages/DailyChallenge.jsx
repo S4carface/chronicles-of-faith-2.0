@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart } from "lucide-react";
+import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart, User, Zap, ListChecks, Trophy } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { getDailyChallenge } from "@/data/dailyChallenge";
+import { getCardById } from "@/data/cards";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
 
@@ -13,9 +14,22 @@ export default function DailyChallenge() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const daily = getDailyChallenge();
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = daily.date;
   const battleCompletedToday = profile.lastDailyDate === todayStr;
   const hasActiveDaily = run?.isDaily && run.phase === "battle";
+
+  // Fixed deck preview — counts per card, identical for every player.
+  const deckCounts = daily.deck.reduce((acc, cardId) => {
+    acc[cardId] = (acc[cardId] || 0) + 1;
+    return acc;
+  }, {});
+  const deckPreview = Object.entries(deckCounts).map(([cardId, count]) => ({
+    id: cardId,
+    count,
+    name: getCardById(cardId)?.name || cardId,
+  }));
+
+  const startingFaith = daily.rule.maxEnergy || 3;
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -101,7 +115,8 @@ export default function DailyChallenge() {
 
   <p className="mt-1 text-amber-100/55 text-[10px] lg:text-xs">
     Every player uses today&apos;s fixed hero, deck, enemy, difficulty, and special rule.
-    Your personal cards are not used.
+    Your custom deck, unlocked cards, upgrades, and progression are never used —
+    everyone faces the exact same battle.
   </p>
 </div>
 
@@ -113,6 +128,29 @@ export default function DailyChallenge() {
           <p className="text-amber-100/50 text-[10px] lg:text-xs mb-4 lg:mb-6 italic">{daily.difficultyDesc}</p>
 
           <div className="grid grid-cols-1 gap-3 text-left">
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
+              <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-blue-500/30 bg-blue-900/20 flex items-center justify-center">
+                <User className="w-6 h-6 text-blue-300" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">Today's Hero</p>
+                <p className="font-serif text-amber-100 text-sm lg:text-base">{daily.hero.name} — {daily.hero.title}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
+              <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-red-500/30 bg-red-900/20 flex items-center justify-center gap-0">
+                <Heart className="w-6 h-6 text-red-300" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">Starting HP &amp; Faith</p>
+                <p className="font-serif text-amber-100 text-sm lg:text-base flex items-center gap-3">
+                  <span className="inline-flex items-center gap-1"><Heart className="w-3.5 h-3.5 text-red-300" />{daily.maxHp} HP</span>
+                  <span className="inline-flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-yellow-300" />{startingFaith} Faith</span>
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/10 bg-slate-900/30">
               <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden border border-red-900/50" style={{ background: "#0F1A30" }}>
                 {enemyArt ? (
@@ -139,23 +177,30 @@ export default function DailyChallenge() {
               </div>
             </div>
 
-<div className="flex items-center gap-3 p-3 rounded-lg border border-emerald-500/20 bg-emerald-900/10">
+<div className="flex items-start gap-3 p-3 rounded-lg border border-emerald-500/20 bg-emerald-900/10">
   <div className="flex-shrink-0 w-12 h-12 lg:w-14 lg:h-14 rounded-lg border border-emerald-500/30 bg-emerald-900/20 flex items-center justify-center">
     <span className="text-2xl">🃏</span>
   </div>
 
-  <div className="min-w-0">
+  <div className="min-w-0 flex-1">
     <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide">
-      Today&apos;s Fixed Deck
+      Today&apos;s Fixed Deck — {daily.deck.length} Cards
     </p>
 
-    <p className="font-serif text-emerald-200 text-sm lg:text-base">
-      {daily.deck.length} Cards
+    <p className="text-amber-100/50 text-[10px] lg:text-xs mb-1.5">
+      Identical for every player. Your unlocked cards are not used.
     </p>
 
-    <p className="text-amber-100/50 text-[10px] lg:text-xs">
-      Identical for every player
-    </p>
+    <div className="flex flex-wrap gap-1.5">
+      {deckPreview.map((card) => (
+        <span
+          key={card.id}
+          className="text-[10px] lg:text-xs px-2 py-1 rounded-full border border-emerald-500/20 bg-emerald-900/20 text-emerald-200/90"
+        >
+          {card.count > 1 ? `${card.count}× ` : ""}{card.name}
+        </span>
+      ))}
+    </div>
   </div>
 </div>
 
@@ -206,6 +251,51 @@ export default function DailyChallenge() {
               </p>
               <p className="text-amber-100/50 text-[10px] lg:text-xs">Today's Status</p>
             </div>
+          </div>
+        </div>
+
+        {/* Scoring rules */}
+        <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6 text-left" style={{ background: "rgba(15,26,48,0.6)" }}>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <ListChecks className="w-4 h-4 text-amber-300/60" />
+            <h3 className="font-serif text-amber-200 text-base lg:text-lg">Scoring Rules</h3>
+          </div>
+          <div className="space-y-1.5 text-xs lg:text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Victory</span>
+              <span className="text-amber-100 font-medium">+500</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">HP remaining</span>
+              <span className="text-amber-100 font-medium">+10 per HP</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Turns used</span>
+              <span className="text-red-300/80 font-medium">-25 per turn</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Correct trivia</span>
+              <span className="text-amber-100 font-medium">+100</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Perfect battle (no HP lost)</span>
+              <span className="text-amber-100 font-medium">+100</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Cards played</span>
+              <span className="text-amber-100/50 font-medium">0 points</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-amber-100/60">Defeat</span>
+              <span className="text-amber-100/50 font-medium">0</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-amber-500/10 flex items-start gap-2">
+            <Trophy className="w-3.5 h-3.5 text-amber-300/60 flex-shrink-0 mt-0.5" />
+            <p className="text-amber-100/50 text-[10px] lg:text-xs">
+              Only your best score for today is kept on the Daily leaderboard — replaying with a
+              lower score never overwrites it.
+            </p>
           </div>
         </div>
 

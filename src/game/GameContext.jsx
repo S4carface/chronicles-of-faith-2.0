@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { HEROES, HERO_MAP } from "@/data/heroes";
-import { CARDS, CARD_MAP, getCardById } from "@/data/cards";
+import { CARD_MAP, getCardById } from "@/data/cards";
 import { ENEMIES, ENEMY_POOL, BOSSES, EASY_ENEMY_POOL, EASY_BOSS_POOL } from "@/data/enemies";
 import { TRIVIA_QUESTIONS } from "@/data/trivia";
 import { ACHIEVEMENT_MAP } from "@/data/achievements";
@@ -682,19 +682,17 @@ if (node.enemyId === "babel_tower") {
   const startDailyBattle = useCallback((dailyConfig) => {
     const hero = dailyConfig.hero;
 
-    // Use player's active deck instead of hero starter deck
-    let deck = [...(profile.activeDeck || STARTER_DECK)];
-    if (dailyConfig.rule.startWithRare) {
-      const rareCards = CARDS.filter(c => c.rarity === "rare");
-      const rng = createRng(dailyConfig.seed + "rare");
-      deck.push(pick(rng, rareCards).id);
-    }
+    // Daily Challenge is sealed: always the fixed deck computed deterministically
+    // from today's seed in getDailyChallenge(). The player's custom deck,
+    // unlocked cards, upgrades, and progression are never used here.
+    const deck = [...dailyConfig.deck];
 
     setRun({
       hero,
       map: null,
       seed: dailyConfig.seed,
       isDaily: true,
+      mode: "daily",
       difficulty: "daily_standard",
       fogOfWar: false,
       playerHp: dailyConfig.playerHp,
@@ -733,7 +731,7 @@ if (node.enemyId === "babel_tower") {
     });
 
     Sound.playMusic("battle");
-  }, [profile.activeDeck]);
+  }, []);
 
   const resumeStoryRun = useCallback(() => {
     const saved = loadStoryRun();

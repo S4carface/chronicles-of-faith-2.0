@@ -3,45 +3,45 @@ import { useNavigate } from "react-router-dom";
 import { Trophy, Skull, Heart, Clock, Swords, BookOpen, Coins, Flame, BarChart3 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
-import { submitBestScore, getDailyRank } from "@/game/scoreManager";
+import { submitBestScore, getDailyRank, calculateDailyScore } from "@/game/scoreManager";
+import { getDailySeed } from "@/data/dailyChallenge";
 import * as Sound from "@/game/soundManager";
 import { recordDailyCompleted, syncStatsToCloud } from "@/game/playerStats";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
-
-function calculateScore(result, playerHp, maxPlayerHp, turns, cardsPlayed, triviaCorrect) {
-  if (result !== "victory") return 0;
-  let score = 500;
-  score += playerHp * 10;
-  score -= turns * 20;
-  score += cardsPlayed * 5;
-  if (triviaCorrect) score += 100;
-  return Math.max(0, score);
-}
 
 export default function DailyResultScreen() {
   const { run, profile, saveProfile, endRun } = useGame();
   const navigate = useNavigate();
   const submitted = useRef(false);
-  const [finalScore, setFinalScore] = useState(0);
+  const [breakdown, setBreakdown] = useState(null);
   const [streakUpdated, setStreakUpdated] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [rank, setRank] = useState(null);
   const [submitError, setSubmitError] = useState(false);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [previousBest, setPreviousBest] = useState(null);
+  const [isNewBest, setIsNewBest] = useState(false);
   const calculatedScore = useRef(0);
 
   const result = run?.dailyResult;
   const dailyConfig = run?.dailyConfig;
+  const finalScore = breakdown?.finalScore ?? 0;
 
   useEffect(() => {
     if (submitted.current || !result) return;
 
     const triviaCorrect = run.dailyTriviaCorrect;
-    const score = calculateScore(result.result, result.playerHp, result.maxPlayerHp, result.turnNumber, result.cardsPlayed, triviaCorrect);
-    setFinalScore(score);
-    calculatedScore.current = score;
+    const scoreBreakdown = calculateDailyScore({
+      result: result.result,
+      playerHp: result.playerHp,
+      maxPlayerHp: result.maxPlayerHp,
+      turns: result.turnNumber,
+      triviaCorrect,
+    });
+    setBreakdown(scoreBreakdown);
+    calculatedScore.current = scoreBreakdown.finalScore;
 
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = dailyConfig?.date || getDailySeed();
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const isFirstToday = profile.lastDailyDate !== todayStr;
 
@@ -54,14 +54,14 @@ export default function DailyResultScreen() {
         gold: (profile.gold || 0) + goldReward,
       });
       setStreakUpdated(true);
-      recordDailyCompleted(score, newStreak, goldReward);
+      recordDailyCompleted(scoreBreakdown.finalScore, newStreak, goldReward);
     }
     syncStatsToCloud();
 
     // Always submit the score (as Anonymous Pilgrim if no name set).
     const playerName = needsPlayerName(profile.playerName) ? "Anonymous Pilgrim" : profile.playerName;
     submitted.current = true;
-    submitLeaderboard(playerName, score, result, triviaCorrect, todayStr, run.hero?.id || "adam");
+    submitLeaderboard(playerName, scoreBreakdown.finalScore, result, triviaCorrect, todayStr);
     if (needsPlayerName(profile.playerName)) {
       setShowNamePrompt(true);
     }
@@ -74,11 +74,11 @@ export default function DailyResultScreen() {
       return;
     }
     // Re-submit with the new name to update the existing record
-    const todayStr = new Date().toISOString().slice(0, 10);
-    submitLeaderboard(name, calculatedScore.current, result, run.dailyTriviaCorrect, todayStr, run.hero?.id || "adam");
+    const todayStr = dailyConfig?.date || getDailySeed();
+    submitLeaderboard(name, calculatedScore.current, result, run.dailyTriviaCorrect, todayStr);
   };
 
-  const submitLeaderboard = async (playerName, score, result, triviaCorrect, todayStr, heroId) => {
+  const submitLeaderboard = async (playerName, score, result, triviaCorrect, todayStr) => {
     const submitResult = await submitBestScore({
       playerName: playerName,
       score: score,
@@ -95,6 +95,8 @@ export default function DailyResultScreen() {
 
     if (submitResult.success) {
       setScoreSubmitted(true);
+      setPreviousBest(submitResult.previousScore ?? null);
+      setIsNewBest(!!submitResult.isNewBest);
       try {
         const playerRank = await getDailyRank(todayStr);
         setRank(playerRank);
@@ -106,14 +108,13 @@ export default function DailyResultScreen() {
 
   const handleRetry = () => {
     setSubmitError(false);
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = dailyConfig?.date || getDailySeed();
     submitLeaderboard(
       profile.playerName || "Anonymous Pilgrim",
       calculatedScore.current,
       result,
       run.dailyTriviaCorrect,
-      todayStr,
-      run.hero?.id || "adam"
+      todayStr
     );
   };
 
@@ -183,7 +184,7 @@ export default function DailyResultScreen() {
             <div className="flex items-center gap-2 p-2 lg:p-3 rounded-lg bg-slate-900/40">
               <Swords className="w-4 h-4 text-orange-300/60 flex-shrink-0" />
               <div className="text-left">
-                <p className="text-amber-100/40 text-[9px] lg:text-[10px] uppercase">Cards</p>
+                <p className="text-amber-100/40 text-[9px] lg:text-[10px] uppercase">Cards (0 pts)</p>
                 <p className="text-amber-100 text-sm lg:text-base font-bold">{result.cardsPlayed}</p>
               </div>
             </div>
@@ -198,6 +199,50 @@ export default function DailyResultScreen() {
             </div>
           </div>
         </div>
+
+        {breakdown && (
+          <div className="rounded-xl border-2 border-amber-500/20 p-4 lg:p-6 mb-4 lg:mb-6 text-left" style={{ background: "rgba(15,26,48,0.6)" }}>
+            <p className="text-amber-100/50 text-[10px] lg:text-xs uppercase tracking-wide mb-3 text-center">Score Breakdown</p>
+            <div className="space-y-1.5 text-sm lg:text-base">
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">Victory Bonus</span>
+                <span className="text-amber-100 font-medium">+{breakdown.victoryBonus}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">HP Bonus</span>
+                <span className="text-amber-100 font-medium">+{breakdown.hpBonus}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">Turn Penalty</span>
+                <span className="text-red-300/80 font-medium">-{breakdown.turnPenalty}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">Trivia Bonus</span>
+                <span className="text-amber-100 font-medium">+{breakdown.triviaBonus}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">Perfect Battle Bonus</span>
+                <span className="text-amber-100 font-medium">+{breakdown.perfectBonus}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 mt-1 border-t border-amber-500/10">
+                <span className="text-amber-200 font-serif">Final Score</span>
+                <span className="text-amber-200 font-serif text-lg font-bold">{breakdown.finalScore}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 mt-1 border-t border-amber-500/10">
+                <span className="text-amber-100/60">Previous Best Today</span>
+                <span className="text-amber-100/80 font-medium">
+                  {previousBest === null ? "—" : previousBest}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-amber-100/60">New Best Today</span>
+                <span className={`font-medium ${isNewBest ? "text-emerald-300" : "text-amber-100/50"}`}>
+                  {isNewBest ? "Yes ✓" : "No"}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-around mb-6">
           <div className="flex items-center gap-2">

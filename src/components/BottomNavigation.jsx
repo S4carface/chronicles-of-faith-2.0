@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { Copy, BookOpen, Church, Sun, CircleUser } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
 
@@ -7,28 +8,28 @@ const ITEMS = [
   {
     label: "Cards",
     path: "/collection",
-    symbol: "▦",
+    icon: Copy,
   },
   {
     label: "Bible",
     path: "/daily-prayer",
-    symbol: "✦",
+    icon: BookOpen,
   },
   {
     label: "Home",
     path: "/",
-    symbol: "⌂",
+    icon: Church,
     primary: true,
   },
   {
     label: "Daily",
     path: "/daily",
-    symbol: "◆",
+    icon: Sun,
   },
   {
     label: "You",
     path: "/journey",
-    symbol: "○",
+    icon: CircleUser,
   },
 ];
 
@@ -73,43 +74,52 @@ export default function BottomNavigation() {
               "0 -8px 30px rgba(0,0,0,0.45), 0 0 25px rgba(201,168,76,0.08)",
           }}
         >
-          {ITEMS.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              onClick={() => Sound.sfx.click()}
-              className="group flex min-h-12 flex-col items-center justify-end gap-0.5"
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={`flex items-center justify-center rounded-full border font-serif transition-all ${
-                      item.primary
-                        ? "-mt-4 h-12 w-12 border-amber-300/50 bg-amber-600/25 text-xl shadow-md shadow-amber-500/15"
-                        : "h-8 w-8 border-transparent text-lg"
-                    } ${
-                      isActive
-                        ? "text-amber-200"
-                        : "text-amber-100/45 group-hover:text-amber-100/75"
-                    }`}
-                  >
-                    {item.symbol}
-                  </span>
+          {ITEMS.map((item) => {
+            const Icon = item.icon;
 
-                  <span
-                    className={`text-[9px] font-medium ${
-                      isActive
-                        ? "text-amber-200"
-                        : "text-amber-100/40"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          ))}
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                onClick={() => Sound.sfx.click()}
+                className="group flex min-h-12 flex-col items-center justify-end gap-1"
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                        item.primary ? "-mt-3 h-11 w-11" : "h-9 w-9"
+                      } ${
+                        isActive
+                          ? "bg-amber-400/15 ring-1 ring-amber-300/50 shadow-[0_0_14px_rgba(201,168,76,0.35)]"
+                          : "ring-1 ring-transparent"
+                      }`}
+                    >
+                      <Icon
+                        className={`${item.primary ? "h-[22px] w-[22px]" : "h-5 w-5"} transition-colors ${
+                          isActive
+                            ? "text-amber-200"
+                            : "text-amber-100/45 group-hover:text-amber-100/70"
+                        }`}
+                        strokeWidth={2}
+                      />
+                    </span>
+
+                    <span
+                      className={`text-[9px] font-medium tracking-wide transition-colors ${
+                        isActive
+                          ? "text-amber-200"
+                          : "text-amber-100/40 group-hover:text-amber-100/60"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
     </>

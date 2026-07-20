@@ -14,6 +14,7 @@ import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
 import NewSeasonAnnouncement from "@/components/game/NewSeasonAnnouncement";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
+import OpeningAudioGate from "@/components/game/OpeningAudioGate";
 import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
@@ -36,6 +37,7 @@ import AdminDeveloperAccounts from "@/pages/AdminDeveloperAccounts";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useEffect, useRef, useState } from "react";
 import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
+import * as Sound from "@/game/soundManager";
 
 const PROFILE_STORAGE_KEY = "chronicles_of_faith_v1";
 
@@ -87,6 +89,12 @@ const AuthenticatedApp = () => {
 
   useEffect(() => {
     let mounted = true;
+    // Fire-and-forget: pre-decodes the Genesis intro music buffer and
+    // preloads the narration element ahead of any tap, so the eventual
+    // "Tap to Begin" gesture doesn't have to wait on a fresh fetch+decode
+    // before music becomes audible. Doesn't gate the loading screen — audio
+    // decoding never requires a user gesture, only playback does.
+    Sound.preloadGenesisIntroAssets();
     preloadCriticalFirstRunAssets().finally(() => {
       if (mounted) setCriticalAssetsReady(true);
     });
@@ -144,6 +152,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
    <GameProvider>
+  <OpeningAudioGate />
   <AudioUnlockButton />
   <UnlockReveal />
   <NewSeasonAnnouncement />

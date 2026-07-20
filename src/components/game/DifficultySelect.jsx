@@ -6,27 +6,20 @@ import * as Sound from "@/game/soundManager";
 
 const DIFFICULTY_RULES = {
   easy: {
-    label: "Retry Rule",
-    text: "Retry the same battle with 75% HP. Each retry reduces your score by 5%.",
+    text: "Retry: 75% HP. −5% score per retry.",
     panelClass: "border-emerald-400/25 bg-emerald-950/20",
-    labelClass: "text-emerald-300/75",
-    textClass: "text-emerald-100/70",
+    textClass: "text-emerald-100/80",
   },
 
   normal: {
-    label: "Checkpoint Rule",
-    text: "Retry from the room checkpoint with 50% HP. Each retry reduces your score by 15%.",
+    text: "Checkpoint: 50% HP. −15% score per retry.",
     panelClass: "border-amber-400/25 bg-amber-950/20",
-    labelClass: "text-amber-300/75",
-    textClass: "text-amber-100/70",
+    textClass: "text-amber-100/80",
   },
 
   hard: {
-    label: "One-Life Rule",
-    text: "No retries. Any defeat ends the entire run.",
-    panelClass:
-      "border-red-400/40 bg-red-950/25 shadow-sm shadow-red-950/40",
-    labelClass: "text-red-300",
+    text: "One life: Defeat ends the run.",
+    panelClass: "border-red-400/40 bg-red-950/25",
     textClass: "text-red-100/90",
   },
 };
@@ -113,43 +106,32 @@ export default function DifficultySelect() {
         })}
       </div>
 
-      {/* Selected difficulty description */}
-      <div className="mt-3 flex items-center gap-3 rounded-xl border border-amber-500/15 bg-slate-900/40 px-4 py-2.5">
-        <div
-          className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/30"
-          style={{ background: "#0F1A30" }}
-        >
-          <img
-            src={artMap[current]}
-            alt={currentPreset.label}
-            className="art-portrait"
-          />
+      {/* Selected difficulty — description and retry rule combined in one compact panel */}
+      <div className={`mt-3 rounded-xl border px-4 py-2.5 ${currentRule.panelClass}`}>
+        <div className="flex items-center gap-3">
+          <div
+            className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/30"
+            style={{ background: "#0F1A30" }}
+          >
+            <img
+              src={artMap[current]}
+              alt={currentPreset.label}
+              className="art-portrait"
+            />
+          </div>
+
+          <div className="min-w-0">
+            <span className="font-serif text-sm font-bold text-amber-200">
+              {currentPreset.label}
+            </span>
+
+            <span className="ml-2 text-xs text-amber-100/50">
+              {currentPreset.desc}
+            </span>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <span className="font-serif text-sm font-bold text-amber-200">
-            {currentPreset.label}
-          </span>
-
-          <span className="ml-2 text-xs text-amber-100/50">
-            {currentPreset.desc}
-          </span>
-        </div>
-      </div>
-
-      {/* Retry rule */}
-      <div
-        className={`mt-2 rounded-lg border px-3 py-2.5 text-center ${currentRule.panelClass}`}
-      >
-        <p
-          className={`text-[10px] font-bold uppercase tracking-[0.18em] ${currentRule.labelClass}`}
-        >
-          {currentRule.label}
-        </p>
-
-        <p
-          className={`mt-1 text-xs font-semibold ${currentRule.textClass}`}
-        >
+        <p className={`mt-1.5 pl-10 text-xs font-medium ${currentRule.textClass}`}>
           {currentRule.text}
         </p>
       </div>

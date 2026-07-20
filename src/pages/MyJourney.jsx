@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 import {
   Pencil, Compass, Swords, BookOpen, Flame, Layers,
   Trophy, Skull, Crown, Coins, Target, Shield, Heart, Sparkles, Star, Clock, Award,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { CARD_MAP, getCardById } from "@/data/cards";
@@ -116,7 +118,16 @@ export default function MyJourney() {
   }}
 >
 
-      <div className="w-full max-w-2xl text-center mb-5">
+      <div className="relative w-full max-w-2xl text-center mb-5">
+        <Link
+          to="/settings"
+          onClick={() => Sound.sfx.click()}
+          aria-label="Settings"
+          className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center rounded-full border border-amber-400/25 bg-slate-900/40 text-amber-100/70 transition hover:border-amber-400/50 hover:text-amber-200"
+        >
+          <SettingsIcon className="h-5 w-5" />
+        </Link>
+
         <div className="flex justify-center mb-2">
           <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" style={{ background: "#0F1A30" }}>
             <img src={MENU_ART.progress} alt="My Journey" className="art-portrait" />

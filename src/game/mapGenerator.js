@@ -27,9 +27,9 @@ export function pickN(rng, arr, n) {
 
 // Difficulty presets: fog of war + reward frequency
 export const DIFFICULTY_PRESETS = {
-  easy: { fogOfWar: false, rewardChance: 0.55, label: "Easy", desc: "All rooms visible. More rewards.", icon: "🌱" },
-  normal: { fogOfWar: true, rewardChance: 0.40, label: "Normal", desc: "Fog of war. Decent rewards.", icon: "⚔️" },
-  hard: {   fogOfWar: true,   rewardChance: 0.55,   label: "Hard",   desc: "Hidden rooms. Stronger enemies. Better rewards. Permanent progress is kept.",   icon: "🔥", },
+  easy: { fogOfWar: false, rewardChance: 0.55, label: "Easy", desc: "Guided difficulty.", icon: "🌱" },
+  normal: { fogOfWar: true, rewardChance: 0.40, label: "Normal", desc: "Balanced difficulty.", icon: "⚔️" },
+  hard: {   fogOfWar: true,   rewardChance: 0.55,   label: "Hard",   desc: "High risk. Greater rewards.",   icon: "🔥", },
 };
 
 // Generate a branching map with difficulty-based room distribution

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Swords, Pencil, Sun } from "lucide-react";
+import { Swords, Pencil, Sun, Trophy } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
@@ -294,10 +294,7 @@ const handleNameSaved = (name) => {
           >
             <span className="flex items-center justify-center gap-2">
               <Swords className="w-5 h-5" />
-              Continue Genesis Run
-            </span>
-            <span className="block text-emerald-200/60 text-xs font-body font-normal mt-1">
-              {savedRunInfo.heroName} • {savedRunInfo.difficulty ? savedRunInfo.difficulty.charAt(0).toUpperCase() + savedRunInfo.difficulty.slice(1) : "Normal"} • Stage {savedRunInfo.stage} • HP {savedRunInfo.playerHp}/{savedRunInfo.maxHp} • {savedRunInfo.roomLabel}
+              Continue
             </span>
           </button>
           <button
@@ -340,78 +337,63 @@ const handleNameSaved = (name) => {
         </span>
             </button>
 
-      {/* Daily Prayer spotlight */}
-      <Link
-        to="/daily-prayer"
-        onClick={() => Sound.sfx.click()}
-        className={`relative w-full max-w-md lg:max-w-[600px] mb-3 overflow-hidden rounded-xl border-2 px-4 py-3 lg:px-6 lg:py-5 transition-all duration-300 active:scale-[0.99] ${
-          devotionPrayedToday
-            ? "border-emerald-400/35 bg-emerald-900/15"
-            : "border-sky-300/45 bg-sky-900/15 shadow-lg shadow-sky-400/10 hover:border-sky-200/70 hover:bg-sky-900/25"
-        }`}
-      >
-        <div className="flex items-center gap-4 text-left">
-          <div
-            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border lg:h-16 lg:w-16 ${
-              devotionPrayedToday
-                ? "border-emerald-400/30 bg-emerald-900/20"
-                : "border-sky-300/35 bg-sky-900/25"
-            }`}
-          >
-            <Sun
-              className={`h-6 w-6 lg:h-8 lg:w-8 ${
-                devotionPrayedToday
-                  ? "text-emerald-300"
-                  : "text-sky-200"
-              }`}
-            />
-          </div>
+      {/* Daily Prayer — compact status strip once completed, full invite otherwise */}
+      {devotionPrayedToday ? (
+        <Link
+          to="/daily-prayer"
+          onClick={() => Sound.sfx.click()}
+          className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-900/15 px-3 py-2 mb-3 transition hover:bg-emerald-900/25 lg:max-w-[600px]"
+        >
+          <span className="font-serif text-sm font-semibold text-emerald-300">
+            ✓ Daily Prayer Completed
+          </span>
+          {profile.devotionStreak > 0 && (
+            <span className="ml-auto flex-shrink-0 text-[10px] text-amber-300/60">
+              {profile.devotionStreak}-day streak
+            </span>
+          )}
+        </Link>
+      ) : (
+        <Link
+          to="/daily-prayer"
+          onClick={() => Sound.sfx.click()}
+          className="relative w-full max-w-md lg:max-w-[600px] mb-3 overflow-hidden rounded-xl border-2 border-sky-300/45 bg-sky-900/15 px-4 py-3 lg:px-6 lg:py-5 shadow-lg shadow-sky-400/10 transition-all duration-300 hover:border-sky-200/70 hover:bg-sky-900/25 active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-4 text-left">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-sky-300/35 bg-sky-900/25 lg:h-16 lg:w-16">
+              <Sun className="h-6 w-6 text-sky-200 lg:h-8 lg:w-8" />
+            </div>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
-              <p
-                className={`min-w-[9rem] flex-1 font-serif text-lg font-bold leading-snug lg:text-xl ${
-                  devotionPrayedToday
-                    ? "text-emerald-200"
-                    : "text-sky-100"
-                }`}
-              >
-                {devotionPrayedToday
-                  ? "Daily Prayer Completed"
-                  : "Take a Quiet Moment"}
-              </p>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
+                <p className="min-w-[9rem] flex-1 font-serif text-lg font-bold leading-snug text-sky-100 lg:text-xl">
+                  Take a Quiet Moment
+                </p>
 
-              {!devotionPrayedToday && (
                 <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
                   New Today
                 </span>
-              )}
-            </div>
+              </div>
 
-            <p className="mt-1 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
-              A short scripture, reflection, and prayer for today.
-            </p>
+              <p className="mt-1 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
+                A short scripture, reflection, and prayer for today.
+              </p>
 
-            <div className="mt-2 flex items-center gap-3">
-              <span
-                className={`text-xs font-semibold lg:text-sm ${
-                  devotionPrayedToday
-                    ? "text-emerald-300"
-                    : "text-sky-200"
-                }`}
-              >
-                {devotionPrayedToday ? "✓ Prayed Today" : "Pray Now →"}
-              </span>
-
-              {profile.devotionStreak > 0 && (
-                <span className="text-[10px] text-amber-300/60 lg:text-xs">
-                  {profile.devotionStreak}-day prayer streak
+              <div className="mt-2 flex items-center gap-3">
+                <span className="text-xs font-semibold text-sky-200 lg:text-sm">
+                  Pray Now →
                 </span>
-              )}
+
+                {profile.devotionStreak > 0 && (
+                  <span className="text-[10px] text-amber-300/60 lg:text-xs">
+                    {profile.devotionStreak}-day prayer streak
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+      )}
 
       {/* Confirmation dialog */}
             {showConfirm && (
@@ -446,34 +428,15 @@ const handleNameSaved = (name) => {
       )}
 
 
-{/* Compact supporting links */}
-<div className="relative grid w-full max-w-md grid-cols-2 gap-3 lg:max-w-[600px]">
-  <Link
-    to="/leaderboard"
-    onClick={() => Sound.sfx.click()}
-    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
-  >
-    <p className="font-serif text-sm text-amber-100 lg:text-base">
-      Leaderboard
-    </p>
-    <p className="mt-1 text-[10px] text-amber-100/40 lg:text-xs">
-      Compare daily scores
-    </p>
-  </Link>
-
-  <Link
-    to="/settings"
-    onClick={() => Sound.sfx.click()}
-    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
-  >
-    <p className="font-serif text-sm text-amber-100 lg:text-base">
-      Settings
-    </p>
-    <p className="mt-1 text-[10px] text-amber-100/40 lg:text-xs">
-      Audio and options
-    </p>
-  </Link>
-</div>
+{/* Compact secondary action */}
+<Link
+  to="/leaderboard"
+  onClick={() => Sound.sfx.click()}
+  className="relative flex w-full max-w-md items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 transition hover:border-amber-400/40 hover:bg-amber-500/5 lg:max-w-[600px]"
+>
+  <Trophy className="h-4 w-4 text-amber-300/70" />
+  <span className="font-serif text-sm text-amber-100">Leaderboard</span>
+</Link>
 
 <p className="relative text-amber-100/40 text-[10px] mt-3 font-serif italic text-center max-w-md">
   "In the beginning, God created the heavens and the earth." — Genesis 1:1

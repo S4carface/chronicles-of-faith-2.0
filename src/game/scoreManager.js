@@ -130,6 +130,16 @@ function buildCategoryQuery(payload, playerField, playerValue) {
     query.dailyChallengeId = payload.dailyChallengeId;
   }
 
+  // Season-aware fields are additive and opt-in: existing callers never set
+  // them, so this branch never fires for story/daily/weekly submissions and
+  // their query shape is unchanged. See seasonManager.js.
+  if (payload.leaderboardPeriod) {
+    query.leaderboardPeriod = payload.leaderboardPeriod;
+  }
+  if (payload.seasonId) {
+    query.seasonId = payload.seasonId;
+  }
+
   return query;
 }
 
@@ -159,6 +169,14 @@ export async function submitBestScore(scoreData) {
     dailyChallengeId: scoreData.dailyChallengeId || null,
     retriesUsed: scoreData.retriesUsed || 0,
     scorePenalty: scoreData.scorePenalty || 0,
+    // Optional season fields — only included when the caller provides them
+    // (seasonManager.js), so existing story/daily/weekly payloads are
+    // byte-for-byte unchanged.
+    ...(scoreData.leaderboardPeriod ? { leaderboardPeriod: scoreData.leaderboardPeriod } : {}),
+    ...(scoreData.seasonId ? { seasonId: scoreData.seasonId } : {}),
+    ...(scoreData.seasonName ? { seasonName: scoreData.seasonName } : {}),
+    ...(scoreData.periodId ? { periodId: scoreData.periodId } : {}),
+    ...(scoreData.gameVersion ? { gameVersion: scoreData.gameVersion } : {}),
   };
 
   try {

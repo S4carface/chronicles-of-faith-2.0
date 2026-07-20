@@ -60,6 +60,28 @@
     "scorePenalty": {
       "type": "number",
       "default": 0
+    },
+    "seasonId": {
+      "type": "string",
+      "description": "Active season this row belongs to. Absent on records written before seasons existed — those are treated as legacy (Early Access Season 1)."
+    },
+    "seasonName": {
+      "type": "string"
+    },
+    "leaderboardPeriod": {
+      "type": "string",
+      "enum": [
+        "season",
+        "weekly",
+        "daily"
+      ],
+      "description": "Distinguishes a Current Season row (mode=story) from a pre-season legacy row (mode=story, this field absent). Weekly/daily rows continue to use the existing mode+dailyChallengeId scheme and do not set this field."
+    },
+    "periodId": {
+      "type": "string"
+    },
+    "gameVersion": {
+      "type": "string"
     }
   },
   "required": [

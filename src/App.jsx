@@ -12,6 +12,7 @@ import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
+import NewSeasonAnnouncement from "@/components/game/NewSeasonAnnouncement";
 import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
@@ -29,6 +30,7 @@ import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
 import PremiumCardPreview from "@/pages/PremiumCardPreview";
 import CardRarityPreview from "@/pages/CardRarityPreview";
+import AdminSeasons from "@/pages/AdminSeasons";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useEffect, useRef, useState } from "react";
 import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
@@ -132,6 +134,7 @@ const AuthenticatedApp = () => {
         <Route path="/special-thanks" element={<SpecialThanks />} />
         <Route path="/dev/premium-card-showcase" element={<PremiumCardPreview />} />
         <Route path="/dev/card-rarity-preview" element={<CardRarityPreview />} />
+        <Route path="/admin/seasons" element={<AdminSeasons />} />
     </Routes>
   );
 
@@ -139,6 +142,7 @@ const AuthenticatedApp = () => {
   return (
    <GameProvider>
   <UnlockReveal />
+  <NewSeasonAnnouncement />
 
   {isMainTabPage ? (
     <AnimatePresence mode="wait" initial={false} custom={tabDirection}>

@@ -1,0 +1,31 @@
+{
+  "name": "SeasonAuditLog",
+  "type": "object",
+  "properties": {
+    "adminEmail": {
+      "type": "string",
+      "minLength": 1
+    },
+    "oldSeasonId": {
+      "type": "string"
+    },
+    "newSeasonId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "gameVersion": {
+      "type": "string"
+    },
+    "recordsAffectedEstimate": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "adminEmail",
+    "newSeasonId"
+  ]
+}

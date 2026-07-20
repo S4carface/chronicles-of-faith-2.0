@@ -7,7 +7,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import AccountPrompt from "@/components/game/AccountPrompt";
 import SafeImage from "@/components/ui/SafeImage";
 import { preloadImages } from "@/lib/imageAssets";
-import { submitStoryScores } from "@/game/scoreManager";
+import { submitGenesisScores } from "@/game/seasonManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
 import { generateFirstCompletionReward } from "@/game/deckRules";
@@ -24,7 +24,7 @@ export default function VictoryScreen() {
   const [stageVisible, setStageVisible] = useState(false);
   const [backgroundReady, setBackgroundReady] = useState(false);
   const [score, setScore] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
@@ -99,10 +99,10 @@ export default function VictoryScreen() {
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(false);
-    // Every Genesis victory submits independently to both the All Time and
-    // This Week leaderboard categories — not just All Time. See
-    // submitStoryScores in scoreManager.js.
-    const result = await submitStoryScores({
+    // Every Genesis victory submits independently to both Current Season and
+    // This Week — a failure in one never blocks or hides the other. See
+    // submitGenesisScores in seasonManager.js.
+    const result = await submitGenesisScores({
       playerName: name || "Anonymous Pilgrim",
       score: scoreToSubmit,
       hero: run.hero?.name || "Adam",
@@ -115,7 +115,7 @@ export default function VictoryScreen() {
       retriesUsed: totalRetries,
       scorePenalty: penaltyPercent,
     });
-    setSubmitted(result.success);
+    setSubmitResult(result);
     setSubmitError(!result.success);
     setSubmitting(false);
   };
@@ -185,7 +185,7 @@ export default function VictoryScreen() {
             <StageTwo run={run} multiplier={multiplier} baseScore={baseScore} penaltyPercent={penaltyPercent} onContinue={advanceStage} enabled={stageVisible} />
           )}
           {stage === 3 && (
-            <StageThree firstCompletion={firstCompletion} rewardCard={rewardCard} submitted={submitted} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
+            <StageThree firstCompletion={firstCompletion} rewardCard={rewardCard} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
           )}
         </div>
       </section>
@@ -259,7 +259,39 @@ function StageTwo({ run, multiplier, baseScore, penaltyPercent, onContinue, enab
   );
 }
 
-function StageThree({ firstCompletion, rewardCard, submitted, submitting, submitError, onRetry, onReturn }) {
+// Builds the compact post-run leaderboard feedback lines. A category only
+// gets a "New ... best" line when it actually improved (isNewBest); otherwise
+// it shows what the standing best remains. When neither category improved,
+// an extra "Score posted" line acknowledges the run so the two "remains"
+// lines don't read as if nothing happened.
+function buildScoreFeedbackLines(scoreToSubmit, submitResult) {
+  const { seasonResult, weeklyResult } = submitResult || {};
+  if (!seasonResult?.success || !weeklyResult?.success) return [];
+
+  const seasonImproved = seasonResult.isNewBest;
+  const weeklyImproved = weeklyResult.isNewBest;
+  const lines = [];
+
+  if (!seasonImproved && !weeklyImproved) {
+    lines.push({ text: `Score posted: ${scoreToSubmit.toLocaleString()}`, emphasize: false });
+  }
+  lines.push({
+    text: seasonImproved
+      ? `New season best: ${seasonResult.bestScore.toLocaleString()}`
+      : `Season best remains ${seasonResult.bestScore.toLocaleString()}`,
+    emphasize: seasonImproved,
+  });
+  lines.push({
+    text: weeklyImproved
+      ? `New weekly best: ${weeklyResult.bestScore.toLocaleString()}`
+      : `Weekly best remains ${weeklyResult.bestScore.toLocaleString()}`,
+    emphasize: weeklyImproved,
+  });
+
+  return lines;
+}
+
+function StageThree({ firstCompletion, rewardCard, score, submitResult, submitting, submitError, onRetry, onReturn }) {
   return (
     <>
       <p className="text-[9px] font-bold uppercase tracking-[.24em] text-amber-300/60">Stage 3 of 3</p>
@@ -292,8 +324,25 @@ function StageThree({ firstCompletion, rewardCard, submitted, submitting, submit
         </div>
       )}
 
-      <div className="mt-2 min-h-5 text-[9px]">
-        {submitError ? <button onClick={onRetry} className="text-red-200 underline">Score save failed — retry</button> : submitted ? <span className="text-emerald-300/75">Score saved to leaderboard</span> : <span className="text-amber-100/50">{submitting ? "Saving score…" : "Score queued"}</span>}
+      <div className="mt-2 min-h-9 text-[9px] leading-relaxed">
+        {submitError ? (
+          <div className="text-red-200">
+            <p>
+              Your run was completed, but the online score could not be updated. Tap{" "}
+              <button onClick={onRetry} className="font-semibold underline">Retry Score Upload</button>.
+            </p>
+          </div>
+        ) : submitting ? (
+          <span className="text-amber-100/50">Saving score…</span>
+        ) : submitResult ? (
+          buildScoreFeedbackLines(score, submitResult).map((line, i) => (
+            <p key={i} className={line.emphasize ? "text-emerald-300/80" : "text-amber-100/55"}>
+              {line.text}
+            </p>
+          ))
+        ) : (
+          <span className="text-amber-100/50">Score queued</span>
+        )}
       </div>
       <StageButton onClick={onReturn}>Return to World Map</StageButton>
     </>

@@ -1,0 +1,39 @@
+{
+  "name": "LeaderboardSeason",
+  "type": "object",
+  "properties": {
+    "seasonId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seasonName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived"
+      ],
+      "default": "active"
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "endedAt": {
+      "type": "string"
+    },
+    "gameVersion": {
+      "type": "string"
+    },
+    "createdBy": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "seasonId",
+    "seasonName",
+    "status"
+  ]
+}

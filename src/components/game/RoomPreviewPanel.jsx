@@ -2,7 +2,7 @@ import React from "react";
 import { ROOM_INFO } from "@/data/genesisRooms";
 import { getNodeArt } from "@/data/art";
 import { cn } from "@/utils";
-import SafeImage from "@/components/ui/SafeImage";
+import RoomArt from "@/components/game/RoomArt";
 
 export default function RoomPreviewPanel({
   node,
@@ -45,14 +45,15 @@ export default function RoomPreviewPanel({
           <div className="mb-3 flex items-center gap-3">
             <div
               className={cn(
-                "h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2",
+                "relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2",
                 isBoss
                   ? "border-red-400/60"
                   : "border-amber-400/40"
               )}
               style={{ background: "#0F1A30" }}
             >
-              <SafeImage
+              <RoomArt
+                roomType={node.type}
                 src={artUrl}
                 alt={info.title}
                 className="h-full w-full select-none object-cover"

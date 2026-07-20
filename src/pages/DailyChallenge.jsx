@@ -9,7 +9,30 @@ import { getStats } from "@/game/playerStats";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import CollapsibleRow from "@/components/game/CollapsibleRow";
 import FixedViewportPage from "@/components/FixedViewportPage";
+import StickyActionDock from "@/components/StickyActionDock";
 import * as Sound from "@/game/soundManager";
+
+// The daily seed rolls over at UTC midnight (see getDailySeed in dailyChallenge.js) —
+// this only computes a display countdown to that boundary, it never touches the seed itself.
+function useResetCountdown() {
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const nextReset = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      const diffMs = Math.max(0, nextReset - now.getTime());
+      const hours = Math.floor(diffMs / 3_600_000);
+      const minutes = Math.floor((diffMs % 3_600_000) / 60_000);
+      setLabel(`${hours}h ${minutes}m`);
+    };
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return label;
+}
 
 const DIFFICULTY_BADGE_CLASSES = {
   easy: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
@@ -55,6 +78,7 @@ export default function DailyChallenge() {
 
   const startingFaith = daily.rule.maxEnergy || 3;
   const difficultyBadgeClass = DIFFICULTY_BADGE_CLASSES[daily.difficulty] || DIFFICULTY_BADGE_CLASSES.normal;
+  const resetLabel = useResetCountdown();
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -105,7 +129,7 @@ export default function DailyChallenge() {
   return (
     <FixedViewportPage
       style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}
-      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:px-6 lg:pt-8"
+      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
     >
       {Array.from({ length: 10 }).map((_, i) => (
         <div
@@ -132,11 +156,17 @@ export default function DailyChallenge() {
               <img src={MENU_ART.daily} alt="Daily Battle" className="art-portrait" />
             </div>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[10px] uppercase tracking-widest text-amber-300/60">Daily Battle</p>
             <h1 className="truncate font-serif text-lg text-amber-200 leading-tight">{daily.theme.title}</h1>
             <p className="truncate text-xs italic text-amber-100/50">{daily.theme.verse}</p>
           </div>
+
+          {resetLabel && (
+            <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-amber-500/20 bg-slate-900/40 px-2 py-1 text-[10px] font-medium text-amber-100/50">
+              Resets in {resetLabel}
+            </span>
+          )}
         </div>
 
         {/* Compact fairness note — full explanation lives in a modal */}
@@ -278,16 +308,6 @@ export default function DailyChallenge() {
           </CollapsibleRow>
         </div>
 
-        {/* Primary battle button — moved above the fold */}
-        <button
-          onClick={handleStart}
-          disabled={loading}
-          className="mb-1.5 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 px-6 py-2.5 font-serif text-lg font-bold text-amber-100 transition hover:bg-amber-600/40 active:scale-[0.98] disabled:opacity-50"
-        >
-          <Swords className="h-5 w-5" />
-          {loading ? "Starting..." : hasActiveDaily ? "Continue Daily Battle" : "Start Daily Battle"}
-        </button>
-
         {/* Compact status & reward grid */}
         <div className="grid grid-cols-3 gap-2">
           <StatTile icon={Coins} label="Reward" value={`${daily.reward.gold} Gold`} />
@@ -306,6 +326,21 @@ export default function DailyChallenge() {
           <StatTile icon={Heart} label="Prayer Streak" value={profile.devotionStreak || 0} />
         </div>
       </div>
+
+      {/* Flexible filler — keeps the sticky Start button pinned to the bottom
+          of the viewport even when the content above doesn't fill it */}
+      <div className="flex-1" aria-hidden="true" />
+
+      <StickyActionDock className="mx-auto max-w-md lg:max-w-2xl">
+        <button
+          onClick={handleStart}
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 px-6 py-2.5 font-serif text-lg font-bold text-amber-100 transition hover:bg-amber-600/40 active:scale-[0.98] disabled:opacity-50"
+        >
+          <Swords className="h-5 w-5" />
+          {loading ? "Starting..." : hasActiveDaily ? "Continue Daily Battle" : "Start Daily Battle"}
+        </button>
+      </StickyActionDock>
 
       {showFairnessInfo && createPortal(
         <div

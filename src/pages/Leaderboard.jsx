@@ -186,7 +186,7 @@ return (
       </div>
 <p className="mb-4 text-center text-[11px] text-amber-100/45">
   {filter === "all" && "Each player’s best story score is shown."}
-  {filter === "weekly" && "Best story score submitted in the last 7 days."}
+  {filter === "weekly" && "Each player’s best story score completed this week."}
   {filter === "daily" && "Best score from today’s shared Daily Battle."}
 </p>
       <div className="max-w-2xl mx-auto rounded-xl border-2 border-amber-500/15 overflow-hidden" style={{ background: "rgba(15,26,48,0.5)" }}>
@@ -208,8 +208,12 @@ return (
         {!loading && !loadError && entries.length === 0 && (
           <div className="p-12 text-center text-amber-100/60">
             <ScrollText className="w-10 h-10 mx-auto mb-3 text-amber-300/40" />
-            <p className="mb-1">No scores yet.</p>
-            <p className="text-xs text-amber-100/40">Complete Genesis or Daily Battle to appear here.</p>
+            <p className="mb-1">{filter === "weekly" ? "No weekly scores yet." : "No scores yet."}</p>
+            <p className="text-xs text-amber-100/40">
+              {filter === "weekly"
+                ? "Complete Genesis to post your best score for this week."
+                : "Complete Genesis or Daily Battle to appear here."}
+            </p>
           </div>
         )}
 

@@ -7,7 +7,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import AccountPrompt from "@/components/game/AccountPrompt";
 import SafeImage from "@/components/ui/SafeImage";
 import { preloadImages } from "@/lib/imageAssets";
-import { submitBestScore } from "@/game/scoreManager";
+import { submitStoryScores } from "@/game/scoreManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
 import { generateFirstCompletionReward } from "@/game/deckRules";
@@ -99,10 +99,12 @@ export default function VictoryScreen() {
     if (submitting) return;
     setSubmitting(true);
     setSubmitError(false);
-    const result = await submitBestScore({
+    // Every Genesis victory submits independently to both the All Time and
+    // This Week leaderboard categories — not just All Time. See
+    // submitStoryScores in scoreManager.js.
+    const result = await submitStoryScores({
       playerName: name || "Anonymous Pilgrim",
       score: scoreToSubmit,
-      mode: "story",
       hero: run.hero?.name || "Adam",
       chapter: "Genesis",
       roomsCleared: run.roomsCleared,

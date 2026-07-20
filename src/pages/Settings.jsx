@@ -187,17 +187,17 @@ const handleNarrationVolume = (vol) => {
                 <p className="text-amber-100/40 text-[10px]">Shown on the leaderboard</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 min-[360px]:flex-row min-[360px]:items-center">
               <input
                 type="text"
                 value={sanitizePlayerName(profile.playerName)}
                 readOnly
                 placeholder="Enter your name"
-                className="flex-1 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50"
+                className="w-full min-w-0 px-4 py-2 rounded-lg bg-slate-900/60 border border-amber-500/20 text-amber-100 outline-none focus:border-amber-400/50 min-[360px]:flex-1"
               />
               <button
                 onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition"
+                className="flex w-full items-center justify-center gap-1.5 whitespace-nowrap px-3 py-2 rounded-lg border border-amber-400/40 bg-amber-900/20 text-amber-100 text-sm hover:bg-amber-900/40 transition min-[360px]:w-auto min-[360px]:flex-shrink-0"
               >
                 <Pencil className="w-3.5 h-3.5" /> Change Name
               </button>

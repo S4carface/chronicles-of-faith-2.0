@@ -237,6 +237,7 @@ body {
   background: #0a0f1e;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 #root {

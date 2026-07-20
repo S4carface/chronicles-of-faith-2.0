@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Swords, Check, Flame, Crown, Coins, Sparkles, Heart, User, Zap, Trophy, Info } from "lucide-react";
 import { useGame } from "@/game/GameContext";
@@ -31,7 +32,7 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showEqualInfo, setShowEqualInfo] = useState(false);
+  const [showFairnessInfo, setShowFairnessInfo] = useState(false);
   const [showDeck, setShowDeck] = useState(false);
   const [showScoring, setShowScoring] = useState(false);
 
@@ -56,6 +57,15 @@ export default function DailyChallenge() {
   const difficultyBadgeClass = DIFFICULTY_BADGE_CLASSES[daily.difficulty] || DIFFICULTY_BADGE_CLASSES.normal;
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
+
+  useEffect(() => {
+    if (!showFairnessInfo) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setShowFairnessInfo(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showFairnessInfo]);
 
   const beginDaily = () => {
     setLoading(true);
@@ -129,33 +139,19 @@ export default function DailyChallenge() {
           </div>
         </div>
 
-        {/* Equal Challenge — compact row with optional expanded explanation */}
-        <div className="mb-1 rounded-lg border border-emerald-400/20 bg-emerald-900/10 px-3 py-0.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-emerald-200/90">Equal Challenge</p>
-              <p className="mt-0.5 text-[11px] leading-snug text-amber-100/55">
-                Same hero, deck, enemy, rules, and difficulty for every player today.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => { Sound.sfx.click(); setShowEqualInfo((v) => !v); }}
-              aria-expanded={showEqualInfo}
-              aria-controls="equal-challenge-detail"
-              aria-label="More about Equal Challenge"
-              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-emerald-400/30 text-emerald-200/80 transition hover:bg-emerald-500/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
-            >
-              <Info className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <p
-            id="equal-challenge-detail"
-            hidden={!showEqualInfo}
-            className="mt-2 border-t border-emerald-400/10 pt-2 text-[10px] leading-relaxed text-amber-100/50"
-          >
-            Your custom deck, unlocked cards, upgrades, and personal progression are not used.
+        {/* Compact fairness note — full explanation lives in a modal */}
+        <div className="mb-1.5 flex items-center gap-1 pl-11">
+          <p className="min-w-0 flex-1 text-[11px] leading-snug text-amber-100/55">
+            Same challenge for every player today.
           </p>
+          <button
+            type="button"
+            onClick={() => { Sound.sfx.click(); setShowFairnessInfo(true); }}
+            aria-label="Explain Daily Battle fairness"
+            className="relative -my-2.5 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-emerald-200/80 transition hover:text-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+          >
+            <Info className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         {/* Today's Challenge — compact combined panel */}
@@ -311,7 +307,40 @@ export default function DailyChallenge() {
         </div>
       </div>
 
-      {showConfirm && (
+      {showFairnessInfo && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(8,12,24,0.95)" }}
+          onClick={() => setShowFairnessInfo(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fairness-info-title"
+            className="w-full max-w-sm rounded-2xl border-2 border-emerald-400/30 p-6"
+            style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="fairness-info-title" className="mb-3 text-center font-serif text-lg text-emerald-200">
+              Same Challenge For Everyone
+            </h2>
+            <p className="mb-6 text-center text-sm leading-relaxed text-amber-100/70">
+              Hero, deck, enemy, difficulty, modifiers, and scoring are fixed. Your personal cards,
+              upgrades, and progression are not used.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowFairnessInfo(false)}
+              className="w-full rounded-lg border-2 border-emerald-400/50 bg-emerald-900/30 px-4 py-2 text-sm font-bold text-emerald-100 transition hover:bg-emerald-800/40"
+            >
+              Close
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {showConfirm && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Abandon Current Run?</h2>
@@ -331,7 +360,8 @@ export default function DailyChallenge() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </FixedViewportPage>
   );

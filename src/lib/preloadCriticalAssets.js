@@ -1,5 +1,13 @@
 import { CARD_ART, HOME_ART } from "@/data/art";
 
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+function preloadDevLog(...args) {
+  if (import.meta.env?.DEV) console.info("[Opening Preload]", ...args);
+}
+
 export const CRITICAL_FIRST_RUN_ASSETS = Object.freeze({
   images: [
     "/images/intro/intro_poster.PNG",
@@ -18,9 +26,10 @@ export const CRITICAL_FIRST_RUN_ASSETS = Object.freeze({
   video: ["/video/genesis_intro.mp4"],
 });
 
-export const CRITICAL_ASSET_TIMEOUT_MS = 12000;
+export const CRITICAL_ASSET_TIMEOUT_MS = 6000;
 
 let preloadPromise;
+let videoPreloadPromise;
 
 function preloadImage(src) {
   return new Promise((resolve, reject) => {
@@ -66,16 +75,50 @@ function preloadMedia(src, kind) {
   });
 }
 
+// The video is intentionally excluded from the blocking readiness race below.
+// It's by far the largest of the critical assets, and CinematicIntro already
+// falls back to its poster image when the video itself isn't ready yet, so
+// gating "Tap to Begin" on a fully-preloaded video just adds silent wait time
+// for no playback benefit. It's still warmed here, fire-and-forget, so it's
+// likely cached by the time the cinematic actually needs it.
+export function preloadCriticalVideoAssets() {
+  if (videoPreloadPromise) return videoPreloadPromise;
+  const startedAt = nowMs();
+  videoPreloadPromise = Promise.allSettled(
+    CRITICAL_FIRST_RUN_ASSETS.video.map((src) => preloadMedia(src, "video"))
+  ).then((results) => {
+    preloadDevLog("Video ready (or settled)", {
+      elapsedMs: (nowMs() - startedAt).toFixed(1),
+      results: results.map((r) => r.status),
+    });
+    return results;
+  });
+  return videoPreloadPromise;
+}
+
 export function preloadCriticalFirstRunAssets() {
   if (preloadPromise) return preloadPromise;
+  const startedAt = nowMs();
+  preloadDevLog("Media preload start", { startedAt, timeoutMs: CRITICAL_ASSET_TIMEOUT_MS });
+
+  // Fire-and-forget: warms the video cache without blocking readiness below.
+  preloadCriticalVideoAssets();
 
   const assetsReady = Promise.allSettled([
     ...CRITICAL_FIRST_RUN_ASSETS.images.map(preloadImage),
     ...CRITICAL_FIRST_RUN_ASSETS.audio.map((src) => preloadMedia(src, "audio")),
-    ...CRITICAL_FIRST_RUN_ASSETS.video.map((src) => preloadMedia(src, "video")),
-  ]);
+  ]).then((results) => {
+    preloadDevLog("Images + audio ready", {
+      elapsedMs: (nowMs() - startedAt).toFixed(1),
+      results: results.map((r) => r.status),
+    });
+    return results;
+  });
   const timeout = new Promise((resolve) => {
-    window.setTimeout(() => resolve("timeout"), CRITICAL_ASSET_TIMEOUT_MS);
+    window.setTimeout(() => {
+      preloadDevLog("Critical asset timeout reached", { elapsedMs: (nowMs() - startedAt).toFixed(1) });
+      resolve("timeout");
+    }, CRITICAL_ASSET_TIMEOUT_MS);
   });
 
   preloadPromise = Promise.race([assetsReady, timeout]);

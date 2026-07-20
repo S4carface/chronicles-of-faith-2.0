@@ -1,0 +1,29 @@
+{
+  "name": "DeveloperAccountAuditLog",
+  "type": "object",
+  "properties": {
+    "targetAccountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "previousStatus": {
+      "type": "string"
+    },
+    "newStatus": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "adminEmail": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "targetAccountId",
+    "newStatus",
+    "adminEmail"
+  ]
+}

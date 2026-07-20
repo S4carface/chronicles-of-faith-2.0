@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { ROOM_LABELS, ROOM_INFO } from "@/data/genesisRooms";
-import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
+import { getNodeArt } from "@/data/art";
 import { getVisibleNodes } from "@/game/mapGenerator";
 import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
 import RoomTooltip from "@/components/game/RoomTooltip";
+import RoomArt from "@/components/game/RoomArt";
 import * as Sound from "@/game/soundManager";
 import { preloadImages } from "@/lib/imageAssets";
-import SafeImage from "@/components/ui/SafeImage";
 
 export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp, difficulty }) {
   const [previewNode, setPreviewNode] = useState(null);
@@ -101,7 +101,7 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                             )}
                             style={{ filter: "blur(1px)", opacity: 0.4 }}
                           >
-                            <SafeImage src={PLACEHOLDER_ART} alt="Hidden room" className="art-portrait opacity-30" />
+                            <span className="text-lg text-amber-100/40 lg:text-xl" aria-hidden="true">✦</span>
                           </div>
                           <span className="text-[9px] mt-1.5 h-6" />
                         </div>
@@ -130,7 +130,12 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
                           {isCleared && !isBoss ? (
                             <span className="text-emerald-400 text-lg lg:text-2xl font-bold">✓</span>
                           ) : (
-                            <SafeImage src={getNodeArt(node)} alt={ROOM_LABELS[node.type]} className="art-portrait" />
+                            <RoomArt
+                              roomType={node.type}
+                              src={getNodeArt(node)}
+                              alt={ROOM_LABELS[node.type]}
+                              className="art-portrait"
+                            />
                           )}
                           {recommendation && isAvailable && !isCleared && (
                             <span className={cn(

@@ -7,6 +7,7 @@ import { getCardById } from "@/data/cards";
 import { getStats } from "@/game/playerStats";
 import { MENU_ART, ENEMY_ART } from "@/data/art";
 import CollapsibleRow from "@/components/game/CollapsibleRow";
+import FixedViewportPage from "@/components/FixedViewportPage";
 import * as Sound from "@/game/soundManager";
 
 const DIFFICULTY_BADGE_CLASSES = {
@@ -17,8 +18,8 @@ const DIFFICULTY_BADGE_CLASSES = {
 
 function StatTile({ icon: Icon, label, value, valueClassName = "" }) {
   return (
-    <div className="rounded-lg border border-amber-500/10 bg-slate-900/30 px-2 py-2.5 text-center">
-      <Icon className="mx-auto mb-1 h-4 w-4 text-amber-300/60" />
+    <div className="rounded-lg border border-amber-500/10 bg-slate-900/30 px-2 py-1.5 text-center">
+      <Icon className="mx-auto mb-0.5 h-3.5 w-3.5 text-amber-300/60" />
       <p className={`font-serif text-sm font-bold text-amber-100 ${valueClassName}`}>{value}</p>
       <p className="text-[9px] uppercase tracking-wide text-amber-100/40">{label}</p>
     </div>
@@ -92,11 +93,9 @@ export default function DailyChallenge() {
   const enemyArt = ENEMY_ART[daily.enemy.id];
 
   return (
-    <div
-      className="relative flex min-h-screen flex-col items-center overflow-hidden px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-[calc(2.5rem+env(safe-area-inset-bottom))] lg:px-6 lg:pb-16 lg:pt-8"
-      style={{
-        background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
-      }}
+    <FixedViewportPage
+      style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}
+      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:px-6 lg:pt-8"
     >
       {Array.from({ length: 10 }).map((_, i) => (
         <div
@@ -116,10 +115,10 @@ export default function DailyChallenge() {
 
       <div className="relative w-full max-w-md lg:max-w-2xl">
         {/* Compact header */}
-        <div className="mb-2 flex items-center gap-3">
+        <div className="mb-1 flex items-center gap-3">
           <div className="relative flex-shrink-0">
             <div className="absolute inset-0 rounded-full blur-md" style={{ background: "rgba(201,168,76,0.2)" }} />
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400/40" style={{ background: "#0F1A30" }}>
+            <div className="relative h-8 w-8 overflow-hidden rounded-full border-2 border-amber-400/40" style={{ background: "#0F1A30" }}>
               <img src={MENU_ART.daily} alt="Daily Battle" className="art-portrait" />
             </div>
           </div>
@@ -131,7 +130,7 @@ export default function DailyChallenge() {
         </div>
 
         {/* Equal Challenge — compact row with optional expanded explanation */}
-        <div className="mb-2 rounded-lg border border-emerald-400/20 bg-emerald-900/10 px-3 py-1.5">
+        <div className="mb-1 rounded-lg border border-emerald-400/20 bg-emerald-900/10 px-3 py-0.5">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-emerald-200/90">Equal Challenge</p>
@@ -160,8 +159,8 @@ export default function DailyChallenge() {
         </div>
 
         {/* Today's Challenge — compact combined panel */}
-        <div className="mb-2 rounded-xl border-2 border-amber-500/20 p-2.5" style={{ background: "rgba(15,26,48,0.6)" }}>
-          <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="mb-1 rounded-xl border-2 border-amber-500/20 p-1.5" style={{ background: "rgba(15,26,48,0.6)" }}>
+          <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-[10px] uppercase tracking-widest text-amber-100/50">Today&apos;s Challenge</p>
             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${difficultyBadgeClass}`}>
               {daily.difficultyLabel}
@@ -169,8 +168,8 @@ export default function DailyChallenge() {
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-blue-500/30 bg-blue-900/20">
-              <User className="h-4 w-4 text-blue-300" />
+            <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border border-blue-500/30 bg-blue-900/20">
+              <User className="h-3.5 w-3.5 text-blue-300" />
             </div>
             <div className="min-w-0 leading-tight">
               <p className="truncate font-serif text-sm text-amber-100">{daily.hero.name} — {daily.hero.title}</p>
@@ -181,14 +180,10 @@ export default function DailyChallenge() {
             </div>
           </div>
 
-          <div className="my-1 flex items-center gap-2">
-            <div className="h-px flex-1 bg-amber-500/15" />
-            <span className="text-[9px] font-bold tracking-widest text-amber-300/40">VS</span>
-            <div className="h-px flex-1 bg-amber-500/15" />
-          </div>
+          <p className="my-0.5 text-center text-[9px] font-bold tracking-widest text-amber-300/40">VS</p>
 
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg border border-red-900/50" style={{ background: "#0F1A30" }}>
+            <div className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-lg border border-red-900/50" style={{ background: "#0F1A30" }}>
               {enemyArt ? (
                 <img src={enemyArt} alt={daily.enemy.name} className="art-portrait" />
               ) : (
@@ -205,7 +200,7 @@ export default function DailyChallenge() {
             </div>
           </div>
 
-          <div className="mt-2 flex items-start gap-2 border-t border-amber-500/10 pt-2">
+          <div className="mt-1 flex items-start gap-2 border-t border-amber-500/10 pt-1">
             <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-purple-300" />
             <div className="min-w-0">
               <p className="font-serif text-xs font-semibold text-purple-200">{daily.rule.name}</p>
@@ -215,7 +210,7 @@ export default function DailyChallenge() {
         </div>
 
         {/* Fixed Deck — collapsed row */}
-        <div className="mb-1.5">
+        <div className="mb-0.5">
           <CollapsibleRow
             label={`Fixed Deck — ${daily.deck.length} Cards`}
             actionLabel="View Deck"
@@ -239,7 +234,7 @@ export default function DailyChallenge() {
         </div>
 
         {/* Scoring Rules — collapsed row */}
-        <div className="mb-2.5">
+        <div className="mb-1">
           <CollapsibleRow
             label="Scoring Rules"
             summary="Victory +500 • HP +10 • Turn −25"
@@ -291,7 +286,7 @@ export default function DailyChallenge() {
         <button
           onClick={handleStart}
           disabled={loading}
-          className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 px-6 py-3.5 font-serif text-lg font-bold text-amber-100 transition hover:bg-amber-600/40 active:scale-[0.98] disabled:opacity-50"
+          className="mb-1.5 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 px-6 py-2.5 font-serif text-lg font-bold text-amber-100 transition hover:bg-amber-600/40 active:scale-[0.98] disabled:opacity-50"
         >
           <Swords className="h-5 w-5" />
           {loading ? "Starting..." : hasActiveDaily ? "Continue Daily Battle" : "Start Daily Battle"}
@@ -338,6 +333,6 @@ export default function DailyChallenge() {
           </div>
         </div>
       )}
-    </div>
+    </FixedViewportPage>
   );
 }

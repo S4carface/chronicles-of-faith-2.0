@@ -28,7 +28,7 @@ export default function CollapsibleRow({
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-3 px-3.5 py-3 text-left transition-colors hover:bg-amber-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-inset"
+        className="flex w-full items-center justify-between gap-3 px-3.5 py-2 text-left transition-colors hover:bg-amber-500/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/50 focus-visible:ring-inset"
       >
         <span className="min-w-0">
           <span className="block font-serif text-sm text-amber-200">{label}</span>

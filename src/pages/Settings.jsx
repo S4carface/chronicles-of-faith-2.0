@@ -55,6 +55,7 @@ export default function Settings() {
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState(null); 
   const [expandedSection, setExpandedSection] = useState("player");
+  const [previewPlaying, setPreviewPlaying] = useState(false);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -152,15 +153,29 @@ const handleNarrationVolume = (vol) => {
 
 
 
-  const previewVoice = () => {
+  const previewVoice = async () => {
     Sound.sfx.click();
+    // Ensure the AudioContext (used for music ducking during narration) is
+    // actually resumed before attempting playback, so Preview Voice gives
+    // reliable feedback even as the very first audio interaction.
+    await Sound.ensureAudioUnlocked();
+    setPreviewPlaying(true);
     // Preview includes a raw scripture reference so the user hears how
     // citations are verbalized: "Genesis 1:1-3" → "Genesis chapter 1, verses 1 through 3"
-    Sound.speakNarration(
+    const utterance = Sound.speakNarration(
       "In the beginning, God created the heavens and the earth. Genesis 1:1-3.",
       (profile.settings.narrationVolume ?? 50) / 100,
-      profile.settings.narrationVoice
+      profile.settings.narrationVoice,
+      (state, error) => {
+        if (state === "end" || state === "error") {
+          setPreviewPlaying(false);
+          if (state === "error") {
+            console.warn("[Settings] Preview Voice playback failed:", error);
+          }
+        }
+      }
     );
+    if (!utterance) setPreviewPlaying(false);
   };
 
   return (
@@ -346,10 +361,11 @@ const handleNarrationVolume = (vol) => {
                 </div>
                 <button
                   onClick={previewVoice}
-                  className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition"
+                  disabled={previewPlaying}
+                  className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-200 text-xs font-medium hover:bg-amber-800/30 transition disabled:opacity-70"
                 >
                   <Play className="w-3 h-3" />
-                  Preview Voice
+                  {previewPlaying ? "Playing…" : "Preview Voice"}
                 </button>
                 <p className="text-amber-100/30 text-[9px] mt-1.5 text-center italic">Scripture references are read as "Genesis chapter 3, verse 1"</p>
               </>

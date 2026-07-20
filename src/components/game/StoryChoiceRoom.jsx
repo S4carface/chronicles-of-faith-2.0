@@ -15,7 +15,7 @@ export default function StoryChoiceRoom() {
   const story = node?.storyChoice;
   const [chosen, setChosen] = useState(null);
   const [resultText, setResultText] = useState("");
-  const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
+  const [narrationOn, setNarrationOn] = useState(Sound.toBoolean(profile.settings.narration));
   const [deckFullCard, setDeckFullCard] = useState(null);
   const narratedRef = useRef(null);
 

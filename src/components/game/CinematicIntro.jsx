@@ -39,7 +39,7 @@ export default function CinematicIntro({ onComplete }) {
   const [isTransitioning, setIsTransitioning] = useState(false); 
   const [bookCardStage, setBookCardStage] = useState(0);
   const [narrationOn, setNarrationOn] = useState(
-    profile.settings.narration !== false
+    Sound.toBoolean(profile.settings.narration)
   );
 
   const videoRef = useRef(null);
@@ -119,42 +119,52 @@ export default function CinematicIntro({ onComplete }) {
 
     const video = videoRef.current;
 
+    // Mobile browsers (iOS Safari in particular) block a non-muted Audio
+    // element's play() unless it's adjacent to a real user gesture. Rather
+    // than attempting narration blind and discovering the rejection after
+    // the fact, confirm the AudioContext can actually resume before
+    // proceeding on the automatic (non-tap) path. If it can't, show the
+    // existing "Tap to Begin" prompt so the eventual play() call happens
+    // inside a genuine tap instead of silently failing.
+    if (!userInitiated) {
+      const unlocked = await Sound.ensureAudioUnlocked();
+      if (lifecycleRef.current !== lifecycleId || completedRef.current) return;
+      if (!unlocked) {
+        setNeedsTap(true);
+        return;
+      }
+    } else {
+      await Sound.ensureAudioUnlocked();
+    }
+
     if (!video) {
       setNeedsTap(true);
-      return;
-    }
-
-    let usePosterFallback = videoFailed;
-    if (!usePosterFallback) {
-      try {
-        await waitForVideo(video);
-        await video.play();
-      } catch (error) {
-        if (!userInitiated) {
-          console.warn("Genesis video requires player interaction.", error);
-          setNeedsTap(true);
-          return;
-        }
-
-        try {
-          video.load();
-          await waitForVideo(video);
-          await video.play();
-        } catch (retryError) {
-          console.warn("Genesis video could not be played; using its poster.", retryError);
-          usePosterFallback = true;
-          setVideoFailed(true);
-        }
-      }
-    }
-
-    if (lifecycleRef.current !== lifecycleId || completedRef.current) {
       return;
     }
 
     cinematicStartedRef.current = true;
     setCinematicStarted(true);
     setNeedsTap(false);
+
+    // Video is a visual layer only, attempted independently below — a slow
+    // network or failed decode must never delay or block narration/music,
+    // which are the parts scripture playback actually depends on.
+    (async () => {
+      if (videoFailed) return;
+      try {
+        await waitForVideo(video);
+        await video.play();
+      } catch (error) {
+        try {
+          video.load();
+          await waitForVideo(video);
+          await video.play();
+        } catch (retryError) {
+          console.warn("[Genesis Intro] Video could not be played; using its poster.", retryError);
+          if (lifecycleRef.current === lifecycleId) setVideoFailed(true);
+        }
+      }
+    })();
 
     Sound.pauseMusicForAmbience();
 

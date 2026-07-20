@@ -12,7 +12,7 @@ export default function StoryNarration({ text, summary, onComplete, skipable = t
   const [mode, setMode] = useState("summary"); // "summary" | "full"
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
-  const [narrationOn, setNarrationOn] = useState(profile.settings.narration !== false);
+  const [narrationOn, setNarrationOn] = useState(Sound.toBoolean(profile.settings.narration));
   const [isListening, setIsListening] = useState(false);
   const narratedRef = useRef(false);
 

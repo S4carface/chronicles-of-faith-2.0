@@ -349,12 +349,6 @@ const handleNameSaved = (name) => {
             : "border-sky-300/45 bg-sky-900/15 shadow-lg shadow-sky-400/10 hover:border-sky-200/70 hover:bg-sky-900/25"
         }`}
       >
-        {!devotionPrayedToday && (
-          <div className="absolute right-3 top-3 rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
-            New Today
-          </div>
-        )}
-
         <div className="flex items-center gap-4 text-left">
           <div
             className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border lg:h-16 lg:w-16 ${
@@ -373,17 +367,25 @@ const handleNameSaved = (name) => {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p
-              className={`font-serif text-lg font-bold lg:text-xl ${
-                devotionPrayedToday
-                  ? "text-emerald-200"
-                  : "text-sky-100"
-              }`}
-            >
-              {devotionPrayedToday
-                ? "Daily Prayer Completed"
-                : "Take a Quiet Moment"}
-            </p>
+            <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
+              <p
+                className={`min-w-[9rem] flex-1 font-serif text-lg font-bold leading-snug lg:text-xl ${
+                  devotionPrayedToday
+                    ? "text-emerald-200"
+                    : "text-sky-100"
+                }`}
+              >
+                {devotionPrayedToday
+                  ? "Daily Prayer Completed"
+                  : "Take a Quiet Moment"}
+              </p>
+
+              {!devotionPrayedToday && (
+                <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
+                  New Today
+                </span>
+              )}
+            </div>
 
             <p className="mt-1 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
               A short scripture, reflection, and prayer for today.

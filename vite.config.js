@@ -15,5 +15,9 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
-  ]
+  ],
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.{js,jsx}"],
+  },
 });

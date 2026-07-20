@@ -3,15 +3,15 @@
 export const COUNTER_CAP = 12;
 export const HAND_LIMIT = 4;
 
-function pickEnemyAttack(enemy) {
-  return enemy.attacks[Math.floor(Math.random() * enemy.attacks.length)];
+function pickEnemyAttack(enemy, rng = Math.random) {
+  return enemy.attacks[Math.floor(rng() * enemy.attacks.length)];
 }
 
 function isCardObject(card) {
   return card && typeof card === "object" && card.id;
 }
 
-function buildEnemyDeck(enemy) {
+function buildEnemyDeck(enemy, rng = Math.random) {
   const blockAction = {
     name: "Raise Block",
     damage: 0,
@@ -28,9 +28,13 @@ function buildEnemyDeck(enemy) {
       cost: a.cost || (a.damage >= 8 ? 2 : 1),
     })),
     blockAction,
-  ]);
+  ], rng);
 }
 
+// `rng` is a seeded generator (see mapGenerator.createRng) for deterministic
+// battles (Daily Challenge). Defaults to Math.random for regular runs. The
+// generator is carried on the returned state so every downstream shuffle /
+// enemy-behavior decision for this battle continues the same sequence.
 export function createBattleState(
   enemy,
   playerHp,
@@ -38,10 +42,11 @@ export function createBattleState(
   deck,
   startingBlock = 0,
   extraDraw = 0,
-  heroId = null
+  heroId = null,
+  rng = Math.random
 ) {
-  const shuffled = shuffle([...deck]);
-  const enemyDeck = buildEnemyDeck(enemy);
+  const shuffled = shuffle([...deck], rng);
+  const enemyDeck = buildEnemyDeck(enemy, rng);
 
 // Force the first enemy action to be an attack.
 const firstAttackIndex = enemyDeck.findIndex(card => card.damage > 0);
@@ -54,7 +59,7 @@ if (firstAttackIndex > 0) {
 }
 
 const enemyHand = enemyDeck.splice(0, 1);
-const intent = enemyHand[0] || pickEnemyAttack(enemy);
+const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
   const openingHandSize = HAND_LIMIT;
 
   return {
@@ -94,15 +99,16 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy);
     skipDraw: 0,
     counter: 0,
     heroId,
+    rng,
     error: null,
   };
 }
 
-export function shuffle(arr) {
+export function shuffle(arr, rng = Math.random) {
   const copy = [...arr];
 
   for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rng() * (i + 1));
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
 
@@ -110,6 +116,7 @@ export function shuffle(arr) {
 }
 
 export function drawCards(state, count) {
+  const rng = state.rng || Math.random;
   const newHand = [...(state.hand || [])];
   const newDeck = [...(state.deck || [])];
   const newDiscard = [...(state.discard || [])];
@@ -122,7 +129,7 @@ export function drawCards(state, count) {
     if (newDeck.length === 0) {
       if (newDiscard.length === 0) break;
 
-      newDeck.push(...shuffle(newDiscard.splice(0)));
+      newDeck.push(...shuffle(newDiscard.splice(0), rng));
       reshuffled = true;
     }
 
@@ -496,6 +503,7 @@ function fadeBlock(playerBlock, log) {
 }
 
 export function enemyTurn(state) {
+  const rng = state.rng || Math.random;
   const log = [...state.log];
 
   let playerHp = state.playerHp;
@@ -516,9 +524,9 @@ export function enemyTurn(state) {
       allCards = [...state.enemy.attacks];
     }
 
-    const newDeck = shuffle(allCards);
+    const newDeck = shuffle(allCards, rng);
     const newHand = newDeck.splice(0, 1);
-    const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+    const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
 
     if (newIntent) {
       log.push(
@@ -639,9 +647,9 @@ export function enemyTurn(state) {
     allCards = [...state.enemy.attacks];
   }
 
-  const newDeck = shuffle(allCards);
+  const newDeck = shuffle(allCards, rng);
   const newHand = newDeck.splice(0, 1);
-  const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+  const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
 
   if (newIntent) {
     const label = newIntent.damage
@@ -690,6 +698,7 @@ export function checkBattleEnd(state) {
 }
 
 export function getEnemyTurnSteps(state) {
+  const rng = state.rng || Math.random;
   const steps = [];
   const log = [...state.log];
 
@@ -711,9 +720,9 @@ export function getEnemyTurnSteps(state) {
       allCards = [...state.enemy.attacks];
     }
 
-    const newDeck = shuffle(allCards);
+    const newDeck = shuffle(allCards, rng);
     const newHand = newDeck.splice(0, 1);
-    const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+    const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
 
     if (newIntent) {
       log.push(`${state.enemy.name} readies ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage})` : ""}`);
@@ -884,9 +893,9 @@ export function getEnemyTurnSteps(state) {
     allCards = [...state.enemy.attacks];
   }
 
-  const newDeck = shuffle(allCards);
+  const newDeck = shuffle(allCards, rng);
   const newHand = newDeck.splice(0, 1);
-  const newIntent = newHand[0] || pickEnemyAttack(state.enemy);
+  const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
   const endLog = [...log];
 
   if (newIntent) {

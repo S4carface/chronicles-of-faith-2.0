@@ -56,16 +56,25 @@ const DIFFICULTY_CONFIG = {
 
 const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
 
+// Plain ISO date key (YYYY-MM-DD) — used for leaderboard/profile bookkeeping.
 export function getDailySeed(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
+// Deterministic RNG seed for the challenge itself: daily_challenge_YYYY_MM_DD.
+// Same date always yields the same seed, which yields the same challenge
+// and the same card draw order / enemy behavior for every player.
+export function getDailyChallengeSeed(date = new Date()) {
+  return `daily_challenge_${getDailySeed(date).replace(/-/g, "_")}`;
+}
+
 export function getDailyChallenge(date = new Date()) {
-  const seed = getDailySeed(date);
+  const dateKey = getDailySeed(date);
+  const seed = getDailyChallengeSeed(date);
   const rng = createRng(seed);
 
   // Deterministic difficulty rotation based on day of year
-  const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+  const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
   const difficultyKey = DIFFICULTY_ORDER[dayOfYear % 3];
   const difficulty = DIFFICULTY_CONFIG[difficultyKey];
 
@@ -109,7 +118,7 @@ export function getDailyChallenge(date = new Date()) {
 
   return {
     seed,
-    date: seed,
+    date: dateKey,
     theme,
     enemyId,
     enemy,

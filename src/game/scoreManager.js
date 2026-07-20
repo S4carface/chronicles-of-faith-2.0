@@ -4,6 +4,52 @@ import { sanitizePlayerName } from "@/game/nameValidator";
 const PLAYER_ID_KEY = "cof_player_id";
 
 /**
+ * Daily Challenge scoring — pure function, no side effects.
+ *
+ * Victory: +500
+ * HP remaining: +10 per HP
+ * Turns used: -25 per turn
+ * Correct trivia: +100
+ * Perfect battle (no HP lost): +100
+ * Defeat: 0
+ * Cards played: always worth 0 points (no card-spam scoring)
+ *
+ * @param {{result?: string, playerHp?: number, maxPlayerHp?: number, turns?: number, triviaCorrect?: boolean}} params
+ */
+export function calculateDailyScore(params = {}) {
+  const {
+    result,
+    playerHp = 0,
+    maxPlayerHp = 0,
+    turns = 0,
+    triviaCorrect = false,
+  } = params;
+  if (result !== "victory") {
+    return {
+      victoryBonus: 0,
+      hpBonus: 0,
+      turnPenalty: 0,
+      triviaBonus: 0,
+      perfectBonus: 0,
+      finalScore: 0,
+    };
+  }
+
+  const victoryBonus = 500;
+  const hpBonus = Math.max(0, playerHp) * 10;
+  const turnPenalty = Math.max(0, turns) * 25;
+  const triviaBonus = triviaCorrect ? 100 : 0;
+  const perfectBonus = playerHp >= maxPlayerHp ? 100 : 0;
+
+  const finalScore = Math.max(
+    0,
+    victoryBonus + hpBonus - turnPenalty + triviaBonus + perfectBonus
+  );
+
+  return { victoryBonus, hpBonus, turnPenalty, triviaBonus, perfectBonus, finalScore };
+}
+
+/**
  * Get or create a stable playerId stored in localStorage.
  * No login required — this identifies the browser/device.
  */
@@ -137,8 +183,9 @@ export async function submitBestScore(scoreData) {
 
     if (existing && existing.length > 0) {
       const previous = existing[0];
+      const previousScore = Number(previous.score || 0);
 
-      if (payload.score > Number(previous.score || 0)) {
+      if (payload.score > previousScore) {
         await base44.entities.LeaderboardScore.update(previous.id, {
           ...payload,
           playerId,
@@ -147,6 +194,9 @@ export async function submitBestScore(scoreData) {
         return {
           success: true,
           action: "updated",
+          previousScore,
+          bestScore: payload.score,
+          isNewBest: true,
         };
       }
 
@@ -162,12 +212,18 @@ export async function submitBestScore(scoreData) {
         return {
           success: true,
           action: "named",
+          previousScore,
+          bestScore: previousScore,
+          isNewBest: false,
         };
       }
 
       return {
         success: true,
         action: "kept_previous",
+        previousScore,
+        bestScore: previousScore,
+        isNewBest: false,
       };
     }
 
@@ -176,6 +232,9 @@ export async function submitBestScore(scoreData) {
     return {
       success: true,
       action: "created",
+      previousScore: null,
+      bestScore: payload.score,
+      isNewBest: true,
     };
   } catch (error) {
     return {

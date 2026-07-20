@@ -14,6 +14,7 @@ import {
   HAND_LIMIT
 } from "@/game/battleEngine";
 import { ENEMIES, getEnemyForDifficulty } from "@/data/enemies";
+import { createRng } from "@/game/mapGenerator";
 import Card, { getCardEffectText } from "@/components/game/Card";
 import CardPreviewPanel from "@/components/game/CardPreviewPanel";
 import EndTurnConfirmModal from "@/components/game/EndTurnConfirmModal";
@@ -262,6 +263,10 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
       }
       return;
     }
+// Daily Challenge battles use a seeded RNG (derived from the daily seed) so
+// card draw order and enemy behavior are identical for every player and on
+// every replay of the same day's challenge.
+const battleRng = run.isDaily ? createRng(run.seed) : Math.random;
 const state = createBattleState(
   enemy,
   run.playerHp,
@@ -269,7 +274,8 @@ const state = createBattleState(
   run.deck,
   0,
   run.extraDraw,
-  run.hero?.id
+  run.hero?.id,
+  battleRng
 );
 
 state.drawToFull = run.difficulty === "easy";

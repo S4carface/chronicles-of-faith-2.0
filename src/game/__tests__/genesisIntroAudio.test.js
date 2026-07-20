@@ -103,16 +103,57 @@ globalThis.window.AudioContext = FakeAudioContext;
 globalThis.window.webkitAudioContext = FakeAudioContext;
 globalThis.Audio = FakeAudio;
 globalThis.window.Audio = FakeAudio;
-globalThis.fetch = () =>
-  Promise.resolve({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(8) });
+
+let fetchCallCount = 0;
+globalThis.fetch = (...args) => {
+  fetchCallCount += 1;
+  return Promise.resolve({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(8) });
+};
 
 const soundManager = await import("@/game/soundManager");
 
 beforeEach(() => {
   createdAudios.length = 0;
+  fetchCallCount = 0;
   soundManager.stopGenesisIntro({ fadeDuration: 0 });
   soundManager.setMusicEnabled(true);
   soundManager.setNarrationVolume(0.6);
+});
+
+describe("preloadGenesisIntroAssets — warms music + narration ahead of any tap", () => {
+  // preloadGenesisIntroAssets() memoizes its promise at module scope (so a
+  // real page load only ever pays for the fetch+decode once) — these are
+  // combined into a single test, in file order before any other test
+  // populates the buffer, rather than split across `it`s that would each
+  // see the already-cached result.
+  it("decodes the buffer + preloads narration once, ahead of any tap, and lets startGenesisIntro reuse it", async () => {
+    expect(soundManager.isGenesisIntroMusicBufferReady()).toBe(false);
+
+    await soundManager.preloadGenesisIntroAssets();
+    expect(soundManager.isGenesisIntroMusicBufferReady()).toBe(true);
+    expect(createdAudios.some((a) => a.src.includes("cid_intro-2.0.m4a"))).toBe(true);
+    expect(fetchCallCount).toBe(1);
+
+    // A second call must not re-fetch.
+    await soundManager.preloadGenesisIntroAssets();
+    expect(fetchCallCount).toBe(1);
+
+    // The tap-to-audible path (startGenesisIntro -> playCinematicTrack)
+    // should find the buffer already warm and skip its own fetch entirely.
+    await soundManager.startGenesisIntro();
+    expect(soundManager.isGenesisIntroMusicActive()).toBe(true);
+    expect(fetchCallCount).toBe(1);
+  });
+});
+
+describe("Opening gate dismissal — module-scoped, not sessionStorage", () => {
+  it("starts undismissed and can be marked dismissed for this page load", () => {
+    // Some earlier test in this file may have already dismissed it; reset
+    // isn't exposed (mirrors that a real page load never un-dismisses it
+    // either), so this test only asserts the setter takes effect.
+    soundManager.dismissOpeningGate();
+    expect(soundManager.isOpeningGateDismissed()).toBe(true);
+  });
 });
 
 describe("startGenesisIntro — music starts from the tap, not a later effect", () => {
@@ -212,5 +253,11 @@ describe("stopGenesisIntro — clean, idempotent shutdown", () => {
     // Calling it again (e.g. handleBegin followed by the unmount cleanup)
     // must not throw.
     expect(() => soundManager.stopGenesisIntro({ fadeDuration: 0 })).not.toThrow();
+  });
+
+  it("accepts an optional diagnostic reason without changing its behavior", async () => {
+    await soundManager.startGenesisIntro();
+    expect(() => soundManager.stopGenesisIntro({ fadeDuration: 0, reason: "skip" })).not.toThrow();
+    expect(soundManager.isGenesisIntroMusicActive()).toBe(false);
   });
 });

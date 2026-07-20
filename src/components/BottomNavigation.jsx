@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Copy, BookOpen, Home as HomeIcon, Sun, CircleUser } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
@@ -38,6 +39,7 @@ const HIDDEN_PATHS = ["/play"];
 export default function BottomNavigation() {
   const location = useLocation();
   const { profile } = useGame();
+  const prefersReducedMotion = useReducedMotion();
 
   const isHiddenPath = HIDDEN_PATHS.some(
     (path) =>
@@ -88,16 +90,22 @@ export default function BottomNavigation() {
                 {({ isActive }) => (
                   <>
                     <span
-                      className={`flex items-center justify-center rounded-full transition-all duration-200 ${
+                      className={`relative flex items-center justify-center transition-transform duration-200 motion-reduce:transition-none ${
                         item.primary ? "h-10 w-10" : "h-9 w-9"
-                      } ${
-                        isActive
-                          ? "bg-amber-400/15 ring-1 ring-amber-300/50 shadow-[0_0_12px_rgba(201,168,76,0.28)]"
-                          : "ring-1 ring-transparent"
-                      }`}
+                      } ${isActive ? "-translate-y-0.5" : "translate-y-0"}`}
                     >
+                      {/* Medallion halo — sits behind the icon so it can expand without resizing the glyph */}
+                      <span
+                        aria-hidden="true"
+                        className={`absolute inset-0 rounded-full transition-all duration-200 motion-reduce:transition-none ${
+                          isActive
+                            ? "scale-110 bg-amber-400/15 ring-1 ring-amber-300/50 shadow-[0_0_12px_rgba(201,168,76,0.28)]"
+                            : "scale-100 ring-1 ring-transparent"
+                        }`}
+                      />
+
                       <Icon
-                        className={`${item.primary ? "h-[21px] w-[21px]" : "h-5 w-5"} transition-colors ${
+                        className={`relative ${item.primary ? "h-[21px] w-[21px]" : "h-5 w-5"} transition-colors ${
                           isActive
                             ? "text-amber-200"
                             : "text-amber-100/60 group-hover:text-amber-100/80"
@@ -106,15 +114,28 @@ export default function BottomNavigation() {
                       />
                     </span>
 
-                    <span
-                      className={`text-[10px] font-medium tracking-wide transition-colors ${
-                        isActive
-                          ? "text-amber-200"
-                          : "text-amber-100/55 group-hover:text-amber-100/70"
-                      }`}
-                    >
-                      {item.label}
+                    {/* Reserved-height label slot — only the active tab's label renders, so
+                        switching tabs never shifts icon positions on the tabs around it. */}
+                    <span className="relative flex h-[13px] w-full items-center justify-center">
+                      <AnimatePresence initial={false}>
+                        {isActive && (
+                          <motion.span
+                            aria-hidden="true"
+                            key={item.path}
+                            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 3 }}
+                            transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: "easeOut" }}
+                            className="absolute whitespace-nowrap text-[10px] font-medium tracking-wide text-amber-200"
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </span>
+
+                    {/* Always-present accessible name, independent of the visual label above */}
+                    <span className="sr-only">{item.label}</span>
                   </>
                 )}
               </NavLink>

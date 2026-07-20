@@ -82,6 +82,19 @@
     },
     "gameVersion": {
       "type": "string"
+    },
+    "excludedFromCompetition": {
+      "type": "boolean",
+      "default": false,
+      "description": "true when this row belongs to a developer/test account or was manually excluded by an admin. Absent/false = normal, competitive row. Never deleted — only hidden from public leaderboard fetches and rank calculations."
+    },
+    "exclusionReason": {
+      "type": "string",
+      "description": "e.g. \"developer_account\" or an admin-entered note. Only meaningful when excludedFromCompetition is true."
+    },
+    "excludedBy": {
+      "type": "string",
+      "description": "Admin email who manually excluded this row, when applicable (not set for automatic developer-account skips, since those never create a row)."
     }
   },
   "required": [

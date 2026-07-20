@@ -1,0 +1,27 @@
+{
+  "name": "DeveloperAccount",
+  "type": "object",
+  "properties": {
+    "accountId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable authenticated identity of the account — the Base44 user's email (preferred) or user id. Never a display/player name, never client-editable."
+    },
+    "excluded": {
+      "type": "boolean",
+      "default": true,
+      "description": "true = this account's Story/Daily scores are excluded from public leaderboards. Kept as a field (not row presence alone) so exclusions can be toggled off without deleting history."
+    },
+    "reason": {
+      "type": "string"
+    },
+    "addedBy": {
+      "type": "string",
+      "description": "Admin email who created or last changed this record."
+    }
+  },
+  "required": [
+    "accountId",
+    "excluded"
+  ]
+}

@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { sanitizePlayerName } from "@/game/nameValidator";
+import { getCompetitiveAccountStatus, ACCOUNT_STATUS } from "@/game/devAccountManager";
 
 const PLAYER_ID_KEY = "cof_player_id";
 
@@ -120,6 +121,19 @@ export function deduplicateByPlayer(scores) {
   );
 }
 
+/**
+ * Strip developer/test or admin-excluded rows before they reach any public
+ * leaderboard, rank calculation, or "your status" text. Rows are never
+ * deleted — this is a read-time filter only, applied client-side because
+ * `excludedFromCompetition` is absent (not `false`) on the vast majority of
+ * rows, which an exact-match server query would mishandle. Kept separate
+ * from deduplicateByPlayer() so admin-only views (Developer / QA Scores)
+ * can still request the excluded rows directly.
+ */
+export function filterCompetitiveScores(scores) {
+  return (scores || []).filter((row) => row.excludedFromCompetition !== true);
+}
+
 function buildCategoryQuery(payload, playerField, playerValue) {
   const query = {
     [playerField]: playerValue,
@@ -149,8 +163,30 @@ function buildCategoryQuery(payload, playerField, playerValue) {
  * Story mode stores the player's all-time best.
  * Weekly story scores use a reserved weekly challenge key.
  * Daily mode stores the player's best Daily Battle score for that date.
+ *
+ * Every submission first resolves competitive eligibility (see
+ * devAccountManager.js) — this is the single choke point every leaderboard
+ * submission path runs through (submitStoryScores, seasonManager's
+ * submitSeasonBestScore/submitWeeklyBestScore/submitGenesisScores, and
+ * DailyResultScreen's direct call), so a developer/test account is excluded
+ * everywhere without every call site needing to remember the check itself.
+ * A developer account's run still calculates a real score — it's just never
+ * written to LeaderboardScore. `options.eligibility`, if provided, skips a
+ * redundant lookup when the caller already resolved it (e.g. Genesis
+ * submits to two categories in parallel from a single resolved status).
  */
-export async function submitBestScore(scoreData) {
+export async function submitBestScore(scoreData, options = {}) {
+  const eligibility = options.eligibility || (await getCompetitiveAccountStatus());
+
+  if (eligibility.status === ACCOUNT_STATUS.DEVELOPER) {
+    return {
+      success: true,
+      skipped: true,
+      reason: "developer_account",
+      score: Number(scoreData.score || 0),
+    };
+  }
+
   const playerId = getPlayerId();
   const safeName = sanitizePlayerName(scoreData.playerName);
 
@@ -293,18 +329,19 @@ export async function submitBestScore(scoreData) {
  */
 export async function submitStoryScores(scoreData) {
   const weekId = getCurrentWeekId();
+  const eligibility = await getCompetitiveAccountStatus();
 
   const [allTimeResult, weeklyResult] = await Promise.all([
     submitBestScore({
       ...scoreData,
       mode: "story",
-    }),
+    }, { eligibility }),
 
     submitBestScore({
       ...scoreData,
       mode: "daily",
       dailyChallengeId: `weekly-${weekId}`,
-    }),
+    }, { eligibility }),
   ]);
 
   if (!allTimeResult.success || !weeklyResult.success) {
@@ -362,7 +399,7 @@ export async function fetchLeaderboard(tab) {
     );
   }
 
-  return deduplicateByPlayer(results || []);
+  return deduplicateByPlayer(filterCompetitiveScores(results));
 }
 
 /**
@@ -380,7 +417,7 @@ export async function getDailyRank(dailyChallengeId) {
     100
   );
 
-  const deduped = deduplicateByPlayer(scores || []);
+  const deduped = deduplicateByPlayer(filterCompetitiveScores(scores));
 
   const index = deduped.findIndex(
     (score) => score.playerId === playerId

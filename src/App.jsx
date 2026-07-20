@@ -32,6 +32,7 @@ import SpecialThanks from "@/pages/SpecialThanks";
 import PremiumCardPreview from "@/pages/PremiumCardPreview";
 import CardRarityPreview from "@/pages/CardRarityPreview";
 import AdminSeasons from "@/pages/AdminSeasons";
+import AdminDeveloperAccounts from "@/pages/AdminDeveloperAccounts";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useEffect, useRef, useState } from "react";
 import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
@@ -136,6 +137,7 @@ const AuthenticatedApp = () => {
         <Route path="/dev/premium-card-showcase" element={<PremiumCardPreview />} />
         <Route path="/dev/card-rarity-preview" element={<CardRarityPreview />} />
         <Route path="/admin/seasons" element={<AdminSeasons />} />
+        <Route path="/admin/developer-accounts" element={<AdminDeveloperAccounts />} />
     </Routes>
   );
 

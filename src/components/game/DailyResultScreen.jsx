@@ -21,6 +21,7 @@ export default function DailyResultScreen() {
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [previousBest, setPreviousBest] = useState(null);
   const [isNewBest, setIsNewBest] = useState(false);
+  const [devSkipped, setDevSkipped] = useState(false);
   const calculatedScore = useRef(0);
 
   const result = run?.dailyResult;
@@ -93,7 +94,15 @@ export default function DailyResultScreen() {
       result: result.result,
     });
 
-    if (submitResult.success) {
+    if (submitResult.skipped) {
+      // Developer/test account — the run and its score are real, but the
+      // submission was intentionally never sent. Not an error: no retry,
+      // no rank lookup, no "saved to leaderboard" message.
+      setDevSkipped(true);
+      setSubmitError(false);
+      setScoreSubmitted(false);
+    } else if (submitResult.success) {
+      setDevSkipped(false);
       setScoreSubmitted(true);
       setPreviousBest(submitResult.previousScore ?? null);
       setIsNewBest(!!submitResult.isNewBest);
@@ -272,7 +281,11 @@ export default function DailyResultScreen() {
           )}
         </div>
 
-        {submitError && (
+        {devSkipped ? (
+          <p className="text-amber-100/50 text-sm mb-4 text-center">
+            Developer run — Daily Battle score not submitted.
+          </p>
+        ) : submitError ? (
           <div className="mb-4 p-4 rounded-lg border border-red-400/40 bg-red-900/20 text-center">
             <p className="text-red-300 text-sm mb-2">Score could not be saved. Check your connection and try again.</p>
             <button
@@ -282,7 +295,7 @@ export default function DailyResultScreen() {
               Retry Submission
             </button>
           </div>
-        )}
+        ) : null}
 
         {scoreSubmitted && !submitError && (
           <p className="text-emerald-300 text-sm mb-4 text-center">Score saved to leaderboard.</p>

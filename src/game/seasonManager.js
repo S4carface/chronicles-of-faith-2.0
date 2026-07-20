@@ -23,7 +23,9 @@ import {
   fetchLeaderboard,
   getCurrentWeekId,
   deduplicateByPlayer,
+  filterCompetitiveScores,
 } from "@/game/scoreManager";
+import { getCompetitiveAccountStatus } from "@/game/devAccountManager";
 
 export const DEFAULT_ACTIVE_SEASON = {
   id: "early-access-season-2",
@@ -75,8 +77,10 @@ export { getCurrentWeekId };
 /**
  * Submit the player's Current Season best. One row per player per season —
  * a lower score never replaces it. Creates the season record if none exists.
+ * `eligibility`, if provided, avoids a redundant developer-account lookup —
+ * see submitGenesisScores below.
  */
-export async function submitSeasonBestScore(scoreData, activeSeason) {
+export async function submitSeasonBestScore(scoreData, activeSeason, eligibility) {
   const season = activeSeason || (await getActiveSeason());
   return submitBestScore({
     ...scoreData,
@@ -86,7 +90,7 @@ export async function submitSeasonBestScore(scoreData, activeSeason) {
     seasonName: season.name,
     periodId: season.id,
     gameVersion: season.gameVersion || DEFAULT_ACTIVE_SEASON.gameVersion,
-  });
+  }, eligibility ? { eligibility } : {});
 }
 
 /**
@@ -94,29 +98,38 @@ export async function submitSeasonBestScore(scoreData, activeSeason) {
  * implementation — untouched on purpose so existing weekly data and behavior
  * survive this feature unmodified.
  */
-export async function submitWeeklyBestScore(scoreData) {
+export async function submitWeeklyBestScore(scoreData, eligibility) {
   const weekId = getCurrentWeekId();
   return submitBestScore({
     ...scoreData,
     mode: "daily",
     dailyChallengeId: `weekly-${weekId}`,
-  });
+  }, eligibility ? { eligibility } : {});
 }
 
 /**
  * Every completed Genesis run submits independently to Current Season and
  * This Week (Promise.all — a failure in one never blocks or hides the other).
+ *
+ * Competitive eligibility (developer/test account check) is resolved once
+ * here and passed to both submissions — one authenticated-identity lookup
+ * per run, and both categories always agree on the result. A developer
+ * account still gets both results back as an intentional `skipped: true`,
+ * never as a failure — the Victory screen distinguishes the two.
  */
 export async function submitGenesisScores(scoreData) {
   const activeSeason = await getActiveSeason();
   const weekId = getCurrentWeekId();
+  const eligibility = await getCompetitiveAccountStatus();
 
   const [seasonResult, weeklyResult] = await Promise.all([
-    submitSeasonBestScore(scoreData, activeSeason),
-    submitWeeklyBestScore(scoreData),
+    submitSeasonBestScore(scoreData, activeSeason, eligibility),
+    submitWeeklyBestScore(scoreData, eligibility),
   ]);
 
-  if (!seasonResult.success || !weeklyResult.success) {
+  const skipped = seasonResult.skipped === true && weeklyResult.skipped === true;
+
+  if (!skipped && (!seasonResult.success || !weeklyResult.success)) {
     console.error("[seasonManager] submitGenesisScores had a partial or full failure", {
       activeSeason,
       weekId,
@@ -127,11 +140,13 @@ export async function submitGenesisScores(scoreData) {
 
   return {
     success: seasonResult.success && weeklyResult.success,
+    skipped,
+    reason: skipped ? "developer_account" : undefined,
     seasonResult,
     weeklyResult,
     activeSeason,
     weekId,
-    error: seasonResult.error || weeklyResult.error,
+    error: skipped ? undefined : (seasonResult.error || weeklyResult.error),
   };
 }
 
@@ -158,7 +173,7 @@ export async function fetchCurrentSeasonLeaderboard(activeSeason) {
     "-score",
     100
   );
-  return deduplicateByPlayer(rows || []);
+  return deduplicateByPlayer(filterCompetitiveScores(rows));
 }
 
 // This Week is unaffected by seasons — same data, same query, same shape.
@@ -218,7 +233,11 @@ export async function fetchLegacyLeaderboard(seasonId) {
     return seasonId === LEGACY_SEASON_1.id;
   });
 
-  return deduplicateByPlayer(rows);
+  // Developer/test rows are preserved in the database (never deleted) but
+  // stay out of every player-facing ranking, including historical Legacy
+  // Records — they remain visible only in the internal Developer / QA
+  // Scores admin view (see devAccountManager.js).
+  return deduplicateByPlayer(filterCompetitiveScores(rows));
 }
 
 const SEASON_ACK_KEY_PREFIX = "chronicles_of_faith_season_ack_";

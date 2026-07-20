@@ -264,7 +264,16 @@ function StageTwo({ run, multiplier, baseScore, penaltyPercent, onContinue, enab
 // it shows what the standing best remains. When neither category improved,
 // an extra "Score posted" line acknowledges the run so the two "remains"
 // lines don't read as if nothing happened.
+//
+// A developer/test account's submission is intentionally skipped (see
+// submitGenesisScores in seasonManager.js) — that's never an error, so it
+// gets its own message instead of falling through to the success/failure
+// branches below, which assume a real submission was attempted.
 function buildScoreFeedbackLines(scoreToSubmit, submitResult) {
+  if (submitResult?.skipped) {
+    return [{ text: "Developer run — score not submitted to public leaderboards.", emphasize: false }];
+  }
+
   const { seasonResult, weeklyResult } = submitResult || {};
   if (!seasonResult?.success || !weeklyResult?.success) return [];
 

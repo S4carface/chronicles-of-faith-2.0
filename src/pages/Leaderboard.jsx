@@ -292,10 +292,13 @@ export default function Leaderboard() {
           </div>
         )}
 
-        <p className="mb-4 text-center text-[11px] text-amber-100/45">
+        <p className="mb-1 text-center text-[11px] text-amber-100/45">
           {showLegacy
             ? "Archived scores from earlier gameplay and balance versions."
             : TAB_EXPLANATIONS[filter]}
+        </p>
+        <p className="mb-4 text-center text-[9px] text-amber-100/25">
+          Developer and internal test scores are excluded from public rankings.
         </p>
 
         {statusLabel && (
@@ -415,9 +418,12 @@ export default function Leaderboard() {
         )}
 
       {isAdmin && (
-        <div className="mx-auto mt-6 max-w-2xl text-center">
+        <div className="mx-auto mt-6 max-w-2xl flex items-center justify-center gap-4 text-center">
           <Link to="/admin/seasons" className="text-[10px] text-amber-100/30 transition hover:text-amber-200/60">
             Season Management →
+          </Link>
+          <Link to="/admin/developer-accounts" className="text-[10px] text-amber-100/30 transition hover:text-amber-200/60">
+            Developer Accounts →
           </Link>
         </div>
       )}

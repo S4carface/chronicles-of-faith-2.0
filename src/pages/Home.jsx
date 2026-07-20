@@ -6,6 +6,7 @@ import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
+import FixedViewportPage from "@/components/FixedViewportPage";
 import { HOME_ART, MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
@@ -204,18 +205,18 @@ const handleNameSaved = (name) => {
   },
 ];
   return (
-    <div
-  className="min-h-screen flex flex-col items-center px-4 lg:px-8 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-32 relative overflow-hidden"
-  style={{
-    backgroundColor: "#0A0F1E",
-    backgroundImage: homeBackgroundReady
-      ? `linear-gradient(180deg, rgba(5, 12, 29, 0.28) 0%, rgba(7, 15, 34, 0.48) 42%, rgba(4, 10, 24, 0.7) 100%), url("${HOME_BACKGROUND}")`
-      : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
-    backgroundPosition: "center 18%",
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "cover",
-  }}
->
+    <FixedViewportPage
+      style={{
+        backgroundColor: "#0A0F1E",
+        backgroundImage: homeBackgroundReady
+          ? `linear-gradient(180deg, rgba(5, 12, 29, 0.28) 0%, rgba(7, 15, 34, 0.48) 42%, rgba(4, 10, 24, 0.7) 100%), url("${HOME_BACKGROUND}")`
+          : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+        backgroundPosition: "center 18%",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+      }}
+      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:pb-16"
+    >
       {/* Floating particles */}
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
@@ -230,9 +231,9 @@ const handleNameSaved = (name) => {
       ))}
 
       {/* Hero / Title — compact */}
-      <div className="relative text-center mb-5">
-        <div className="flex justify-center mb-2">
-          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" style={{ background: "#0F1A30" }}>
+      <div className="relative text-center mb-3">
+        <div className="flex justify-center mb-1.5">
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" style={{ background: "#0F1A30" }}>
             <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait" />
           </div>
         </div>
@@ -242,13 +243,13 @@ const handleNameSaved = (name) => {
         <p className="text-amber-100/45 mt-1 font-serif italic tracking-wide" style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)" }}>
           A Biblical Roguelike Journey
         </p>
-        <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+        <div className="w-24 h-px mx-auto mt-1.5 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
       </div>
 
       {/* Player name row — subtle guest-mode indicator or name display */}
       <button
         onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-        className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm mb-3"
+        className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm mb-2"
       >
         {needsPlayerName(profile.playerName) ? (
           <>
@@ -310,7 +311,7 @@ const handleNameSaved = (name) => {
 
 {/* Difficulty appears only after the first tutorial is completed */}
 {profile.tutorialSeen && (
-  <div className="relative w-full max-w-md lg:max-w-[600px] mb-4 lg:mb-5">
+  <div className="relative w-full max-w-md lg:max-w-[600px] mb-2 lg:mb-3">
     <DifficultySelect />
   </div>
 )}
@@ -327,7 +328,7 @@ const handleNameSaved = (name) => {
       {/* Play button — primary CTA */}
       <button
         onClick={handleBeginRun}
-        className="relative w-full max-w-md lg:max-w-[600px] mb-6 px-8 py-4 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+        className="relative w-full max-w-md lg:max-w-[600px] mb-3 px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
         style={{
           fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
           background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
@@ -343,7 +344,7 @@ const handleNameSaved = (name) => {
       <Link
         to="/daily-prayer"
         onClick={() => Sound.sfx.click()}
-        className={`relative w-full max-w-md lg:max-w-[600px] mb-6 overflow-hidden rounded-xl border-2 px-4 py-4 lg:px-6 lg:py-5 transition-all duration-300 active:scale-[0.99] ${
+        className={`relative w-full max-w-md lg:max-w-[600px] mb-3 overflow-hidden rounded-xl border-2 px-4 py-3 lg:px-6 lg:py-5 transition-all duration-300 active:scale-[0.99] ${
           devotionPrayedToday
             ? "border-emerald-400/35 bg-emerald-900/15"
             : "border-sky-300/45 bg-sky-900/15 shadow-lg shadow-sky-400/10 hover:border-sky-200/70 hover:bg-sky-900/25"
@@ -351,14 +352,14 @@ const handleNameSaved = (name) => {
       >
         <div className="flex items-center gap-4 text-left">
           <div
-            className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border lg:h-16 lg:w-16 ${
+            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border lg:h-16 lg:w-16 ${
               devotionPrayedToday
                 ? "border-emerald-400/30 bg-emerald-900/20"
                 : "border-sky-300/35 bg-sky-900/25"
             }`}
           >
             <Sun
-              className={`h-7 w-7 lg:h-8 lg:w-8 ${
+              className={`h-6 w-6 lg:h-8 lg:w-8 ${
                 devotionPrayedToday
                   ? "text-emerald-300"
                   : "text-sky-200"
@@ -450,7 +451,7 @@ const handleNameSaved = (name) => {
   <Link
     to="/leaderboard"
     onClick={() => Sound.sfx.click()}
-    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-3 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
+    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
   >
     <p className="font-serif text-sm text-amber-100 lg:text-base">
       Leaderboard
@@ -463,7 +464,7 @@ const handleNameSaved = (name) => {
   <Link
     to="/settings"
     onClick={() => Sound.sfx.click()}
-    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-3 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
+    className="rounded-xl border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 text-center transition hover:border-amber-400/40 hover:bg-amber-500/5"
   >
     <p className="font-serif text-sm text-amber-100 lg:text-base">
       Settings
@@ -474,7 +475,7 @@ const handleNameSaved = (name) => {
   </Link>
 </div>
 
-<p className="relative text-amber-100/40 text-[10px] mt-6 font-serif italic text-center max-w-md">
+<p className="relative text-amber-100/40 text-[10px] mt-3 font-serif italic text-center max-w-md">
   "In the beginning, God created the heavens and the earth." — Genesis 1:1
 </p>
 
@@ -492,8 +493,6 @@ const handleNameSaved = (name) => {
           onAbandon={() => { setShowResume(false); endRun(); }}
         />
       )}
-
-      
-    </div>
+    </FixedViewportPage>
   );
 }

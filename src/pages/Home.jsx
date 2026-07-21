@@ -20,7 +20,6 @@ import * as Sound from "@/game/soundManager";
 const HOME_BACKGROUND = "/images/home/home-celestial.png";
 const HOME_CREST_ART = "/images/home/home-crest.webp";
 const HOME_TROPHY_ART = "/images/home/home-trophy.webp";
-const START_JOURNEY_FRAME_ART = "/images/home/start-journey-frame.webp";
 
 // Fixed, deterministic particle field — declared once at module scope so
 // positions never change on re-render (Math.random() directly inside JSX
@@ -34,6 +33,17 @@ const HOME_PARTICLES = [
   { left: 78, top: 55, size: 4, duration: 9.5, delay: 1.8 },
   { left: 90, top: 10, size: 2.5, duration: 6, delay: 2.2 },
   { left: 95, top: 75, size: 3, duration: 8, delay: 3.8 },
+];
+
+// Sparse gold dust for the atmospheric space below Start Journey on the
+// first-time screen (bottom nav — and its own reserved spacer — is hidden
+// pre-tutorial, so this small fixed set gives that leftover space a
+// deliberate, sacred feel instead of a flat empty gap).
+const TAIL_PARTICLES = [
+  { left: 18, top: 30, size: 2, duration: 8, delay: 0.4 },
+  { left: 46, top: 60, size: 2.5, duration: 9.5, delay: 1.6 },
+  { left: 72, top: 22, size: 2, duration: 7.5, delay: 2.8 },
+  { left: 88, top: 55, size: 2.5, duration: 10, delay: 0.8 },
 ];
 
 export default function Home() {
@@ -82,8 +92,8 @@ export default function Home() {
   // Home artwork (the crest and the Genesis horizon) ahead of when
   // SafeImage actually mounts them, so they're more likely to be ready to
   // fade in immediately rather than showing their loading placeholder
-  // first. The trophy and Start Journey frame crop are lower-priority
-  // decoration and intentionally left to load on their own.
+  // first. The trophy is lower-priority decoration and intentionally left
+  // to load on its own.
   useEffect(() => {
     preloadImages([HOME_CREST_ART, GENESIS_HORIZON_ART]);
   }, []);
@@ -168,6 +178,14 @@ export default function Home() {
   // still offers a clean way to abandon it and start fresh.
   const hasResumableRun = Boolean(run || savedStoryExists);
 
+  // Bottom nav (and its own reserved spacer) only renders once the tutorial
+  // is seen, so the page's own bottom padding only needs to reserve that
+  // much room post-tutorial. Pre-tutorial, a small safe-area pad is enough —
+  // the leftover space is filled deliberately below (see TAIL_PARTICLES).
+  const contentBottomPadding = profile.tutorialSeen
+    ? "pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
+    : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-8";
+
   return (
     <FixedViewportPage
       style={{
@@ -179,7 +197,7 @@ export default function Home() {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName="pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
+      contentClassName={`pt-[calc(0.5rem+env(safe-area-inset-top))] ${contentBottomPadding}`}
     >
       {/* Floating particles — drift across the whole screen, behind every section */}
       {HOME_PARTICLES.map((particle, i) => (
@@ -206,7 +224,15 @@ export default function Home() {
           The darkening gradient sits on this full-bleed wrapper (no side
           padding) so it spans edge to edge; the crest/title/subtitle
           content is centered inside its own padded inner div. */}
-      <section className="relative w-full pt-3 pb-7 lg:pb-9 text-center overflow-hidden">
+      {/* shrink-0: this is a flex item of FixedViewportPage's flex column.
+          Combined with overflow-hidden, a flex item's automatic minimum
+          size resolves to 0 instead of its content size — on a short
+          viewport with enough content below to exceed the container's
+          height, that lets the flex algorithm collapse this section down
+          to just its own padding and CLIP the crest/title/subtitle
+          entirely, even though scrolling was available and preferred.
+          shrink-0 keeps it pinned to its natural content height instead. */}
+      <section className="relative w-full shrink-0 pt-3 pb-7 lg:pb-9 text-center overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
@@ -218,10 +244,10 @@ export default function Home() {
 
         <div className="relative px-4 lg:px-8">
           <div className="flex justify-center mb-2">
-            <div className="relative h-16 w-16 lg:h-20 lg:w-20">
+            <div className="relative h-20 w-20 lg:h-24 lg:w-24">
               <div
                 className="absolute inset-0 rounded-full blur-xl"
-                style={{ background: "rgba(201,168,76,0.4)" }}
+                style={{ background: "rgba(251,191,36,0.5)" }}
                 aria-hidden="true"
               />
               {/* home-crest.webp is a fully opaque square (no alpha channel) —
@@ -241,16 +267,16 @@ export default function Home() {
           </div>
 
           <h1
-            className="font-serif text-amber-100 tracking-wide leading-tight"
+            className="font-serif text-amber-50 tracking-wide leading-tight"
             style={{
               fontSize: "clamp(1.75rem, 5vw, 3.5rem)",
-              textShadow: "0 0 34px rgba(201,168,76,0.4), 0 2px 8px rgba(0,0,0,0.5)",
+              textShadow: "0 0 40px rgba(251,191,36,0.5), 0 2px 10px rgba(0,0,0,0.55)",
             }}
           >
             Chronicles of Faith
           </h1>
           <p
-            className="text-amber-100/60 mt-1 font-serif italic tracking-wide"
+            className="text-amber-100/70 mt-1 font-serif italic tracking-wide"
             style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
           >
             A Biblical Roguelike Journey
@@ -259,113 +285,137 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Player identity row */}
+      {/* 5. Player identity row — a small dark pill so the name reads
+          clearly against the bright celestial background, without a large
+          rectangle behind the whole header. */}
       <div className="w-full px-4 lg:px-8 flex justify-center mb-6">
         <button
           onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-          className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm"
+          className="flex items-center gap-2 rounded-full border border-amber-400/20 px-3.5 py-1.5 hover:border-amber-300/35 transition text-xs lg:text-sm"
+          style={{ background: "rgba(5,9,18,0.55)" }}
         >
           {needsPlayerName(profile.playerName) ? (
-            <span className="text-amber-100/40">Playing as Guest Pilgrim</span>
+            <span className="text-amber-100/55">Playing as Guest Pilgrim</span>
           ) : (
-            <span>Playing as: {sanitizePlayerName(profile.playerName)}</span>
+            <span className="text-amber-100/85">Playing as: {sanitizePlayerName(profile.playerName)}</span>
           )}
-          <Pencil className="w-3 h-3" />
+          <Pencil className="w-3 h-3 flex-shrink-0 text-amber-100/60" />
         </button>
       </div>
 
-      {/* 6. "Take a Quiet Moment" — part of the full post-tutorial home menu,
-          so it stays hidden for first-time players to keep their first
-          impression focused on Start Journey. */}
-      {profile.tutorialSeen && (
-        <div className="w-full px-4 lg:px-8 flex justify-center mb-4">
-          {devotionPrayedToday ? (
-            <Link
-              to="/daily-prayer"
-              onClick={() => Sound.sfx.click()}
-              className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/35 px-3 py-2 transition hover:border-emerald-300/50 lg:max-w-[600px]"
-              style={{ background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.78) 100%)" }}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-serif text-sm font-semibold text-emerald-200">
-                  ✓ Daily Prayer Completed
-                </p>
-                <p className="text-[11px] text-emerald-100/65">
-                  Return to today&rsquo;s reflection
-                </p>
-              </div>
-              {profile.devotionStreak > 0 && (
-                <span className="flex-shrink-0 whitespace-nowrap text-[10px] text-amber-300/70">
-                  {profile.devotionStreak}-day streak
-                </span>
-              )}
-            </Link>
-          ) : (
-            <Link
-              to="/daily-prayer"
-              onClick={() => Sound.sfx.click()}
-              className="relative w-full max-w-md lg:max-w-[600px] overflow-hidden rounded-xl border-2 border-sky-300/45 bg-sky-900/15 px-4 py-3 lg:px-6 lg:py-5 shadow-lg shadow-sky-400/10 transition-all duration-300 hover:border-sky-200/70 hover:bg-sky-900/25 active:scale-[0.99]"
-            >
-              <div className="flex items-center gap-4 text-left">
-                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-sky-300/35 bg-sky-900/25 lg:h-16 lg:w-16">
-                  <Sun className="h-6 w-6 text-sky-200 lg:h-8 lg:w-8" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  {/* Title and badge each get their own row on narrow
-                      screens (flex-wrap) so the badge never squeezes the
-                      title text into a clip — it simply wraps below. */}
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <p className="font-serif text-lg font-bold leading-snug text-sky-100 lg:text-xl">
-                      Take a Quiet Moment
-                    </p>
-                    <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
-                      New Today
-                    </span>
-                  </div>
-
-                  <p className="mt-1.5 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
-                    A short scripture, reflection, and prayer for today.
-                  </p>
-
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="text-xs font-semibold text-sky-200 lg:text-sm">
-                      Pray Now →
-                    </span>
-
-                    {profile.devotionStreak > 0 && (
-                      <span className="text-[10px] text-amber-300/60 lg:text-xs">
-                        {profile.devotionStreak}-day prayer streak
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Link>
-          )}
-        </div>
-      )}
-
-      {/* 7. Leaderboard — also part of the full post-tutorial home menu. */}
-      {profile.tutorialSeen && (
-        <div className="w-full px-4 lg:px-8 flex justify-center mb-2">
+      {/* 6. "Take a Quiet Moment" — shown both before AND after the tutorial;
+          it's a standing daily feature, not part of the post-tutorial menu. */}
+      <div className="w-full px-4 lg:px-8 flex justify-center mb-4">
+        {devotionPrayedToday ? (
           <Link
-            to="/leaderboard"
+            to="/daily-prayer"
             onClick={() => Sound.sfx.click()}
-            className="relative flex min-h-[76px] w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/25 px-3 py-2 transition hover:border-amber-400/40 lg:max-w-[600px]"
-            style={{ background: "rgba(8,12,24,0.78)" }}
+            className="relative flex w-full max-w-md items-center gap-2 rounded-xl border border-emerald-400/35 px-4 py-3 transition hover:border-emerald-300/50 lg:max-w-[600px]"
+            style={{
+              background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.85) 100%)",
+              boxShadow: "inset 0 1px 0 rgba(251,191,36,0.14)",
+            }}
           >
-            <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
-              <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+            <div className="min-w-0 flex-1">
+              <p className="font-serif text-sm font-semibold text-emerald-200">
+                ✓ Daily Prayer Completed
+              </p>
+              <p className="text-[11px] text-emerald-100/65">
+                Return to today&rsquo;s reflection
+              </p>
             </div>
-            <div className="min-w-0 flex-1 text-left">
-              <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
-              <p className="text-[11px] text-amber-100/80">View current rankings</p>
-            </div>
-            <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
+            {profile.devotionStreak > 0 && (
+              <span className="flex-shrink-0 whitespace-nowrap text-[10px] font-semibold text-amber-300/80">
+                {profile.devotionStreak}-day streak
+              </span>
+            )}
           </Link>
-        </div>
-      )}
+        ) : (
+          <Link
+            to="/daily-prayer"
+            onClick={() => Sound.sfx.click()}
+            className="relative flex w-full max-w-md min-h-[132px] items-center gap-4 rounded-2xl border border-amber-400/35 px-4 py-4 transition-all duration-300 hover:border-amber-300/55 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px] lg:min-h-[140px] lg:px-6"
+            style={{
+              background: "linear-gradient(135deg, rgba(14,20,38,0.92) 0%, rgba(6,10,20,0.96) 100%)",
+              boxShadow: "inset 0 1px 0 rgba(251,191,36,0.18), inset 0 0 0 1px rgba(251,191,36,0.06), 0 6px 18px rgba(0,0,0,0.35)",
+            }}
+          >
+            {/* Badge pinned to its own top-right corner, with the text
+                column reserving space via pr-14 below — it never competes
+                with the title for width, so the title can never clip. */}
+            <span className="absolute top-3 right-3 whitespace-nowrap rounded-full border border-amber-300/35 bg-amber-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+              New Today
+            </span>
+
+            {/* Compact icon medallion — no dedicated lantern/prayer artwork
+                exists locally yet, so the Sun icon is presented inside a
+                gold/navy medallion with a soft glow behind it. */}
+            <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center lg:h-16 lg:w-16">
+              <div
+                className="absolute inset-0 rounded-full blur-md"
+                style={{ background: "rgba(251,191,36,0.35)" }}
+                aria-hidden="true"
+              />
+              <div
+                className="relative flex h-full w-full items-center justify-center rounded-full border border-amber-400/50"
+                style={{ background: "radial-gradient(circle at 50% 35%, rgba(58,45,16,0.9) 0%, rgba(10,14,26,0.96) 100%)" }}
+              >
+                <Sun className="h-6 w-6 text-amber-200 lg:h-7 lg:w-7" />
+              </div>
+            </div>
+
+            <div className="min-w-0 flex-1 pr-14 text-left">
+              <p className="font-serif text-lg font-bold leading-snug text-amber-100 lg:text-xl">
+                Take a Quiet Moment
+              </p>
+
+              <p className="mt-1.5 text-xs leading-relaxed text-amber-100/60 lg:text-sm">
+                A short scripture, reflection, and prayer for today.
+              </p>
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-xs font-semibold text-amber-300 lg:text-sm">
+                  Pray Now →
+                </span>
+
+                {profile.devotionStreak > 0 && (
+                  <span className="text-[10px] text-amber-300/50 lg:text-xs">
+                    {profile.devotionStreak}-day prayer streak
+                  </span>
+                )}
+              </div>
+            </div>
+          </Link>
+        )}
+      </div>
+
+      {/* 7. Leaderboard — also shown both before AND after the tutorial. */}
+      <div className="w-full px-4 lg:px-8 flex justify-center mb-2">
+        <Link
+          to="/leaderboard"
+          onClick={() => Sound.sfx.click()}
+          className="relative flex min-h-[88px] w-full max-w-md items-center gap-3 rounded-xl border border-amber-400/30 px-4 py-3 transition hover:border-amber-300/45 lg:max-w-[600px]"
+          style={{
+            background: "linear-gradient(135deg, rgba(10,16,32,0.85) 0%, rgba(6,10,20,0.9) 100%)",
+            boxShadow: "inset 0 1px 0 rgba(251,191,36,0.12)",
+          }}
+        >
+          <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
+            <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+          </div>
+          <div className="min-w-0 flex-1 text-left">
+            <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
+            <p className="text-[11px] text-amber-100/70">See how you rank among faithful warriors.</p>
+          </div>
+          {/* Full action text on wider screens; a plain gold arrow on narrow
+              phones so it never forces the card wider or clips. */}
+          <span className="hidden flex-shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-amber-300/80 sm:flex">
+            View Top Players
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </span>
+          <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70 sm:hidden" aria-hidden="true" />
+        </Link>
+      </div>
 
       {/* 8. Scripture / Genesis horizon — atmospheric centerpiece, always
           shown (including before the tutorial) so the first impression
@@ -398,43 +448,77 @@ export default function Home() {
           underlying resume/new-run logic stays wired exactly as before. */}
       <StickyActionDock className="w-full px-4 lg:px-8">
         <div className="relative mx-auto w-full max-w-md lg:max-w-[600px]">
-          {/* Decorative crest cropped from the top of start-journey-frame.webp —
-              only the ornamental arch/shield band (roughly the top ~10% of the
-              tall source image) is ever visible here. The source also contains
-              a baked-in "Start your Journey" nameplate much further down; a
-              short, fixed-height, overflow-hidden window with object-position:
-              top keeps that text entirely outside the crop regardless of
-              viewport width, so the live button text below is never duplicated. */}
-          <div className="relative mx-auto h-10 w-full overflow-hidden rounded-t-xl sm:h-12" aria-hidden="true">
-            <SafeImage
-              src={START_JOURNEY_FRAME_ART}
-              alt=""
-              className="h-full w-full object-cover"
-              style={{ objectPosition: "top center" }}
+          {/* CSS-only ornament in place of the old start-journey-frame.webp
+              crop — no image asset, so there's no risk of the source's
+              baked-in "Start your Journey" nameplate ever duplicating the
+              live button text below. */}
+          <div className="mb-2 flex items-center justify-center gap-2" aria-hidden="true">
+            <span className="h-px w-14 bg-gradient-to-r from-transparent to-amber-400/60 sm:w-20" />
+            <span
+              className="h-1.5 w-1.5 flex-shrink-0 rotate-45 bg-amber-300/80"
+              style={{ boxShadow: "0 0 8px rgba(251,191,36,0.6)" }}
             />
-            <div
-              className="pointer-events-none absolute inset-0"
-              style={{ background: "linear-gradient(180deg, transparent 35%, rgba(8,12,24,0.92) 100%)" }}
-            />
+            <span className="h-px w-14 bg-gradient-to-l from-transparent to-amber-400/60 sm:w-20" />
           </div>
+
+          {/* Soft flare behind the button — reuses the existing sacredGlow
+              keyframe/utility, which already has its own reduced-motion
+              override (a static glow instead of pulsing) in index.css. */}
+          <div
+            className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] animate-sacred-glow"
+            aria-hidden="true"
+          />
+
           <button
             onClick={handleBeginRun}
-            className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/75 bg-amber-600/20 text-amber-50 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02]"
+            className="relative min-h-[78px] w-full px-8 py-4 lg:min-h-[92px] lg:py-5 rounded-2xl border-2 border-amber-400/85 text-amber-50 font-serif font-bold text-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
             style={{
-              fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
-              background: "linear-gradient(135deg, rgba(200,158,45,0.3) 0%, rgba(130,98,22,0.24) 100%)",
+              fontSize: "clamp(1.2rem, 2.2vw, 1.85rem)",
+              background: "linear-gradient(135deg, rgba(216,168,52,0.42) 0%, rgba(122,90,18,0.32) 100%)",
               boxShadow:
-                "0 0 40px rgba(251,191,36,0.32), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.25), inset 0 0 24px rgba(251,191,36,0.1)",
+                "0 0 55px rgba(251,191,36,0.42), 0 0 90px rgba(251,191,36,0.14), 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.32), inset 0 0 28px rgba(251,191,36,0.14)",
               textShadow: "0 1px 4px rgba(0,0,0,0.4)",
             }}
           >
-            <span className="flex items-center justify-center gap-2">
-              <Swords className="w-5 h-5" />
+            <span className="flex items-center justify-center gap-2.5">
+              <Swords className="w-6 h-6 lg:w-7 lg:h-7" />
               {hasResumableRun ? "Continue Journey" : "Start Journey"}
             </span>
           </button>
         </div>
       </StickyActionDock>
+
+      {/* The atmospheric space below Start Journey on the first-time screen
+          (bottom nav — and its own reserved spacer — is hidden pre-tutorial,
+          so this space would otherwise just be flat empty padding). A
+          subtle navy fade plus a few fixed gold particles keep it feeling
+          deliberate without adding another panel. */}
+      {!profile.tutorialSeen && (
+        <div className="relative h-16 w-full shrink-0 overflow-hidden lg:h-20" aria-hidden="true">
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(180deg, rgba(8,12,24,0.35) 0%, rgba(4,7,15,0.75) 100%)" }}
+          />
+          {TAIL_PARTICLES.map((particle, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: `${particle.left}%`,
+                top: `${particle.top}%`,
+                width: `${particle.size}px`,
+                height: `${particle.size}px`,
+                background: "rgba(201,168,76,0.3)",
+                animation: prefersReducedMotion
+                  ? "none"
+                  : `float ${particle.duration}s ease-in-out infinite`,
+                animationDelay: `${particle.delay}s`,
+                opacity: prefersReducedMotion ? 0.3 : undefined,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Confirmation dialog */}
       {showConfirm && (

@@ -49,38 +49,37 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
   return (
     <>
       <div
-        className="relative w-full flex-1 min-h-24 min-[400px]:min-h-28 sm:min-h-32 lg:min-h-40 overflow-hidden pointer-events-none"
+        className="relative w-full flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px] lg:min-h-[220px] overflow-hidden pointer-events-none"
         aria-hidden="true"
       >
         <SafeImage
           src={GENESIS_HORIZON_ART}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "center 50%" }}
+          style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
         />
 
-        {/* Dark navy overlay — keeps the scripture below readable and fades
-            the scene into the page's own background at the bottom edge.
-            Applied on top of the (full-opacity) artwork rather than dimming
-            the <img> itself, so it doesn't fight SafeImage's own opacity-
-            based fade-in transition. Lightened ~20% relative to the previous
-            pass so the artwork itself reads brighter while keeping the same
-            top-to-bottom darkening shape scripture readability depends on. */}
+        {/* Dark navy vignette — dark bands at the top and bottom edges keep
+            the header above and the scripture below readable, while a much
+            lighter middle band (down to ~0.16 opacity) lets the artwork's
+            own golden light source shine through instead of reading as a
+            single flat, washed-out gray tone across the whole box. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(10,15,30,0.44) 0%, rgba(9,13,27,0.5) 55%, rgba(8,12,24,0.7) 100%)",
+              "linear-gradient(180deg, rgba(6,10,20,0.6) 0%, rgba(6,10,20,0.22) 28%, rgba(6,10,20,0.16) 52%, rgba(6,10,20,0.3) 76%, rgba(6,10,20,0.68) 100%)",
           }}
         />
 
-        {/* Warm glow centered on the artwork's own light source, emphasizing
-            the golden center without changing the overall darkening shape. */}
+        {/* Warm glow centered on the artwork's own light source — the "let
+            there be light" moment — emphasizing the golden center without
+            changing the overall vignette shape. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 55% 45% at 50% 42%, rgba(251,191,36,0.16) 0%, transparent 70%)",
+              "radial-gradient(ellipse 60% 50% at 50% 42%, rgba(251,191,36,0.26) 0%, transparent 72%)",
           }}
         />
 
@@ -90,7 +89,7 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
           className="absolute inset-x-0 bottom-0 h-2/3"
           style={{
             background:
-              "radial-gradient(ellipse 70% 60% at 50% 100%, rgba(201,168,76,0.20) 0%, rgba(201,168,76,0.08) 45%, transparent 75%)",
+              "radial-gradient(ellipse 70% 60% at 50% 100%, rgba(201,168,76,0.24) 0%, rgba(201,168,76,0.1) 45%, transparent 75%)",
           }}
         />
 
@@ -116,22 +115,25 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
       </div>
 
       {/* Scripture — real content, always rendered at its natural size */}
-      <div className="relative w-full px-4 pb-2 pt-2 text-center">
+      <div className="relative w-full px-4 pb-3 pt-3 text-center">
         {showJourneyHint && (
-          <p className="mb-1.5 text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/50">
+          <p
+            className="mb-2 text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/60"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.55)" }}
+          >
             Your journey begins in Genesis
           </p>
         )}
         <p
-          className="font-serif italic text-amber-50/85"
+          className="font-serif italic text-amber-50/90"
           style={{
             fontSize: "clamp(0.8rem, 2vw, 0.95rem)",
-            textShadow: "0 0 18px rgba(201,168,76,0.22), 0 1px 6px rgba(0,0,0,0.6)",
+            textShadow: "0 0 20px rgba(201,168,76,0.26), 0 1px 6px rgba(0,0,0,0.65)",
           }}
         >
           &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
         </p>
-        <p className="mt-1 text-[10px] font-serif italic text-amber-300/60">
+        <p className="mt-1.5 text-[10px] font-serif italic text-amber-300/65">
           Genesis 1:1
         </p>
       </div>

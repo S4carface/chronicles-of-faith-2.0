@@ -177,6 +177,15 @@ export default function Home() {
   // Start Journey doubles as "continue" for it; the confirm dialog below
   // still offers a clean way to abandon it and start fresh.
   const hasResumableRun = Boolean(run || savedStoryExists);
+  // Pre-tutorial shows every section post-tutorial does except Difficulty
+  // and bottom nav — a genuinely taller stack, not a shorter one. Left at
+  // the same sizes used post-tutorial (where bottom nav's absence isn't
+  // compensated for), that stack no longer fits one screen and forces a
+  // scroll. isPreTutorial drives a dedicated, more compact sizing pass
+  // below (crest/cards/horizon/button all shrink a bit, gaps tighten) so
+  // the same content fits within FixedViewportPage's 100dvh box without
+  // scrolling, while post-tutorial keeps its original, roomier sizing.
+  const isPreTutorial = !profile.tutorialSeen;
 
   // Bottom nav (and its own reserved spacer) only renders once the tutorial
   // is seen, so the page's own bottom padding only needs to reserve that
@@ -184,7 +193,10 @@ export default function Home() {
   // the leftover space is filled deliberately below (see TAIL_PARTICLES).
   const contentBottomPadding = profile.tutorialSeen
     ? "pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
-    : "pb-[calc(1.5rem+env(safe-area-inset-bottom))] lg:pb-8";
+    : "pb-[calc(0.75rem+env(safe-area-inset-bottom))] [@media(max-height:760px)]:pb-[calc(0.25rem+env(safe-area-inset-bottom))] lg:pb-8";
+  const contentTopPadding = isPreTutorial
+    ? "pt-[calc(0.5rem+env(safe-area-inset-top))] [@media(max-height:760px)]:pt-[calc(0.125rem+env(safe-area-inset-top))]"
+    : "pt-[calc(0.5rem+env(safe-area-inset-top))]";
 
   return (
     <FixedViewportPage
@@ -197,7 +209,7 @@ export default function Home() {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName={`pt-[calc(0.5rem+env(safe-area-inset-top))] ${contentBottomPadding}`}
+      contentClassName={`${contentTopPadding} ${contentBottomPadding}`}
     >
       {/* Floating particles — drift across the whole screen, behind every section */}
       {HOME_PARTICLES.map((particle, i) => (
@@ -232,7 +244,13 @@ export default function Home() {
           to just its own padding and CLIP the crest/title/subtitle
           entirely, even though scrolling was available and preferred.
           shrink-0 keeps it pinned to its natural content height instead. */}
-      <section className="relative w-full shrink-0 pt-3 pb-7 lg:pb-9 text-center overflow-hidden">
+      <section
+        className={`relative w-full shrink-0 text-center overflow-hidden ${
+          isPreTutorial
+            ? "pt-2 pb-3 [@media(max-height:760px)]:pt-0 [@media(max-height:760px)]:pb-0.5 lg:pt-3 lg:pb-9"
+            : "pt-3 pb-7 lg:pb-9"
+        }`}
+      >
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
@@ -243,8 +261,14 @@ export default function Home() {
         />
 
         <div className="relative px-4 lg:px-8">
-          <div className="flex justify-center mb-2">
-            <div className="relative h-20 w-20 lg:h-24 lg:w-24">
+          <div className={`flex justify-center ${isPreTutorial ? "mb-1 [@media(max-height:760px)]:mb-0.5" : "mb-2"}`}>
+            <div
+              className={
+                isPreTutorial
+                  ? "relative h-16 w-16 [@media(max-height:760px)]:h-11 [@media(max-height:760px)]:w-11 lg:h-24 lg:w-24"
+                  : "relative h-20 w-20 lg:h-24 lg:w-24"
+              }
+            >
               <div
                 className="absolute inset-0 rounded-full blur-xl"
                 style={{ background: "rgba(251,191,36,0.5)" }}
@@ -269,7 +293,7 @@ export default function Home() {
           <h1
             className="font-serif text-amber-50 tracking-wide leading-tight"
             style={{
-              fontSize: "clamp(1.75rem, 5vw, 3.5rem)",
+              fontSize: isPreTutorial ? "clamp(1.5rem, 4.5vw, 3.5rem)" : "clamp(1.75rem, 5vw, 3.5rem)",
               textShadow: "0 0 40px rgba(251,191,36,0.5), 0 2px 10px rgba(0,0,0,0.55)",
             }}
           >
@@ -281,14 +305,18 @@ export default function Home() {
           >
             A Biblical Roguelike Journey
           </p>
-          <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+          <div
+            className={`w-24 h-px mx-auto bg-gradient-to-r from-transparent via-amber-500/50 to-transparent ${
+              isPreTutorial ? "mt-1" : "mt-2"
+            }`}
+          />
         </div>
       </section>
 
       {/* 5. Player identity row — a small dark pill so the name reads
           clearly against the bright celestial background, without a large
           rectangle behind the whole header. */}
-      <div className="w-full px-4 lg:px-8 flex justify-center mb-6">
+      <div className={`w-full px-4 lg:px-8 flex justify-center ${isPreTutorial ? "mb-2 [@media(max-height:760px)]:mb-1" : "mb-6"}`}>
         <button
           onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
           className="flex items-center gap-2 rounded-full border border-amber-400/20 px-3.5 py-1.5 hover:border-amber-300/35 transition text-xs lg:text-sm"
@@ -305,12 +333,14 @@ export default function Home() {
 
       {/* 6. "Take a Quiet Moment" — shown both before AND after the tutorial;
           it's a standing daily feature, not part of the post-tutorial menu. */}
-      <div className="w-full px-4 lg:px-8 flex justify-center mb-4">
+      <div className={`w-full px-4 lg:px-8 flex justify-center ${isPreTutorial ? "mb-2 [@media(max-height:760px)]:mb-1" : "mb-4"}`}>
         {devotionPrayedToday ? (
           <Link
             to="/daily-prayer"
             onClick={() => Sound.sfx.click()}
-            className="relative flex w-full max-w-md items-center gap-2 rounded-xl border border-emerald-400/35 px-4 py-3 transition hover:border-emerald-300/50 lg:max-w-[600px]"
+            className={`relative flex w-full max-w-md items-center gap-2 rounded-xl border border-emerald-400/35 px-4 transition hover:border-emerald-300/50 lg:max-w-[600px] ${
+              isPreTutorial ? "py-2" : "py-3"
+            }`}
             style={{
               background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.85) 100%)",
               boxShadow: "inset 0 1px 0 rgba(251,191,36,0.14)",
@@ -334,7 +364,11 @@ export default function Home() {
           <Link
             to="/daily-prayer"
             onClick={() => Sound.sfx.click()}
-            className="relative flex w-full max-w-md min-h-[132px] items-center gap-4 rounded-2xl border border-amber-400/35 px-4 py-4 transition-all duration-300 hover:border-amber-300/55 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px] lg:min-h-[140px] lg:px-6"
+            className={`relative flex w-full max-w-md items-center rounded-2xl border border-amber-400/35 transition-all duration-300 hover:border-amber-300/55 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px] lg:min-h-[140px] lg:gap-4 lg:px-6 lg:py-4 ${
+              isPreTutorial
+                ? "min-h-[112px] gap-3 px-3 py-2.5 [@media(max-height:760px)]:min-h-[104px] [@media(max-height:760px)]:py-2"
+                : "min-h-[132px] gap-4 px-4 py-4"
+            }`}
             style={{
               background: "linear-gradient(135deg, rgba(14,20,38,0.92) 0%, rgba(6,10,20,0.96) 100%)",
               boxShadow: "inset 0 1px 0 rgba(251,191,36,0.18), inset 0 0 0 1px rgba(251,191,36,0.06), 0 6px 18px rgba(0,0,0,0.35)",
@@ -343,14 +377,18 @@ export default function Home() {
             {/* Badge pinned to its own top-right corner, with the text
                 column reserving space via pr-14 below — it never competes
                 with the title for width, so the title can never clip. */}
-            <span className="absolute top-3 right-3 whitespace-nowrap rounded-full border border-amber-300/35 bg-amber-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-200">
+            <span className="absolute top-2.5 right-2.5 whitespace-nowrap rounded-full border border-amber-300/35 bg-amber-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-200">
               New Today
             </span>
 
             {/* Compact icon medallion — no dedicated lantern/prayer artwork
                 exists locally yet, so the Sun icon is presented inside a
                 gold/navy medallion with a soft glow behind it. */}
-            <div className="relative flex h-14 w-14 flex-shrink-0 items-center justify-center lg:h-16 lg:w-16">
+            <div
+              className={`relative flex flex-shrink-0 items-center justify-center lg:h-16 lg:w-16 ${
+                isPreTutorial ? "h-11 w-11" : "h-14 w-14"
+              }`}
+            >
               <div
                 className="absolute inset-0 rounded-full blur-md"
                 style={{ background: "rgba(251,191,36,0.35)" }}
@@ -360,20 +398,28 @@ export default function Home() {
                 className="relative flex h-full w-full items-center justify-center rounded-full border border-amber-400/50"
                 style={{ background: "radial-gradient(circle at 50% 35%, rgba(58,45,16,0.9) 0%, rgba(10,14,26,0.96) 100%)" }}
               >
-                <Sun className="h-6 w-6 text-amber-200 lg:h-7 lg:w-7" />
+                <Sun className={`text-amber-200 lg:h-7 lg:w-7 ${isPreTutorial ? "h-5 w-5" : "h-6 w-6"}`} />
               </div>
             </div>
 
-            <div className="min-w-0 flex-1 pr-14 text-left">
-              <p className="font-serif text-lg font-bold leading-snug text-amber-100 lg:text-xl">
+            <div className={`min-w-0 flex-1 text-left ${isPreTutorial ? "pr-12" : "pr-14"}`}>
+              <p
+                className={`font-serif font-bold leading-snug text-amber-100 lg:text-xl ${
+                  isPreTutorial ? "text-sm" : "text-lg"
+                }`}
+              >
                 Take a Quiet Moment
               </p>
 
-              <p className="mt-1.5 text-xs leading-relaxed text-amber-100/60 lg:text-sm">
+              <p
+                className={`leading-relaxed text-amber-100/60 lg:text-sm ${
+                  isPreTutorial ? "mt-0.5 text-[11px]" : "mt-1.5 text-xs"
+                }`}
+              >
                 A short scripture, reflection, and prayer for today.
               </p>
 
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${isPreTutorial ? "mt-1" : "mt-2"}`}>
                 <span className="text-xs font-semibold text-amber-300 lg:text-sm">
                   Pray Now →
                 </span>
@@ -390,17 +436,25 @@ export default function Home() {
       </div>
 
       {/* 7. Leaderboard — also shown both before AND after the tutorial. */}
-      <div className="w-full px-4 lg:px-8 flex justify-center mb-2">
+      <div className={`w-full px-4 lg:px-8 flex justify-center ${isPreTutorial ? "mb-2 [@media(max-height:760px)]:mb-1" : "mb-2"}`}>
         <Link
           to="/leaderboard"
           onClick={() => Sound.sfx.click()}
-          className="relative flex min-h-[88px] w-full max-w-md items-center gap-3 rounded-xl border border-amber-400/30 px-4 py-3 transition hover:border-amber-300/45 lg:max-w-[600px]"
+          className={`relative flex w-full max-w-md items-center gap-3 rounded-xl border border-amber-400/30 px-4 transition hover:border-amber-300/45 lg:max-w-[600px] ${
+            isPreTutorial
+              ? "min-h-[76px] py-2 [@media(max-height:760px)]:min-h-[72px] [@media(max-height:760px)]:py-1.5"
+              : "min-h-[88px] py-3"
+          }`}
           style={{
             background: "linear-gradient(135deg, rgba(10,16,32,0.85) 0%, rgba(6,10,20,0.9) 100%)",
             boxShadow: "inset 0 1px 0 rgba(251,191,36,0.12)",
           }}
         >
-          <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
+          <div
+            className={`relative flex-shrink-0 sm:h-14 sm:w-14 ${
+              isPreTutorial ? "h-10 w-10" : "h-12 w-12"
+            }`}
+          >
             <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0 flex-1 text-left">
@@ -420,7 +474,7 @@ export default function Home() {
       {/* 8. Scripture / Genesis horizon — atmospheric centerpiece, always
           shown (including before the tutorial) so the first impression
           still carries the game's sacred tone, not just an empty gap. */}
-      <HomeGenesisAtmosphere showJourneyHint={!profile.tutorialSeen} />
+      <HomeGenesisAtmosphere showJourneyHint={isPreTutorial} compact={isPreTutorial} />
 
       {/* Difficulty — tucked directly above Start Journey, right where a
           player would want to check it before launching a run. Unchanged
@@ -452,7 +506,7 @@ export default function Home() {
               crop — no image asset, so there's no risk of the source's
               baked-in "Start your Journey" nameplate ever duplicating the
               live button text below. */}
-          <div className="mb-2 flex items-center justify-center gap-2" aria-hidden="true">
+          <div className={`flex items-center justify-center gap-2 ${isPreTutorial ? "mb-1 [@media(max-height:760px)]:mb-0" : "mb-2"}`} aria-hidden="true">
             <span className="h-px w-14 bg-gradient-to-r from-transparent to-amber-400/60 sm:w-20" />
             <span
               className="h-1.5 w-1.5 flex-shrink-0 rotate-45 bg-amber-300/80"
@@ -471,9 +525,13 @@ export default function Home() {
 
           <button
             onClick={handleBeginRun}
-            className="relative min-h-[78px] w-full px-8 py-4 lg:min-h-[92px] lg:py-5 rounded-2xl border-2 border-amber-400/85 text-amber-50 font-serif font-bold text-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100"
+            className={`relative w-full rounded-2xl border-2 border-amber-400/85 text-amber-50 font-serif font-bold text-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 lg:min-h-[92px] lg:py-5 ${
+              isPreTutorial
+                ? "min-h-[72px] px-6 py-3 [@media(max-height:760px)]:min-h-[68px] [@media(max-height:760px)]:py-2"
+                : "min-h-[78px] px-8 py-4"
+            }`}
             style={{
-              fontSize: "clamp(1.2rem, 2.2vw, 1.85rem)",
+              fontSize: isPreTutorial ? "clamp(1.05rem, 2vw, 1.85rem)" : "clamp(1.2rem, 2.2vw, 1.85rem)",
               background: "linear-gradient(135deg, rgba(216,168,52,0.42) 0%, rgba(122,90,18,0.32) 100%)",
               boxShadow:
                 "0 0 55px rgba(251,191,36,0.42), 0 0 90px rgba(251,191,36,0.14), 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.32), inset 0 0 28px rgba(251,191,36,0.14)",
@@ -481,7 +539,7 @@ export default function Home() {
             }}
           >
             <span className="flex items-center justify-center gap-2.5">
-              <Swords className="w-6 h-6 lg:w-7 lg:h-7" />
+              <Swords className={isPreTutorial ? "w-5 h-5 lg:w-7 lg:h-7" : "w-6 h-6 lg:w-7 lg:h-7"} />
               {hasResumableRun ? "Continue Journey" : "Start Journey"}
             </span>
           </button>
@@ -490,11 +548,16 @@ export default function Home() {
 
       {/* The atmospheric space below Start Journey on the first-time screen
           (bottom nav — and its own reserved spacer — is hidden pre-tutorial,
-          so this space would otherwise just be flat empty padding). A
-          subtle navy fade plus a few fixed gold particles keep it feeling
-          deliberate without adding another panel. */}
-      {!profile.tutorialSeen && (
-        <div className="relative h-16 w-full shrink-0 overflow-hidden lg:h-20" aria-hidden="true">
+          so this space would otherwise just be flat empty padding). Only
+          rendered when there's actually room to spare: the compact
+          pre-tutorial layout is sized to fit one screen with no scrolling,
+          so this stays out of the way rather than competing with Start
+          Journey for the last bit of vertical space on short viewports. */}
+      {isPreTutorial && (
+        <div
+          className="relative hidden h-16 w-full shrink-0 overflow-hidden [@media(min-height:761px)]:block lg:h-20"
+          aria-hidden="true"
+        >
           <div
             className="absolute inset-0"
             style={{ background: "linear-gradient(180deg, rgba(8,12,24,0.35) 0%, rgba(4,7,15,0.75) 100%)" }}

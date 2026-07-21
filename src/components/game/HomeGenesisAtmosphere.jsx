@@ -43,13 +43,24 @@ const DUST_PARTICLES = [
 // pinned, so there's no scenario where it visually collides with either of
 // these. The dark overlay's gradient deepens toward the bottom of the image
 // so the two sections read as one continuous scene despite the DOM boundary.
-export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
+export default function HomeGenesisAtmosphere({ showJourneyHint = false, compact = false }) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
     <>
       <div
-        className="relative w-full flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px] lg:min-h-[220px] overflow-hidden pointer-events-none"
+        className={`relative w-full overflow-hidden pointer-events-none lg:min-h-[220px] ${
+          compact
+            ? // flex-none (not flex-1): in compact/pre-tutorial mode this must
+              // land inside the suggested 105-130px target range, not grow to
+              // fill whatever's left in the flex column — flex-1 here would
+              // balloon it well past that range on any viewport taller than
+              // the rest of the (now much shorter) pre-tutorial content adds
+              // up to, which is exactly the scrolling regression this file
+              // exists to avoid.
+              "flex-none h-[118px] min-[400px]:h-[124px] [@media(max-height:760px)]:h-[100px] sm:h-[128px]"
+            : "flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px]"
+        }`}
         aria-hidden="true"
       >
         <SafeImage
@@ -115,10 +126,14 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
       </div>
 
       {/* Scripture — real content, always rendered at its natural size */}
-      <div className="relative w-full px-4 pb-3 pt-3 text-center">
+      <div
+        className={`relative w-full px-4 text-center ${
+          compact ? "pb-1.5 pt-1.5 [@media(max-height:760px)]:pb-1 [@media(max-height:760px)]:pt-1" : "pb-3 pt-3"
+        }`}
+      >
         {showJourneyHint && (
           <p
-            className="mb-2 text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/60"
+            className={`text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/60 ${compact ? "mb-1 [@media(max-height:760px)]:mb-0.5" : "mb-2"}`}
             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.55)" }}
           >
             Your journey begins in Genesis
@@ -127,13 +142,13 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
         <p
           className="font-serif italic text-amber-50/90"
           style={{
-            fontSize: "clamp(0.8rem, 2vw, 0.95rem)",
+            fontSize: compact ? "clamp(0.75rem, 1.8vw, 0.95rem)" : "clamp(0.8rem, 2vw, 0.95rem)",
             textShadow: "0 0 20px rgba(201,168,76,0.26), 0 1px 6px rgba(0,0,0,0.65)",
           }}
         >
           &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
         </p>
-        <p className="mt-1.5 text-[10px] font-serif italic text-amber-300/65">
+        <p className={`text-[10px] font-serif italic text-amber-300/65 ${compact ? "mt-1" : "mt-1.5"}`}>
           Genesis 1:1
         </p>
       </div>

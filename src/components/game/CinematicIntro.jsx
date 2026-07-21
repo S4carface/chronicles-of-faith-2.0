@@ -46,6 +46,17 @@ export default function CinematicIntro({ onComplete }) {
   const [needsTap, setNeedsTap] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  // Gates the poster -> video crossfade. Deliberately keyed off loadeddata/
+  // canplay (a decoded frame exists) rather than the "playing" event (actual
+  // playback started), because "playing" only fires once video.play()
+  // resolves — and an embedded iframe's autoplay permission policy can
+  // reject a JS-driven play() call even for a muted video, leaving
+  // "playing" stuck forever while the video is otherwise fully loaded. A
+  // ready-but-not-yet-playing frame looks identical to a playing one to the
+  // viewer, and playback (loop + autoplay) catches up the moment it's
+  // actually allowed — so gating visibility on readiness instead of on
+  // play() success is what keeps this from permanently showing the poster.
+  const [videoReady, setVideoReady] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false); 
   const [bookCardStage, setBookCardStage] = useState(0);
   const [narrationOn, setNarrationOn] = useState(
@@ -259,6 +270,7 @@ export default function CinematicIntro({ onComplete }) {
     activeScriptureRef.current = 0;
     fallbackStartedRef.current = false;
     setVideoPlaying(false);
+    setVideoReady(false);
 
     Sound.pauseMusicForAmbience();
     videoDevLog("video element mounted", { src: INTRO_VIDEO });
@@ -348,7 +360,7 @@ return (
       {/* Loading poster */}
       <picture
         className={`absolute inset-0 transition-opacity duration-1000 ${
-          videoPlaying && !videoFailed ? "opacity-0" : "opacity-100"
+          (videoReady || videoPlaying) && !videoFailed ? "opacity-0" : "opacity-100"
         }`}
       >
         <source
@@ -366,7 +378,7 @@ return (
       {/* Dark loading readability layer */}
       <div
         className={`absolute inset-0 bg-slate-950/35 transition-opacity duration-700 ${
-          videoPlaying && !videoFailed ? "opacity-0" : "opacity-100"
+          (videoReady || videoPlaying) && !videoFailed ? "opacity-0" : "opacity-100"
         }`}
       />
 
@@ -413,10 +425,17 @@ return (
         playsInline
         preload="auto"
         poster={PORTRAIT_POSTER}
-        onLoadStart={() => videoDevLog("loadstart")}
+        onLoadStart={() => videoDevLog("loadstart", { src: INTRO_VIDEO })}
         onLoadedMetadata={() => videoDevLog("loadedmetadata")}
-        onLoadedData={() => videoDevLog("loadeddata")}
-        onCanPlay={() => videoDevLog("canplay")}
+        onLoadedData={() => {
+          videoDevLog("loadeddata");
+          setVideoReady(true);
+        }}
+        onCanPlay={() => {
+          videoDevLog("canplay");
+          setVideoReady(true);
+        }}
+        onPlay={() => videoDevLog("play")}
         onPlaying={() => {
           videoDevLog("playing");
           setVideoPlaying(true);
@@ -429,7 +448,7 @@ return (
           if (!cinematicStartedRef.current) setNeedsTap(true);
         }}
         className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-          videoPlaying && !videoFailed ? "opacity-100" : "opacity-0"
+          (videoReady || videoPlaying) && !videoFailed ? "opacity-100" : "opacity-0"
         }`}
       >
         <source src={INTRO_VIDEO} type="video/mp4" />

@@ -28,34 +28,35 @@ const DUST_PARTICLES = [
 // deliberate (if simpler) atmosphere, never a broken-image icon.
 //
 // Structured as two siblings rather than one box:
-//   1. A `flex-1` decorative layer (this is what grows/shrinks with
-//      available space, and is safe to clip via overflow-hidden — it's
-//      pure decoration, nothing meaningful is ever lost).
-//   2. The scripture, as a normal, naturally-sized block.
-// Keeping the scripture OUTSIDE the shrinkable/clippable flex-1 box matters:
-// in dense Home states (saved run + difficulty + prayer banners all
-// visible), the decorative layer can be squeezed toward its floor by
-// StickyActionDock's sticky-bottom behavior. If the scripture lived inside
-// that same shrinking, overflow-hidden box, it could get clipped or
-// visually collide with the button beneath it. As a sibling with its own
-// natural height, it always renders in full, exactly like the other
-// content blocks above it. The dark overlay's gradient deepens toward the
-// bottom of the image so the two sections read as one continuous scene
-// despite the DOM boundary.
+//   1. A `flex-1` decorative layer with a real minimum height (96px small
+//      mobile, up to 160px on desktop) — grows to fill available space when
+//      content above is short, but never shrinks below a size where the
+//      horizon art and its light source actually read.
+//   2. The scripture, as a normal, naturally-sized block, never inside the
+//      clippable decorative box — it always renders in full at its own
+//      size, exactly like the other content blocks above it, regardless of
+//      how much room the decorative layer above it gets.
+// On a short viewport with a lot of content above (saved run + difficulty +
+// prayer banners all visible together), the page's own scroll container
+// (see FixedViewportPage) simply scrolls a little rather than compressing
+// this down to nothing — StickyActionDock below is normal flow too, not
+// pinned, so there's no scenario where it visually collides with either of
+// these. The dark overlay's gradient deepens toward the bottom of the image
+// so the two sections read as one continuous scene despite the DOM boundary.
 export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
     <>
       <div
-        className="relative w-full flex-1 min-h-[24px] overflow-hidden pointer-events-none"
+        className="relative w-full flex-1 min-h-24 min-[400px]:min-h-28 sm:min-h-32 lg:min-h-40 overflow-hidden pointer-events-none"
         aria-hidden="true"
       >
         <SafeImage
           src={GENESIS_HORIZON_ART}
           alt=""
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "center 55%" }}
+          style={{ objectPosition: "center 50%" }}
         />
 
         {/* Dark navy overlay — keeps the scripture below readable and fades
@@ -104,7 +105,7 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
       </div>
 
       {/* Scripture — real content, always rendered at its natural size */}
-      <div className="relative w-full px-4 pb-1 pt-1 text-center">
+      <div className="relative w-full px-4 pb-2 pt-2 text-center">
         {showJourneyHint && (
           <p className="mb-1.5 text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/50">
             Your journey begins in Genesis

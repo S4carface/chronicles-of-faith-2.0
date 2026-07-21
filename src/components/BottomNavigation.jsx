@@ -1,6 +1,5 @@
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Copy, BookOpen, Home as HomeIcon, Sun, CircleUser } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import * as Sound from "@/game/soundManager";
@@ -39,7 +38,6 @@ const HIDDEN_PATHS = ["/play"];
 export default function BottomNavigation() {
   const location = useLocation();
   const { profile } = useGame();
-  const prefersReducedMotion = useReducedMotion();
 
   const isHiddenPath = HIDDEN_PATHS.some(
     (path) =>
@@ -114,28 +112,19 @@ export default function BottomNavigation() {
                       />
                     </span>
 
-                    {/* Reserved-height label slot — only the active tab's label renders, so
-                        switching tabs never shifts icon positions on the tabs around it. */}
+                    {/* Label — always visible for all five tabs (muted when
+                        inactive, bright when active) so the bar is readable
+                        without needing to tap around to find each
+                        destination. Doubles as the link's accessible name. */}
                     <span className="relative flex h-[13px] w-full items-center justify-center">
-                      <AnimatePresence initial={false}>
-                        {isActive && (
-                          <motion.span
-                            aria-hidden="true"
-                            key={item.path}
-                            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 3 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 3 }}
-                            transition={{ duration: prefersReducedMotion ? 0 : 0.18, ease: "easeOut" }}
-                            className="absolute whitespace-nowrap text-[10px] font-medium tracking-wide text-amber-200"
-                          >
-                            {item.label}
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
+                      <span
+                        className={`whitespace-nowrap text-[10px] font-medium tracking-wide transition-colors duration-200 motion-reduce:transition-none ${
+                          isActive ? "text-amber-200" : "text-amber-100/65"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
                     </span>
-
-                    {/* Always-present accessible name, independent of the visual label above */}
-                    <span className="sr-only">{item.label}</span>
                   </>
                 )}
               </NavLink>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
-import { Swords, Pencil, Sun } from "lucide-react";
+import { Swords, Pencil, Sun, ChevronRight } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
@@ -272,7 +272,17 @@ const handleNameSaved = (name) => {
       ))}
 
       {/* Hero / Title — compact */}
-      <div className="relative text-center mb-2">
+      <div className="relative text-center mb-3">
+        {/* Localized vignette — only behind this header block, not the whole
+            page — so the crest/title/subtitle/name-row read clearly against
+            the bright celestial background instead of competing with it. */}
+        <div
+          className="pointer-events-none absolute -inset-x-6 -top-4 -bottom-9 -z-10"
+          style={{
+            background: "radial-gradient(ellipse 90% 100% at 50% 25%, rgba(8,12,24,0.6) 0%, rgba(8,12,24,0.28) 60%, transparent 85%)",
+          }}
+          aria-hidden="true"
+        />
         <div className="flex justify-center mb-1">
           <div className="relative h-16 w-16 lg:h-20 lg:w-20">
             <div
@@ -280,11 +290,20 @@ const handleNameSaved = (name) => {
               style={{ background: "rgba(201,168,76,0.28)" }}
               aria-hidden="true"
             />
-            <SafeImage
-              src={HOME_CREST_ART}
-              alt="Chronicles of Faith"
-              className="h-full w-full object-contain"
-            />
+            {/* home-crest.webp is a fully opaque square (no alpha channel) —
+                object-contain alone can't make its dark background
+                transparent, so it's clipped to a circle instead. Verified
+                against the source pixels that the medallion's own artwork
+                (spike, ring, wings) sits well within the inscribed circle,
+                so this only trims background/corners, never the crest
+                itself. */}
+            <div className="h-full w-full overflow-hidden rounded-full">
+              <SafeImage
+                src={HOME_CREST_ART}
+                alt="Chronicles of Faith"
+                className="h-full w-full object-contain"
+              />
+            </div>
           </div>
         </div>
         <h1 className="font-serif text-amber-200 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
@@ -467,15 +486,17 @@ const handleNameSaved = (name) => {
 <Link
   to="/leaderboard"
   onClick={() => Sound.sfx.click()}
-  className="relative flex w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/20 bg-slate-900/30 px-3 py-1.5 transition hover:border-amber-400/40 hover:bg-amber-500/5 lg:max-w-[600px]"
+  className="relative flex min-h-[76px] w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/25 px-3 py-2 transition hover:border-amber-400/40 lg:max-w-[600px]"
+  style={{ background: "rgba(8,12,24,0.78)" }}
 >
   <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
     <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
   </div>
-  <div className="min-w-0 text-left">
+  <div className="min-w-0 flex-1 text-left">
     <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
-    <p className="text-[11px] text-amber-100/50">View current rankings</p>
+    <p className="text-[11px] text-amber-200/70">View current rankings</p>
   </div>
+  <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
 </Link>
 
 {/* Atmospheric Genesis centerpiece — fills the space between the compact
@@ -492,7 +513,7 @@ const handleNameSaved = (name) => {
             top keeps that text entirely outside the crop regardless of
             viewport width, so the live button text below is never duplicated. */}
         <div
-          className="relative mx-auto h-8 w-full overflow-hidden rounded-t-xl sm:h-10"
+          className="relative mx-auto h-10 w-full overflow-hidden rounded-t-xl sm:h-12"
           aria-hidden="true"
         >
           <SafeImage

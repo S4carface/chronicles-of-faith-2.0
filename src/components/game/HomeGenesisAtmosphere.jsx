@@ -64,9 +64,14 @@ export default function HomeGenesisAtmosphere({
         className="relative w-full shrink-0 flex-1 min-h-[90px] max-h-[130px] overflow-hidden"
         aria-label="Genesis 1:1"
       >
+        {/* fallback=null: the navy/gold gradients and glow layers rendered
+            just below already give this box a deliberate atmosphere on
+            their own — the actual photo fades in over them once decoded,
+            so no separate placeholder glyph is needed here. */}
         <SafeImage
           src={GENESIS_HORIZON_ART}
           alt=""
+          fallback={null}
           className="absolute inset-0 h-full w-full object-cover"
           style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
         />
@@ -132,9 +137,14 @@ export default function HomeGenesisAtmosphere({
         }`}
         aria-hidden="true"
       >
+        {/* fallback=null: the navy/gold gradients and glow layers rendered
+            just below already give this box a deliberate atmosphere on
+            their own — the actual photo fades in over them once decoded,
+            so no separate placeholder glyph is needed here. */}
         <SafeImage
           src={GENESIS_HORIZON_ART}
           alt=""
+          fallback={null}
           className="absolute inset-0 h-full w-full object-cover"
           style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
         />

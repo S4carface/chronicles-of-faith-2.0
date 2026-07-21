@@ -1,5 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { HOME_ART } from "@/data/art";
+import { Cross } from "lucide-react";
+
+// Fixed, deterministic particle field — declared once at module scope so
+// positions never change on re-render (this screen can now stay mounted for
+// several seconds while Home-critical artwork loads, so a Math.random()
+// field computed directly in JSX would visibly jump on every re-render).
+const LOADING_PARTICLES = [
+  { left: 6, top: 15, size: 3, duration: 7, delay: 0 },
+  { left: 18, top: 62, size: 4, duration: 9.5, delay: 1.1 },
+  { left: 30, top: 34, size: 2.5, duration: 6.5, delay: 2.4 },
+  { left: 42, top: 78, size: 3.5, duration: 8.5, delay: 0.6 },
+  { left: 54, top: 22, size: 3, duration: 7.5, delay: 3.2 },
+  { left: 66, top: 58, size: 4, duration: 9, delay: 1.8 },
+  { left: 78, top: 12, size: 2.5, duration: 6, delay: 2.9 },
+  { left: 88, top: 70, size: 3, duration: 8, delay: 0.3 },
+  { left: 12, top: 88, size: 2.5, duration: 10, delay: 3.6 },
+  { left: 60, top: 90, size: 3.5, duration: 7.8, delay: 1.5 },
+  { left: 94, top: 40, size: 2, duration: 9.2, delay: 2.1 },
+  { left: 24, top: 6, size: 3, duration: 6.8, delay: 4 },
+];
 
 const SCRIPTURES = [
   { text: "In the beginning, God created the heavens and the earth.", ref: "Genesis 1:1" },
@@ -45,22 +64,24 @@ export default function LoadingScreen({ message }) {
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center px-6" style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}>
-      {Array.from({ length: 12 }).map((_, i) => (
+      {LOADING_PARTICLES.map((particle, i) => (
         <div key={i} className="absolute pointer-events-none rounded-full" style={{
-          width: `${2 + Math.random() * 3}px`,
-          height: `${2 + Math.random() * 3}px`,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          background: `rgba(201,168,76,${0.2 + Math.random() * 0.3})`,
-          animation: `float ${4 + Math.random() * 6}s ease-in-out infinite`,
-          animationDelay: `${Math.random() * 4}s`,
+          width: `${particle.size}px`,
+          height: `${particle.size}px`,
+          left: `${particle.left}%`,
+          top: `${particle.top}%`,
+          background: "rgba(201,168,76,0.35)",
+          animation: `float ${particle.duration}s ease-in-out infinite`,
+          animationDelay: `${particle.delay}s`,
         }} />
       ))}
 
+      {/* CSS + a lightweight local icon only — this screen must never
+          depend on the same large Home artwork it exists to wait for. */}
       <div className="relative mb-6">
         <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "rgba(201,168,76,0.15)" }} />
-        <div className="relative w-20 h-20 rounded-full border-2 border-amber-400/40 overflow-hidden animate-icon-float" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}>
-          <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait" />
+        <div className="relative w-20 h-20 rounded-full border-2 border-amber-400/40 flex items-center justify-center animate-icon-float" style={{ background: "linear-gradient(135deg, rgba(26,39,68,0.8) 0%, rgba(15,26,48,0.8) 100%)" }}>
+          <Cross className="h-8 w-8 text-amber-300/80" strokeWidth={1.75} aria-hidden="true" />
         </div>
       </div>
 

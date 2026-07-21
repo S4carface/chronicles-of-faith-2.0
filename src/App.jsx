@@ -14,7 +14,6 @@ import { GameProvider } from "@/game/GameContext";
 import UnlockReveal from "@/components/game/UnlockReveal";
 import NewSeasonAnnouncement from "@/components/game/NewSeasonAnnouncement";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
-import OpeningAudioGate from "@/components/game/OpeningAudioGate";
 import LoadingScreen from "@/components/LoadingScreen";
 import Home from "./pages/Home";
 import Play from "./pages/Play";
@@ -90,10 +89,12 @@ const AuthenticatedApp = () => {
   useEffect(() => {
     let mounted = true;
     // Fire-and-forget: pre-decodes the Genesis intro music buffer and
-    // preloads the narration element ahead of any tap, so the eventual
-    // "Tap to Begin" gesture doesn't have to wait on a fresh fetch+decode
-    // before music becomes audible. Doesn't gate the loading screen — audio
-    // decoding never requires a user gesture, only playback does.
+    // preloads the narration element ahead of any tap, so the Start Journey
+    // tap (the app's single audio-unlock gesture — see
+    // GameContext.triggerIntroReplay) doesn't have to wait on a fresh
+    // fetch+decode before music becomes audible. Doesn't gate the loading
+    // screen — audio decoding never requires a user gesture, only playback
+    // does.
     Sound.preloadGenesisIntroAssets();
     preloadCriticalFirstRunAssets().finally(() => {
       if (mounted) setCriticalAssetsReady(true);
@@ -152,7 +153,6 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
    <GameProvider>
-  <OpeningAudioGate />
   <AudioUnlockButton />
   <UnlockReveal />
   <NewSeasonAnnouncement />

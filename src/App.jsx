@@ -78,6 +78,23 @@ const AuthenticatedApp = () => {
   const [tutorialCompleted] = useState(tutorialWasCompletedAtStartup);
   const [criticalAssetsReady, setCriticalAssetsReady] = useState(false);
   const [homeAssetsReady, setHomeAssetsReady] = useState(false);
+  // One-way latch for "the app has finished its initial startup" — once
+  // true, NOTHING can ever set it back to false again (there is no setter
+  // call anywhere that passes false). This is deliberate: isLoadingAuth,
+  // isLoadingPublicSettings, criticalAssetsReady, and homeAssetsReady are
+  // each individually live values that could in principle be touched again
+  // later in the session (an auth re-check, a slow timeout resolving after
+  // a fast navigation, a future code path) — gating the branded
+  // LoadingScreen directly on those raw booleans on every render meant any
+  // one of them flipping true again would flash it back onto the screen
+  // over Home, the cinematic intro, or the tutorial. Latching to this
+  // separate flag the first time all of them are satisfied means initial
+  // startup is the only thing that can ever show LoadingScreen — pressing
+  // Start Journey, entering the intro, buffering video, starting the
+  // tutorial, changing routes, and returning Home all render past this
+  // check for the rest of the browser session.
+  const [initialAppReady, setInitialAppReady] = useState(false);
+  const initialAppReadyRef = useRef(false);
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
 
@@ -133,16 +150,26 @@ const AuthenticatedApp = () => {
     if (homeAssetsReady) preloadDeferredGameAssets();
   }, [homeAssetsReady]);
 
-  // Show loading spinner while checking app public settings or auth, or
-  // while Home's own critical artwork is still being decoded — applies to
-  // every player, not just first-timers, and never blocks longer than
-  // HOME_CRITICAL_TIMEOUT_MS (see preloadHomeAssets.js).
-  if (
-    isLoadingAuth ||
-    isLoadingPublicSettings ||
-    (!tutorialCompleted && !criticalAssetsReady) ||
-    !homeAssetsReady
-  ) {
+  // The actual startup readiness check — auth/public settings resolved, and
+  // (for a first-time player only) the first-run cinematic assets and Home's
+  // own critical artwork decoded, never blocking longer than
+  // HOME_CRITICAL_TIMEOUT_MS (see preloadHomeAssets.js). Latched into
+  // initialAppReady below the moment it's first satisfied; never consulted
+  // directly for rendering after that.
+  const startupReady =
+    !isLoadingAuth &&
+    !isLoadingPublicSettings &&
+    (tutorialCompleted || criticalAssetsReady) &&
+    homeAssetsReady;
+
+  useEffect(() => {
+    if (startupReady && !initialAppReadyRef.current) {
+      initialAppReadyRef.current = true;
+      setInitialAppReady(true);
+    }
+  }, [startupReady]);
+
+  if (!initialAppReady) {
     return <LoadingScreen />;
   }
 

@@ -63,13 +63,24 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
             the scene into the page's own background at the bottom edge.
             Applied on top of the (full-opacity) artwork rather than dimming
             the <img> itself, so it doesn't fight SafeImage's own opacity-
-            based fade-in transition; net visible brightness of the artwork
-            through this overlay lands in the same ~30-40% range either way. */}
+            based fade-in transition. Lightened ~20% relative to the previous
+            pass so the artwork itself reads brighter while keeping the same
+            top-to-bottom darkening shape scripture readability depends on. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, rgba(10,15,30,0.55) 0%, rgba(9,13,27,0.62) 55%, rgba(8,12,24,0.85) 100%)",
+              "linear-gradient(180deg, rgba(10,15,30,0.44) 0%, rgba(9,13,27,0.5) 55%, rgba(8,12,24,0.7) 100%)",
+          }}
+        />
+
+        {/* Warm glow centered on the artwork's own light source, emphasizing
+            the golden center without changing the overall darkening shape. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 55% 45% at 50% 42%, rgba(251,191,36,0.16) 0%, transparent 70%)",
           }}
         />
 
@@ -112,15 +123,15 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
           </p>
         )}
         <p
-          className="font-serif italic text-amber-100/70"
+          className="font-serif italic text-amber-50/85"
           style={{
             fontSize: "clamp(0.8rem, 2vw, 0.95rem)",
-            textShadow: "0 0 18px rgba(201,168,76,0.18)",
+            textShadow: "0 0 18px rgba(201,168,76,0.22), 0 1px 6px rgba(0,0,0,0.6)",
           }}
         >
           &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
         </p>
-        <p className="mt-1 text-[10px] font-serif italic text-amber-300/45">
+        <p className="mt-1 text-[10px] font-serif italic text-amber-300/60">
           Genesis 1:1
         </p>
       </div>

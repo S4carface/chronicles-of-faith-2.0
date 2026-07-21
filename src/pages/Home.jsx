@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useReducedMotion } from "framer-motion";
 import { Swords, Pencil, Sun, Trophy } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
+import HomeGenesisAtmosphere from "@/components/game/HomeGenesisAtmosphere";
 import FixedViewportPage from "@/components/FixedViewportPage";
 import StickyActionDock from "@/components/StickyActionDock";
 import { HOME_ART, MENU_ART } from "@/data/art";
@@ -17,6 +19,21 @@ import { preloadImage } from "@/lib/imageAssets";
 import * as Sound from "@/game/soundManager";
 
 const HOME_BACKGROUND = "/images/home/home-celestial.png";
+
+// Fixed, deterministic particle field — declared once at module scope so
+// positions never change on re-render. Previously these were computed with
+// Math.random() directly inside JSX, which regenerated every particle's
+// position/size/timing on every render (any profile or run state change).
+const HOME_PARTICLES = [
+  { left: 8, top: 12, size: 3, duration: 7, delay: 0 },
+  { left: 22, top: 68, size: 4, duration: 9, delay: 1.2 },
+  { left: 36, top: 30, size: 2.5, duration: 6.5, delay: 2.6 },
+  { left: 50, top: 80, size: 3.5, duration: 8.5, delay: 0.8 },
+  { left: 64, top: 20, size: 3, duration: 7.5, delay: 3.4 },
+  { left: 78, top: 55, size: 4, duration: 9.5, delay: 1.8 },
+  { left: 90, top: 10, size: 2.5, duration: 6, delay: 2.2 },
+  { left: 95, top: 75, size: 3, duration: 8, delay: 3.8 },
+];
 
 export default function Home() {
   const {
@@ -35,6 +52,7 @@ export default function Home() {
   handleIntroComplete,
 } = useGame();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showResume, setShowResume] = useState(false);
@@ -216,19 +234,27 @@ const handleNameSaved = (name) => {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-16"
+      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[6.25rem]"
     >
       {/* Floating particles */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="absolute pointer-events-none rounded-full" style={{
-          width: `${2 + Math.random() * 3}px`,
-          height: `${2 + Math.random() * 3}px`,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          background: `rgba(201,168,76,${0.2 + Math.random() * 0.3})`,
-          animation: `float ${4 + Math.random() * 6}s ease-in-out infinite`,
-          animationDelay: `${Math.random() * 4}s`,
-        }} />
+      {HOME_PARTICLES.map((particle, i) => (
+        <div
+          key={i}
+          className="absolute pointer-events-none rounded-full"
+          aria-hidden="true"
+          style={{
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
+            background: "rgba(201,168,76,0.35)",
+            animation: prefersReducedMotion
+              ? "none"
+              : `float ${particle.duration}s ease-in-out infinite`,
+            animationDelay: `${particle.delay}s`,
+            opacity: prefersReducedMotion ? 0.35 : undefined,
+          }}
+        />
       ))}
 
       {/* Hero / Title — compact */}
@@ -424,21 +450,19 @@ const handleNameSaved = (name) => {
   <span className="font-serif text-sm text-amber-100">Leaderboard</span>
 </Link>
 
-<p className="relative text-amber-100/40 text-[10px] mt-3 font-serif italic text-center max-w-md">
-  "In the beginning, God created the heavens and the earth." — Genesis 1:1
-</p>
-
-      {/* Flexible filler — keeps the sticky action pinned to the bottom of the
-          viewport even when the content above doesn't fill it */}
-      <div className="flex-1" aria-hidden="true" />
+{/* Atmospheric Genesis centerpiece — fills the space between the compact
+    upper content and Start Journey, replacing what used to be a plain
+    flex-1 spacer. Carries the Genesis 1:1 scripture as its content. */}
+<HomeGenesisAtmosphere showJourneyHint={!profile.tutorialSeen} />
 
       <StickyActionDock className="mx-auto w-full max-w-md lg:max-w-[600px]">
         <button
           onClick={handleBeginRun}
-          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/20"
+          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/30"
           style={{
             fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
             background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
+            boxShadow: "0 0 32px rgba(251,191,36,0.22)",
           }}
         >
           <span className="flex items-center justify-center gap-2">

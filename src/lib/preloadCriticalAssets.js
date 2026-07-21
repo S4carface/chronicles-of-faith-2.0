@@ -78,7 +78,7 @@ function preloadMedia(src, kind) {
 // The video is intentionally excluded from the blocking readiness race below.
 // It's by far the largest of the critical assets, and CinematicIntro already
 // falls back to its poster image when the video itself isn't ready yet, so
-// gating "Tap to Begin" on a fully-preloaded video just adds silent wait time
+// gating the loading screen on a fully-preloaded video just adds wait time
 // for no playback benefit. It's still warmed here, fire-and-forget, so it's
 // likely cached by the time the cinematic actually needs it.
 export function preloadCriticalVideoAssets() {

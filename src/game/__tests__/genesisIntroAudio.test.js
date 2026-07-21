@@ -146,16 +146,6 @@ describe("preloadGenesisIntroAssets — warms music + narration ahead of any tap
   });
 });
 
-describe("Opening gate dismissal — module-scoped, not sessionStorage", () => {
-  it("starts undismissed and can be marked dismissed for this page load", () => {
-    // Some earlier test in this file may have already dismissed it; reset
-    // isn't exposed (mirrors that a real page load never un-dismisses it
-    // either), so this test only asserts the setter takes effect.
-    soundManager.dismissOpeningGate();
-    expect(soundManager.isOpeningGateDismissed()).toBe(true);
-  });
-});
-
 describe("startGenesisIntro — music starts from the tap, not a later effect", () => {
   it("resumes the AudioContext and begins the intro music", async () => {
     await soundManager.startGenesisIntro();

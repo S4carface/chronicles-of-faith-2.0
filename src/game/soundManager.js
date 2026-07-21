@@ -71,19 +71,6 @@ let audioUnlocked = false;
 let hasUserInteracted = false; // true once the player has ever unlocked audio via a gesture
 let unlockListeners = new Set();
 
-// Whether the "Tap to Begin" opening gate has already been dismissed during
-// this page load. Deliberately module-scope (not sessionStorage): a true
-// page reload re-evaluates every module, so this naturally resets exactly
-// when the browser gives the app a fresh (suspended) AudioContext, while
-// ordinary in-app navigation (no reload) never touches it.
-let openingGateDismissed = false;
-export function isOpeningGateDismissed() {
-  return openingGateDismissed;
-}
-export function dismissOpeningGate() {
-  openingGateDismissed = true;
-}
-
 let heroAmbienceSource = null;
 let heroAmbienceGain = null;
 let heroAmbienceBuffers = new Map();
@@ -435,8 +422,8 @@ export function isAudioUnlocked() {
 // Awaitable variant of unlockAudio() — actually waits for ctx.resume() to
 // settle instead of returning a stale synchronous flag. Callers that need to
 // know *before* attempting playback whether audio is really unlockable right
-// now (e.g. deciding whether to gate narration behind a "Tap to Begin"
-// prompt) should use this instead of the fire-and-forget unlockAudio().
+// now (e.g. CinematicIntro deciding whether to show its "Tap to Begin" retry
+// button) should use this instead of the fire-and-forget unlockAudio().
 export async function ensureAudioUnlocked() {
   if (audioUnlocked && ctxIsRunning()) return true;
   const ctx = getCtx();

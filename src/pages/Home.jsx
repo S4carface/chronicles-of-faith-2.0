@@ -1,24 +1,28 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
-import { Swords, Pencil, Sun, Trophy } from "lucide-react";
+import { Swords, Pencil, Sun } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
-import HomeGenesisAtmosphere from "@/components/game/HomeGenesisAtmosphere";
+import HomeGenesisAtmosphere, { GENESIS_HORIZON_ART } from "@/components/game/HomeGenesisAtmosphere";
 import FixedViewportPage from "@/components/FixedViewportPage";
 import StickyActionDock from "@/components/StickyActionDock";
-import { HOME_ART, MENU_ART } from "@/data/art";
+import SafeImage from "@/components/ui/SafeImage";
+import { MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
 import { loadStoryRun } from "@/game/storyRunSave";
-import { preloadImage } from "@/lib/imageAssets";
+import { preloadImage, preloadImages } from "@/lib/imageAssets";
 import * as Sound from "@/game/soundManager";
 
 const HOME_BACKGROUND = "/images/home/home-celestial.png";
+const HOME_CREST_ART = "/images/home/home-crest.webp";
+const HOME_TROPHY_ART = "/images/home/home-trophy.webp";
+const START_JOURNEY_FRAME_ART = "/images/home/start-journey-frame.webp";
 
 // Fixed, deterministic particle field — declared once at module scope so
 // positions never change on re-render. Previously these were computed with
@@ -91,6 +95,16 @@ export default function Home() {
     return () => {
       isMounted = false;
     };
+  }, []);
+
+  // Fire-and-forget: warms the two most visually prominent pieces of new
+  // Home artwork (the crest and the Genesis horizon) ahead of when
+  // SafeImage actually mounts them, so they're more likely to be ready to
+  // fade in immediately rather than showing their loading placeholder
+  // first. The trophy and Start Journey frame crop are lower-priority
+  // decoration and intentionally left to load on their own.
+  useEffect(() => {
+    preloadImages([HOME_CREST_ART, GENESIS_HORIZON_ART]);
   }, []);
 const launchFirstTutorialBattle = () => {
   startTutorialRun();
@@ -258,10 +272,19 @@ const handleNameSaved = (name) => {
       ))}
 
       {/* Hero / Title — compact */}
-      <div className="relative text-center mb-3">
-        <div className="flex justify-center mb-1.5">
-          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-400/30 shadow-lg shadow-amber-400/20 animate-icon-float" style={{ background: "#0F1A30" }}>
-            <img src={HOME_ART.cross} alt="Chronicles of Faith" className="art-portrait" />
+      <div className="relative text-center mb-2">
+        <div className="flex justify-center mb-1">
+          <div className="relative h-16 w-16 lg:h-20 lg:w-20">
+            <div
+              className="absolute inset-0 rounded-full blur-xl"
+              style={{ background: "rgba(201,168,76,0.28)" }}
+              aria-hidden="true"
+            />
+            <SafeImage
+              src={HOME_CREST_ART}
+              alt="Chronicles of Faith"
+              className="h-full w-full object-contain"
+            />
           </div>
         </div>
         <h1 className="font-serif text-amber-200 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
@@ -444,10 +467,15 @@ const handleNameSaved = (name) => {
 <Link
   to="/leaderboard"
   onClick={() => Sound.sfx.click()}
-  className="relative flex w-full max-w-md items-center justify-center gap-2 rounded-lg border border-amber-500/20 bg-slate-900/30 px-4 py-2.5 transition hover:border-amber-400/40 hover:bg-amber-500/5 lg:max-w-[600px]"
+  className="relative flex w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/20 bg-slate-900/30 px-3 py-1.5 transition hover:border-amber-400/40 hover:bg-amber-500/5 lg:max-w-[600px]"
 >
-  <Trophy className="h-4 w-4 text-amber-300/70" />
-  <span className="font-serif text-sm text-amber-100">Leaderboard</span>
+  <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
+    <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+  </div>
+  <div className="min-w-0 text-left">
+    <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
+    <p className="text-[11px] text-amber-100/50">View current rankings</p>
+  </div>
 </Link>
 
 {/* Atmospheric Genesis centerpiece — fills the space between the compact
@@ -456,6 +484,28 @@ const handleNameSaved = (name) => {
 <HomeGenesisAtmosphere showJourneyHint={!profile.tutorialSeen} />
 
       <StickyActionDock className="mx-auto w-full max-w-md lg:max-w-[600px]">
+        {/* Decorative crest cropped from the top of start-journey-frame.webp —
+            only the ornamental arch/shield band (roughly the top ~10% of the
+            tall source image) is ever visible here. The source also contains
+            a baked-in "Start your Journey" nameplate much further down; a
+            short, fixed-height, overflow-hidden window with object-position:
+            top keeps that text entirely outside the crop regardless of
+            viewport width, so the live button text below is never duplicated. */}
+        <div
+          className="relative mx-auto h-8 w-full overflow-hidden rounded-t-xl sm:h-10"
+          aria-hidden="true"
+        >
+          <SafeImage
+            src={START_JOURNEY_FRAME_ART}
+            alt=""
+            className="h-full w-full object-cover"
+            style={{ objectPosition: "top center" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{ background: "linear-gradient(180deg, transparent 35%, rgba(8,12,24,0.92) 100%)" }}
+          />
+        </div>
         <button
           onClick={handleBeginRun}
           className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/30"

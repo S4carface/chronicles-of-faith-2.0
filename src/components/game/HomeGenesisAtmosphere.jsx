@@ -1,6 +1,8 @@
 import React from "react";
-import { Compass } from "lucide-react";
 import { useReducedMotion } from "framer-motion";
+import SafeImage from "@/components/ui/SafeImage";
+
+export const GENESIS_HORIZON_ART = "/images/home/genesis-horizon.webp";
 
 // Fixed, deterministic particle field — declared once at module scope so
 // positions never change on re-render (the bug this replaces: computing
@@ -17,10 +19,13 @@ const DUST_PARTICLES = [
 
 // The atmospheric centerpiece that fills the space between Home's compact
 // upper content and the Start Journey dock. Replaces a plain `flex-1`
-// spacer div with a quiet, non-interactive Genesis scene — a horizon glow,
-// a faint mountain silhouette, a soft downward light beam, sparse drifting
-// gold dust, and a faint sacred emblem — built entirely from CSS gradients
-// and an inline SVG silhouette (no new image assets).
+// spacer div with a quiet, non-interactive Genesis scene: the real
+// genesis-horizon.webp artwork (a sunrise over mountains), a dark navy
+// overlay so the scripture stays readable, a golden glow at the bottom
+// edge that bleeds into the dock below, and sparse drifting gold dust.
+// SafeImage handles preload/fade-in/failure — if the artwork can't load,
+// its placeholder plus the gradients/particles here still read as a
+// deliberate (if simpler) atmosphere, never a broken-image icon.
 //
 // Structured as two siblings rather than one box:
 //   1. A `flex-1` decorative layer (this is what grows/shrinks with
@@ -34,7 +39,9 @@ const DUST_PARTICLES = [
 // that same shrinking, overflow-hidden box, it could get clipped or
 // visually collide with the button beneath it. As a sibling with its own
 // natural height, it always renders in full, exactly like the other
-// content blocks above it.
+// content blocks above it. The dark overlay's gradient deepens toward the
+// bottom of the image so the two sections read as one continuous scene
+// despite the DOM boundary.
 export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -44,64 +51,26 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
         className="relative w-full flex-1 min-h-[24px] overflow-hidden pointer-events-none"
         aria-hidden="true"
       >
-        {/* Soft downward light beam — visually leads the eye toward Start Journey */}
+        <SafeImage
+          src={GENESIS_HORIZON_ART}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: "center 55%" }}
+        />
+
+        {/* Dark navy overlay — keeps the scripture below readable and fades
+            the scene into the page's own background at the bottom edge.
+            Applied on top of the (full-opacity) artwork rather than dimming
+            the <img> itself, so it doesn't fight SafeImage's own opacity-
+            based fade-in transition; net visible brightness of the artwork
+            through this overlay lands in the same ~30-40% range either way. */}
         <div
-          className="absolute left-1/2 top-0 h-full w-28 -translate-x-1/2 sm:w-36"
+          className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(180deg, transparent 0%, rgba(201,168,76,0.04) 30%, rgba(201,168,76,0.09) 65%, rgba(201,168,76,0.16) 100%)",
-            filter: "blur(3px)",
+              "linear-gradient(180deg, rgba(10,15,30,0.55) 0%, rgba(9,13,27,0.62) 55%, rgba(8,12,24,0.85) 100%)",
           }}
         />
-
-        {/* Faint mist band */}
-        <div
-          className="absolute inset-x-0 top-[28%] h-14 opacity-[0.07]"
-          style={{
-            background: "linear-gradient(180deg, transparent 0%, rgba(226,220,195,0.6) 50%, transparent 100%)",
-            filter: "blur(8px)",
-          }}
-        />
-
-        {/* Sacred emblem — faint compass within a thin ring, centered, static */}
-        <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-300/[0.08] sm:h-48 sm:w-48">
-          <Compass
-            className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 text-amber-200/[0.09] sm:h-24 sm:w-24"
-            strokeWidth={0.75}
-          />
-        </div>
-
-        {/* Distant mountain silhouette — back layer */}
-        <svg
-          className="absolute inset-x-0 bottom-0 h-2/5 w-full"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,220 C120,180 240,200 360,170 C480,140 600,190 720,160 C840,130 960,180 1080,150 C1200,120 1320,170 1440,140 L1440,320 L0,320 Z"
-            fill="#1A2744"
-            opacity="0.55"
-          />
-        </svg>
-
-        {/* Distant mountain silhouette — front layer, with a thin golden ridge line */}
-        <svg
-          className="absolute inset-x-0 bottom-0 h-1/3 w-full"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0,260 C150,230 300,250 450,220 C600,190 750,240 900,210 C1050,180 1200,230 1350,200 L1440,210 L1440,320 L0,320 Z"
-            fill="#0A0F1E"
-            opacity="0.8"
-          />
-          <path
-            d="M0,260 C150,230 300,250 450,220 C600,190 750,240 900,210 C1050,180 1200,230 1350,200 L1440,210"
-            fill="none"
-            stroke="rgba(251,191,36,0.18)"
-            strokeWidth="2"
-          />
-        </svg>
 
         {/* Golden horizon glow, strongest at the very bottom edge — bleeds
             into StickyActionDock's own transparent top fade just below. */}
@@ -135,7 +104,7 @@ export default function HomeGenesisAtmosphere({ showJourneyHint = false }) {
       </div>
 
       {/* Scripture — real content, always rendered at its natural size */}
-      <div className="relative w-full px-4 pb-2 pt-1 text-center">
+      <div className="relative w-full px-4 pb-1 pt-1 text-center">
         {showJourneyHint && (
           <p className="mb-1.5 text-[10px] font-serif uppercase tracking-[0.2em] text-amber-300/50">
             Your journey begins in Genesis

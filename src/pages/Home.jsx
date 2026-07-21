@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
 import { Swords, Pencil, Sun, ChevronRight } from "lucide-react";
@@ -11,11 +11,9 @@ import HomeGenesisAtmosphere, { GENESIS_HORIZON_ART } from "@/components/game/Ho
 import FixedViewportPage from "@/components/FixedViewportPage";
 import StickyActionDock from "@/components/StickyActionDock";
 import SafeImage from "@/components/ui/SafeImage";
-import { MENU_ART } from "@/data/art";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
-import { loadStoryRun } from "@/game/storyRunSave";
 import { preloadImage, preloadImages } from "@/lib/imageAssets";
 import * as Sound from "@/game/soundManager";
 
@@ -25,9 +23,8 @@ const HOME_TROPHY_ART = "/images/home/home-trophy.webp";
 const START_JOURNEY_FRAME_ART = "/images/home/start-journey-frame.webp";
 
 // Fixed, deterministic particle field — declared once at module scope so
-// positions never change on re-render. Previously these were computed with
-// Math.random() directly inside JSX, which regenerated every particle's
-// position/size/timing on every render (any profile or run state change).
+// positions never change on re-render (Math.random() directly inside JSX
+// would regenerate every particle on every profile/run state change).
 const HOME_PARTICLES = [
   { left: 8, top: 12, size: 3, duration: 7, delay: 0 },
   { left: 22, top: 68, size: 4, duration: 9, delay: 1.2 },
@@ -41,42 +38,26 @@ const HOME_PARTICLES = [
 
 export default function Home() {
   const {
-  profile,
-  run,
-  endRun,
-  startTutorialRun,
-  saveProfile,
-  Sound: Snd,
-  savedStoryExists,
-  resumeStoryRun,
-  storySaveError,
-  showIntro,
-  introPurpose,
-  triggerIntroReplay,
-  handleIntroComplete,
-} = useGame();
+    profile,
+    run,
+    endRun,
+    startTutorialRun,
+    saveProfile,
+    Sound: Snd,
+    savedStoryExists,
+    resumeStoryRun,
+    storySaveError,
+    showIntro,
+    introPurpose,
+    triggerIntroReplay,
+    handleIntroComplete,
+  } = useGame();
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showResume, setShowResume] = useState(false);
   const [homeBackgroundReady, setHomeBackgroundReady] = useState(false);
-  const savedRunInfo = useMemo(() => {
-    if (!savedStoryExists) return null;
-    const saved = loadStoryRun();
-    if (!saved) return null;
-    const nodeType = saved.currentNode?.type;
-    const roomType = nodeType === "mystery" ? saved.currentNode?.mysteryType : nodeType;
-    const roomLabels = { battle: "Battle", treasure: "Treasure", divine: "Divine Encounter", story: "Story Choice", mystery: "Mystery", boss: "Boss Battle", rest: "Campfire" };
-    return {
-      stage: (saved.roomsCleared || 0) + 1,
-      difficulty: saved.difficulty || "normal",
-      playerHp: saved.playerHp || 0,
-      maxHp: saved.maxHp || 0,
-      heroName: saved.hero?.name || "Adam",
-      roomLabel: roomLabels[roomType] || "Exploring",
-    };
-  }, [savedStoryExists]);
 
   useEffect(() => {
     Snd.playMusic("menu");
@@ -106,46 +87,47 @@ export default function Home() {
   useEffect(() => {
     preloadImages([HOME_CREST_ART, GENESIS_HORIZON_ART]);
   }, []);
-const launchFirstTutorialBattle = () => {
-  startTutorialRun();
-  navigate("/play");
-};
 
-const handleIntroFinished = () => {
-  const shouldStartTutorial =
-    introPurpose === "onboarding" && !profile.tutorialSeen;
+  const launchFirstTutorialBattle = () => {
+    startTutorialRun();
+    navigate("/play");
+  };
 
-  handleIntroComplete();
+  const handleIntroFinished = () => {
+    const shouldStartTutorial =
+      introPurpose === "onboarding" && !profile.tutorialSeen;
 
-  if (shouldStartTutorial) {
-    launchFirstTutorialBattle();
-  }
-};
+    handleIntroComplete();
 
-const handleBeginRun = () => {
-  Sound.sfx.click();
+    if (shouldStartTutorial) {
+      launchFirstTutorialBattle();
+    }
+  };
 
-  if (run || savedStoryExists) {
-    setShowConfirm(true);
-    return;
-  }
+  const handleBeginRun = () => {
+    Sound.sfx.click();
 
-  // First-time onboarding begins only after the player presses Play.
-  if (!profile.tutorialSeen) {
-    triggerIntroReplay("onboarding");
-    return;
-  }
+    if (run || savedStoryExists) {
+      setShowConfirm(true);
+      return;
+    }
 
-  const deckCheck = validateDeck(profile.activeDeck);
+    // First-time onboarding begins only after the player presses Play.
+    if (!profile.tutorialSeen) {
+      triggerIntroReplay("onboarding");
+      return;
+    }
 
-  if (!deckCheck.valid) {
-    navigate("/collection");
-    return;
-  }
+    const deckCheck = validateDeck(profile.activeDeck);
 
-  // Returning player: use selected difficulty and normal run flow
-  navigate("/play");
-};
+    if (!deckCheck.valid) {
+      navigate("/collection");
+      return;
+    }
+
+    // Returning player: use selected difficulty and normal run flow
+    navigate("/play");
+  };
 
   const handleContinueSaved = () => {
     Sound.sfx.click();
@@ -157,100 +139,49 @@ const handleBeginRun = () => {
     }
   };
 
-  const handleResumeSavedRun = () => {
-    Sound.sfx.click();
-    if (resumeStoryRun()) {
-      navigate("/play");
-    }
-  };
-  
   const handleConfirmNew = () => {
-  endRun();
-  setShowConfirm(false);
+    endRun();
+    setShowConfirm(false);
 
-  setTimeout(() => {
-    if (!profile.tutorialSeen) {
-      triggerIntroReplay("onboarding");
-      return;
-    }
+    setTimeout(() => {
+      if (!profile.tutorialSeen) {
+        triggerIntroReplay("onboarding");
+        return;
+      }
 
-    navigate("/play");
-  }, 0);
-};
+      navigate("/play");
+    }, 0);
+  };
 
-const handleNameSaved = (name) => {
-  saveProfile({
-    playerName: sanitizePlayerName(name),
-  });
+  const handleNameSaved = (name) => {
+    saveProfile({
+      playerName: sanitizePlayerName(name),
+    });
 
-  setShowNamePrompt(false);
-};
+    setShowNamePrompt(false);
+  };
 
-  const TOTAL_CARDS = 29;
-  const TOTAL_ACHIEVEMENTS = 17;
   const todayStr = new Date().toISOString().slice(0, 10);
   const devotionPrayedToday = profile.devotionReadDate === todayStr;
-  const battleDoneToday = profile.lastDailyDate === todayStr;
-  const battleStatus = battleDoneToday ? "✓ Done" : (profile.dailyStreak > 0 ? `${profile.dailyStreak}-day streak` : "New today");
-  const prayerStatus = devotionPrayedToday ? "✓ Prayed" : (profile.devotionStreak > 0 ? `${profile.devotionStreak}-day streak` : null);
-  const primaryItems = [
-    { label: "Daily Battle", art: MENU_ART.daily, path: "/daily", desc: "One shared battle. Compete for the best score.", status: battleStatus },
-    { label: "My Cards & Deck", art: MENU_ART.collection, path: "/collection", desc: "Build your deck and view collected cards", status: `${profile.collectedCards.length}/${TOTAL_CARDS}` },
-    { label: "Leaderboard", art: MENU_ART.leaderboard, path: "/leaderboard", desc: "Compare scores with other players", status: null },
-    { label: "Faith Progress", art: MENU_ART.progress, path: "/faith-progress", desc: "Track your Bible learning progress", status: null },
-    { label: "My Progress", art: MENU_ART.progress, path: "/journey", desc: "Stats, streaks, and Bible learning", status: null },
-  ];
-  const secondaryItems = [
-  {
-    label: "Codex",
-    art: MENU_ART.collection,
-    path: "/codex",
-    desc: "View every enemy you've discovered",
-    status: `${profile.encounteredEnemies?.length || 0} found`,
-  },
-  {
-    label: "Marketplace",
-    art: MENU_ART.shop,
-    path: "/shop",
-    desc: "Buy card packs with earned gold.",
-    status: `${profile.gold || 0} gold`,
-  },
-  {
-    label: "Progress Map",
-    art: MENU_ART.progress,
-    path: "/progress",
-    desc: "Genesis to Revelation",
-    status: "Genesis active",
-  },
-  {
-    label: "Achievements",
-    art: MENU_ART.achievements,
-    path: "/achievements",
-    desc: "Sacred milestones",
-    status: `${profile.achievements.length}/${TOTAL_ACHIEVEMENTS}`,
-  },
-  {
-    label: "Settings",
-    art: MENU_ART.settings,
-    path: "/settings",
-    desc: "Audio & player options",
-    status: null,
-  },
-];
+  // A run to resume — either live in memory or persisted as a story save.
+  // Start Journey doubles as "continue" for it; the confirm dialog below
+  // still offers a clean way to abandon it and start fresh.
+  const hasResumableRun = Boolean(run || savedStoryExists);
+
   return (
     <FixedViewportPage
       style={{
-        backgroundColor: "#0A0F1E",
+        backgroundColor: "#050B16",
         backgroundImage: homeBackgroundReady
-          ? `linear-gradient(180deg, rgba(5, 12, 29, 0.28) 0%, rgba(7, 15, 34, 0.48) 42%, rgba(4, 10, 24, 0.7) 100%), url("${HOME_BACKGROUND}")`
-          : "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)",
+          ? `linear-gradient(180deg, rgba(4,9,20,0.42) 0%, rgba(5,11,26,0.6) 42%, rgba(3,8,18,0.84) 100%), url("${HOME_BACKGROUND}")`
+          : "radial-gradient(ellipse at center, #131d34 0%, #050B16 80%)",
         backgroundPosition: "center 18%",
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
+      contentClassName="pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
     >
-      {/* Floating particles */}
+      {/* Floating particles — drift across the whole screen, behind every section */}
       {HOME_PARTICLES.map((particle, i) => (
         <div
           key={i}
@@ -271,193 +202,242 @@ const handleNameSaved = (name) => {
         />
       ))}
 
-      {/* Hero / Title — compact */}
-      <div className="relative text-center mb-3">
-        {/* Localized vignette — only behind this header block, not the whole
-            page — so the crest/title/subtitle/name-row read clearly against
-            the bright celestial background instead of competing with it. */}
+      {/* 1. Full-width dark hero band — 2. crest, 3. title, 4. subtitle.
+          The darkening gradient sits on this full-bleed wrapper (no side
+          padding) so it spans edge to edge; the crest/title/subtitle
+          content is centered inside its own padded inner div. */}
+      <section className="relative w-full pt-3 pb-7 lg:pb-9 text-center overflow-hidden">
         <div
-          className="pointer-events-none absolute -inset-x-6 -top-4 -bottom-9 -z-10"
+          className="pointer-events-none absolute inset-0 -z-10"
           style={{
-            background: "radial-gradient(ellipse 90% 100% at 50% 25%, rgba(8,12,24,0.68) 0%, rgba(8,12,24,0.34) 60%, transparent 85%)",
+            background:
+              "radial-gradient(ellipse 100% 95% at 50% 15%, rgba(5,9,18,0.82) 0%, rgba(5,9,18,0.48) 55%, transparent 92%)",
           }}
           aria-hidden="true"
         />
-        <div className="flex justify-center mb-1">
-          <div className="relative h-16 w-16 lg:h-20 lg:w-20">
-            <div
-              className="absolute inset-0 rounded-full blur-xl"
-              style={{ background: "rgba(201,168,76,0.4)" }}
-              aria-hidden="true"
-            />
-            {/* home-crest.webp is a fully opaque square (no alpha channel) —
-                object-contain alone can't make its dark background
-                transparent, so it's clipped to a circle instead. Verified
-                against the source pixels that the medallion's own artwork
-                (spike, ring, wings) sits well within the inscribed circle,
-                so this only trims background/corners, never the crest
-                itself. */}
-            <div className="h-full w-full overflow-hidden rounded-full">
-              <SafeImage
-                src={HOME_CREST_ART}
-                alt="Chronicles of Faith"
-                className="h-full w-full object-contain"
-                style={{ filter: "brightness(1.15) saturate(1.08)" }}
+
+        <div className="relative px-4 lg:px-8">
+          <div className="flex justify-center mb-2">
+            <div className="relative h-16 w-16 lg:h-20 lg:w-20">
+              <div
+                className="absolute inset-0 rounded-full blur-xl"
+                style={{ background: "rgba(201,168,76,0.4)" }}
+                aria-hidden="true"
               />
+              {/* home-crest.webp is a fully opaque square (no alpha channel) —
+                  object-contain alone can't make its dark background
+                  transparent, so it's clipped to a circle instead. The
+                  crest's own artwork (spike, ring, wings) sits well within
+                  the inscribed circle, so this only trims background/corners. */}
+              <div className="h-full w-full overflow-hidden rounded-full">
+                <SafeImage
+                  src={HOME_CREST_ART}
+                  alt="Chronicles of Faith"
+                  className="h-full w-full object-contain"
+                  style={{ filter: "brightness(1.15) saturate(1.08)" }}
+                />
+              </div>
             </div>
           </div>
+
+          <h1
+            className="font-serif text-amber-100 tracking-wide leading-tight"
+            style={{
+              fontSize: "clamp(1.75rem, 5vw, 3.5rem)",
+              textShadow: "0 0 34px rgba(201,168,76,0.4), 0 2px 8px rgba(0,0,0,0.5)",
+            }}
+          >
+            Chronicles of Faith
+          </h1>
+          <p
+            className="text-amber-100/60 mt-1 font-serif italic tracking-wide"
+            style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
+          >
+            A Biblical Roguelike Journey
+          </p>
+          <div className="w-24 h-px mx-auto mt-2 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
         </div>
-        <h1 className="font-serif text-amber-100 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 34px rgba(201,168,76,0.4), 0 2px 8px rgba(0,0,0,0.5)" }}>
-          Chronicles of Faith
-        </h1>
-        <p className="text-amber-100/60 mt-1 font-serif italic tracking-wide" style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-          A Biblical Roguelike Journey
-        </p>
-        <div className="w-24 h-px mx-auto mt-1.5 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+      </section>
+
+      {/* 5. Player identity row */}
+      <div className="w-full px-4 lg:px-8 flex justify-center mb-6">
+        <button
+          onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
+          className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm"
+        >
+          {needsPlayerName(profile.playerName) ? (
+            <span className="text-amber-100/40">Playing as Guest Pilgrim</span>
+          ) : (
+            <span>Playing as: {sanitizePlayerName(profile.playerName)}</span>
+          )}
+          <Pencil className="w-3 h-3" />
+        </button>
       </div>
 
-      {/* Player name row — subtle guest-mode indicator or name display */}
-      <button
-        onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
-        className="flex items-center gap-1.5 text-amber-100/50 hover:text-amber-200 transition text-xs lg:text-sm mb-2"
-      >
-        {needsPlayerName(profile.playerName) ? (
-          <>
-            <span className="text-amber-100/40">Playing as Guest Pilgrim</span>
-          </>
-        ) : (
-          <>
-            <span>Playing as: {sanitizePlayerName(profile.playerName)}</span>
-          </>
-        )}
-        <Pencil className="w-3 h-3" />
-      </button>
+      {/* 6. "Take a Quiet Moment" — part of the full post-tutorial home menu,
+          so it stays hidden for first-time players to keep their first
+          impression focused on Start Journey. */}
+      {profile.tutorialSeen && (
+        <div className="w-full px-4 lg:px-8 flex justify-center mb-4">
+          {devotionPrayedToday ? (
+            <Link
+              to="/daily-prayer"
+              onClick={() => Sound.sfx.click()}
+              className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/35 px-3 py-2 transition hover:border-emerald-300/50 lg:max-w-[600px]"
+              style={{ background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.78) 100%)" }}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-serif text-sm font-semibold text-emerald-200">
+                  ✓ Daily Prayer Completed
+                </p>
+                <p className="text-[11px] text-emerald-100/65">
+                  Return to today&rsquo;s reflection
+                </p>
+              </div>
+              {profile.devotionStreak > 0 && (
+                <span className="flex-shrink-0 whitespace-nowrap text-[10px] text-amber-300/70">
+                  {profile.devotionStreak}-day streak
+                </span>
+              )}
+            </Link>
+          ) : (
+            <Link
+              to="/daily-prayer"
+              onClick={() => Sound.sfx.click()}
+              className="relative w-full max-w-md lg:max-w-[600px] overflow-hidden rounded-xl border-2 border-sky-300/45 bg-sky-900/15 px-4 py-3 lg:px-6 lg:py-5 shadow-lg shadow-sky-400/10 transition-all duration-300 hover:border-sky-200/70 hover:bg-sky-900/25 active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-4 text-left">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-sky-300/35 bg-sky-900/25 lg:h-16 lg:w-16">
+                  <Sun className="h-6 w-6 text-sky-200 lg:h-8 lg:w-8" />
+                </div>
 
-      {/* Resume prompt */}
-      {run && (
-        <div className="relative w-full max-w-md lg:max-w-2xl mb-4 p-4 rounded-xl border-2 border-emerald-400/40 bg-emerald-900/20 animate-fade-in">
-          <p className="text-emerald-200 font-serif text-sm text-center mb-3">Continue your Genesis run?</p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => { Sound.sfx.click(); navigate("/play"); }}
-              className="flex-1 px-4 py-2 rounded-lg border-2 border-emerald-400/50 bg-emerald-600/20 text-emerald-100 font-bold text-sm hover:bg-emerald-600/40 transition"
-            >
-              Continue
-            </button>
-            <button
-              onClick={() => { Sound.sfx.click(); setShowConfirm(true); }}
-              className="flex-1 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20 text-amber-100/80 text-sm hover:bg-amber-800/30 transition"
-            >
-              Start New Run
-            </button>
-          </div>
+                <div className="min-w-0 flex-1">
+                  {/* Title and badge each get their own row on narrow
+                      screens (flex-wrap) so the badge never squeezes the
+                      title text into a clip — it simply wraps below. */}
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="font-serif text-lg font-bold leading-snug text-sky-100 lg:text-xl">
+                      Take a Quiet Moment
+                    </p>
+                    <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
+                      New Today
+                    </span>
+                  </div>
+
+                  <p className="mt-1.5 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
+                    A short scripture, reflection, and prayer for today.
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-3">
+                    <span className="text-xs font-semibold text-sky-200 lg:text-sm">
+                      Pray Now →
+                    </span>
+
+                    {profile.devotionStreak > 0 && (
+                      <span className="text-[10px] text-amber-300/60 lg:text-xs">
+                        {profile.devotionStreak}-day prayer streak
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          )}
         </div>
       )}
 
-      {/* Continue Saved Run — shown when no active run in memory but a story save exists */}
-      {!run && savedStoryExists && savedRunInfo && (
-        <div className="relative w-full max-w-md lg:max-w-[600px] mb-3 animate-fade-in">
-          <button
-            onClick={handleResumeSavedRun}
-            className="relative w-full px-8 py-4 lg:py-5 rounded-xl border-2 border-emerald-400/60 text-emerald-100 font-serif font-bold text-center hover:bg-emerald-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-emerald-500/20"
-            style={{ background: "linear-gradient(135deg, rgba(20,80,40,0.25) 0%, rgba(10,60,30,0.2) 100%)" }}
+      {/* 7. Leaderboard — also part of the full post-tutorial home menu. */}
+      {profile.tutorialSeen && (
+        <div className="w-full px-4 lg:px-8 flex justify-center mb-2">
+          <Link
+            to="/leaderboard"
+            onClick={() => Sound.sfx.click()}
+            className="relative flex min-h-[76px] w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/25 px-3 py-2 transition hover:border-amber-400/40 lg:max-w-[600px]"
+            style={{ background: "rgba(8,12,24,0.78)" }}
           >
-            <span className="flex items-center justify-center gap-2">
-              <Swords className="w-5 h-5" />
-              Continue
-            </span>
-          </button>
-          <button
-            onClick={() => { Sound.sfx.click(); setShowConfirm(true); }}
-            className="relative w-full mt-2 px-8 py-2.5 rounded-xl border border-amber-400/30 text-amber-100/70 font-serif text-sm text-center hover:bg-amber-900/20 transition"
-          >
-            Start New Run
-          </button>
+            <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
+              <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+            </div>
+            <div className="min-w-0 flex-1 text-left">
+              <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
+              <p className="text-[11px] text-amber-100/80">View current rankings</p>
+            </div>
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
+          </Link>
         </div>
       )}
 
-{/* Difficulty appears only after the first tutorial is completed */}
-{profile.tutorialSeen && (
-  <div className="relative w-full max-w-md lg:max-w-[600px] mb-2 lg:mb-3">
-    <DifficultySelect />
-  </div>
-)}
+      {/* 8. Scripture / Genesis horizon — atmospheric centerpiece, always
+          shown (including before the tutorial) so the first impression
+          still carries the game's sacred tone, not just an empty gap. */}
+      <HomeGenesisAtmosphere showJourneyHint={!profile.tutorialSeen} />
+
+      {/* Difficulty — tucked directly above Start Journey, right where a
+          player would want to check it before launching a run. Unchanged
+          tutorial gate: only returning players (post-tutorial) see it. */}
+      {profile.tutorialSeen && (
+        <div className="w-full px-4 lg:px-8 flex justify-center mt-3">
+          <DifficultySelect />
+        </div>
+      )}
 
       {/* Story save corruption notice */}
       {storySaveError && !savedStoryExists && (
-        <div className="w-full max-w-md mb-3 p-3 rounded-lg border border-red-500/30 bg-red-900/20 text-center animate-fade-in">
-          <p className="text-red-200/80 text-xs">
-            Saved run could not be restored. Please start a new run.
-          </p>
+        <div className="w-full px-4 lg:px-8 flex justify-center mt-3">
+          <div className="w-full max-w-md p-3 rounded-lg border border-red-500/30 bg-red-900/20 text-center animate-fade-in">
+            <p className="text-red-200/80 text-xs">
+              Saved run could not be restored. Please start a new run.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Daily Prayer — compact status strip once completed, full invite otherwise */}
-      {devotionPrayedToday ? (
-        <Link
-          to="/daily-prayer"
-          onClick={() => Sound.sfx.click()}
-          className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/35 px-3 py-2 mb-3 transition hover:border-emerald-300/50 lg:max-w-[600px]"
-          style={{ background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.78) 100%)" }}
-        >
-          <div className="min-w-0 flex-1">
-            <p className="font-serif text-sm font-semibold text-emerald-200">
-              ✓ Daily Prayer Completed
-            </p>
-            <p className="text-[11px] text-emerald-100/65">
-              Return to today&rsquo;s reflection
-            </p>
+      {/* 9. Start Journey — the single, strongest action on the screen.
+          Resuming a run/save goes through this same button + the confirm
+          dialog below (Continue Saved Run vs. Start New Run), so all the
+          underlying resume/new-run logic stays wired exactly as before. */}
+      <StickyActionDock className="w-full px-4 lg:px-8">
+        <div className="relative mx-auto w-full max-w-md lg:max-w-[600px]">
+          {/* Decorative crest cropped from the top of start-journey-frame.webp —
+              only the ornamental arch/shield band (roughly the top ~10% of the
+              tall source image) is ever visible here. The source also contains
+              a baked-in "Start your Journey" nameplate much further down; a
+              short, fixed-height, overflow-hidden window with object-position:
+              top keeps that text entirely outside the crop regardless of
+              viewport width, so the live button text below is never duplicated. */}
+          <div className="relative mx-auto h-10 w-full overflow-hidden rounded-t-xl sm:h-12" aria-hidden="true">
+            <SafeImage
+              src={START_JOURNEY_FRAME_ART}
+              alt=""
+              className="h-full w-full object-cover"
+              style={{ objectPosition: "top center" }}
+            />
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: "linear-gradient(180deg, transparent 35%, rgba(8,12,24,0.92) 100%)" }}
+            />
           </div>
-          {profile.devotionStreak > 0 && (
-            <span className="flex-shrink-0 whitespace-nowrap text-[10px] text-amber-300/70">
-              {profile.devotionStreak}-day streak
+          <button
+            onClick={handleBeginRun}
+            className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/75 bg-amber-600/20 text-amber-50 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02]"
+            style={{
+              fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
+              background: "linear-gradient(135deg, rgba(200,158,45,0.3) 0%, rgba(130,98,22,0.24) 100%)",
+              boxShadow:
+                "0 0 40px rgba(251,191,36,0.32), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.25), inset 0 0 24px rgba(251,191,36,0.1)",
+              textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+            }}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <Swords className="w-5 h-5" />
+              {hasResumableRun ? "Continue Journey" : "Start Journey"}
             </span>
-          )}
-        </Link>
-      ) : (
-        <Link
-          to="/daily-prayer"
-          onClick={() => Sound.sfx.click()}
-          className="relative w-full max-w-md lg:max-w-[600px] mb-3 overflow-hidden rounded-xl border-2 border-sky-300/45 bg-sky-900/15 px-4 py-3 lg:px-6 lg:py-5 shadow-lg shadow-sky-400/10 transition-all duration-300 hover:border-sky-200/70 hover:bg-sky-900/25 active:scale-[0.99]"
-        >
-          <div className="flex items-center gap-4 text-left">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-sky-300/35 bg-sky-900/25 lg:h-16 lg:w-16">
-              <Sun className="h-6 w-6 text-sky-200 lg:h-8 lg:w-8" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-start gap-x-3 gap-y-1.5">
-                <p className="min-w-[9rem] flex-1 font-serif text-lg font-bold leading-snug text-sky-100 lg:text-xl">
-                  Take a Quiet Moment
-                </p>
-
-                <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-sky-300/30 bg-sky-950/70 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200">
-                  New Today
-                </span>
-              </div>
-
-              <p className="mt-1 text-xs leading-relaxed text-amber-100/55 lg:text-sm">
-                A short scripture, reflection, and prayer for today.
-              </p>
-
-              <div className="mt-2 flex items-center gap-3">
-                <span className="text-xs font-semibold text-sky-200 lg:text-sm">
-                  Pray Now →
-                </span>
-
-                {profile.devotionStreak > 0 && (
-                  <span className="text-[10px] text-amber-300/60 lg:text-xs">
-                    {profile.devotionStreak}-day prayer streak
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </Link>
-      )}
+          </button>
+        </div>
+      </StickyActionDock>
 
       {/* Confirmation dialog */}
-            {showConfirm && (
+      {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.95)" }} onClick={() => setShowConfirm(false)}>
           <div className="max-w-sm w-full rounded-2xl border-2 border-amber-500/30 p-6" style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-serif text-amber-200 text-center mb-3">Start a New Run?</h2>
@@ -488,70 +468,6 @@ const handleNameSaved = (name) => {
         </div>
       )}
 
-
-{/* Compact secondary action */}
-<Link
-  to="/leaderboard"
-  onClick={() => Sound.sfx.click()}
-  className="relative flex min-h-[76px] w-full max-w-md items-center gap-3 rounded-lg border border-amber-500/25 px-3 py-2 transition hover:border-amber-400/40 lg:max-w-[600px]"
-  style={{ background: "rgba(8,12,24,0.78)" }}
->
-  <div className="relative h-12 w-12 flex-shrink-0 sm:h-14 sm:w-14">
-    <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
-  </div>
-  <div className="min-w-0 flex-1 text-left">
-    <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
-    <p className="text-[11px] text-amber-100/80">View current rankings</p>
-  </div>
-  <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
-</Link>
-
-{/* Atmospheric Genesis centerpiece — fills the space between the compact
-    upper content and Start Journey, replacing what used to be a plain
-    flex-1 spacer. Carries the Genesis 1:1 scripture as its content. */}
-<HomeGenesisAtmosphere showJourneyHint={!profile.tutorialSeen} />
-
-      <StickyActionDock className="mx-auto w-full max-w-md lg:max-w-[600px]">
-        {/* Decorative crest cropped from the top of start-journey-frame.webp —
-            only the ornamental arch/shield band (roughly the top ~10% of the
-            tall source image) is ever visible here. The source also contains
-            a baked-in "Start your Journey" nameplate much further down; a
-            short, fixed-height, overflow-hidden window with object-position:
-            top keeps that text entirely outside the crop regardless of
-            viewport width, so the live button text below is never duplicated. */}
-        <div
-          className="relative mx-auto h-10 w-full overflow-hidden rounded-t-xl sm:h-12"
-          aria-hidden="true"
-        >
-          <SafeImage
-            src={START_JOURNEY_FRAME_ART}
-            alt=""
-            className="h-full w-full object-cover"
-            style={{ objectPosition: "top center" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{ background: "linear-gradient(180deg, transparent 35%, rgba(8,12,24,0.92) 100%)" }}
-          />
-        </div>
-        <button
-          onClick={handleBeginRun}
-          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/75 bg-amber-600/20 text-amber-50 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02]"
-          style={{
-            fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
-            background: "linear-gradient(135deg, rgba(200,158,45,0.3) 0%, rgba(130,98,22,0.24) 100%)",
-            boxShadow:
-              "0 0 40px rgba(251,191,36,0.32), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.25), inset 0 0 24px rgba(251,191,36,0.1)",
-            textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-          }}
-        >
-          <span className="flex items-center justify-center gap-2">
-            <Swords className="w-5 h-5" />
-            Start Journey
-          </span>
-        </button>
-      </StickyActionDock>
-
       {showNamePrompt && (
         <PlayerNamePrompt onSave={handleNameSaved} onCancel={() => setShowNamePrompt(false)} />
       )}
@@ -560,7 +476,7 @@ const handleNameSaved = (name) => {
         <CinematicIntro onComplete={handleIntroFinished} />
       )}
 
-            {showResume && (
+      {showResume && (
         <ResumeModal
           onResume={() => { setShowResume(false); navigate("/play"); }}
           onAbandon={() => { setShowResume(false); endRun(); }}

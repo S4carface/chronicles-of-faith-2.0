@@ -24,7 +24,7 @@ const DIFFICULTY_RULES = {
   },
 };
 
-export default function DifficultySelect() {
+export default function DifficultySelect({ compact = false }) {
   const { profile, saveProfile } = useGame();
 
   const current = DIFFICULTY_PRESETS[profile.difficulty]
@@ -61,6 +61,60 @@ export default function DifficultySelect() {
       },
     });
   };
+
+  // Compact mode (post-tutorial Home dashboard): shorter button row and the
+  // description + retry rule merged into a single truncated line instead of
+  // the two-line panel below, matching the ~46-54px target for the button
+  // row plus one small rule row rather than a much taller detail card. Data
+  // (labels/desc/rule text) is unchanged either way — only the layout.
+  if (compact) {
+    const summary = `${currentPreset.label.toUpperCase()} · ${currentPreset.desc} · ${currentRule.text}`;
+
+    return (
+      <div className="mx-auto w-full max-w-md">
+        <div className="flex justify-center gap-1.5">
+          {Object.entries(DIFFICULTY_PRESETS).map(([key, preset]) => {
+            const isActive = current === key;
+
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => handleSelect(key)}
+                className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full border-2 px-2.5 py-1 transition-all duration-200 ${
+                  isActive
+                    ? "scale-[1.03] border-amber-300 bg-amber-500/20 shadow-md shadow-amber-400/30"
+                    : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:border-amber-400/40 hover:opacity-100"
+                }`}
+              >
+                <div
+                  className="h-5 w-5 flex-shrink-0 overflow-hidden rounded-full"
+                  style={{ background: "#0F1A30" }}
+                >
+                  <img src={artMap[key]} alt="" className="art-portrait" />
+                </div>
+                <span
+                  className={`font-serif text-xs font-semibold ${
+                    isActive ? "text-amber-100" : "text-amber-100/60"
+                  }`}
+                >
+                  {preset.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          className={`mt-1 truncate rounded-lg border px-3 py-1 text-[11px] font-medium ${currentRule.panelClass} ${currentRule.textClass}`}
+          title={summary}
+        >
+          {summary}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-md">

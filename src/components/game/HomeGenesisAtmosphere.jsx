@@ -43,8 +43,77 @@ const DUST_PARTICLES = [
 // pinned, so there's no scenario where it visually collides with either of
 // these. The dark overlay's gradient deepens toward the bottom of the image
 // so the two sections read as one continuous scene despite the DOM boundary.
-export default function HomeGenesisAtmosphere({ showJourneyHint = false, compact = false }) {
+// overlayScripture: the post-tutorial compact dashboard's variant — a
+// single fixed-height box (90-130px) with the scripture layered directly
+// on top of the artwork instead of the image-plus-separate-text-block-
+// below structure the rest of this component uses. Kept as an early return
+// (not threaded through the shared JSX below) because the two layouts
+// don't share a DOM shape: below-image scripture is a real, independently-
+// sized sibling block, while overlaid scripture is absolutely positioned
+// inside the same box as the image and must never add its own height.
+export default function HomeGenesisAtmosphere({
+  showJourneyHint = false,
+  compact = false,
+  overlayScripture = false,
+}) {
   const prefersReducedMotion = useReducedMotion();
+
+  if (overlayScripture) {
+    return (
+      <div
+        className="relative w-full shrink-0 flex-1 min-h-[90px] max-h-[130px] overflow-hidden"
+        aria-label="Genesis 1:1"
+      >
+        <SafeImage
+          src={GENESIS_HORIZON_ART}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
+        />
+
+        {/* Stronger vignette than the below-image layout needs — the
+            scripture sits directly on top of the artwork here, so it needs
+            more contrast to stay readable without extra vertical space. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(6,10,20,0.58) 0%, rgba(6,10,20,0.28) 35%, rgba(6,10,20,0.32) 65%, rgba(6,10,20,0.62) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 55% at 50% 40%, rgba(251,191,36,0.2) 0%, transparent 72%)",
+          }}
+        />
+
+        {/* Scripture — live HTML, overlaid instead of taking its own
+            space below. showJourneyHint is intentionally not supported in
+            this mode: post-tutorial never needs the "journey begins" hint,
+            and a constrained 90-130px box has no room to show it without
+            crowding the verse itself. */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <p
+            className="font-serif italic text-amber-50/95"
+            style={{
+              fontSize: "clamp(0.7rem, 2vw, 0.85rem)",
+              textShadow: "0 1px 6px rgba(0,0,0,0.75), 0 0 16px rgba(0,0,0,0.5)",
+            }}
+          >
+            &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
+          </p>
+          <p
+            className="mt-1 text-[9px] font-serif italic text-amber-200/80"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
+          >
+            Genesis 1:1
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

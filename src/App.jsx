@@ -46,6 +46,15 @@ const PROFILE_STORAGE_KEY = "chronicles_of_faith_v1";
 // management, etc.) renders without this transition, unchanged from before.
 const MAIN_TAB_PATHS = ["/collection", "/daily-prayer", "/", "/daily", "/journey"];
 
+// Routes whose page is a FixedViewportPage "dashboard" screen that already
+// reserves its own bottom clearance around BottomNavigation's exact
+// footprint (Home, the collapsed Daily Battle page) — for these,
+// BottomNavigation must not render its own normal-flow spacer too, or the
+// same clearance gets reserved twice, eating into a layout that's been
+// sized to fit exactly one screen. Every other route keeps the default
+// spacer, since normal scrolling pages rely on it.
+const FIXED_DASHBOARD_ROUTES = ["/", "/daily"];
+
 const tabPageVariants = {
   enter: (direction) => ({ opacity: 0, x: direction === 0 ? 0 : direction * 16 }),
   center: { opacity: 1, x: 0 },
@@ -175,7 +184,7 @@ const AuthenticatedApp = () => {
     routedPages
   )}
 
-<BottomNavigation />
+<BottomNavigation reserveSpace={!FIXED_DASHBOARD_ROUTES.includes(location.pathname)} />
 </GameProvider>
   );
 };

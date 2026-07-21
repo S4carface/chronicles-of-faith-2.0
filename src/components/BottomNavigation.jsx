@@ -41,7 +41,14 @@ const ITEMS = [
 
 const HIDDEN_PATHS = ["/play"];
 
-export default function BottomNavigation() {
+// reserveSpace: true (default) renders a normal-flow spacer div ahead of
+// the fixed bar so ordinary scrolling pages never need to know the bar's
+// exact height themselves. Pass false for pages that already own their own
+// bottom clearance (a FixedViewportPage screen sized around this bar's
+// exact footprint, e.g. Home) — rendering the spacer there too would
+// reserve the same space twice, silently eating into the screen's already-
+// tight vertical budget for content that's supposed to fit in one view.
+export default function BottomNavigation({ reserveSpace = true }) {
   const location = useLocation();
   const { profile } = useGame();
 
@@ -63,11 +70,14 @@ export default function BottomNavigation() {
     <>
       {/* Reserves room so the fixed bar — including the raised Home
           medallion, which extends above the bar's own top edge — never
-          covers page content (Start Journey in particular). */}
-      <div
-        aria-hidden="true"
-        className="h-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      />
+          covers page content (Start Journey in particular). Skipped when
+          the page itself already reserves this exact clearance. */}
+      {reserveSpace && (
+        <div
+          aria-hidden="true"
+          className="h-[calc(6.5rem+env(safe-area-inset-bottom))]"
+        />
+      )}
 
       <nav
         className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-xl px-3 pb-[calc(0.4rem+env(safe-area-inset-bottom))]"

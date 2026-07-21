@@ -2,6 +2,7 @@ import React from "react";
 import { useGame } from "@/game/GameContext";
 import { DIFFICULTY_PRESETS } from "@/game/mapGenerator";
 import { HOME_ART } from "@/data/art";
+import SafeImage from "@/components/ui/SafeImage";
 import * as Sound from "@/game/soundManager";
 
 const DIFFICULTY_RULES = {
@@ -92,7 +93,7 @@ export default function DifficultySelect({ compact = false }) {
                   className="h-5 w-5 flex-shrink-0 overflow-hidden rounded-full"
                   style={{ background: "#0F1A30" }}
                 >
-                  <img src={artMap[key]} alt="" className="art-portrait" />
+                  <SafeImage src={artMap[key]} alt="" fallback={null} className="art-portrait" />
                 </div>
                 <span
                   className={`font-serif text-xs font-semibold ${
@@ -139,9 +140,10 @@ export default function DifficultySelect({ compact = false }) {
                 className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full"
                 style={{ background: "#0F1A30" }}
               >
-                <img
+                <SafeImage
                   src={artMap[key]}
                   alt=""
+                  fallback={null}
                   className="art-portrait"
                 />
               </div>
@@ -167,9 +169,10 @@ export default function DifficultySelect({ compact = false }) {
             className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/30"
             style={{ background: "#0F1A30" }}
           >
-            <img
+            <SafeImage
               src={artMap[current]}
               alt={currentPreset.label}
+              fallback={null}
               className="art-portrait"
             />
           </div>

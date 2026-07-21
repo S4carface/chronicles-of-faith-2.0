@@ -1,25 +1,50 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReducedMotion } from "framer-motion";
-import { Swords, Pencil, Sun, ChevronRight } from "lucide-react";
+import { Swords, Pencil, Sun, ChevronRight, Cross, Trophy } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import ResumeModal from "@/components/game/ResumeModal";
 import DifficultySelect from "@/components/game/DifficultySelect";
 import CinematicIntro from "@/components/game/CinematicIntro";
-import HomeGenesisAtmosphere, { GENESIS_HORIZON_ART } from "@/components/game/HomeGenesisAtmosphere";
+import HomeGenesisAtmosphere from "@/components/game/HomeGenesisAtmosphere";
 import FixedViewportPage from "@/components/FixedViewportPage";
 import StickyActionDock from "@/components/StickyActionDock";
 import SafeImage from "@/components/ui/SafeImage";
 import { getSavedRoute } from "@/components/ScrollToTop";
 import { validateDeck } from "@/game/deckRules";
 import { sanitizePlayerName, needsPlayerName } from "@/game/nameValidator";
-import { preloadImage, preloadImages } from "@/lib/imageAssets";
+import { preloadImage } from "@/lib/imageAssets";
+import {
+  HOME_CREST_ART,
+  HOME_TROPHY_ART,
+  HOME_BACKGROUND_ART,
+} from "@/lib/preloadHomeAssets";
 import * as Sound from "@/game/soundManager";
 
-const HOME_BACKGROUND = "/images/home/home-celestial.png";
-const HOME_CREST_ART = "/images/home/home-crest.webp";
-const HOME_TROPHY_ART = "/images/home/home-trophy.webp";
+// Intentional visual fallbacks — shown by SafeImage while the real artwork
+// is still loading/decoding (or if it fails). Sized as fractions of their
+// parent box (absolute inset-0) so they exactly fill the same space the
+// image will fade into, meaning artwork arriving never shifts the layout.
+const CREST_FALLBACK = (
+  <div
+    className="absolute inset-0 flex items-center justify-center rounded-full"
+    style={{
+      background:
+        "radial-gradient(circle at 50% 35%, rgba(30,42,68,0.95) 0%, rgba(8,12,24,0.98) 100%)",
+      boxShadow: "inset 0 0 0 2px rgba(201,168,76,0.45)",
+    }}
+    aria-hidden="true"
+  >
+    <Cross className="h-2/5 w-2/5 text-amber-300/70" strokeWidth={1.75} />
+  </div>
+);
+
+const TROPHY_FALLBACK = (
+  <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+    <Trophy className="h-1/2 w-1/2 text-amber-300/70" strokeWidth={1.75} />
+  </div>
+);
 
 // Fixed, deterministic particle field — declared once at module scope so
 // positions never change on re-render (Math.random() directly inside JSX
@@ -76,26 +101,21 @@ export default function Home() {
     }
   }, []);
 
+  // By the time Home mounts, App.jsx's own Home-critical preload race has
+  // already awaited (or timed out on) this exact source — preloadImage's
+  // module-level cache means this resolves immediately on a cache hit, or
+  // picks up the still-in-flight load if the race hit its timeout first,
+  // fading the CSS background from its gradient fallback once it lands.
   useEffect(() => {
     let isMounted = true;
 
-    preloadImage(HOME_BACKGROUND).then((loaded) => {
+    preloadImage(HOME_BACKGROUND_ART).then((loaded) => {
       if (isMounted && loaded) setHomeBackgroundReady(true);
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
-
-  // Fire-and-forget: warms the two most visually prominent pieces of new
-  // Home artwork (the crest and the Genesis horizon) ahead of when
-  // SafeImage actually mounts them, so they're more likely to be ready to
-  // fade in immediately rather than showing their loading placeholder
-  // first. The trophy is lower-priority decoration and intentionally left
-  // to load on its own.
-  useEffect(() => {
-    preloadImages([HOME_CREST_ART, GENESIS_HORIZON_ART]);
   }, []);
 
   const launchFirstTutorialBattle = () => {
@@ -205,7 +225,7 @@ export default function Home() {
       style={{
         backgroundColor: "#050B16",
         backgroundImage: homeBackgroundReady
-          ? `linear-gradient(180deg, rgba(4,9,20,0.42) 0%, rgba(5,11,26,0.6) 42%, rgba(3,8,18,0.84) 100%), url("${HOME_BACKGROUND}")`
+          ? `linear-gradient(180deg, rgba(4,9,20,0.42) 0%, rgba(5,11,26,0.6) 42%, rgba(3,8,18,0.84) 100%), url("${HOME_BACKGROUND_ART}")`
           : "radial-gradient(ellipse at center, #131d34 0%, #050B16 80%)",
         backgroundPosition: "center 18%",
         backgroundRepeat: "no-repeat",
@@ -293,6 +313,7 @@ export default function Home() {
                 <SafeImage
                   src={HOME_CREST_ART}
                   alt="Chronicles of Faith"
+                  fallback={CREST_FALLBACK}
                   className="h-full w-full object-contain"
                   style={{ filter: "brightness(1.15) saturate(1.08)" }}
                 />
@@ -465,7 +486,7 @@ export default function Home() {
               isPreTutorial ? "h-10 w-10" : "h-12 w-12"
             }`}
           >
-            <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+            <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0 flex-1 text-left">
             <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
@@ -616,6 +637,7 @@ export default function Home() {
               <SafeImage
                 src={HOME_CREST_ART}
                 alt="Chronicles of Faith"
+                fallback={CREST_FALLBACK}
                 className="h-full w-full object-contain"
                 style={{ filter: "brightness(1.15) saturate(1.08)" }}
               />
@@ -740,7 +762,7 @@ export default function Home() {
             }}
           >
             <div className="relative h-6 w-6 flex-shrink-0">
-              <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+              <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-contain" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-serif text-xs font-bold text-amber-100">Leaderboard</p>

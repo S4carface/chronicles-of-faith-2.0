@@ -36,6 +36,7 @@ import AdminDeveloperAccounts from "@/pages/AdminDeveloperAccounts";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useEffect, useRef, useState } from "react";
 import { preloadCriticalFirstRunAssets } from "@/lib/preloadCriticalAssets";
+import { preloadHomeCriticalAssets, preloadDeferredGameAssets } from "@/lib/preloadHomeAssets";
 import * as Sound from "@/game/soundManager";
 
 const PROFILE_STORAGE_KEY = "chronicles_of_faith_v1";
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const [tutorialCompleted] = useState(tutorialWasCompletedAtStartup);
   const [criticalAssetsReady, setCriticalAssetsReady] = useState(false);
+  const [homeAssetsReady, setHomeAssetsReady] = useState(false);
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
 
@@ -108,19 +110,41 @@ const AuthenticatedApp = () => {
     preloadCriticalFirstRunAssets().finally(() => {
       if (mounted) setCriticalAssetsReady(true);
     });
+    // Home's own critical artwork (crest, trophy, Genesis horizon,
+    // background, and — for returning players — the difficulty icons) is a
+    // separate, smaller preload race from the first-run cinematic intro
+    // assets above. It must gate EVERY player, not just first-timers: a
+    // returning player (tutorialCompleted === true) skips the first-run
+    // race entirely via the condition below, so without this they'd reach
+    // Home with zero asset gating at all — exactly the reported bug.
+    preloadHomeCriticalAssets({ includeDifficultyIcons: tutorialCompleted }).finally(() => {
+      if (mounted) setHomeAssetsReady(true);
+    });
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Show loading spinner while checking app public settings or auth
+  // Once Home's own critical artwork is settled (or timed out), warm
+  // anything else Home is likely to need soon in the background — never
+  // gates this or any later reveal, just reduces the odds of *those*
+  // showing their own loading placeholder later.
+  useEffect(() => {
+    if (homeAssetsReady) preloadDeferredGameAssets();
+  }, [homeAssetsReady]);
+
+  // Show loading spinner while checking app public settings or auth, or
+  // while Home's own critical artwork is still being decoded — applies to
+  // every player, not just first-timers, and never blocks longer than
+  // HOME_CRITICAL_TIMEOUT_MS (see preloadHomeAssets.js).
   if (
     isLoadingAuth ||
     isLoadingPublicSettings ||
-    (!tutorialCompleted && !criticalAssetsReady)
+    (!tutorialCompleted && !criticalAssetsReady) ||
+    !homeAssetsReady
   ) {
-  return <LoadingScreen />;
-}
+    return <LoadingScreen />;
+  }
 
   // Handle authentication errors
   if (authError) {

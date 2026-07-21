@@ -177,20 +177,22 @@ export default function Home() {
   // Start Journey doubles as "continue" for it; the confirm dialog below
   // still offers a clean way to abandon it and start fresh.
   const hasResumableRun = Boolean(run || savedStoryExists);
-  // Pre-tutorial shows every section post-tutorial does except Difficulty
-  // and bottom nav — a genuinely taller stack, not a shorter one. Left at
-  // the same sizes used post-tutorial (where bottom nav's absence isn't
-  // compensated for), that stack no longer fits one screen and forces a
-  // scroll. isPreTutorial drives a dedicated, more compact sizing pass
-  // below (crest/cards/horizon/button all shrink a bit, gaps tighten) so
-  // the same content fits within FixedViewportPage's 100dvh box without
-  // scrolling, while post-tutorial keeps its original, roomier sizing.
+  // Pre-tutorial is the approved cinematic first-time Home (unchanged).
+  // Post-tutorial is a completely different, compact fixed-dashboard
+  // hierarchy — see the two branches in the JSX below. Each has its own
+  // sizing/spacing tuned to actually fit FixedViewportPage's 100dvh box:
+  // pre-tutorial keeps a scroll fallback for the rare device it doesn't
+  // quite fit; post-tutorial is compact enough to render with scrolling
+  // turned off entirely (see the `scrollable` prop just below).
   const isPreTutorial = !profile.tutorialSeen;
 
-  // Bottom nav (and its own reserved spacer) only renders once the tutorial
-  // is seen, so the page's own bottom padding only needs to reserve that
-  // much room post-tutorial. Pre-tutorial, a small safe-area pad is enough —
-  // the leftover space is filled deliberately below (see TAIL_PARTICLES).
+  // BottomNavigation renders reserveSpace={false} for this route (see
+  // App.jsx) specifically so this padding is the SOLE bottom-clearance
+  // reservation — both used to reserve the same ~6.5rem independently,
+  // silently doubling the space taken out of an already-tight post-tutorial
+  // layout. Pre-tutorial doesn't need this at all (bottom nav is hidden
+  // until the tutorial completes); a small safe-area pad is enough there,
+  // with the leftover space filled deliberately below (see TAIL_PARTICLES).
   const contentBottomPadding = profile.tutorialSeen
     ? "pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
     : "pb-[calc(0.75rem+env(safe-area-inset-bottom))] [@media(max-height:760px)]:pb-[calc(0.25rem+env(safe-area-inset-bottom))] lg:pb-8";
@@ -210,6 +212,7 @@ export default function Home() {
         backgroundSize: "cover",
       }}
       contentClassName={`${contentTopPadding} ${contentBottomPadding}`}
+      scrollable={isPreTutorial}
     >
       {/* Floating particles — drift across the whole screen, behind every section */}
       {HOME_PARTICLES.map((particle, i) => (
@@ -232,6 +235,13 @@ export default function Home() {
         />
       ))}
 
+      {/* Pre-tutorial: the approved cinematic first-time Home, unchanged
+          (see the isPreTutorial ternaries throughout this block — they
+          always resolve to their pre-tutorial branch here now, but are
+          left as-is rather than hardcoded, so this JSX stays byte-for-byte
+          identical to the pre-tutorial screen this task must not alter). */}
+      {isPreTutorial && (
+      <>
       {/* 1. Full-width dark hero band — 2. crest, 3. title, 4. subtitle.
           The darkening gradient sits on this full-bleed wrapper (no side
           padding) so it spans edge to edge; the crest/title/subtitle
@@ -581,6 +591,202 @@ export default function Home() {
             />
           ))}
         </div>
+      )}
+      </>
+      )}
+
+      {/* Post-tutorial: compact fixed dashboard — see the numbered hierarchy
+          comments below. FixedViewportPage renders with scrollable={false}
+          for this branch (see the JSX prop below), so every section here is
+          sized to actually fit within one 100dvh screen rather than relying
+          on scroll as a fallback. */}
+      {!isPreTutorial && (
+      <>
+      {/* 1. Compact header — crest, title, and player name in one tight
+          row instead of the pre-tutorial hero band's own full section. */}
+      <div className="w-full shrink-0 px-4 pt-1 pb-0.5 lg:px-8">
+        <div className="flex items-center justify-center gap-2.5">
+          <div className="relative h-10 w-10 flex-shrink-0 lg:h-14 lg:w-14">
+            <div
+              className="absolute inset-0 rounded-full blur-lg"
+              style={{ background: "rgba(251,191,36,0.45)" }}
+              aria-hidden="true"
+            />
+            <div className="h-full w-full overflow-hidden rounded-full">
+              <SafeImage
+                src={HOME_CREST_ART}
+                alt="Chronicles of Faith"
+                className="h-full w-full object-contain"
+                style={{ filter: "brightness(1.15) saturate(1.08)" }}
+              />
+            </div>
+          </div>
+
+          <div className="min-w-0 text-left">
+            <h1
+              className="font-serif text-amber-50 tracking-wide leading-tight truncate"
+              style={{
+                fontSize: "clamp(1.05rem, 3.2vw, 1.4rem)",
+                textShadow: "0 0 20px rgba(251,191,36,0.4), 0 1px 5px rgba(0,0,0,0.5)",
+              }}
+            >
+              Chronicles of Faith
+            </h1>
+            <button
+              onClick={() => { Sound.sfx.click(); setShowNamePrompt(true); }}
+              className="mt-0.5 flex max-w-full items-center gap-1 text-[11px] text-amber-100/60 transition hover:text-amber-200"
+            >
+              {needsPlayerName(profile.playerName) ? (
+                <span className="truncate">Playing as Guest Pilgrim</span>
+              ) : (
+                <span className="truncate">Playing as: {sanitizePlayerName(profile.playerName)}</span>
+              )}
+              <Pencil className="h-2.5 w-2.5 flex-shrink-0" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Continue — a quick, one-tap resume, shown only when there's
+          actually a run to resume. Reuses handleContinueSaved exactly as
+          the confirm dialog below does, so this is a shortcut to the same
+          existing resume path, not a new one. Start Journey further down
+          still goes through handleBeginRun + the confirm dialog, so a
+          player can also choose to abandon this run and start fresh. */}
+      {hasResumableRun && (
+        <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
+          <button
+            onClick={handleContinueSaved}
+            className="mx-auto flex min-h-[44px] w-full max-w-md items-center justify-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-900/25 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-900/40 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px]"
+          >
+            <Swords className="h-4 w-4" />
+            Continue Journey
+          </button>
+        </div>
+      )}
+
+      {/* 3-4. Easy/Normal/Hard selector + one compact selected-difficulty
+          rule row (DifficultySelect's own compact mode). Unchanged gate:
+          only returning players (post-tutorial) ever reach this branch. */}
+      <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
+        <DifficultySelect compact />
+      </div>
+
+      {/* Story save corruption notice */}
+      {storySaveError && !savedStoryExists && (
+        <div className="w-full shrink-0 px-4 pb-1.5 lg:px-8">
+          <div className="mx-auto max-w-md rounded-lg border border-red-500/30 bg-red-900/20 px-3 py-2 text-center animate-fade-in lg:max-w-[600px]">
+            <p className="text-[11px] text-red-200/80">
+              Saved run could not be restored. Please start a new run.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Daily Prayer + Leaderboard — compact secondary tiles, side by
+          side once there's room (361px+) and stacked as slim rows below
+          that so neither tile gets cramped. Rows are shorter while stacked
+          (44px, the touch-target floor) than while side by side (56px) —
+          the narrowest phones need every pixel this can give back. */}
+      <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
+        <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-1 min-[361px]:grid-cols-2 min-[361px]:gap-2 lg:max-w-[600px]">
+          {devotionPrayedToday ? (
+            <Link
+              to="/daily-prayer"
+              onClick={() => Sound.sfx.click()}
+              className="flex min-h-[44px] min-[361px]:min-h-[56px] items-center gap-1.5 rounded-xl border border-emerald-400/35 px-3 py-1.5 transition hover:border-emerald-300/50"
+              style={{
+                background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.85) 100%)",
+                boxShadow: "inset 0 1px 0 rgba(251,191,36,0.14)",
+              }}
+            >
+              <div className="min-w-0 flex-1">
+                <p className="font-serif text-xs font-bold text-emerald-200">✓ Prayer Complete</p>
+                {profile.devotionStreak > 0 && (
+                  <p className="text-[10px] text-amber-300/70">{profile.devotionStreak}-day streak</p>
+                )}
+              </div>
+            </Link>
+          ) : (
+            <Link
+              to="/daily-prayer"
+              onClick={() => Sound.sfx.click()}
+              className="flex min-h-[44px] min-[361px]:min-h-[56px] items-center gap-1.5 rounded-xl border border-amber-400/30 px-3 py-1.5 transition hover:border-amber-300/45"
+              style={{
+                background: "linear-gradient(135deg, rgba(14,20,38,0.92) 0%, rgba(6,10,20,0.96) 100%)",
+                boxShadow: "inset 0 1px 0 rgba(251,191,36,0.1)",
+              }}
+            >
+              <div
+                className="relative flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-amber-400/40"
+                style={{ background: "radial-gradient(circle at 50% 35%, rgba(58,45,16,0.9) 0%, rgba(10,14,26,0.96) 100%)" }}
+              >
+                <Sun className="h-3.5 w-3.5 text-amber-200" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-serif text-xs font-bold text-amber-100">Daily Prayer</p>
+                <p className="text-[10px] text-amber-300">Pray Now →</p>
+              </div>
+            </Link>
+          )}
+
+          <Link
+            to="/leaderboard"
+            onClick={() => Sound.sfx.click()}
+            className="flex min-h-[44px] min-[361px]:min-h-[56px] items-center gap-1.5 rounded-xl border border-amber-400/30 px-3 py-1.5 transition hover:border-amber-300/45"
+            style={{
+              background: "linear-gradient(135deg, rgba(10,16,32,0.85) 0%, rgba(6,10,20,0.9) 100%)",
+              boxShadow: "inset 0 1px 0 rgba(251,191,36,0.1)",
+            }}
+          >
+            <div className="relative h-6 w-6 flex-shrink-0">
+              <SafeImage src={HOME_TROPHY_ART} alt="" className="h-full w-full object-contain" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-serif text-xs font-bold text-amber-100">Leaderboard</p>
+              <p className="text-[10px] text-amber-300">View Rankings →</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* 6. Genesis horizon with scripture layered inside it — the
+          flexible middle visual area, capped to the ~90-130px target so it
+          can't grow past a compact dashboard's budget. */}
+      <HomeGenesisAtmosphere overlayScripture />
+
+      {/* 7. Start Journey — kept visually dominant (gold border, glow,
+          large icon+text) despite the shorter target height. Sits in
+          normal document flow directly above the bottom-nav clearance
+          Home's own padding reserves — no sticky/absolute overlap.
+          handleBeginRun is unchanged: it still opens the confirm dialog
+          when a run/save exists, offering "Start New Run" as an explicit
+          alternative to the quick Continue button above. */}
+      <StickyActionDock className="w-full px-4 lg:px-8">
+        <div className="relative mx-auto w-full max-w-md lg:max-w-[600px]">
+          <div
+            className="pointer-events-none absolute -inset-3 -z-10 rounded-[1.75rem] animate-sacred-glow"
+            aria-hidden="true"
+          />
+          <button
+            onClick={handleBeginRun}
+            className="relative min-h-[64px] w-full rounded-2xl border-2 border-amber-400/85 px-6 py-2 text-center font-serif font-bold text-amber-50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 lg:min-h-[80px] lg:py-4"
+            style={{
+              fontSize: "clamp(1.1rem, 2vw, 1.6rem)",
+              background: "linear-gradient(135deg, rgba(216,168,52,0.42) 0%, rgba(122,90,18,0.32) 100%)",
+              boxShadow:
+                "0 0 45px rgba(251,191,36,0.4), 0 0 75px rgba(251,191,36,0.12), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.3), inset 0 0 24px rgba(251,191,36,0.12)",
+              textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+            }}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <Swords className="h-5 w-5" />
+              {hasResumableRun ? "Continue Journey" : "Start Journey"}
+            </span>
+          </button>
+        </div>
+      </StickyActionDock>
+      </>
       )}
 
       {/* Confirmation dialog */}

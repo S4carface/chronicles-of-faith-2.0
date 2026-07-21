@@ -248,7 +248,7 @@ const handleNameSaved = (name) => {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
       }}
-      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[6.25rem]"
+      contentClassName="px-4 lg:px-8 pt-[calc(1rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:pb-[7rem]"
     >
       {/* Floating particles */}
       {HOME_PARTICLES.map((particle, i) => (
@@ -279,7 +279,7 @@ const handleNameSaved = (name) => {
         <div
           className="pointer-events-none absolute -inset-x-6 -top-4 -bottom-9 -z-10"
           style={{
-            background: "radial-gradient(ellipse 90% 100% at 50% 25%, rgba(8,12,24,0.6) 0%, rgba(8,12,24,0.28) 60%, transparent 85%)",
+            background: "radial-gradient(ellipse 90% 100% at 50% 25%, rgba(8,12,24,0.68) 0%, rgba(8,12,24,0.34) 60%, transparent 85%)",
           }}
           aria-hidden="true"
         />
@@ -287,7 +287,7 @@ const handleNameSaved = (name) => {
           <div className="relative h-16 w-16 lg:h-20 lg:w-20">
             <div
               className="absolute inset-0 rounded-full blur-xl"
-              style={{ background: "rgba(201,168,76,0.28)" }}
+              style={{ background: "rgba(201,168,76,0.4)" }}
               aria-hidden="true"
             />
             {/* home-crest.webp is a fully opaque square (no alpha channel) —
@@ -302,14 +302,15 @@ const handleNameSaved = (name) => {
                 src={HOME_CREST_ART}
                 alt="Chronicles of Faith"
                 className="h-full w-full object-contain"
+                style={{ filter: "brightness(1.15) saturate(1.08)" }}
               />
             </div>
           </div>
         </div>
-        <h1 className="font-serif text-amber-200 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 30px rgba(201,168,76,0.3)" }}>
+        <h1 className="font-serif text-amber-100 tracking-wide leading-tight" style={{ fontSize: "clamp(1.75rem, 5vw, 3.5rem)", textShadow: "0 0 34px rgba(201,168,76,0.4), 0 2px 8px rgba(0,0,0,0.5)" }}>
           Chronicles of Faith
         </h1>
-        <p className="text-amber-100/45 mt-1 font-serif italic tracking-wide" style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)" }}>
+        <p className="text-amber-100/60 mt-1 font-serif italic tracking-wide" style={{ fontSize: "clamp(0.7rem, 1.5vw, 1rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
           A Biblical Roguelike Journey
         </p>
         <div className="w-24 h-px mx-auto mt-1.5 bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
@@ -396,13 +397,19 @@ const handleNameSaved = (name) => {
         <Link
           to="/daily-prayer"
           onClick={() => Sound.sfx.click()}
-          className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-900/15 px-3 py-2 mb-3 transition hover:bg-emerald-900/25 lg:max-w-[600px]"
+          className="relative flex w-full max-w-md items-center gap-2 rounded-lg border border-emerald-400/35 px-3 py-2 mb-3 transition hover:border-emerald-300/50 lg:max-w-[600px]"
+          style={{ background: "linear-gradient(135deg, rgba(6,45,36,0.55) 0%, rgba(8,12,24,0.78) 100%)" }}
         >
-          <span className="font-serif text-sm font-semibold text-emerald-300">
-            ✓ Daily Prayer Completed
-          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-serif text-sm font-semibold text-emerald-200">
+              ✓ Daily Prayer Completed
+            </p>
+            <p className="text-[11px] text-emerald-100/65">
+              Return to today&rsquo;s reflection
+            </p>
+          </div>
           {profile.devotionStreak > 0 && (
-            <span className="ml-auto flex-shrink-0 text-[10px] text-amber-300/60">
+            <span className="flex-shrink-0 whitespace-nowrap text-[10px] text-amber-300/70">
               {profile.devotionStreak}-day streak
             </span>
           )}
@@ -494,7 +501,7 @@ const handleNameSaved = (name) => {
   </div>
   <div className="min-w-0 flex-1 text-left">
     <p className="font-serif text-sm font-semibold text-amber-100">Leaderboard</p>
-    <p className="text-[11px] text-amber-200/70">View current rankings</p>
+    <p className="text-[11px] text-amber-100/80">View current rankings</p>
   </div>
   <ChevronRight className="h-4 w-4 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
 </Link>
@@ -529,11 +536,13 @@ const handleNameSaved = (name) => {
         </div>
         <button
           onClick={handleBeginRun}
-          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-amber-500/30"
+          className="relative w-full px-8 py-3.5 lg:py-5 rounded-xl border-2 border-amber-400/75 bg-amber-600/20 text-amber-50 font-serif font-bold text-center hover:bg-amber-600/40 transition-all duration-300 hover:scale-[1.02]"
           style={{
             fontSize: "clamp(1.1rem, 2vw, 1.75rem)",
-            background: "linear-gradient(135deg, rgba(180,140,40,0.25) 0%, rgba(120,90,20,0.2) 100%)",
-            boxShadow: "0 0 32px rgba(251,191,36,0.22)",
+            background: "linear-gradient(135deg, rgba(200,158,45,0.3) 0%, rgba(130,98,22,0.24) 100%)",
+            boxShadow:
+              "0 0 40px rgba(251,191,36,0.32), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.25), inset 0 0 24px rgba(251,191,36,0.1)",
+            textShadow: "0 1px 4px rgba(0,0,0,0.4)",
           }}
         >
           <span className="flex items-center justify-center gap-2">

@@ -129,7 +129,7 @@ export default function DailyChallenge() {
   return (
     <FixedViewportPage
       style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}
-      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(5.75rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
+      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
     >
       {Array.from({ length: 10 }).map((_, i) => (
         <div

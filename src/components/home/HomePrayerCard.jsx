@@ -91,24 +91,24 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
   }
 
   return (
-    <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1">
+    <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1 [@media(max-height:600px)]:!mb-0.5">
       {devotionPrayedToday ? (
         <Link
           to="/daily-prayer"
           onClick={() => Sound.sfx.click()}
-          className="relative flex w-full max-w-md items-center gap-3 rounded-2xl border border-emerald-400/40 px-4 py-3 transition hover:border-emerald-300/55 lg:max-w-[600px]"
+          className="relative flex w-full max-w-md items-center gap-3.5 rounded-2xl border border-emerald-400/40 px-4 py-3.5 transition hover:border-emerald-300/55 lg:max-w-[600px] [@media(max-height:760px)]:py-3"
           style={{
             background: "linear-gradient(135deg, rgba(6,50,40,0.55) 0%, rgba(8,12,24,0.9) 100%)",
             boxShadow: "inset 0 0 0 1px rgba(52,211,153,0.12)",
           }}
         >
-          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
+          <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50 [@media(max-height:760px)]:h-14 [@media(max-height:760px)]:w-14">
             <SafeImage src={HOME_PRAYER_ART} alt="" fallback={null} className="h-full w-full object-cover object-center" />
             <div className="absolute inset-0 bg-emerald-950/45" aria-hidden="true" />
-            <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-lg leading-none">✓</span>
+            <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-xl leading-none">✓</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-serif text-base font-bold text-emerald-200" style={SMALL_CAPS}>
+            <p className="font-serif text-lg font-bold text-emerald-200 [@media(max-height:760px)]:text-base" style={SMALL_CAPS}>
               Daily Prayer Completed
             </p>
             <p className="text-xs italic text-emerald-100/65">
@@ -126,7 +126,7 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
         <Link
           to="/daily-prayer"
           onClick={() => Sound.sfx.click()}
-          className="relative flex w-full max-w-md flex-col rounded-2xl border border-amber-400/35 px-4 pb-3 pt-4 transition-all duration-300 hover:border-amber-300/55 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px] [@media(max-height:760px)]:pb-2 [@media(max-height:760px)]:pt-2.5"
+          className="relative flex w-full max-w-md flex-col rounded-2xl border border-amber-400/35 px-4 pb-3 pt-4 transition-all duration-300 hover:border-amber-300/55 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px] [@media(max-height:760px)]:pb-2 [@media(max-height:760px)]:pt-2.5 [@media(max-height:600px)]:!pt-2 [@media(max-height:600px)]:!pb-1.5"
           style={{
             background: "linear-gradient(135deg, rgba(14,20,38,0.92) 0%, rgba(6,10,20,0.96) 100%)",
             boxShadow: `${FRAME_SHADOW}, 0 6px 18px rgba(0,0,0,0.35)`,
@@ -139,11 +139,13 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
             New Today
           </span>
 
-          <div className="flex items-center gap-3 pr-16">
+          <div className="flex items-center gap-3.5">
             {/* Lantern medallion on the card's left side — the home-prayer
                 artwork inside a gold-ringed circle with a soft glow behind
-                it, falling back to the Sun icon if the image never loads. */}
-            <div className="relative flex h-[5rem] w-[5rem] flex-shrink-0 items-center justify-center [@media(max-height:760px)]:h-14 [@media(max-height:760px)]:w-14">
+                it, falling back to the Sun icon if the image never loads.
+                Deliberately large (~84px) so the artwork reads as the
+                card's centerpiece, as in the approved mockup. */}
+            <div className="relative flex h-[5.25rem] w-[5.25rem] flex-shrink-0 items-center justify-center [@media(max-height:760px)]:h-16 [@media(max-height:760px)]:w-16 [@media(max-height:600px)]:!h-[3.25rem] [@media(max-height:600px)]:!w-[3.25rem]">
               <div
                 className="absolute inset-0 rounded-full blur-md"
                 style={{ background: "rgba(251,191,36,0.35)" }}
@@ -154,18 +156,22 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
               </div>
             </div>
 
+            {/* Only the title reserves room for the top-right "New Today"
+                badge (pr-14); the description sits below the badge's band
+                and uses the full text-column width, so it can render in full
+                on every viewport (including short ones) without truncation. */}
             <div className="min-w-0 flex-1 text-left">
-              <p className="font-serif font-bold leading-snug text-amber-100 text-base [@media(max-height:760px)]:text-sm" style={SMALL_CAPS}>
+              <p className="pr-14 font-serif font-bold leading-snug text-amber-100 text-lg [@media(max-height:760px)]:text-base" style={SMALL_CAPS}>
                 Take a Quiet Moment
               </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-amber-100/60 [@media(max-height:760px)]:hidden">
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-100/65 [@media(max-height:760px)]:mt-0.5">
                 A short scripture, reflection, and prayer for today.
               </p>
             </div>
           </div>
 
           <span
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-amber-400/50 py-2 text-xs font-bold text-amber-200 transition group-hover:border-amber-300 [@media(max-height:760px)]:mt-1.5 [@media(max-height:760px)]:py-1"
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border-2 border-amber-400/50 py-2 text-xs font-bold text-amber-200 transition group-hover:border-amber-300 [@media(max-height:760px)]:mt-1.5 [@media(max-height:760px)]:py-1 [@media(max-height:600px)]:!mt-1"
             style={{ ...SMALL_CAPS, background: "rgba(8,12,24,0.55)" }}
           >
             Play Now

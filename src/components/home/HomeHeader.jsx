@@ -112,7 +112,7 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
           to just its own padding and CLIP the crest/title/subtitle
           entirely, even though scrolling was available and preferred.
           shrink-0 keeps it pinned to its natural content height instead. */}
-      <section className="relative w-full shrink-0 text-center overflow-hidden pt-3 pb-2 [@media(max-height:760px)]:pt-1 [@media(max-height:760px)]:pb-0.5 lg:pt-4 lg:pb-6">
+      <section className="relative w-full shrink-0 text-center overflow-hidden pt-3 pb-2 [@media(max-height:760px)]:pt-1 [@media(max-height:760px)]:pb-0.5 [@media(max-height:600px)]:!pt-0.5 [@media(max-height:600px)]:!pb-0 lg:pt-4 lg:pb-6">
         <div
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
@@ -123,11 +123,15 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
         />
 
         <div className="relative px-4 lg:px-8">
-          <div className="flex justify-center mb-1.5 [@media(max-height:760px)]:mb-1">
-            <div className="relative h-[4.5rem] w-[4.5rem] [@media(max-height:760px)]:h-12 [@media(max-height:760px)]:w-12 lg:h-24 lg:w-24">
+          {/* Crest — the main brand symbol on the first-launch screen, so
+              deliberately large: ~108px on tall phones (up to the mockup's
+              hero scale), ~80px on short-height phones where vertical budget
+              is tighter. Never the small compact returning-player size. */}
+          <div className="flex justify-center mb-2 [@media(max-height:760px)]:mb-1 [@media(max-height:600px)]:!mb-0.5">
+            <div className="relative h-[6.75rem] w-[6.75rem] [@media(max-height:760px)]:h-20 [@media(max-height:760px)]:w-20 [@media(max-height:600px)]:!h-[4.5rem] [@media(max-height:600px)]:!w-[4.5rem] lg:h-28 lg:w-28">
               <div
                 className="absolute inset-0 rounded-full blur-xl"
-                style={{ background: "rgba(251,191,36,0.55)" }}
+                style={{ background: "rgba(251,191,36,0.5)" }}
                 aria-hidden="true"
               />
               <div className="h-full w-full overflow-hidden rounded-full">
@@ -143,17 +147,20 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
           </div>
 
           {/* Title split across two lines, small-caps, mirroring the
-              approved mockup's engraved "CHRONICLES / OF FAITH" wordmark. */}
+              approved mockup's engraved "CHRONICLES / OF FAITH" wordmark —
+              a substantial display size that scales with viewport width
+              (~33px at 320px up to ~43px at 412px). */}
           {/* The !text-[...] short-viewport override beats the inline
               clamp() below on specificity (Tailwind's ! prefix compiles to
               !important) — a two-line title at full size is the single
-              largest contributor to this hero header's height, so a short
-              phone needs it smaller, not just less padding around it. */}
+              largest contributor to this hero header's height, so a
+              short-HEIGHT phone uses a slightly restrained (but still large,
+              ~30-34px) width-scaled clamp to protect the vertical budget. */}
           <h1
-            className="font-serif font-bold text-amber-50 tracking-wide leading-[1.05] [@media(max-height:760px)]:!text-[1.55rem]"
+            className="font-serif font-bold text-amber-50 tracking-wide leading-[1.02] [@media(max-height:760px)]:!text-[clamp(1.9rem,8.5vw,2.4rem)]"
             style={{
               ...SMALL_CAPS,
-              fontSize: "clamp(1.7rem, 6vw, 3rem)",
+              fontSize: "clamp(2rem, 10.5vw, 2.9rem)",
               textShadow: "0 0 40px rgba(251,191,36,0.5), 0 2px 10px rgba(0,0,0,0.55)",
             }}
           >
@@ -161,11 +168,11 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
             <span className="block">of Faith</span>
           </h1>
 
-          <div className="mt-1.5 flex items-center justify-center gap-2 [@media(max-height:760px)]:mt-1">
+          <div className="mt-2 flex items-center justify-center gap-2 [@media(max-height:760px)]:mt-1.5 [@media(max-height:600px)]:!mt-0.5">
             <Diamond className="h-2 w-2 flex-shrink-0 fill-amber-400/60 text-amber-400/60" aria-hidden="true" />
             <p
-              className="text-amber-100/70 font-serif italic tracking-wide"
-              style={{ ...SMALL_CAPS, fontSize: "clamp(0.7rem, 1.5vw, 0.95rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
+              className="text-amber-100/75 font-serif italic tracking-wide"
+              style={{ ...SMALL_CAPS, fontSize: "clamp(0.72rem, 1.7vw, 1rem)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}
             >
               A Biblical Roguelike Journey
             </p>
@@ -177,7 +184,7 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
       {/* Player identity — quiet, borderless text so it reads as a subtle
           signature line rather than another dashboard chip competing with
           the cards below. */}
-      <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1">
+      <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1 [@media(max-height:600px)]:!mb-0.5">
         <button
           onClick={onEditName}
           className="flex items-center gap-1.5 text-xs text-amber-100/55 transition hover:text-amber-200 lg:text-sm"

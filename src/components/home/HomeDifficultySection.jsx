@@ -8,7 +8,7 @@ import DifficultySelect from "@/components/game/DifficultySelect";
 // list of named sections rather than an inline DifficultySelect call.
 export default function HomeDifficultySection() {
   return (
-    <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
+    <div className="w-full shrink-0 px-4 pb-2 [@media(max-height:700px)]:pb-1 lg:px-8">
       <DifficultySelect compact />
     </div>
   );

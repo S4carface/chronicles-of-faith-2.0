@@ -1,14 +1,17 @@
 import React from "react";
 import { useReducedMotion } from "framer-motion";
-import { Swords } from "lucide-react";
+import { Swords, ChevronRight } from "lucide-react";
 import HomeHeader from "@/components/home/HomeHeader";
 import HomePrayerCard from "@/components/home/HomePrayerCard";
 import HomeLeaderboardCard from "@/components/home/HomeLeaderboardCard";
 import HomeDifficultySection from "@/components/home/HomeDifficultySection";
-import HomeGenesisAtmosphere from "@/components/game/HomeGenesisAtmosphere";
+import HomeGenesisAtmosphere, { GENESIS_HORIZON_ART } from "@/components/game/HomeGenesisAtmosphere";
 import FixedViewportPage from "@/components/FixedViewportPage";
 import StickyActionDock from "@/components/StickyActionDock";
+import SafeImage from "@/components/ui/SafeImage";
 import { HOME_BACKGROUND_ART } from "@/lib/preloadHomeAssets";
+
+const SMALL_CAPS = { fontVariant: "small-caps" };
 
 // Floating particles — drift across the whole screen, behind every section.
 // Declared once at module scope so positions never change on re-render.
@@ -28,10 +31,15 @@ const HOME_PARTICLES = [
 
 // The compact, fixed (non-scrollable) post-tutorial dashboard — a
 // completely different hierarchy from FirstTimeHome's tall cinematic hero,
-// not the same layout wearing conditional Tailwind classes. Every section
-// here is sized to actually fit within one 100dvh screen (see `scrollable`
-// below), which is why this and FirstTimeHome are two dedicated
-// compositions rather than one component branching internally.
+// not the same layout wearing conditional Tailwind classes. Composition
+// mirrors the approved mockup's order: compact header, a Continue card
+// (only when a run exists), difficulty near the top, Daily Prayer and
+// Leaderboard as full-width rows, the Genesis horizon filling whatever
+// flexible space remains, and a dominant Start Journey action directly
+// above the fixed bottom navigation. Every section is sized to actually
+// fit within one 100dvh screen (see `scrollable` below), which is why this
+// and FirstTimeHome are two dedicated compositions rather than one
+// component branching internally.
 export default function ReturningHome({
   playerName,
   onEditName,
@@ -86,20 +94,42 @@ export default function ReturningHome({
 
       <HomeHeader variant="compact" playerName={playerName} onEditName={onEditName} />
 
-      {/* Continue — a quick, one-tap resume, shown only when there's
-          actually a run to resume. Reuses the same resume handler as the
-          confirm dialog Home.jsx owns, so this is a shortcut to the same
-          existing resume path, not a new one. Start Journey further down
-          still opens that confirm dialog, so a player can also choose to
-          abandon this run and start fresh. */}
+      {/* Continue — shown only when there's actually a run to resume, one
+          tap from the dashboard rather than needing to open the confirm
+          dialog first. Reuses the same resume handler as that dialog (which
+          Home.jsx still owns), so this is a shortcut to the existing resume
+          path, not a new one. Start Journey further down still opens that
+          dialog, so a player can also choose to abandon this run and start
+          fresh — that behavior is unchanged. */}
       {hasResumableRun && (
-        <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
+        <div className="w-full shrink-0 px-4 pb-2 [@media(max-height:700px)]:pb-1 lg:px-8">
           <button
             onClick={onContinueSaved}
-            className="mx-auto flex min-h-[44px] w-full max-w-md items-center justify-center gap-2 rounded-xl border-2 border-emerald-400/50 bg-emerald-900/25 py-2.5 text-sm font-bold text-emerald-100 transition hover:bg-emerald-900/40 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px]"
+            className="relative mx-auto flex w-full max-w-md items-center gap-3 overflow-hidden rounded-2xl border-2 border-amber-400/50 text-left transition hover:border-amber-300/70 active:scale-[0.99] motion-reduce:transition-none lg:max-w-[600px]"
+            style={{
+              background: "linear-gradient(135deg, rgba(20,28,50,0.92) 0%, rgba(8,12,22,0.96) 100%)",
+              boxShadow: "inset 0 0 0 1px rgba(251,191,36,0.16), 0 4px 14px rgba(0,0,0,0.35)",
+            }}
           >
-            <Swords className="h-4 w-4" />
-            Continue Journey
+            <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl sm:h-16 sm:w-16">
+              <SafeImage
+                src={GENESIS_HORIZON_ART}
+                alt=""
+                fallback={null}
+                className="h-full w-full object-cover"
+                style={{ objectPosition: "center 50%", filter: "brightness(0.85) saturate(1.1)" }}
+              />
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(135deg, rgba(6,10,20,0.1) 0%, rgba(6,10,20,0.6) 100%)" }}
+                aria-hidden="true"
+              />
+            </div>
+            <div className="min-w-0 flex-1 py-2.5">
+              <p className="font-serif text-base font-bold text-amber-100" style={SMALL_CAPS}>Continue</p>
+              <p className="truncate text-[11px] text-amber-200/60">Resume your saved journey</p>
+            </div>
+            <ChevronRight className="mr-3 h-5 w-5 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -117,20 +147,22 @@ export default function ReturningHome({
         </div>
       )}
 
-      {/* Daily Prayer + Leaderboard — compact secondary tiles, side by side
-          once there's room (361px+) and stacked as slim rows below that so
-          neither tile gets cramped. Rows are shorter while stacked (44px,
-          the touch-target floor) than while side by side (56px) — the
-          narrowest phones need every pixel this can give back. */}
-      <div className="w-full shrink-0 px-4 pb-1 lg:px-8">
-        <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-1 min-[361px]:grid-cols-2 min-[361px]:gap-2 lg:max-w-[600px]">
+      {/* Daily Prayer + Leaderboard — full-width rows by default, mirroring
+          the approved mockup's stacked strips (each with room for a streak
+          badge / action pill instead of being squeezed into a half-width
+          tile). A short viewport can't spare that much vertical room for
+          two full rows, so it falls back to the previous compact side-by-
+          side grid instead of ever scrolling or clipping. */}
+      <div className="w-full shrink-0 px-4 pb-2 [@media(max-height:700px)]:pb-1 lg:px-8">
+        <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-1.5 [@media(max-height:700px)]:grid-cols-2 [@media(max-height:700px)]:gap-1.5 lg:max-w-[600px]">
           <HomePrayerCard compact devotionPrayedToday={devotionPrayedToday} devotionStreak={devotionStreak} />
           <HomeLeaderboardCard compact />
         </div>
       </div>
 
       {/* Genesis horizon with scripture layered inside it — the flexible
-          middle visual area. */}
+          middle visual area, now owning whatever vertical space the rest
+          of the dashboard leaves unclaimed. */}
       <HomeGenesisAtmosphere overlayScripture />
 
       {/* Start Journey — kept visually dominant (gold border, glow, large
@@ -139,7 +171,7 @@ export default function ReturningHome({
           layout's own padding reserves — no sticky/absolute overlap.
           onBeginRun is unchanged: it still opens the confirm dialog when a
           run/save exists, offering "Start New Run" as an explicit
-          alternative to the quick Continue button above. */}
+          alternative to the Continue card above. */}
       <StickyActionDock className="w-full px-4 lg:px-8">
         <div className="relative mx-auto w-full max-w-md lg:max-w-[600px]">
           <div
@@ -150,10 +182,11 @@ export default function ReturningHome({
             onClick={onBeginRun}
             className="relative min-h-[64px] w-full rounded-2xl border-2 border-amber-400/85 px-6 py-2 text-center font-serif font-bold text-amber-50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 lg:min-h-[80px] lg:py-4"
             style={{
+              fontVariant: "small-caps",
               fontSize: "clamp(1.1rem, 2vw, 1.6rem)",
               background: "linear-gradient(135deg, rgba(216,168,52,0.42) 0%, rgba(122,90,18,0.32) 100%)",
               boxShadow:
-                "0 0 45px rgba(251,191,36,0.4), 0 0 75px rgba(251,191,36,0.12), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.3), inset 0 0 24px rgba(251,191,36,0.12)",
+                "0 0 45px rgba(251,191,36,0.4), 0 0 75px rgba(251,191,36,0.12), 0 4px 14px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,235,180,0.3), inset 0 0 24px rgba(251,191,36,0.12), inset 0 0 0 1px rgba(251,191,36,0.25)",
               textShadow: "0 1px 4px rgba(0,0,0,0.4)",
             }}
           >

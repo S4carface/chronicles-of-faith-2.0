@@ -101,6 +101,13 @@ export default function ReturningHome({
           path, not a new one. Start Journey further down still opens that
           dialog, so a player can also choose to abandon this run and start
           fresh — that behavior is unchanged. */}
+      {/* Continue — compact fixed-height card, present only when a run
+          exists. Because Start Journey is docked to the bottom via mt-auto
+          (see StickyActionDock below) and every returning state is sized to
+          fit one screen, this card appearing/disappearing is absorbed by
+          the flexible gap above the dock rather than shoving Start Journey
+          up or down. Kept deliberately short (one row) so that absorption
+          stays small. */}
       {hasResumableRun && (
         <div className="w-full shrink-0 px-4 pb-2 [@media(max-height:700px)]:pb-1 lg:px-8">
           <button
@@ -111,7 +118,7 @@ export default function ReturningHome({
               boxShadow: "inset 0 0 0 1px rgba(251,191,36,0.16), 0 4px 14px rgba(0,0,0,0.35)",
             }}
           >
-            <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl sm:h-16 sm:w-16">
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl [@media(max-height:700px)]:h-11 [@media(max-height:700px)]:w-11 sm:h-14 sm:w-14">
               <SafeImage
                 src={GENESIS_HORIZON_ART}
                 alt=""
@@ -125,8 +132,8 @@ export default function ReturningHome({
                 aria-hidden="true"
               />
             </div>
-            <div className="min-w-0 flex-1 py-2.5">
-              <p className="font-serif text-base font-bold text-amber-100" style={SMALL_CAPS}>Continue</p>
+            <div className="min-w-0 flex-1 py-2 [@media(max-height:700px)]:py-1">
+              <p className="font-serif text-sm font-bold text-amber-100" style={SMALL_CAPS}>Continue</p>
               <p className="truncate text-[11px] text-amber-200/60">Resume your saved journey</p>
             </div>
             <ChevronRight className="mr-3 h-5 w-5 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
@@ -154,7 +161,7 @@ export default function ReturningHome({
           two full rows, so it falls back to the previous compact side-by-
           side grid instead of ever scrolling or clipping. */}
       <div className="w-full shrink-0 px-4 pb-2 [@media(max-height:700px)]:pb-1 lg:px-8">
-        <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-1.5 [@media(max-height:700px)]:grid-cols-2 [@media(max-height:700px)]:gap-1.5 lg:max-w-[600px]">
+        <div className="mx-auto grid w-full max-w-md grid-cols-1 gap-1.5 [@media(max-height:700px)]:grid-cols-2 [@media(max-height:700px)]:gap-1 lg:max-w-[600px]">
           <HomePrayerCard compact devotionPrayedToday={devotionPrayedToday} devotionStreak={devotionStreak} />
           <HomeLeaderboardCard compact />
         </div>
@@ -180,7 +187,7 @@ export default function ReturningHome({
           />
           <button
             onClick={onBeginRun}
-            className="relative min-h-[64px] w-full rounded-2xl border-2 border-amber-400/85 px-6 py-2 text-center font-serif font-bold text-amber-50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 lg:min-h-[80px] lg:py-4"
+            className="relative min-h-[64px] w-full rounded-2xl border-2 border-amber-400/85 px-6 py-2 text-center font-serif font-bold text-amber-50 transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 [@media(max-height:700px)]:min-h-[52px] lg:min-h-[80px] lg:py-4"
             style={{
               fontVariant: "small-caps",
               fontSize: "clamp(1.1rem, 2vw, 1.6rem)",

@@ -25,13 +25,13 @@ export default function HomeLeaderboardCard({ compact = false }) {
       <Link
         to="/leaderboard"
         onClick={() => Sound.sfx.click()}
-        className="flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-amber-400/30 px-3.5 py-2 transition hover:border-amber-300/45"
+        className="flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-amber-400/30 px-3.5 py-2 transition hover:border-amber-300/45 [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:px-3"
         style={{
           background: "linear-gradient(135deg, rgba(10,16,32,0.85) 0%, rgba(6,10,20,0.9) 100%)",
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
+        <div className="relative h-[2.875rem] w-[2.875rem] flex-shrink-0 overflow-hidden rounded-full [@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9">
           <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1">
@@ -63,7 +63,7 @@ export default function HomeLeaderboardCard({ compact = false }) {
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full sm:h-12 sm:w-12 [@media(max-height:760px)]:h-9 [@media(max-height:760px)]:w-9">
+        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full [@media(max-height:760px)]:h-12 [@media(max-height:760px)]:w-12">
           <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1 text-left">

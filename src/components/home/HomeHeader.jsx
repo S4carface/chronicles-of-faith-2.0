@@ -45,7 +45,7 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
     return (
       <div className="w-full shrink-0 px-4 pt-1.5 pb-1 lg:px-8">
         <div className="flex items-center gap-2.5">
-          <div className="relative h-11 w-11 flex-shrink-0 lg:h-14 lg:w-14">
+          <div className="relative h-[3.875rem] w-[3.875rem] flex-shrink-0 lg:h-[4.5rem] lg:w-[4.5rem]">
             <div
               className="absolute inset-0 rounded-full blur-lg"
               style={{ background: "rgba(251,191,36,0.45)" }}

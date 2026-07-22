@@ -30,16 +30,16 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
       <Link
         to="/daily-prayer"
         onClick={() => Sound.sfx.click()}
-        className="relative flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-emerald-400/40 px-3.5 py-2 transition hover:border-emerald-300/55"
+        className="relative flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-emerald-400/40 px-3.5 py-2 transition hover:border-emerald-300/55 [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:px-3"
         style={{
           background: "linear-gradient(135deg, rgba(6,50,40,0.55) 0%, rgba(8,12,24,0.9) 100%)",
           boxShadow: "inset 0 0 0 1px rgba(52,211,153,0.12)",
         }}
       >
-        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
+        <div className="relative h-[2.875rem] w-[2.875rem] flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50 [@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9">
           <SafeImage src={HOME_PRAYER_ART} alt="" fallback={null} className="h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-emerald-950/45" aria-hidden="true" />
-          <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-sm leading-none">✓</span>
+          <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-base leading-none">✓</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-serif text-xs font-bold text-emerald-200" style={SMALL_CAPS}>
@@ -63,13 +63,13 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
       <Link
         to="/daily-prayer"
         onClick={() => Sound.sfx.click()}
-        className="flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-amber-400/30 px-3.5 py-2 transition hover:border-amber-300/45"
+        className="flex min-h-[52px] w-full items-center gap-2.5 rounded-xl border border-amber-400/30 px-3.5 py-2 transition hover:border-amber-300/45 [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:px-3"
         style={{
           background: "linear-gradient(135deg, rgba(14,20,38,0.92) 0%, rgba(6,10,20,0.96) 100%)",
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/45">
+        <div className="relative h-[2.875rem] w-[2.875rem] flex-shrink-0 overflow-hidden rounded-full border border-amber-400/45 [@media(max-height:700px)]:h-9 [@media(max-height:700px)]:w-9">
           <SafeImage src={HOME_PRAYER_ART} alt="" fallback={PRAYER_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1">
@@ -102,7 +102,7 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
             boxShadow: "inset 0 0 0 1px rgba(52,211,153,0.12)",
           }}
         >
-          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
+          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
             <SafeImage src={HOME_PRAYER_ART} alt="" fallback={null} className="h-full w-full object-cover object-center" />
             <div className="absolute inset-0 bg-emerald-950/45" aria-hidden="true" />
             <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-lg leading-none">✓</span>
@@ -143,7 +143,7 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
             {/* Lantern medallion on the card's left side — the home-prayer
                 artwork inside a gold-ringed circle with a soft glow behind
                 it, falling back to the Sun icon if the image never loads. */}
-            <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center [@media(max-height:760px)]:h-10 [@media(max-height:760px)]:w-10">
+            <div className="relative flex h-[5rem] w-[5rem] flex-shrink-0 items-center justify-center [@media(max-height:760px)]:h-14 [@media(max-height:760px)]:w-14">
               <div
                 className="absolute inset-0 rounded-full blur-md"
                 style={{ background: "rgba(251,191,36,0.35)" }}

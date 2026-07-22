@@ -66,18 +66,16 @@ export default function HomeGenesisAtmosphere({
 
   if (overlayScripture) {
     return (
-      // Owns ALL of the fixed post-tutorial dashboard's unused flexible
-      // space (flex-1, flex-basis 0% via Tailwind's flex-1 — grows purely
-      // from available space, not from content size). min-h keeps it from
-      // ever going too small to read; there is no max-height cap — the
-      // horizon photo itself (object-cover, light source pinned centered
-      // via objectPosition) is what fills whatever room a tall viewport
-      // leaves unclaimed, rather than a fixed-height band surrounded by
-      // gradients standing in for it. min-h-0 on the box lets it still
-      // shrink freely on a short viewport instead of being held open by
-      // its own content's implicit min-height.
+      // Bounded, responsive height instead of an uncapped flex-1: the
+      // approved mockup keeps this atmosphere band a controlled ~100-135px
+      // on standard phones (80-105px on short devices), so it no longer
+      // dominates the fixed dashboard or shrinks the crest/card artwork
+      // above it. clamp() scales it with viewport height between those
+      // bounds; ReturningHome pins Start Journey to the bottom (mt-auto on
+      // its dock) so the leftover space on a tall phone reads as calm
+      // breathing room above the CTA rather than an oversized horizon.
       <div
-        className="relative w-full shrink-0 flex-1 min-h-[92px] overflow-hidden"
+        className="relative w-full shrink-0 overflow-hidden h-[clamp(6.25rem,20vh,8.4375rem)] [@media(max-height:700px)]:h-[clamp(5rem,15vh,6.5625rem)]"
         aria-label="Genesis 1:1"
       >
         {/* fallback=null: the gradients/glow below already give this box a
@@ -177,13 +175,12 @@ export default function HomeGenesisAtmosphere({
         className={`relative w-full overflow-hidden pointer-events-none lg:min-h-[220px] ${
           compact
             ? // flex-1 (not flex-none): the compact pre-tutorial atmosphere
-              // now OWNS whatever vertical space the rest of the hero layout
-              // leaves unclaimed, instead of sitting at a fixed height while
-              // a separate empty filler strip absorbed the leftover space
-              // below Start Journey. min-h keeps it from ever going too
-              // small to read; max-h keeps a very tall phone from stretching
-              // the horizon photo into an awkward, oversized band.
-              "flex-1 min-h-[110px] min-[400px]:min-h-[128px] sm:min-h-[150px] max-h-[260px] [@media(max-height:760px)]:min-h-[52px]"
+              // still fills leftover hero space, but now with a controlled
+              // max-height so it stays a cinematic ~130-170px band instead
+              // of stretching tall enough to compress the crest and the
+              // enlarged Prayer/Leaderboard artwork above it. min-h keeps it
+              // from ever going too small to read.
+              "flex-1 min-h-[130px] sm:min-h-[150px] max-h-[170px] [@media(max-height:760px)]:min-h-[72px] [@media(max-height:760px)]:max-h-[124px]"
             : "flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px]"
         }`}
         aria-hidden="true"

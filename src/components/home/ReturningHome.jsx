@@ -172,7 +172,7 @@ export default function ReturningHome({
           onBeginRun is unchanged: it still opens the confirm dialog when a
           run/save exists, offering "Start New Run" as an explicit
           alternative to the Continue card above. */}
-      <StickyActionDock className="w-full px-4 lg:px-8">
+      <StickyActionDock className="mt-auto w-full px-4 lg:px-8">
         <div className="relative mx-auto w-full max-w-md lg:max-w-[600px]">
           <div
             className="pointer-events-none absolute -inset-3 -z-10 rounded-[1.75rem] animate-sacred-glow"

@@ -83,20 +83,20 @@ export default function DifficultySelect({ compact = false }) {
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => handleSelect(key)}
-                className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full border-2 px-2.5 py-1 transition-all duration-200 ${
+                className={`flex min-h-[54px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl border-2 px-1.5 py-0 transition-all duration-200 ${
                   isActive
                     ? "scale-[1.03] border-amber-300 bg-amber-500/20 shadow-md shadow-amber-400/30"
                     : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:border-amber-400/40 hover:opacity-100"
                 }`}
               >
                 <div
-                  className="relative h-5 w-5 flex-shrink-0 overflow-hidden rounded-full"
+                  className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/25"
                   style={{ background: "#0F1A30" }}
                 >
                   <SafeImage src={artMap[key]} alt="" fallback={null} className="h-full w-full object-cover object-center" />
                 </div>
                 <span
-                  className={`font-serif text-xs font-semibold ${
+                  className={`font-serif text-[11px] font-semibold leading-none ${
                     isActive ? "text-amber-100" : "text-amber-100/60"
                   }`}
                 >

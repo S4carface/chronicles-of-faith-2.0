@@ -11,7 +11,7 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import { CARDS } from "@/data/cards";
+import { cardsOfTier } from "@/game/deckRules";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
 import { getCardRarity } from "@/data/cardRarity";
@@ -115,7 +115,9 @@ export default function Shop() {
     return;
   }
     if (item.type === "card_pack") {
-      const pool = CARDS.filter(c => c.rarity === item.rarity && !profile.collectedCards.includes(c.id));
+      // cardsOfTier folds Epic into the Rare tier (minimum Epic support), so the
+      // Rare pack can still grant the Epic card until a dedicated Epic pack exists.
+      const pool = cardsOfTier(item.rarity).filter(c => !profile.collectedCards.includes(c.id));
       if (pool.length === 0) {
         setPurchased({   message: "You already own all cards of this rarity!",   isError: true, });
         return;

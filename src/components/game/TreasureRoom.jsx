@@ -20,9 +20,21 @@ export default function TreasureRoom() {
   const [deckFullCard, setDeckFullCard] = useState(null);
   const [assetsReady, setAssetsReady] = useState(false);
 
-  // Generate treasure card using treasure drop rates
-  const [rewardCardId] = useState(() => generateTreasureCard(Math.random) || "sling_stone");
+  // Generate treasure card using treasure drop rates, honoring the one-shot
+  // "Rare or better" reward and first-run Legendary gating.
+  const [rewardCardId] = useState(
+    () =>
+      generateTreasureCard(Math.random, {
+        rareOrBetter: run.nextCardRare === true,
+        firstRun: !profile.genesisCompleted,
+      }) || "sling_stone"
+  );
   const card = getCardById(rewardCardId);
+
+  // The upgraded reward has now been generated — consume the one-shot flag.
+  useEffect(() => {
+    if (run.nextCardRare) updateRun({ nextCardRare: false });
+  }, []);
 
   useEffect(() => {
     Sound.stopMusic();

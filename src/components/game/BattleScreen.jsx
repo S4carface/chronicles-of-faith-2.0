@@ -289,7 +289,19 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
   state.log.push(
     `🙏 Prayer grants +${run.bossStartingFaith} starting Faith.`
   );
-}    if (run.shieldActive) state.shieldActive = true;
+}
+    // Story "Faith" reward — extra starting Faith for this battle (any battle).
+    if (run.startFaithNext > 0) {
+      state.maxEnergy += run.startFaithNext;
+      state.energy += run.startFaithNext;
+      state.log.push(`🙏 You begin with +${run.startFaithNext} Faith.`);
+    }
+    // Story "Block" reward — starting Block for this battle.
+    if (run.startBlockNext > 0) {
+      state.playerBlock = (state.playerBlock || 0) + run.startBlockNext;
+      state.log.push(`🛡️ You begin with +${run.startBlockNext} Block.`);
+    }
+    if (run.shieldActive) state.shieldActive = true;
     if (run.buffAttack > 0) state.buffAttack = run.buffAttack;
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
     if (run.isDaily) {
@@ -306,8 +318,12 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
       state.deck = ["sling_stone", "faith_shield", "prayer", "sling_stone"];
       state.discard = [];
     }
-    setBattleState(state);  
+    setBattleState(state);
     if (enemy.isBoss && run.bossStartingFaith > 0) {   updateRun({ bossStartingFaith: 0 }); }
+    // One-battle story rewards are consumed on battle start.
+    if (run.startFaithNext > 0 || run.startBlockNext > 0) {
+      updateRun({ startFaithNext: 0, startBlockNext: 0 });
+    }
   }, []);
 
   useEffect(() => {

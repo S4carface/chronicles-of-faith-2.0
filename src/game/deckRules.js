@@ -51,6 +51,26 @@ export const REWARD_ODDS = {
   },
 };
 
+// First-run reward gating (before the player's first Genesis completion).
+// Random Legendary drops are removed and Rare chance is modestly reduced for the
+// two random room types so a brand-new player can't receive end-game power in
+// run 1. Boss rewards keep their intended first-clear rules and are not gated.
+export const FIRST_RUN_REWARD_ODDS = {
+  normal: { common: 0.72, uncommon: 0.24, rare: 0.04, legendary: 0 },
+  treasure: { common: 0.56, uncommon: 0.35, rare: 0.09, legendary: 0 },
+};
+
+// Deterministic Rare granted by Abraham's Test before Genesis is completed once.
+// After the first completion the story may restore its Legendary reward.
+export const ABRAHAM_FIRST_RUN_REWARD = "ark_covenant"; // Rare — God's provision
+export const ABRAHAM_COMPLETED_REWARD = "angel_lord"; // Legendary
+
+// Resolve which card Abraham's Test grants. Legendary is only eligible once the
+// player has completed Genesis at least once; otherwise a fixed Rare is granted.
+export function getAbrahamsTestReward(genesisCompleted) {
+  return genesisCompleted ? ABRAHAM_COMPLETED_REWARD : ABRAHAM_FIRST_RUN_REWARD;
+}
+
 // Gold bonus when claiming a duplicate reward card
 export const DUPLICATE_GOLD_BONUS = {
   common: 5,
@@ -148,11 +168,42 @@ export function canAddToDeck(cardId, deck, collection) {
 }
 
 /**
+ * Resolve the rarity odds for a reward roll, applying first-run gating.
+ * `firstRun` (player has not yet completed Genesis) removes random Legendary
+ * drops and lowers Rare chance for normal/treasure rooms; boss keeps its odds.
+ */
+export function resolveRewardOdds(roomType, { firstRun = false } = {}) {
+  const base = REWARD_ODDS[roomType] || REWARD_ODDS.normal;
+  if (firstRun && FIRST_RUN_REWARD_ODDS[roomType]) {
+    return FIRST_RUN_REWARD_ODDS[roomType];
+  }
+  return base;
+}
+
+/**
+ * Cards eligible for a given reward tier. Epic rides along with the Rare tier
+ * in the existing reward/shop pools (minimum Epic support — no separate Epic
+ * economy yet), so "Rare or better" and Rare rolls can surface Epic cards.
+ */
+export function cardsOfTier(tier) {
+  if (tier === "rare") {
+    return CARDS.filter(c => c.rarity === "rare" || c.rarity === "epic");
+  }
+  return CARDS.filter(c => c.rarity === tier);
+}
+
+/**
  * Generate 3 reward card IDs based on room type drop rates.
  * Never more than 1 legendary in a single reward set.
+ *
+ * options.rareOrBetter — every card is guaranteed Rare or better (used by the
+ *   Babel "nextCardRare" reward). Legendary only appears if the resolved odds
+ *   still allow it (e.g. not during a gated first run).
+ * options.firstRun — apply first-run gating (no random Legendary, lower Rare).
  */
-export function generateRewardCards(rng, roomType) {
-  const odds = REWARD_ODDS[roomType] || REWARD_ODDS.normal;
+export function generateRewardCards(rng, roomType, options = {}) {
+  const { rareOrBetter = false, firstRun = false } = options;
+  const odds = resolveRewardOdds(roomType, { firstRun });
   const results = [];
   let legendaryUsed = false;
   const used = new Set();
@@ -160,7 +211,15 @@ export function generateRewardCards(rng, roomType) {
   for (let i = 0; i < 3; i++) {
     const roll = rng();
     let rarity;
-        if (!legendaryUsed && roll < odds.legendary) {
+    if (rareOrBetter) {
+      // Guaranteed Rare or better: Legendary only when odds permit, else Rare.
+      if (!legendaryUsed && odds.legendary > 0 && roll < odds.legendary) {
+        rarity = "legendary";
+        legendaryUsed = true;
+      } else {
+        rarity = "rare";
+      }
+    } else if (!legendaryUsed && roll < odds.legendary) {
       rarity = "legendary";
       legendaryUsed = true;
     } else if (roll < odds.legendary + odds.rare) {
@@ -171,9 +230,9 @@ export function generateRewardCards(rng, roomType) {
       rarity = "common";
     }
 
-    let pool = CARDS.filter(c => c.rarity === rarity && !used.has(c.id));
+    let pool = cardsOfTier(rarity).filter(c => !used.has(c.id));
     if (pool.length === 0) {
-      pool = CARDS.filter(c => c.rarity === rarity);
+      pool = cardsOfTier(rarity);
     }
     if (pool.length === 0) continue;
 
@@ -186,21 +245,25 @@ export function generateRewardCards(rng, roomType) {
 
 /**
  * Generate a single treasure reward card ID.
+ * Honors rareOrBetter (nextCardRare) and firstRun gating like generateRewardCards.
  */
-export function generateTreasureCard(rng) {
-  const odds = REWARD_ODDS.treasure;
+export function generateTreasureCard(rng, options = {}) {
+  const { rareOrBetter = false, firstRun = false } = options;
+  const odds = resolveRewardOdds("treasure", { firstRun });
   const roll = rng();
   let rarity;
-  if (roll < odds.legendary) {
-  rarity = "legendary";
-} else if (roll < odds.legendary + odds.rare) {
-  rarity = "rare";
-} else if (roll < odds.legendary + odds.rare + odds.uncommon) {
-  rarity = "uncommon";
-} else {
-  rarity = "common";
-}
-  const pool = CARDS.filter(c => c.rarity === rarity);
+  if (rareOrBetter) {
+    rarity = (odds.legendary > 0 && roll < odds.legendary) ? "legendary" : "rare";
+  } else if (roll < odds.legendary) {
+    rarity = "legendary";
+  } else if (roll < odds.legendary + odds.rare) {
+    rarity = "rare";
+  } else if (roll < odds.legendary + odds.rare + odds.uncommon) {
+    rarity = "uncommon";
+  } else {
+    rarity = "common";
+  }
+  const pool = cardsOfTier(rarity);
   if (pool.length === 0) return null;
   return pool[Math.floor(rng() * pool.length)].id;
 }

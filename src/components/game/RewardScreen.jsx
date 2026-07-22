@@ -37,16 +37,23 @@ export default function RewardScreen() {
 
   // First Genesis completion guarantees a strong rare card
   const isFirstCompletion = isBoss && !profile.genesisCompleted;
+  const firstRun = !profile.genesisCompleted; // gates random Legendary/Rare in run 1
+  const rareOrBetter = run.nextCardRare === true; // Babel "Rare or better" reward
   const [rewards] = useState(() => {
     if (isFirstCompletion) {
       const guaranteed = generateFirstCompletionReward(Math.random);
-      const others = generateRewardCards(Math.random, "boss");
+      const others = generateRewardCards(Math.random, "boss", { rareOrBetter });
       // Replace first slot with guaranteed rare, no duplicates
       const set = new Set([guaranteed, ...others]);
       return [...set].slice(0, 3);
     }
-    return generateRewardCards(Math.random, roomType);
+    return generateRewardCards(Math.random, roomType, { rareOrBetter, firstRun });
   });
+
+  // The upgraded reward has now been generated — consume the one-shot flag.
+  useEffect(() => {
+    if (run.nextCardRare) updateRun({ nextCardRare: false });
+  }, []);
 
   useEffect(() => {
     if (isBoss) Sound.prepareGenesisCompletionAudio();

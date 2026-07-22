@@ -5,11 +5,14 @@ import {
   getEnemyTurnSteps,
   checkBattleEnd,
   getMarkRule,
+  playCard,
+  RIGHTEOUS_AIM_CAP,
 } from "@/game/battleEngine";
 import { getIntentExplanation } from "@/game/intentExplanations";
 import { createRng } from "@/game/mapGenerator";
 import { ENEMIES } from "@/data/enemies";
 import { HERO_MAP } from "@/data/heroes";
+import { getCardById } from "@/data/cards";
 
 const enemy = ENEMIES.serpent;
 const deck = HERO_MAP.adam.starterDeck;
@@ -321,5 +324,76 @@ describe("Cain rebalance — no regressions", () => {
     const after = enemyTurn(state);
     expect(after.enemy.currentHp).toBe(17); // 20 - 3 recoil, exactly once
     expect(after.log.filter((l) => /recoil/i.test(l)).length).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Righteous Aim (Epic) — bounded double-damage on the next Attack only.
+// ---------------------------------------------------------------------------
+
+const AIM = getCardById("righteous_aim");
+
+// A battle state with a high-HP dummy enemy (no block) and ample Faith so we
+// can chain card plays and read the damage dealt.
+function aimState(heroId = null) {
+  const dummy = { id: "dummy", name: "Dummy", icon: "🎯", hp: 300, attacks: [{ name: "Poke", damage: 1 }] };
+  const s = createBattleState(dummy, 60, 60, deck, 0, 0, heroId, createRng("aim"));
+  return { ...s, energy: 20, maxEnergy: 20, enemyBlock: 0 };
+}
+
+// Damage a single card deals from a given state (enemy HP delta).
+function damageOf(before, after) {
+  return before.enemy.currentHp - after.enemy.currentHp;
+}
+
+describe("Righteous Aim — bounded doubling", () => {
+  it("has a cap constant of 12", () => {
+    expect(RIGHTEOUS_AIM_CAP).toBe(12);
+  });
+
+  it("doubles a small Attack fully (6 → 12)", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    const after = playCard(primed, 0, getCardById("sling_stone")); // 6
+    expect(damageOf(primed, after)).toBe(12);
+  });
+
+  it("doubles a mid Attack fully (9 → 18)", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    const after = playCard(primed, 0, getCardById("rams_horn")); // 9
+    expect(damageOf(primed, after)).toBe(18);
+  });
+
+  it("caps the added bonus at +12 (14 → 26, not 28)", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    const after = playCard(primed, 0, getCardById("pillar_fire")); // 14
+    expect(damageOf(primed, after)).toBe(26);
+  });
+
+  it("applies Adam's +1 before the cap (12 +1 = 13 → 25)", () => {
+    const primed = playCard(aimState("adam"), 0, AIM);
+    const after = playCard(primed, 0, getCardById("sling_david")); // 12 (+1 Adam) = 13
+    expect(damageOf(primed, after)).toBe(25);
+  });
+
+  it("does NOT apply to Miracle cards (Parting Waters stays 15)", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    const after = playCard(primed, 0, getCardById("parting_waters")); // miracle 15
+    expect(damageOf(primed, after)).toBe(15);
+  });
+
+  it("is consumed after one Attack (second Attack is normal)", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    const first = playCard(primed, 0, getCardById("sling_stone"));
+    expect(damageOf(primed, first)).toBe(12); // doubled
+    const second = playCard(first, 0, getCardById("sling_stone"));
+    expect(damageOf(first, second)).toBe(6); // normal
+  });
+
+  it("persists through a non-Attack card until an Attack consumes it", () => {
+    const primed = playCard(aimState(), 0, AIM);
+    // Play a defense card (Faith Shield) — should not consume the Aim.
+    const afterDef = playCard(primed, 0, getCardById("faith_shield"));
+    const afterAtk = playCard(afterDef, 0, getCardById("sling_stone"));
+    expect(damageOf(afterDef, afterAtk)).toBe(12); // still doubled
   });
 });

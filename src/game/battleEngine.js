@@ -3,6 +3,10 @@
 export const COUNTER_CAP = 12;
 export const HAND_LIMIT = 4;
 
+// Righteous Aim (Epic): the next Attack deals double damage, but the added
+// bonus is capped at +12 so it can no longer create uncapped 50–60 burst turns.
+export const RIGHTEOUS_AIM_CAP = 12;
+
 function pickEnemyAttack(enemy, rng = Math.random) {
   return enemy.attacks[Math.floor(rng() * enemy.attacks.length)];
 }
@@ -310,13 +314,27 @@ export function playCard(state, handIndex, card) {
   let blockScripture = state.blockScripture;
   let counter = state.counter || 0;
 
+  // Righteous Aim is active while enemyAttackMultiplier > 1 (set to 2 when the
+  // card is played). It is consumed only by an Attack card; other card types
+  // neither benefit from nor consume it (it clears at end of the player turn).
+  const aimActive = (state.enemyAttackMultiplier || 1) > 1;
+  let nextAimMultiplier = state.enemyAttackMultiplier || 1;
+
   switch (card.type) {
     case "attack": {
       const passiveBonus = state.heroId === "adam" ? 1 : 0;
+
+      // Order of operations:
+      //   1. base card value
+      //   2. + temporary attack buff (buffAttack, e.g. Divine Strength)
+      //   3. + Adam's First Born Fury passive (+1)  → "normal final damage" (N)
+      //   4. Righteous Aim (if active): + min(N, RIGHTEOUS_AIM_CAP), then consume
+      //   5. enemy Block absorption (below)
       let dmg = card.value + buffAttack + passiveBonus;
 
-      if (state.enemyAttackMultiplier > 1) {
-        dmg = Math.floor(dmg * 2);
+      if (aimActive) {
+        dmg = dmg + Math.min(dmg, RIGHTEOUS_AIM_CAP);
+        nextAimMultiplier = 1; // consumed by this Attack
       }
 
       if (enemyBlock > 0) {
@@ -485,7 +503,7 @@ export function playCard(state, handIndex, card) {
           error: null,
         };
       } else if (card.id === "righteous_aim") {
-        log.push("🎯 Righteous Aim — next attack ×2");
+        log.push("🎯 Righteous Aim — next attack doubled (up to +12)");
 
         return {
           ...state,
@@ -507,11 +525,8 @@ export function playCard(state, handIndex, card) {
     }
 
     case "miracle": {
+      // Righteous Aim does not apply to Miracles (attack cards only).
       let dmg = card.value;
-
-      if (state.enemyAttackMultiplier > 1) {
-        dmg = Math.floor(dmg * 2);
-      }
 
       if (enemyBlock > 0) {
         const absorbed = Math.min(enemyBlock, dmg);
@@ -555,7 +570,10 @@ export function playCard(state, handIndex, card) {
     enemy: { ...state.enemy, currentHp: enemyHp },
     enemyBlock,
     log,
-    enemyAttackMultiplier: card.id === "righteous_aim" ? state.enemyAttackMultiplier : 1,
+    // Attack consumes Righteous Aim (nextAimMultiplier → 1); other non-Aim cards
+    // preserve it so a later Attack this turn still benefits. (righteous_aim
+    // itself returns earlier, setting the multiplier to 2.)
+    enemyAttackMultiplier: nextAimMultiplier,
     buffAttack,
     freeCardsRemaining: freeCards,
     blockScripture,

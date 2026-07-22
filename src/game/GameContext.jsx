@@ -419,6 +419,8 @@ const startTutorialRun = useCallback(() => {
     extraDraw: 0,
     freeCardsNext: 0,
     nextCardRare: false,
+    startFaithNext: 0,
+    startBlockNext: 0,
 
     bossModifier: null,
     battleCheckpoint: null,
@@ -518,6 +520,8 @@ if (startAtFirstBattle && firstBattleNode) {
       shieldActive: false,
       extraDraw: 0,
       nextCardRare: false,
+      startFaithNext: 0,
+      startBlockNext: 0,
       bossModifier: map[map.length - 1][0].bossModifier || null,
       battleCheckpoint: startAtFirstBattle
   ? {

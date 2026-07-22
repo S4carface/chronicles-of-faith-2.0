@@ -5,7 +5,8 @@ import { getCardById } from "@/data/cards";
 import { TREASURE_REWARDS } from "@/data/genesisRooms";
 import { pick } from "@/game/mapGenerator";
 import { STORY_ART, PLACEHOLDER_ART } from "@/data/art";
-import { generateTreasureCard, RUN_DECK_MAX } from "@/game/deckRules";
+import { generateTreasureCard, RUN_DECK_MAX, getAbrahamsTestReward } from "@/game/deckRules";
+import { applyStoryEffect } from "@/game/runEffects";
 import * as Sound from "@/game/soundManager";
 import DeckFullModal from "@/components/game/DeckFullModal";
 
@@ -49,36 +50,41 @@ export default function StoryChoiceRoom() {
     const choice = choiceKey === "a" ? story.choice_a : story.choice_b;
     Sound.sfx.click();
     setChosen(choiceKey);
-    setResultText(choice.effect.text);
 
-    // Apply effects
-    if (choice.effect.type === "faith") {
-      updateRun({ buffAttack: run.buffAttack + choice.effect.value });
-    } else if (choice.effect.type === "heal") {
-      updateRun({ playerHp: Math.min(run.maxHp, run.playerHp + choice.effect.value) });
-    } else if (choice.effect.type === "damage") {
-      updateRun({ playerHp: Math.max(1, run.playerHp + choice.effect.value) });
-    } else if (choice.effect.type === "block") {
-      updateRun({ buffAttack: run.buffAttack + choice.effect.value });
-    } else if (choice.effect.type === "miracle_card") {
-      // Add to collection + run deck (with 15 cap)
-      addCardToCollection("angel_lord");
+    // Stat effects (Faith / Block / heal / damage / attack buff / gold) resolve
+    // through the shared pure mapper so Faith and Block grant their real
+    // benefits instead of an attack buff.
+    const statUpdate = applyStoryEffect(run, choice.effect);
+    if (Object.keys(statUpdate).length > 0) updateRun(statUpdate);
+
+    // Card grants have side effects and stay here.
+    let resultOverride = null;
+    if (choice.effect.type === "miracle_card") {
+      // Abraham's Test: a Legendary would leak end-game power into the first run.
+      // Grant a deterministic Rare until Genesis has been completed once.
+      const rewardId = getAbrahamsTestReward(profile.genesisCompleted === true);
+      addCardToCollection(rewardId);
       if (run.deck.length < RUN_DECK_MAX) {
-        addCardToRunDeck("angel_lord");
+        addCardToRunDeck(rewardId);
       }
+      const rewardCard = getCardById(rewardId);
+      resultOverride = profile.genesisCompleted
+        ? "God provides — you receive a Legendary card!"
+        : `God provides — you receive a Rare card: ${rewardCard?.name || "a blessing"}.`;
     } else if (choice.effect.type === "card_upgrade") {
       updateRun({ nextCardRare: true });
     }
 
+    setResultText(resultOverride || choice.effect.text);
+
     if (choice.effect.cardReward) {
-      const reward = generateTreasureCard(Math.random) || pick(Math.random, TREASURE_REWARDS);
+      const reward =
+        generateTreasureCard(Math.random, { firstRun: !profile.genesisCompleted }) ||
+        pick(Math.random, TREASURE_REWARDS);
       addCardToCollection(reward);
       if (run.deck.length < RUN_DECK_MAX) {
         addCardToRunDeck(reward);
       }
-    }
-    if (choice.effect.gold) {
-      updateRun({ gold: run.gold + choice.effect.gold });
     }
 
     // Record story choice

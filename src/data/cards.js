@@ -232,14 +232,14 @@ export const CARDS = [
     id: "righteous_aim",
     name: "Righteous Aim",
     type: CARD_TYPES.SCRIPTURE,
-    rarity: RARITIES.RARE,
+    rarity: RARITIES.EPIC,
     cost: 1,
     value: 0,
     icon: "✝️",
     verse: "1 Samuel 17:47",
     scriptureText:
       "For the battle is the Lord's, and he will give you into our hands.",
-    description: "The battle is the Lord's. Next attack deals double.",
+    description: "The battle is the Lord's. Your next Attack deals double damage, up to +12.",
   },
   {
     id: "parting_waters",

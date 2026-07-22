@@ -4,7 +4,6 @@ import { CARD_ART } from "@/data/art";
 import { getCardPlayabilityReason } from "@/game/statusExplanations";
 import { cn } from "@/utils";
 import { Sparkles, X, Swords, Shield, BookOpen, Wand2 } from "lucide-react";
-import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
 import { getCardRarity } from "@/data/cardRarity";
 
 const TYPE_INFO = {
@@ -53,17 +52,10 @@ return (
           <div className="flex gap-2.5">
             <button onClick={onCancel} disabled={tutorialLocked} className="flex-1 py-2.5 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm active:scale-95 disabled:cursor-not-allowed disabled:opacity-30">Cancel</button>
             <div className="relative flex-[2]">
-  {showTutorialPlayGuide && canPlay && (
-    <TutorialGuidingLight
-  direction="down"
-  size="normal"
-  className="-top-14 left-1/2 -translate-x-1/2"
-/>
-  )}
-
   <button
     onClick={onPlay}
     data-tutorial-action={tutorialLocked ? "play-card" : undefined}
+    data-tutorial-target={tutorialLocked ? "play-card" : undefined}
     disabled={!canPlay}
     className={`w-full rounded-lg border-2 py-3 text-base font-bold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
       showTutorialPlayGuide
@@ -119,7 +111,7 @@ return (
           </div>
              <div className="px-4 pb-4 flex gap-3">
              <button onClick={onCancel} disabled={tutorialLocked} className="flex-1 py-3 rounded-lg border border-slate-500/40 bg-slate-800/40 text-amber-100/60 font-medium text-sm disabled:cursor-not-allowed disabled:opacity-30">Cancel</button>
-             <button onClick={onPlay} data-tutorial-action={tutorialLocked ? "play-card" : undefined} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
+             <button onClick={onPlay} data-tutorial-action={tutorialLocked ? "play-card" : undefined} data-tutorial-target={tutorialLocked ? "play-card" : undefined} disabled={!canPlay} className="flex-[2] py-3.5 rounded-lg border-2 border-emerald-400/70 bg-gradient-to-r from-emerald-600/40 to-emerald-500/30 text-emerald-50 font-bold text-base hover:from-emerald-600/50 hover:to-emerald-500/40 transition disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20">Play Card</button>
             </div>
           {blockReason && (
             <div className="px-4 pb-4">

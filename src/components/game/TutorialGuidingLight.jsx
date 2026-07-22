@@ -5,6 +5,7 @@ export default function TutorialGuidingLight({
   direction = "down",
   size = "normal",
   className = "",
+  reduced = false,
 }) {
   const rotation = {
     up: "rotate(180deg)",
@@ -154,9 +155,9 @@ const activeSize = sizeClasses[size] || sizeClasses.normal;
       <div
         className={`pointer-events-none absolute z-[57] flex items-center justify-center ${activeSize.container} ${className}`}
         style={{
-          animation:
-            movementAnimation[direction] ||
-            movementAnimation.down,
+          animation: reduced
+            ? "none"
+            : movementAnimation[direction] || movementAnimation.down,
         }}
         aria-hidden="true"
       >
@@ -174,8 +175,9 @@ const activeSize = sizeClasses[size] || sizeClasses.normal;
             style={{
               background:
                 "radial-gradient(circle, rgba(255,251,226,0.52) 0%, rgba(251,191,36,0.24) 35%, rgba(251,191,36,0.08) 58%, transparent 76%)",
-              animation:
-                "guidingLightBreathe 1.9s ease-in-out infinite",
+              animation: reduced
+                ? "none"
+                : "guidingLightBreathe 1.9s ease-in-out infinite",
             }}
           />
 
@@ -193,8 +195,12 @@ const activeSize = sizeClasses[size] || sizeClasses.normal;
             className={`relative z-10 text-amber-100 ${activeSize.icon}`}
             strokeWidth={1.7}
             style={{
-              animation:
-                "guidingLightCorePulse 1.7s ease-in-out infinite",
+              animation: reduced
+                ? "none"
+                : "guidingLightCorePulse 1.7s ease-in-out infinite",
+              filter: reduced
+                ? "drop-shadow(0 0 7px rgba(251,191,36,0.8)) drop-shadow(0 0 13px rgba(255,255,255,0.28))"
+                : undefined,
             }}
           />
 
@@ -215,22 +221,26 @@ borderTop:
             }}
           />
 
-          {/* Small particles */}
-          <span
-            className="absolute left-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-100"
-            style={{
-              animation:
-                "guidingParticleLeft 2s ease-in-out infinite",
-            }}
-          />
+          {/* Small particles — omitted under reduced motion */}
+          {!reduced && (
+            <>
+              <span
+                className="absolute left-1 top-2 h-1.5 w-1.5 rounded-full bg-amber-100"
+                style={{
+                  animation:
+                    "guidingParticleLeft 2s ease-in-out infinite",
+                }}
+              />
 
-          <span
-            className="absolute right-1 top-3 h-1.5 w-1.5 rounded-full bg-yellow-100"
-            style={{
-              animation:
-                "guidingParticleRight 2.2s ease-in-out infinite",
-            }}
-          />
+              <span
+                className="absolute right-1 top-3 h-1.5 w-1.5 rounded-full bg-yellow-100"
+                style={{
+                  animation:
+                    "guidingParticleRight 2.2s ease-in-out infinite",
+                }}
+              />
+            </>
+          )}
         </div>
       </div>
     </>

@@ -25,7 +25,7 @@ import { getStatusExplanation } from "@/game/statusExplanations";
 import BattleHelper from "@/components/game/BattleHelper";
 import BattleGuideCallouts from "@/components/game/BattleGuideCallouts";
 import GuidedBattleTutorial, { TUTORIAL_TOTAL_STEPS } from "@/components/game/GuidedBattleTutorial";
-import TutorialGuidingLight from "@/components/game/TutorialGuidingLight";
+import TutorialTargetPointer from "@/components/game/TutorialTargetPointer";
 import useResponsive from "@/hooks/useResponsive";
 import { CARD_ART, ENEMY_ART, HERO_ART, INTENT_ART, VICTORY_ART } from "@/data/art";
 import * as Sound from "@/game/soundManager";
@@ -938,6 +938,35 @@ const selectedCardData =
   const tutorialAllowsEndTurn =
     !tutorialActive || tutorialStep === 5;
 
+  // Which real battle element the guidance marker should anchor to for the
+  // current step. Steps 3/4/6 switch from the card-in-hand to the Play Card
+  // button the moment the required card is selected. Positioning itself is
+  // measured live from the target's rect by TutorialTargetPointer.
+  const tutorialPointerTarget = (() => {
+    if (!tutorialActive) return null;
+    const requiredCardSelected =
+      tutorialRequiredCardId &&
+      selectedCardData?.id === tutorialRequiredCardId;
+    switch (tutorialStep) {
+      case 0:
+        return { selector: '[data-tutorial-target="health"]', size: "small" };
+      case 1:
+        return { selector: '[data-tutorial-target="faith"]', size: "small" };
+      case 2:
+        return { selector: '[data-tutorial-target="enemy-intent"]', size: "small" };
+      case 3:
+      case 4:
+      case 6:
+        return requiredCardSelected
+          ? { selector: '[data-tutorial-target="play-card"]', size: "normal" }
+          : { selector: '[data-tutorial-target="card-required"]', size: "normal" };
+      case 5:
+        return { selector: '[data-tutorial-target="end-turn"]', size: "normal" };
+      default:
+        return null;
+    }
+  })();
+
   const handleTutorialInteractionCapture = (event) => {
     if (!tutorialActive) return;
 
@@ -1142,6 +1171,7 @@ const selectedCardData =
         return (
           <button
             key={i}
+            data-tutorial-target={i === 0 ? "enemy-intent" : undefined}
             onClick={(e) => {
               e.stopPropagation();
               setIntentExplain(action);
@@ -1156,14 +1186,6 @@ const selectedCardData =
                   : `${intentInfo.border} bg-slate-900/40`
             }`}
           >
-            {tutorialActive && tutorialStep === 2 && (
-              <TutorialGuidingLight
-                direction="down"
-                size="small"
-                className="-top-12 left-1/2 -translate-x-1/2"
-              />
-            )}
-
             <span
               className="h-4 w-4 flex-shrink-0 overflow-hidden rounded-sm lg:h-6 lg:w-6"
               style={{ background: "#0F1A30" }}
@@ -1326,15 +1348,10 @@ const selectedCardData =
             )}
           </div>
           <div className="min-w-0">
-            <div className="relative flex items-center gap-1.5">
-  {tutorialActive && tutorialStep === 0 && (
-    <TutorialGuidingLight
-  direction="down"
-  size="small"
-  className="-top-12 left-8"
-/>
-  )}
-
+            <div
+              className="relative flex items-center gap-1.5"
+              data-tutorial-target="health"
+            >
   <Heart className="w-3 h-3 lg:w-5 lg:h-5 text-red-400 flex-shrink-0" />
               <div className="w-16 lg:w-36 h-3 lg:h-4 bg-slate-900 rounded-full border border-red-900/50 overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500" style={{ width: `${(battleState.playerHp / battleState.maxPlayerHp) * 100}%` }} />
@@ -1392,14 +1409,10 @@ const selectedCardData =
               <Shield className="w-3 h-3 lg:w-5 lg:h-5" />
             </button>
           )}
-          <div className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30">
-            {tutorialActive && tutorialStep === 1 && (
-  <TutorialGuidingLight
-  direction="down"
-  size="small"
-  className="-top-12 left-1/2 -translate-x-1/2"
-/>
-)}
+          <div
+            className="relative flex items-center gap-0.5 px-2 py-1 lg:px-3 lg:py-2 rounded-lg bg-amber-900/20 border border-amber-400/30"
+            data-tutorial-target="faith"
+          >
             <Sparkles className="w-3 h-3 lg:w-5 lg:h-5 text-yellow-200" />
             <span className="text-yellow-200 text-sm lg:text-2xl font-bold">{battleState.energy}</span>
             <span className="text-yellow-100/50 text-[9px] lg:text-sm">/{battleState.maxEnergy}</span>
@@ -1417,16 +1430,9 @@ const selectedCardData =
             ) : null;
           })()}
                     <div className="relative">
-  {tutorialActive && tutorialStep === 5 && (
-    <TutorialGuidingLight
-  direction="down"
-  size="normal"
-  className="-top-14 left-1/2 -translate-x-1/2"
-/>
-  )}
-
             <button
               onClick={handleEndTurnClick}
+              data-tutorial-target={tutorialActive && tutorialStep === 5 ? "end-turn" : undefined}
               data-tutorial-action={tutorialActive && tutorialStep === 5 ? "end-turn" : undefined}
               disabled={isEnemyTurn || !tutorialAllowsEndTurn}
                         className={`rounded-lg border-2 font-bold transition-all whitespace-nowrap active:scale-[0.94] ${
@@ -1554,6 +1560,9 @@ const selectedCardData =
             <div
               key={idx}
               data-tutorial-action={isRequiredTutorialCard ? "required-card" : undefined}
+              data-tutorial-target={
+                isRequiredTutorialCard && !isSelected ? "card-required" : undefined
+              }
               className={`relative min-w-0 origin-bottom transition-all duration-200 ${
                 isSelected
                   ? "z-30 translate-y-0 scale-100"
@@ -1568,13 +1577,6 @@ const selectedCardData =
     : ""
               }`}
             >
-              {isRequiredTutorialCard && !isSelected && (
-  <TutorialGuidingLight
-  direction="down"
-  size="normal"
-  className="-top-14 left-1/2 -translate-x-1/2"
-/>
-)}
               <Card
                 card={card}
                 inHand
@@ -1781,6 +1783,18 @@ const selectedCardData =
   onSkip={handleTutorialSkip}
   selectedCardId={selectedCardData?.id || null}
 />
+      )}
+
+      {/* Guidance marker — anchored live to the current step's real target.
+          Keyed on step + target so retry/measure state resets when the
+          target changes (e.g. card → Play Card). */}
+      {tutorialActive && tutorialStep < TUTORIAL_TOTAL_STEPS && !battleEnd && !tutorialCompleteMsg && tutorialPointerTarget && (
+        <TutorialTargetPointer
+          key={`${tutorialStep}:${tutorialPointerTarget.selector}`}
+          targetSelector={tutorialPointerTarget.selector}
+          size={tutorialPointerTarget.size}
+          placement="above"
+        />
       )}
 
       {/* Tutorial completion message */}

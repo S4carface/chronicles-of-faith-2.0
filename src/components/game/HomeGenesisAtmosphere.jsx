@@ -68,29 +68,40 @@ export default function HomeGenesisAtmosphere({
     return (
       // Owns ALL of the fixed post-tutorial dashboard's unused flexible
       // space (flex-1, flex-basis 0% via Tailwind's flex-1 — grows purely
-      // from available space, not from content size). min-h-0 lets it
-      // shrink freely on a short viewport instead of being held open by its
-      // own content's implicit min-height. The photo band inside is capped
-      // to a natural, non-stretched height; the light-path/particle layers
-      // here span this ENTIRE outer box, so whatever room is left above or
-      // below that capped band still reads as deliberate atmosphere instead
-      // of a blank gap before Start Journey.
+      // from available space, not from content size). min-h keeps it from
+      // ever going too small to read; there is no max-height cap — the
+      // horizon photo itself (object-cover, light source pinned centered
+      // via objectPosition) is what fills whatever room a tall viewport
+      // leaves unclaimed, rather than a fixed-height band surrounded by
+      // gradients standing in for it. min-h-0 on the box lets it still
+      // shrink freely on a short viewport instead of being held open by
+      // its own content's implicit min-height.
       <div
-        className="relative w-full shrink-0 flex-1 min-h-0 overflow-hidden"
+        className="relative w-full shrink-0 flex-1 min-h-[92px] overflow-hidden"
         aria-label="Genesis 1:1"
       >
-        {/* Vertical gold light path — a beam falling from the photo band's
-            own light source at the top, down through any leftover flexible
-            space, toward Start Journey below. Together with the bottom
-            glow this reads as one continuous descending light on a tall
-            viewport, instead of the photo band trailing off into flat,
-            empty dark space. */}
+        {/* fallback=null: the gradients/glow below already give this box a
+            deliberate atmosphere on their own — the actual photo fades in
+            over them once decoded, so no separate placeholder glyph is
+            needed here. */}
+        <SafeImage
+          src={GENESIS_HORIZON_ART}
+          alt=""
+          fallback={null}
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ objectPosition: "center 42%", filter: "brightness(1.14) saturate(1.16)" }}
+        />
+
+        {/* Stronger vignette than the below-image layout needs — the
+            scripture sits directly on top of the artwork here, so it needs
+            more contrast to stay readable regardless of how tall this box
+            grows. */}
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden="true"
           style={{
             background:
-              "radial-gradient(ellipse 32% 130% at 50% 0%, rgba(251,191,36,0.16) 0%, rgba(251,191,36,0.07) 40%, transparent 72%)",
+              "linear-gradient(180deg, rgba(6,10,20,0.6) 0%, rgba(6,10,20,0.24) 30%, rgba(6,10,20,0.22) 55%, rgba(6,10,20,0.4) 78%, rgba(6,10,20,0.72) 100%)",
           }}
         />
         <div
@@ -98,15 +109,18 @@ export default function HomeGenesisAtmosphere({
           aria-hidden="true"
           style={{
             background:
-              "linear-gradient(180deg, rgba(5,9,18,0) 0%, rgba(201,168,76,0.06) 45%, rgba(201,168,76,0.12) 75%, rgba(201,168,76,0.2) 100%)",
+              "radial-gradient(ellipse 55% 45% at 50% 38%, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0.08) 55%, transparent 78%)",
           }}
         />
+        {/* Golden glow at the very bottom edge — bleeds into StickyActionDock's
+            own transparent top fade just below, so the scene and Start
+            Journey read as one continuous light source. */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
           aria-hidden="true"
           style={{
             background:
-              "radial-gradient(ellipse 65% 70% at 50% 100%, rgba(201,168,76,0.28) 0%, rgba(201,168,76,0.11) 45%, transparent 78%)",
+              "radial-gradient(ellipse 70% 80% at 50% 100%, rgba(201,168,76,0.3) 0%, rgba(201,168,76,0.12) 45%, transparent 78%)",
           }}
         />
 
@@ -131,63 +145,27 @@ export default function HomeGenesisAtmosphere({
           />
         ))}
 
-        {/* Photo band — a natural, non-stretched height (never the full
-            height of the flexible box above, which would distort a
-            landscape photo on a tall phone). Sized responsively, never a
-            hardcoded pixel value that could overflow a short viewport. */}
-        <div className="relative h-[130px] min-[400px]:h-[150px] sm:h-[168px] [@media(max-height:700px)]:h-[100px] w-full overflow-hidden">
-          {/* fallback=null: the gradients/glow above already give this box
-              a deliberate atmosphere on their own — the actual photo fades
-              in over them once decoded, so no separate placeholder glyph
-              is needed here. */}
-          <SafeImage
-            src={GENESIS_HORIZON_ART}
-            alt=""
-            fallback={null}
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
-          />
-
-          {/* Stronger vignette than the below-image layout needs — the
-              scripture sits directly on top of the artwork here, so it needs
-              more contrast to stay readable without extra vertical space. */}
-          <div
-            className="absolute inset-0"
+        {/* Scripture — live HTML, overlaid instead of taking its own space
+            below. showJourneyHint is intentionally not supported in this
+            mode: post-tutorial never needs the "journey begins" hint, and
+            keeping this centered lets the box grow or shrink around it
+            without the text ever needing to move. */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <p
+            className="font-serif italic text-amber-50/95"
             style={{
-              background:
-                "linear-gradient(180deg, rgba(6,10,20,0.58) 0%, rgba(6,10,20,0.28) 35%, rgba(6,10,20,0.32) 65%, rgba(6,10,20,0.62) 100%)",
+              fontSize: "clamp(0.7rem, 2vw, 0.85rem)",
+              textShadow: "0 1px 6px rgba(0,0,0,0.75), 0 0 16px rgba(0,0,0,0.5)",
             }}
-          />
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 60% 55% at 50% 40%, rgba(251,191,36,0.2) 0%, transparent 72%)",
-            }}
-          />
-
-          {/* Scripture — live HTML, overlaid instead of taking its own
-              space below. showJourneyHint is intentionally not supported in
-              this mode: post-tutorial never needs the "journey begins" hint,
-              and this compact band has no room to show it without crowding
-              the verse itself. */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
-            <p
-              className="font-serif italic text-amber-50/95"
-              style={{
-                fontSize: "clamp(0.7rem, 2vw, 0.85rem)",
-                textShadow: "0 1px 6px rgba(0,0,0,0.75), 0 0 16px rgba(0,0,0,0.5)",
-              }}
-            >
-              &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
-            </p>
-            <p
-              className="mt-1 text-[9px] font-serif italic text-amber-200/80"
-              style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
-            >
-              Genesis 1:1
-            </p>
-          </div>
+          >
+            &ldquo;In the beginning, God created the heavens and the earth.&rdquo;
+          </p>
+          <p
+            className="mt-1 text-[9px] font-serif italic text-amber-200/80"
+            style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
+          >
+            Genesis 1:1
+          </p>
         </div>
       </div>
     );
@@ -198,14 +176,14 @@ export default function HomeGenesisAtmosphere({
       <div
         className={`relative w-full overflow-hidden pointer-events-none lg:min-h-[220px] ${
           compact
-            ? // flex-none (not flex-1): in compact/pre-tutorial mode this must
-              // land inside the suggested 105-130px target range, not grow to
-              // fill whatever's left in the flex column — flex-1 here would
-              // balloon it well past that range on any viewport taller than
-              // the rest of the (now much shorter) pre-tutorial content adds
-              // up to, which is exactly the scrolling regression this file
-              // exists to avoid.
-              "flex-none h-[118px] min-[400px]:h-[124px] [@media(max-height:760px)]:h-[100px] sm:h-[128px]"
+            ? // flex-1 (not flex-none): the compact pre-tutorial atmosphere
+              // now OWNS whatever vertical space the rest of the hero layout
+              // leaves unclaimed, instead of sitting at a fixed height while
+              // a separate empty filler strip absorbed the leftover space
+              // below Start Journey. min-h keeps it from ever going too
+              // small to read; max-h keeps a very tall phone from stretching
+              // the horizon photo into an awkward, oversized band.
+              "flex-1 min-h-[110px] min-[400px]:min-h-[128px] sm:min-h-[150px] max-h-[260px] [@media(max-height:760px)]:min-h-[52px]"
             : "flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px]"
         }`}
         aria-hidden="true"
@@ -219,7 +197,7 @@ export default function HomeGenesisAtmosphere({
           alt=""
           fallback={null}
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ objectPosition: "center 50%", filter: "brightness(1.08) saturate(1.12)" }}
+          style={{ objectPosition: "center 50%", filter: "brightness(1.14) saturate(1.16)" }}
         />
 
         {/* Dark navy vignette — dark bands at the top and bottom edges keep
@@ -242,7 +220,7 @@ export default function HomeGenesisAtmosphere({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 60% 50% at 50% 42%, rgba(251,191,36,0.26) 0%, transparent 72%)",
+              "radial-gradient(ellipse 55% 48% at 50% 42%, rgba(251,191,36,0.34) 0%, rgba(251,191,36,0.1) 55%, transparent 78%)",
           }}
         />
 

@@ -53,22 +53,22 @@ export default function HomeLeaderboardCard({ compact = false }) {
   }
 
   return (
-    <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1">
+    <div className="w-full px-4 lg:px-8 flex justify-center mb-2.5 [@media(max-height:760px)]:mb-1 [@media(max-height:600px)]:!mb-0.5">
       <Link
         to="/leaderboard"
         onClick={() => Sound.sfx.click()}
-        className="relative flex w-full max-w-md items-center gap-3 rounded-2xl border border-amber-400/30 px-4 py-3 transition hover:border-amber-300/45 lg:max-w-[600px] [@media(max-height:760px)]:py-1.5"
+        className="relative flex w-full max-w-md items-center gap-3 rounded-2xl border border-amber-400/30 px-4 py-3 transition hover:border-amber-300/45 lg:max-w-[600px] [@media(max-height:760px)]:py-1.5 [@media(max-height:600px)]:!py-1"
         style={{
           background: "linear-gradient(135deg, rgba(10,16,32,0.85) 0%, rgba(6,10,20,0.9) 100%)",
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full [@media(max-height:760px)]:h-12 [@media(max-height:760px)]:w-12">
+        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full [@media(max-height:760px)]:h-[3.625rem] [@media(max-height:760px)]:w-[3.625rem] [@media(max-height:600px)]:!h-12 [@media(max-height:600px)]:!w-12">
           <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1 text-left">
-          <p className="font-serif text-sm font-bold text-amber-100 [@media(max-height:760px)]:text-xs" style={SMALL_CAPS}>Leaderboard</p>
-          <p className="text-[11px] text-amber-100/70 [@media(max-height:760px)]:hidden">See how you rank among faithful warriors.</p>
+          <p className="font-serif text-base font-bold text-amber-100 [@media(max-height:760px)]:text-sm" style={SMALL_CAPS}>Leaderboard</p>
+          <p className="text-[11px] text-amber-100/70">See how you rank among faithful warriors.</p>
         </div>
         <ChevronRight className="h-5 w-5 flex-shrink-0 text-amber-300/70" aria-hidden="true" />
       </Link>

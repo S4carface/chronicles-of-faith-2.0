@@ -175,12 +175,13 @@ export default function HomeGenesisAtmosphere({
         className={`relative w-full overflow-hidden pointer-events-none lg:min-h-[220px] ${
           compact
             ? // flex-1 (not flex-none): the compact pre-tutorial atmosphere
-              // still fills leftover hero space, but now with a controlled
-              // max-height so it stays a cinematic ~130-170px band instead
-              // of stretching tall enough to compress the crest and the
-              // enlarged Prayer/Leaderboard artwork above it. min-h keeps it
-              // from ever going too small to read.
-              "flex-1 min-h-[130px] sm:min-h-[150px] max-h-[170px] [@media(max-height:760px)]:min-h-[72px] [@media(max-height:760px)]:max-h-[124px]"
+              // fills leftover hero space, capped so it stays a cinematic
+              // band that is clearly subordinate to the now-larger brand
+              // header above it. min-h is the practical floor it shrinks to
+              // on tight screens (the enlarged crest/title/Prayer take
+              // priority for vertical space); max-h caps it on roomy phones
+              // so it never dominates the page.
+              "flex-1 min-h-[104px] sm:min-h-[120px] max-h-[148px] [@media(max-height:760px)]:min-h-[56px] [@media(max-height:760px)]:max-h-[100px] [@media(max-height:600px)]:!min-h-[32px] [@media(max-height:600px)]:!max-h-[68px]"
             : "flex-1 min-h-[152px] min-[400px]:min-h-[168px] sm:min-h-[184px]"
         }`}
         aria-hidden="true"

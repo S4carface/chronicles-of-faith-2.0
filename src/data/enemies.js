@@ -23,7 +23,7 @@ export const ENEMIES = {
     narration: "Cain was very angry, and his face was downcast. The Lord said, 'Sin is crouching at your door.' — Genesis 4:5-7",
     attacks: [
       { name: "Brother's Strike", damage: 7, icon: "👊" },
-      { name: "Jealous Rage", damage: 9, icon: "🔥", effect: "recoil", description: "Takes 3 recoil damage" },
+      { name: "Jealous Rage", damage: 9, icon: "🔥", effect: "recoil", recoil: 3, description: "Takes 3 recoil damage" },
       { name: "Mark of Cain", damage: 5, icon: "👁️", effect: "skip_draw", description: "Draw 1 fewer card next turn" },
     ],
   },

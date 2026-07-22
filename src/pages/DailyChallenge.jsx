@@ -76,7 +76,7 @@ export default function DailyChallenge() {
     name: getCardById(cardId)?.name || cardId,
   }));
 
-  const startingFaith = daily.rule.maxEnergy || 3;
+  const startingFaith = daily.startFaith || daily.rule.maxEnergy || 3;
   const difficultyBadgeClass = DIFFICULTY_BADGE_CLASSES[daily.difficulty] || DIFFICULTY_BADGE_CLASSES.normal;
   const resetLabel = useResetCountdown();
 
@@ -199,9 +199,12 @@ export default function DailyChallenge() {
             </div>
             <div className="min-w-0 leading-tight">
               <p className="truncate font-serif text-sm text-amber-100">{daily.hero.name} — {daily.hero.title}</p>
-              <p className="flex items-center gap-2 text-[11px] text-amber-100/50">
+              <p className="flex flex-wrap items-center gap-2 text-[11px] text-amber-100/50">
                 <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-red-300" />{daily.maxHp} HP</span>
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-yellow-300" />{startingFaith} Faith</span>
+                {daily.drawPerTurn > 1 && (
+                  <span className="inline-flex items-center gap-1"><Sparkles className="h-3 w-3 text-emerald-300" />Draw {daily.drawPerTurn}/turn</span>
+                )}
               </p>
             </div>
           </div>
@@ -263,7 +266,7 @@ export default function DailyChallenge() {
         <div className="mb-1">
           <CollapsibleRow
             label="Scoring Rules"
-            summary="Victory +500 • HP +10 • Turn −25"
+            summary="Victory +500 • HP +10 • Turn −10"
             actionLabel="Details"
             open={showScoring}
             onToggle={() => { Sound.sfx.click(); setShowScoring((v) => !v); }}
@@ -279,7 +282,7 @@ export default function DailyChallenge() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-amber-100/60">Turns used</span>
-                <span className="font-medium text-red-300/80">-25 per turn</span>
+                <span className="font-medium text-red-300/80">-10 per turn</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-amber-100/60">Correct trivia</span>

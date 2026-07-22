@@ -151,7 +151,10 @@ export function drawCards(state, count) {
 function drawNextTurnCard(state, skipDraw = 0) {
   const handSize = state.hand?.length || 0;
 
-  const normalDrawCount = 1;
+  // Per-turn draw count. Regular runs draw 1; easy draws back to a full hand;
+  // Daily can set drawPerTurn (e.g. Hard Daily draws 2) so the small fixed deck
+  // isn't starved by disruptive enemies (skip-draw) — see dailyChallenge.
+  const normalDrawCount = state.drawPerTurn || 1;
   const easyDrawCount = Math.max(0, HAND_LIMIT - handSize);
 
   const baseDrawCount = state.drawToFull
@@ -600,6 +603,12 @@ export function enemyTurn(state) {
       const ctr = applyCounter(state, enemyHp, log, counter);
       enemyHp = ctr.enemyHp;
 
+      // Recoil — the attacker also takes its declared self-damage (once).
+      if (action.effect === "recoil" && action.recoil > 0) {
+        enemyHp = Math.max(0, enemyHp - action.recoil);
+        log.push(`💥 ${state.enemy.name} takes ${action.recoil} recoil`);
+      }
+
       if (action.effect === "heal_self") {
         const healAmt = state.enemy.isBoss ? 6 : 4;
         enemyHp = Math.min(state.enemy.maxHp, enemyHp + healAmt);
@@ -778,6 +787,7 @@ export function getEnemyTurnSteps(state) {
 
     const stepLog = [...log];
     let counterHit = 0;
+    let recoilHit = 0;
 
     if (action.damage > 0) {
       let damage = action.damage;
@@ -801,6 +811,14 @@ export function getEnemyTurnSteps(state) {
       const ctr = applyCounter(state, enemyHp, stepLog, counter);
       enemyHp = ctr.enemyHp;
       counterHit = ctr.counterHit;
+
+      // Recoil — the attacker also takes its declared self-damage (once). May
+      // reduce the enemy to 0, ending the battle in victory.
+      if (action.effect === "recoil" && action.recoil > 0) {
+        recoilHit = action.recoil;
+        enemyHp = Math.max(0, enemyHp - recoilHit);
+        stepLog.push(`💥 ${state.enemy.name} takes ${recoilHit} recoil`);
+      }
 
       if (action.effect === "heal_self") {
         const healAmt = state.enemy.isBoss ? 6 : 4;
@@ -841,6 +859,7 @@ export function getEnemyTurnSteps(state) {
       action,
       handIndex: originalHandIdx,
       counterHit,
+      recoilHit,
       state: {
         ...state,
         enemyBlock,

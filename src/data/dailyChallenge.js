@@ -30,31 +30,51 @@ const SPECIAL_RULES = [
 },
 ];
 
+// Daily HP is derived from the enemy's OWN base HP (respecting its design)
+// scaled by a bounded per-difficulty multiplier, then clamped into a target
+// band, then (for surviving modifiers) any HP bonus, then a hard safety cap.
+// This keeps a fixed-starter-deck challenge clearable in ~6-12 turns and
+// prevents the old bug where base HP was discarded for a 40-55 range and then
+// multiplied again (Cain 32 -> 64).
 const DIFFICULTY_CONFIG = {
   easy: {
     label: "Easy",
-    enemyHpRange: [20, 26],
-    damageMult: 0.7,
+    hpMult: 0.95,
+    hpBand: [28, 36],
+    damageMult: 0.8,
     goldRange: [20, 35],
     desc: "A gentle trial. Suitable for all ages.",
   },
   normal: {
     label: "Normal",
-    enemyHpRange: [28, 38],
+    hpMult: 1.15,
+    hpBand: [34, 42],
     damageMult: 1.0,
     goldRange: [35, 55],
     desc: "A fair challenge. Requires strategy and defense.",
   },
   hard: {
     label: "Hard",
-    enemyHpRange: [40, 55],
-    damageMult: 1.35,
+    hpMult: 1.35,
+    hpBand: [40, 50],
+    damageMult: 1.2,
     goldRange: [55, 85],
     desc: "A true test. Every card choice matters.",
   },
 };
 
 const DIFFICULTY_ORDER = ["easy", "normal", "hard"];
+
+// Absolute ceiling on a Daily enemy's final HP for the fixed starter deck, so
+// even a modifier-boosted enemy stays winnable in ~6-12 turns of competent play.
+const DAILY_HP_SAFETY_CAP = 52;
+
+// Pure enemy-buff modifiers with NO compensating player benefit. These must not
+// stack onto Hard days (see audit): they are deterministically rerolled to a
+// neutral / player-benefiting modifier there.
+const ENEMY_ONLY_RULE_IDS = new Set(["mighty_adversary", "shielded_foe"]);
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // Plain ISO date key (YYYY-MM-DD) — used for leaderboard/profile bookkeeping.
 export function getDailySeed(date = new Date()) {
@@ -68,13 +88,27 @@ export function getDailyChallengeSeed(date = new Date()) {
   return `daily_challenge_${getDailySeed(date).replace(/-/g, "_")}`;
 }
 
+// Day-of-year computed purely from the UTC date — the SAME UTC date key used by
+// the seed. Previously this used local date methods, so players near UTC
+// midnight in non-UTC time zones could get a different difficulty rotation than
+// the (UTC) seed implied. Deriving it from UTC guarantees that the same
+// displayed daily date yields identical difficulty everywhere.
+export function getUtcDayOfYear(date = new Date()) {
+  const year = date.getUTCFullYear();
+  const startOfYear = Date.UTC(year, 0, 0); // Dec 31 prev year — matches classic (y,0,0)
+  const utcMidnight = Date.UTC(year, date.getUTCMonth(), date.getUTCDate());
+  return Math.floor((utcMidnight - startOfYear) / 86400000);
+}
+
 export function getDailyChallenge(date = new Date()) {
   const dateKey = getDailySeed(date);
   const seed = getDailyChallengeSeed(date);
   const rng = createRng(seed);
 
-  // Deterministic difficulty rotation based on day of year
-  const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000);
+  // Deterministic difficulty rotation — derived from the SAME UTC date as the
+  // seed (see getUtcDayOfYear), so every player worldwide gets the same
+  // difficulty for a given displayed daily date.
+  const dayOfYear = getUtcDayOfYear(date);
   const difficultyKey = DIFFICULTY_ORDER[dayOfYear % 3];
   const difficulty = DIFFICULTY_CONFIG[difficultyKey];
 
@@ -82,11 +116,14 @@ export function getDailyChallenge(date = new Date()) {
   const enemyId = pick(rng, ENEMY_POOL);
   const enemyBase = ENEMIES[enemyId];
 
-  // Scale enemy HP to difficulty range
-  const [minHp, maxHp] = difficulty.enemyHpRange;
-  const enemyHp = minHp + Math.floor(rng() * (maxHp - minHp + 1));
+  // Enemy HP: respect the enemy's OWN base HP, scale by a bounded difficulty
+  // multiplier, add a tiny deterministic day-to-day wobble, then clamp into the
+  // difficulty's target band.
+  const baseHp = enemyBase.hp;
+  let enemyHp = Math.round(baseHp * difficulty.hpMult) + (Math.floor(rng() * 3) - 1);
+  enemyHp = clamp(enemyHp, difficulty.hpBand[0], difficulty.hpBand[1]);
 
-  // Scale enemy attack damage
+  // Scale enemy attack damage (recoil / effects preserved via spread).
   const enemy = {
     ...enemyBase,
     hp: enemyHp,
@@ -96,7 +133,15 @@ export function getDailyChallenge(date = new Date()) {
     })),
   };
 
-  const rule = pick(rng, SPECIAL_RULES);
+  // Modifier selection. Hard days must not stack an uncompensated enemy-only
+  // buff — if one is rolled there, deterministically reroll (via the seeded
+  // rng, never Math.random) to a neutral / player-benefiting modifier.
+  let rule = pick(rng, SPECIAL_RULES);
+  if (difficultyKey === "hard" && ENEMY_ONLY_RULE_IDS.has(rule.id)) {
+    const compensatedRules = SPECIAL_RULES.filter((r) => !ENEMY_ONLY_RULE_IDS.has(r.id));
+    rule = pick(rng, compensatedRules);
+  }
+
   const hero = HERO_MAP["adam"];
   const trivia = TRIVIA_QUESTIONS[Math.floor(rng() * TRIVIA_QUESTIONS.length)];
 
@@ -108,10 +153,21 @@ export function getDailyChallenge(date = new Date()) {
 
   const playerMaxHp = Math.max(10, hero.maxHp + (rule.maxHpMod || 0));
 
-  // Apply rule-based enemy HP multiplier
+  // Apply any surviving modifier HP bonus (enemy-only HP buffs only reach here
+  // on Easy/Normal), then enforce the absolute safety cap.
   if (rule.enemyHpMult) {
     enemy.hp = Math.round(enemy.hp * rule.enemyHpMult);
   }
+  enemy.hp = Math.min(enemy.hp, DAILY_HP_SAFETY_CAP);
+
+  // Hard-day compensating economy. Simulation showed +1 Faith alone is
+  // insufficient against draw-disruption enemies (e.g. Cain's Mark of Cain
+  // skip-draw starves the small fixed deck), so Hard days also draw 2 cards per
+  // turn. Both are applied only because one alone was insufficient; Easy/Normal
+  // are unchanged. Rule-based Faith bonuses still apply and are never reduced.
+  const baseFaith = rule.maxEnergy || 3;
+  const startFaith = difficultyKey === "hard" ? Math.max(baseFaith, 4) : baseFaith;
+  const drawPerTurn = difficultyKey === "hard" ? 2 : 1;
 
   const [minGold, maxGold] = difficulty.goldRange;
   const goldReward = minGold + Math.floor(rng() * (maxGold - minGold + 1));
@@ -127,6 +183,8 @@ export function getDailyChallenge(date = new Date()) {
     deck,
     maxHp: playerMaxHp,
     playerHp: playerMaxHp,
+    startFaith,
+    drawPerTurn,
     trivia,
     reward: { gold: goldReward },
     difficulty: difficultyKey,

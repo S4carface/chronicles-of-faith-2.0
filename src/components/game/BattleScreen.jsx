@@ -291,6 +291,7 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
     if (run.freeCardsNext > 0) state.freeCardsRemaining = run.freeCardsNext;
     if (run.isDaily) {
       if (run.dailyMaxEnergy) { state.maxEnergy = run.dailyMaxEnergy; state.energy = run.dailyMaxEnergy; }
+      if (run.dailyDrawPerTurn) state.drawPerTurn = run.dailyDrawPerTurn;
       if (run.dailyEnemyStartBlock) state.enemyBlock = run.dailyEnemyStartBlock;
       if (run.dailyPlayerStartBlock) state.playerBlock = run.dailyPlayerStartBlock;
     }
@@ -707,6 +708,20 @@ if (!tutorialActive) {
               setEnemyShake(true);
               setEnemyFlash(true);
             }, 200);
+            setTimeout(() => {
+              setEnemyShake(false);
+              setEnemyFlash(false);
+              setCounterFloat(null);
+            }, 700);
+          }
+
+          // Recoil — the enemy's own attack hurts it (e.g. Jealous Rage).
+          // The resolved step state already reflects the recoil HP loss, so the
+          // victory check below ends the battle if recoil is lethal.
+          if (step.recoilHit > 0) {
+            setEnemyShake(true);
+            setEnemyFlash(true);
+            setCounterFloat({ text: `Recoil -${step.recoilHit}`, color: "#f97316" });
             setTimeout(() => {
               setEnemyShake(false);
               setEnemyFlash(false);

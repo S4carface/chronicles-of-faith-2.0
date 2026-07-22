@@ -33,7 +33,7 @@ describe("calculateDailyScore", () => {
   });
 
   it("matches the exact scoring spec for a victory", () => {
-    // Victory +500, HP remaining +10/HP, turns -25/turn, correct trivia +100,
+    // Victory +500, HP remaining +10/HP, turns -10/turn, correct trivia +100,
     // perfect battle (full HP) +100.
     const breakdown = calculateDailyScore({
       result: "victory",
@@ -45,10 +45,10 @@ describe("calculateDailyScore", () => {
 
     expect(breakdown.victoryBonus).toBe(500);
     expect(breakdown.hpBonus).toBe(350); // 35 * 10
-    expect(breakdown.turnPenalty).toBe(100); // 4 * 25
+    expect(breakdown.turnPenalty).toBe(40); // 4 * 10
     expect(breakdown.triviaBonus).toBe(100);
     expect(breakdown.perfectBonus).toBe(100); // full HP remaining
-    expect(breakdown.finalScore).toBe(500 + 350 - 100 + 100 + 100);
+    expect(breakdown.finalScore).toBe(500 + 350 - 40 + 100 + 100);
   });
 
   it("does not award the perfect battle bonus when HP was lost", () => {
@@ -88,7 +88,7 @@ describe("calculateDailyScore", () => {
       result: "victory",
       playerHp: 1,
       maxPlayerHp: 35,
-      turns: 50,
+      turns: 100,
       triviaCorrect: false,
     });
     expect(breakdown.finalScore).toBe(0);

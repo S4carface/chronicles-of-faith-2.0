@@ -9,7 +9,7 @@ const PLAYER_ID_KEY = "cof_player_id";
  *
  * Victory: +500
  * HP remaining: +10 per HP
- * Turns used: -25 per turn
+ * Turns used: -10 per turn
  * Correct trivia: +100
  * Perfect battle (no HP lost): +100
  * Defeat: 0
@@ -38,7 +38,9 @@ export function calculateDailyScore(params = {}) {
 
   const victoryBonus = 500;
   const hpBonus = Math.max(0, playerHp) * 10;
-  const turnPenalty = Math.max(0, turns) * 25;
+  // Softer turn penalty (was 25) so the defensive long game a tough Daily can
+  // require isn't double-punished. Daily-only; campaign scoring is untouched.
+  const turnPenalty = Math.max(0, turns) * 10;
   const triviaBonus = triviaCorrect ? 100 : 0;
   const perfectBonus = playerHp >= maxPlayerHp ? 100 : 0;
 

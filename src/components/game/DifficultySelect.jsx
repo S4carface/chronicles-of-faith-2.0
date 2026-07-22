@@ -90,10 +90,10 @@ export default function DifficultySelect({ compact = false }) {
                 }`}
               >
                 <div
-                  className="h-5 w-5 flex-shrink-0 overflow-hidden rounded-full"
+                  className="relative h-5 w-5 flex-shrink-0 overflow-hidden rounded-full"
                   style={{ background: "#0F1A30" }}
                 >
-                  <SafeImage src={artMap[key]} alt="" fallback={null} className="art-portrait" />
+                  <SafeImage src={artMap[key]} alt="" fallback={null} className="h-full w-full object-cover object-center" />
                 </div>
                 <span
                   className={`font-serif text-xs font-semibold ${
@@ -137,14 +137,14 @@ export default function DifficultySelect({ compact = false }) {
               }`}
             >
               <div
-                className="h-6 w-6 flex-shrink-0 overflow-hidden rounded-full"
+                className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full"
                 style={{ background: "#0F1A30" }}
               >
                 <SafeImage
                   src={artMap[key]}
                   alt=""
                   fallback={null}
-                  className="art-portrait"
+                  className="h-full w-full object-cover object-center"
                 />
               </div>
 
@@ -166,14 +166,14 @@ export default function DifficultySelect({ compact = false }) {
       <div className={`mt-3 rounded-xl border px-4 py-2.5 ${currentRule.panelClass}`}>
         <div className="flex items-center gap-3">
           <div
-            className="h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/30"
+            className="relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/30"
             style={{ background: "#0F1A30" }}
           >
             <SafeImage
               src={artMap[current]}
               alt={currentPreset.label}
               fallback={null}
-              className="art-portrait"
+              className="h-full w-full object-cover object-center"
             />
           </div>
 

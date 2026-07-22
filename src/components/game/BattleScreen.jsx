@@ -275,7 +275,10 @@ const state = createBattleState(
   0,
   run.extraDraw,
   run.hero?.id,
-  battleRng
+  battleRng,
+  // mode/difficulty drive Cain's Mark of Cain rebalance. Daily Challenge passes
+  // mode "daily" so its behavior (and determinism) is left completely untouched.
+  { mode: run.isDaily ? "daily" : "campaign", difficulty: run.difficulty || "normal" }
 );
 
 state.drawToFull = run.difficulty === "easy";
@@ -1231,6 +1234,17 @@ const selectedCardData =
     </div>
   )}
 
+  {/* Cain Mark of Cain cooldown — small, non-intrusive state indicator */}
+  {battleState.markCooldown > 0 &&
+    battleState.enemy?.id === "cain_wrath" &&
+    battleState.mode !== "daily" &&
+    !battleEnd && (
+      <span className="mt-0.5 ml-2 inline-block max-w-full truncate rounded-full border border-slate-500/40 bg-slate-800/70 px-2 py-0.5 text-[8px] font-medium text-slate-300 lg:text-xs">
+        👁️ Mark of Cain unavailable — {battleState.markCooldown} turn
+        {battleState.markCooldown === 1 ? "" : "s"}
+      </span>
+    )}
+
   {/* Enemy HP */}
   <div className="mt-1 w-[88%]">
     <div className="h-3 w-full overflow-hidden rounded-full border border-red-900/50 bg-slate-900 lg:h-4">
@@ -1729,7 +1743,11 @@ const selectedCardData =
               <button onClick={() => setIntentExplain(null)} className="text-amber-100/40 hover:text-amber-200 text-sm">✕</button>
             </div>
             <p className="text-amber-100/80 text-xs leading-relaxed">
-              {getIntentExplanation(intentExplain, enemy)}
+              {getIntentExplanation(intentExplain, enemy, {
+                mode: battleState?.mode,
+                difficulty: battleState?.difficulty,
+                markCooldown: battleState?.markCooldown,
+              })}
             </p>
           </div>
         </div>

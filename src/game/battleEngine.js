@@ -7,6 +7,89 @@ function pickEnemyAttack(enemy, rng = Math.random) {
   return enemy.attacks[Math.floor(rng() * enemy.attacks.length)];
 }
 
+// Identifies Cain's signature draw-denial action (Mark of Cain).
+export function isMarkAction(action) {
+  return !!action && action.effect === "skip_draw" && action.name === "Mark of Cain";
+}
+
+// Cain campaign rebalance rules for Mark of Cain. Returns null for anything
+// that must stay untouched: the Daily Challenge (mode "daily"), any enemy other
+// than Cain, or when there is no battle state. When it returns a rule, the
+// engine applies a per-difficulty cooldown so Mark can't be used on consecutive
+// turns, plus a draw-reduction floor so campaign players (who draw only 1 card
+// per turn) don't repeatedly lose their entire card income.
+//
+//   easy   → 4-turn cooldown, draw never falls below 1
+//   normal → 3-turn cooldown, draw never falls below 1
+//   hard   → 2-turn cooldown, draw may fall to 0 (but only once, then cooldown)
+export function getMarkRule(state) {
+  if (!state || state.mode === "daily") return null;
+  if (state.enemy?.id !== "cain_wrath") return null;
+
+  const difficulty = state.difficulty || "normal";
+
+  if (difficulty === "easy") return { cooldown: 4, allowZeroDraw: false };
+  if (difficulty === "hard") return { cooldown: 2, allowZeroDraw: true };
+  return { cooldown: 3, allowZeroDraw: false };
+}
+
+// Picks the enemy's next intent from the given card pool. When Mark of Cain is
+// on cooldown (excludeMark), the top non-Mark card is chosen instead so Cain
+// keeps pressuring with ordinary attacks while his draw-denial recovers. With
+// excludeMark false this is identical to the previous shuffle+take-top behavior,
+// preserving Daily Challenge determinism (same rng draw count and ordering).
+function selectEnemyIntent(cards, rng, enemy, excludeMark = false) {
+  const pool = cards.length > 0 ? cards : [...enemy.attacks];
+  const shuffled = shuffle(pool, rng);
+
+  let idx = 0;
+  if (excludeMark) {
+    const nonMark = shuffled.findIndex((c) => !isMarkAction(c));
+    if (nonMark >= 0) idx = nonMark;
+  }
+
+  const chosen = shuffled.splice(idx, 1)[0] || pickEnemyAttack(enemy, rng);
+  return { intent: chosen, deck: shuffled };
+}
+
+// Honest battle-log line for a resolving draw-denial action. Under the Cain
+// campaign rule the wording matches what actually happens: Easy/Normal keep at
+// least 1 card, Hard may be cut to 0. Any other case keeps the generic wording.
+function markResolutionLog(state, action) {
+  const rule = getMarkRule(state);
+
+  if (rule && isMarkAction(action)) {
+    return rule.allowZeroDraw
+      ? "⚠️ Mark of Cain — your next draw may be cut to 0."
+      : "⚠️ Mark of Cain — your next draw is contested (you keep at least 1 card).";
+  }
+
+  return `⚠️ ${action.description || "Draw 1 fewer next turn"}`;
+}
+
+// Advances Mark of Cain's cooldown for one elapsed enemy turn. If Mark resolved
+// this turn it enters cooldown; otherwise an active cooldown ticks down by one.
+// Returns the new cooldown plus any battle-log lines (cooldown started/expired).
+function advanceMarkCooldown(state, markResolvedThisTurn) {
+  const rule = getMarkRule(state);
+  let cooldown = state.markCooldown || 0;
+  const logs = [];
+
+  if (!rule) return { cooldown, logs };
+
+  if (markResolvedThisTurn) {
+    cooldown = rule.cooldown;
+    logs.push(`⏳ Mark of Cain recovers — unavailable for ${rule.cooldown} turns.`);
+  } else if (cooldown > 0) {
+    cooldown -= 1;
+    if (cooldown === 0) {
+      logs.push("👁️ Mark of Cain is ready again.");
+    }
+  }
+
+  return { cooldown, logs };
+}
+
 function isCardObject(card) {
   return card && typeof card === "object" && card.id;
 }
@@ -43,7 +126,8 @@ export function createBattleState(
   startingBlock = 0,
   extraDraw = 0,
   heroId = null,
-  rng = Math.random
+  rng = Math.random,
+  options = {}
 ) {
   const shuffled = shuffle([...deck], rng);
   const enemyDeck = buildEnemyDeck(enemy, rng);
@@ -99,6 +183,13 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
     skipDraw: 0,
     counter: 0,
     heroId,
+    // Battle mode ("campaign" | "daily") and difficulty drive Cain's Mark of
+    // Cain rebalance (see getMarkRule). markCooldown gates the special so it
+    // can't be used on consecutive turns. Daily Challenge passes mode "daily"
+    // and is therefore never affected.
+    mode: options.mode || "campaign",
+    difficulty: options.difficulty || "normal",
+    markCooldown: 0,
     rng,
     error: null,
   };
@@ -161,10 +252,26 @@ function drawNextTurnCard(state, skipDraw = 0) {
     ? easyDrawCount
     : normalDrawCount;
 
-  const cardsToDraw = Math.max(
+  let cardsToDraw = Math.max(
     0,
     baseDrawCount - (skipDraw || 0)
   );
+
+  // Cain campaign draw-reduction floor. Mark of Cain reduces the next draw by
+  // 1, but campaign players draw only 1 card/turn, so an unfloored reduction
+  // wipes their entire card income. On Easy/Normal the draw never falls below 1
+  // (when the player would otherwise draw ≥ 1). Hard (allowZeroDraw) may reach 0
+  // — but Mark then goes on cooldown, so it can't repeat the shutdown.
+  const rule = getMarkRule(state);
+  if (
+    rule &&
+    !rule.allowZeroDraw &&
+    (skipDraw || 0) > 0 &&
+    baseDrawCount >= 1 &&
+    cardsToDraw < 1
+  ) {
+    cardsToDraw = 1;
+  }
 
   return drawCards(state, cardsToDraw);
 }
@@ -521,15 +628,20 @@ export function enemyTurn(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
+    // Mark did not resolve (turn negated), so its cooldown simply ticks down.
+    const cd = advanceMarkCooldown(state, false);
+    log.push(...cd.logs);
+
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
 
     if (allCards.length === 0) {
       allCards = [...state.enemy.attacks];
     }
 
-    const newDeck = shuffle(allCards, rng);
-    const newHand = newDeck.splice(0, 1);
-    const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
+    const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+    const newIntent = picked.intent;
+    const newDeck = picked.deck;
+    const newHand = newIntent ? [newIntent] : [];
 
     if (newIntent) {
       log.push(
@@ -554,6 +666,7 @@ export function enemyTurn(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
+      markCooldown: cd.cooldown,
       counter,
       error: null,
     };
@@ -567,6 +680,7 @@ export function enemyTurn(state) {
   const hand = [...(state.enemyHand || [])];
   let deck = [...(state.enemyDeck || [])];
   const discard = [];
+  let markResolved = false;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -574,7 +688,7 @@ export function enemyTurn(state) {
 
     if (cost > energy) {
       discard.push(action);
-      
+
       // Enemies perform only one playable action per turn.
       break;
     }
@@ -628,7 +742,8 @@ export function enemyTurn(state) {
 
     if (action.effect === "skip_draw") {
       skipDraw = 1;
-      log.push(`⚠️ ${action.description || "Draw 1 fewer next turn"}`);
+      if (isMarkAction(action)) markResolved = true;
+      log.push(markResolutionLog(state, action));
     }
 
     if (action.effect === "block_scripture") {
@@ -650,15 +765,22 @@ export function enemyTurn(state) {
     log.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
   }
 
+  // Advance Mark of Cain's cooldown for this elapsed enemy turn, then keep Mark
+  // out of the next intent while it recovers so Cain can't shut down draws on
+  // consecutive turns.
+  const cd = advanceMarkCooldown(state, markResolved);
+  log.push(...cd.logs);
+
   let allCards = [...deck, ...discard, ...hand];
 
   if (allCards.length === 0) {
     allCards = [...state.enemy.attacks];
   }
 
-  const newDeck = shuffle(allCards, rng);
-  const newHand = newDeck.splice(0, 1);
-  const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
+  const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+  const newIntent = picked.intent;
+  const newDeck = picked.deck;
+  const newHand = newIntent ? [newIntent] : [];
 
   if (newIntent) {
     const label = newIntent.damage
@@ -692,6 +814,7 @@ export function enemyTurn(state) {
     dots,
     log,
     counter,
+    markCooldown: cd.cooldown,
     error: null,
   };
 
@@ -723,15 +846,20 @@ export function getEnemyTurnSteps(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
+    // Mark did not resolve (turn negated), so its cooldown simply ticks down.
+    const cd = advanceMarkCooldown(state, false);
+    log.push(...cd.logs);
+
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
 
     if (allCards.length === 0) {
       allCards = [...state.enemy.attacks];
     }
 
-    const newDeck = shuffle(allCards, rng);
-    const newHand = newDeck.splice(0, 1);
-    const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
+    const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+    const newIntent = picked.intent;
+    const newDeck = picked.deck;
+    const newHand = newIntent ? [newIntent] : [];
 
     if (newIntent) {
       log.push(`${state.enemy.name} readies ${newIntent.name}${newIntent.damage ? ` (${newIntent.damage})` : ""}`);
@@ -754,6 +882,7 @@ export function getEnemyTurnSteps(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
+      markCooldown: cd.cooldown,
       counter,
       error: null,
     };
@@ -770,6 +899,7 @@ export function getEnemyTurnSteps(state) {
   let deck = [...(state.enemyDeck || [])];
   const discard = [];
   let handIdx = 0;
+  let markResolved = false;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -839,7 +969,8 @@ export function getEnemyTurnSteps(state) {
 
     if (action.effect === "skip_draw") {
       skipDraw = 1;
-      stepLog.push(`⚠️ ${action.description || "Draw 1 fewer next turn"}`);
+      if (isMarkAction(action)) markResolved = true;
+      stepLog.push(markResolutionLog(state, action));
     }
 
     if (action.effect === "block_scripture") {
@@ -906,16 +1037,23 @@ export function getEnemyTurnSteps(state) {
     log.push(...dotLog);
   }
 
+  const endLog = [...log];
+
+  // Advance Mark of Cain's cooldown for this elapsed enemy turn, then keep Mark
+  // out of the next intent while it recovers.
+  const cd = advanceMarkCooldown(state, markResolved);
+  endLog.push(...cd.logs);
+
   let allCards = [...deck, ...discard, ...hand];
 
   if (allCards.length === 0) {
     allCards = [...state.enemy.attacks];
   }
 
-  const newDeck = shuffle(allCards, rng);
-  const newHand = newDeck.splice(0, 1);
-  const newIntent = newHand[0] || pickEnemyAttack(state.enemy, rng);
-  const endLog = [...log];
+  const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+  const newIntent = picked.intent;
+  const newDeck = picked.deck;
+  const newHand = newIntent ? [newIntent] : [];
 
   if (newIntent) {
     const label = newIntent.damage
@@ -949,6 +1087,7 @@ export function getEnemyTurnSteps(state) {
     dots,
     log: endLog,
     counter,
+    markCooldown: cd.cooldown,
     error: null,
   };
 

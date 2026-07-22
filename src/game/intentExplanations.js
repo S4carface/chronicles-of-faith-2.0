@@ -1,10 +1,20 @@
+import { getMarkRule, isMarkAction } from "@/game/battleEngine";
+
 // Returns a plain-language explanation for an enemy intent action.
 // Explains both what will happen and how the player can respond.
-export function getIntentExplanation(action, enemy) {
+//
+// `context` carries the live battle mode/difficulty/cooldown so Cain's Mark of
+// Cain can be explained honestly before it resolves (draw effect + cooldown).
+export function getIntentExplanation(action, enemy, context = {}) {
   if (!action) return null;
 
   const parts = [];
   const isBoss = enemy?.isBoss;
+  const markRule = getMarkRule({
+    mode: context.mode,
+    difficulty: context.difficulty,
+    enemy,
+  });
 
   if (action.damage > 0) {
     parts.push(
@@ -35,9 +45,23 @@ export function getIntentExplanation(action, enemy) {
   }
 
   if (action.effect === "skip_draw") {
-    parts.push(
-      "You will draw 1 fewer card next turn. Use important cards now rather than depending on your next hand."
-    );
+    if (markRule && isMarkAction(action)) {
+      // Cain campaign: explain the exact draw effect and the cooldown before it
+      // happens, using live values rather than internal wording.
+      if (markRule.allowZeroDraw) {
+        parts.push(
+          `May reduce your next draw to 0 — play key cards now. Cannot be used again for ${markRule.cooldown} turns.`
+        );
+      } else {
+        parts.push(
+          `Your next draw is reduced by 1, but you always keep at least 1 card. Cannot be used again for ${markRule.cooldown} turns.`
+        );
+      }
+    } else {
+      parts.push(
+        "You will draw 1 fewer card next turn. Use important cards now rather than depending on your next hand."
+      );
+    }
   }
 
   if (action.effect === "block_scripture") {

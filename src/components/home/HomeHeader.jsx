@@ -43,7 +43,7 @@ export default function HomeHeader({ variant = "hero", playerName, onEditName })
 
   if (variant === "compact") {
     return (
-      <div className="w-full shrink-0 px-4 pt-1.5 pb-1 lg:px-8">
+      <div className="w-full shrink-0 px-4 pt-1.5 pb-1 [@media(max-height:700px)]:pt-1 [@media(max-height:700px)]:pb-0.5 lg:px-8">
         <div className="flex items-center gap-2.5">
           <div className="relative h-[3.875rem] w-[3.875rem] flex-shrink-0 lg:h-[4.5rem] lg:w-[4.5rem]">
             <div

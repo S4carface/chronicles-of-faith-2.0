@@ -73,9 +73,9 @@ export const STORY_ART = {
 
 export const HOME_ART = {
   cross: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/a2ad952db_generated_image.png",
-  difficulty_easy: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/ac8986007_generated_image.png",
-  difficulty_normal: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/c9fcf936c_generated_image.png",
-  difficulty_hard: "https://media.base44.com/images/public/6a472dcab97bfb2db49be40c/c9fcf936c_generated_image.png",
+  difficulty_easy: "/images/home/difficulty-easy.webp",
+  difficulty_normal: "/images/home/difficulty-normal.webp",
+  difficulty_hard: "/images/home/difficulty-hard.webp",
 };
 
 export const MENU_ART = {

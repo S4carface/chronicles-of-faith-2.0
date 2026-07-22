@@ -1,9 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Sun, ChevronRight, Flame } from "lucide-react";
+import SafeImage from "@/components/ui/SafeImage";
+import { HOME_PRAYER_ART } from "@/lib/preloadHomeAssets";
 import * as Sound from "@/game/soundManager";
 
 const SMALL_CAPS = { fontVariant: "small-caps" };
+
+const PRAYER_FALLBACK = (
+  <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+    <Sun className="h-1/2 w-1/2 text-amber-200/80" strokeWidth={1.75} />
+  </div>
+);
 
 // Ornate double-border frame — a thin outer ring plus an inset gold hairline
 // echo the approved mockup's engraved card frame without needing custom
@@ -28,11 +36,10 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
           boxShadow: "inset 0 0 0 1px rgba(52,211,153,0.12)",
         }}
       >
-        <div
-          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-emerald-400/50"
-          style={{ background: "radial-gradient(circle at 50% 35%, rgba(16,60,45,0.9) 0%, rgba(8,16,14,0.96) 100%)" }}
-        >
-          <span className="text-emerald-300 text-sm leading-none">✓</span>
+        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
+          <SafeImage src={HOME_PRAYER_ART} alt="" fallback={null} className="h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-emerald-950/45" aria-hidden="true" />
+          <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-sm leading-none">✓</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-serif text-xs font-bold text-emerald-200" style={SMALL_CAPS}>
@@ -62,11 +69,8 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div
-          className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-amber-400/45"
-          style={{ background: "radial-gradient(circle at 50% 35%, rgba(58,45,16,0.9) 0%, rgba(10,14,26,0.96) 100%)" }}
-        >
-          <Sun className="h-4 w-4 text-amber-200" aria-hidden="true" />
+        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-amber-400/45">
+          <SafeImage src={HOME_PRAYER_ART} alt="" fallback={PRAYER_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-serif text-xs font-bold text-amber-100" style={SMALL_CAPS}>Daily Prayer</p>
@@ -98,11 +102,10 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
             boxShadow: "inset 0 0 0 1px rgba(52,211,153,0.12)",
           }}
         >
-          <div
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-emerald-400/50"
-            style={{ background: "radial-gradient(circle at 50% 35%, rgba(16,60,45,0.9) 0%, rgba(8,16,14,0.96) 100%)" }}
-          >
-            <span className="text-emerald-300 text-lg leading-none">✓</span>
+          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-emerald-400/50">
+            <SafeImage src={HOME_PRAYER_ART} alt="" fallback={null} className="h-full w-full object-cover object-center" />
+            <div className="absolute inset-0 bg-emerald-950/45" aria-hidden="true" />
+            <span className="absolute inset-0 flex items-center justify-center text-emerald-300 text-lg leading-none">✓</span>
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-serif text-base font-bold text-emerald-200" style={SMALL_CAPS}>
@@ -137,20 +140,17 @@ export default function HomePrayerCard({ compact = false, devotionPrayedToday, d
           </span>
 
           <div className="flex items-center gap-3 pr-16">
-            {/* Compact icon medallion — no dedicated lantern/prayer artwork
-                exists locally yet, so the Sun icon is presented inside a
-                gold/navy medallion with a soft glow behind it. */}
+            {/* Lantern medallion on the card's left side — the home-prayer
+                artwork inside a gold-ringed circle with a soft glow behind
+                it, falling back to the Sun icon if the image never loads. */}
             <div className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center [@media(max-height:760px)]:h-10 [@media(max-height:760px)]:w-10">
               <div
                 className="absolute inset-0 rounded-full blur-md"
                 style={{ background: "rgba(251,191,36,0.35)" }}
                 aria-hidden="true"
               />
-              <div
-                className="relative flex h-full w-full items-center justify-center rounded-full border border-amber-400/50"
-                style={{ background: "radial-gradient(circle at 50% 35%, rgba(58,45,16,0.9) 0%, rgba(10,14,26,0.96) 100%)" }}
-              >
-                <Sun className="h-6 w-6 text-amber-200 [@media(max-height:760px)]:h-5 [@media(max-height:760px)]:w-5" aria-hidden="true" />
+              <div className="relative h-full w-full overflow-hidden rounded-full border border-amber-400/50">
+                <SafeImage src={HOME_PRAYER_ART} alt="" fallback={PRAYER_FALLBACK} className="h-full w-full object-cover object-center" />
               </div>
             </div>
 

@@ -31,8 +31,8 @@ export default function HomeLeaderboardCard({ compact = false }) {
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-8 w-8 flex-shrink-0">
-          <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-contain" />
+        <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
+          <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-serif text-xs font-bold text-amber-100" style={SMALL_CAPS}>Leaderboard</p>
@@ -63,8 +63,8 @@ export default function HomeLeaderboardCard({ compact = false }) {
           boxShadow: FRAME_SHADOW,
         }}
       >
-        <div className="relative h-11 w-11 flex-shrink-0 sm:h-12 sm:w-12 [@media(max-height:760px)]:h-9 [@media(max-height:760px)]:w-9">
-          <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-contain" />
+        <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full sm:h-12 sm:w-12 [@media(max-height:760px)]:h-9 [@media(max-height:760px)]:w-9">
+          <SafeImage src={HOME_TROPHY_ART} alt="" fallback={TROPHY_FALLBACK} className="h-full w-full object-cover object-center" />
         </div>
         <div className="min-w-0 flex-1 text-left">
           <p className="font-serif text-sm font-bold text-amber-100 [@media(max-height:760px)]:text-xs" style={SMALL_CAPS}>Leaderboard</p>

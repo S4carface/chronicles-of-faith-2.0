@@ -1,4 +1,4 @@
-// Narrowly-scoped service worker: persistently caches ONLY the four local
+// Narrowly-scoped service worker: persistently caches ONLY the five local
 // Home-critical images (cache-first, with background revalidation) so a
 // returning player's Home reveal never depends on a fresh network fetch for
 // this specific artwork. Every other request — navigation, JS/CSS bundles,
@@ -10,13 +10,14 @@
 // same path (cache-first would otherwise keep serving the old bytes until
 // the background revalidation fetch below happens to complete first).
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const CACHE_NAME = `home-critical-${CACHE_VERSION}`;
 
 // Keep in sync with HOME_LOCAL_CRITICAL_IMAGES in src/lib/preloadHomeAssets.js.
 const CRITICAL_PATHS = [
   "/images/home/home-crest.webp",
   "/images/home/home-trophy.webp",
+  "/images/home/home-prayer.webp",
   "/images/home/genesis-horizon.webp",
   "/images/home/home-celestial.png",
 ];
@@ -54,7 +55,7 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
 
   // Complete passthrough for anything that isn't an exact-match GET to one
-  // of the four known local paths — no respondWith call at all, so the
+  // of the five known local paths — no respondWith call at all, so the
   // browser handles it exactly as if this worker didn't exist.
   if (request.method !== "GET") return;
 

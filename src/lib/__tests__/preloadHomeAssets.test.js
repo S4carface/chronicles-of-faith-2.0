@@ -48,11 +48,12 @@ describe("preloadHomeCriticalAssets", () => {
     expect(mod.HOME_CRITICAL_TIMEOUT_MS).toBe(3500);
   });
 
-  it("lists exactly the four local Home-critical images", async () => {
+  it("lists exactly the five local Home-critical images", async () => {
     const mod = await import("@/lib/preloadHomeAssets");
     expect(mod.HOME_LOCAL_CRITICAL_IMAGES).toEqual([
       "/images/home/home-crest.webp",
       "/images/home/home-trophy.webp",
+      "/images/home/home-prayer.webp",
       "/images/home/genesis-horizon.webp",
       "/images/home/home-celestial.png",
     ]);

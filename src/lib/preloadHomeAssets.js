@@ -8,23 +8,25 @@ import { preloadImage, preloadImages } from "@/lib/imageAssets";
 // never drift out of sync.
 export const HOME_CREST_ART = "/images/home/home-crest.webp";
 export const HOME_TROPHY_ART = "/images/home/home-trophy.webp";
+export const HOME_PRAYER_ART = "/images/home/home-prayer.webp";
 export const HOME_GENESIS_HORIZON_ART = "/images/home/genesis-horizon.webp";
 export const HOME_BACKGROUND_ART = "/images/home/home-celestial.png";
 
-// All four are local, same-origin files — this is also the exact list the
+// All five are local, same-origin files — this is also the exact list the
 // service worker (public/sw.js) caches with a cache-first strategy.
 export const HOME_LOCAL_CRITICAL_IMAGES = Object.freeze([
   HOME_CREST_ART,
   HOME_TROPHY_ART,
+  HOME_PRAYER_ART,
   HOME_GENESIS_HORIZON_ART,
   HOME_BACKGROUND_ART,
 ]);
 
-// Cross-origin (base44 media host) — preloaded/decoded alongside the local
-// critical images for returning players (they're immediately visible below
-// Start Journey once the tutorial is done), but intentionally left out of
-// the service worker's cache list: caching opaque cross-origin responses is
-// a different, less verifiable risk than caching our own static files.
+// Local, same-origin files — preloaded/decoded alongside the critical images
+// above for returning players only (they're not shown until the tutorial is
+// done, so a first-time player never pays for them). Kept out of the
+// service worker's persistent cache list since they aren't part of the
+// always-shown first paint the way HOME_LOCAL_CRITICAL_IMAGES is.
 export const HOME_DIFFICULTY_ICONS = Object.freeze([
   HOME_ART.difficulty_easy,
   HOME_ART.difficulty_normal,

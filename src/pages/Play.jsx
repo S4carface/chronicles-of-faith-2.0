@@ -54,6 +54,9 @@ export default function Play() {
         playerHp={run.playerHp}
         maxHp={run.maxHp}
         difficulty={run.difficulty}
+        hero={run.hero}
+        gold={run.gold}
+        deckCount={run.deck?.length}
       />
     );
   }

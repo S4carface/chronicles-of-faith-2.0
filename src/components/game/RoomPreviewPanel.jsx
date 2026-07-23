@@ -3,11 +3,14 @@ import { ROOM_INFO } from "@/data/genesisRooms";
 import { getNodeArt } from "@/data/art";
 import { cn } from "@/utils";
 import RoomArt from "@/components/game/RoomArt";
+import { getCampHealAmount, getProjectedHp, isLowHp } from "@/game/hpStatus";
 
 export default function RoomPreviewPanel({
   node,
   recommendation,
   difficulty,
+  playerHp,
+  maxHp,
   onEnter,
   onCancel,
 }) {
@@ -15,8 +18,15 @@ export default function RoomPreviewPanel({
 
   const info = ROOM_INFO[node.type] || ROOM_INFO.mystery;
   const artUrl = getNodeArt(node);
-  const isBoss = node.type === "boss"; 
+  const isBoss = node.type === "boss";
   const isEasyBoss =   isBoss && String(difficulty || "easy").toLowerCase() === "easy";
+  const isCamp = node.type === "rest";
+  const isBattle = node.type === "battle" || isBoss;
+
+  const hasHp = typeof playerHp === "number" && typeof maxHp === "number" && maxHp > 0;
+  const campHeal = getCampHealAmount(maxHp);
+  const projectedHp = getProjectedHp(playerHp, maxHp, campHeal);
+  const lowHp = hasHp && isLowHp(playerHp, maxHp);
 
   return (
     <div
@@ -104,21 +114,80 @@ export default function RoomPreviewPanel({
   {info.tip}
 </p>
 
-{isBoss && (
+{/* Camp preview — current HP, heal amount, and capped projected HP. */}
+{isCamp && hasHp && (
+  <div className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3">
+    <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-200">
+      Rest &amp; Heal
+    </p>
+    <dl className="mt-1.5 space-y-0.5 text-sm text-amber-100/80">
+      <div className="flex justify-between gap-3">
+        <dt className="text-amber-100/60">Current HP</dt>
+        <dd className="tabular-nums">{playerHp} / {maxHp}</dd>
+      </div>
+      <div className="flex justify-between gap-3">
+        <dt className="text-amber-100/60">Camp restores</dt>
+        <dd className="tabular-nums text-emerald-200">+{campHeal} HP</dd>
+      </div>
+      <div className="flex justify-between gap-3 border-t border-emerald-500/15 pt-1 font-semibold">
+        <dt className="text-amber-100/70">After rest</dt>
+        <dd className="tabular-nums text-emerald-100">{projectedHp} / {maxHp}</dd>
+      </div>
+    </dl>
+  </div>
+)}
+
+{/* Battle preview — current HP + advisory when critically low. Advisory only;
+    it never blocks the player or reveals concealed enemy details. */}
+{isBattle && hasHp && (
+  <div
+    className={cn(
+      "mt-4 rounded-xl border p-3",
+      isBoss ? "border-red-400/40 bg-red-950/30" : "border-amber-400/30 bg-amber-950/20"
+    )}
+  >
+    <p className={cn(
+      "text-xs font-bold uppercase tracking-[0.18em]",
+      isBoss ? "text-red-200" : "text-amber-200"
+    )}>
+      {isBoss ? "Boss Ahead" : "Battle"}
+    </p>
+    <p className="mt-1 flex justify-between gap-3 text-sm text-amber-100/80">
+      <span className="text-amber-100/60">Current HP</span>
+      <span className="tabular-nums">{playerHp} / {maxHp}</span>
+    </p>
+    {isBoss && (
+      <p className="mt-1 text-sm leading-relaxed text-amber-100/80">
+        Your current HP will carry into the final battle.
+      </p>
+    )}
+    {isEasyBoss && (
+      <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
+        Easy mode offers one preparation choice before the fight.
+      </p>
+    )}
+    {lowHp && (
+      <p className="mt-2 text-xs font-semibold leading-relaxed text-red-300/90">
+        ⚠ Low health — consider resting first.
+      </p>
+    )}
+  </div>
+)}
+
+{/* Fallback boss block when HP is unavailable (keeps prior behavior). */}
+{isBoss && !hasHp && (
   <div className="mt-4 rounded-xl border border-red-400/40 bg-red-950/30 p-3">
     <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-200">
       Boss Ahead
     </p>
-
     <p className="mt-1 text-sm leading-relaxed text-amber-100/80">
       Your current HP will carry into the final battle.
     </p>
-
-{isEasyBoss && (
-  <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
-    Easy mode offers one preparation choice before the fight.
-  </p>
-)}
+    {isEasyBoss && (
+      <p className="mt-1 text-xs leading-relaxed text-amber-100/55">
+        Easy mode offers one preparation choice before the fight.
+      </p>
+    )}
   </div>
 )}
         </div>

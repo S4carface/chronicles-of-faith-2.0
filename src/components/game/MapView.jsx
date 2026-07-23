@@ -6,10 +6,11 @@ import { cn } from "@/utils";
 import RoomPreviewPanel from "@/components/game/RoomPreviewPanel";
 import RoomTooltip from "@/components/game/RoomTooltip";
 import RoomArt from "@/components/game/RoomArt";
+import MapRunStatusHud from "@/components/game/MapRunStatusHud";
 import * as Sound from "@/game/soundManager";
 import { preloadImages } from "@/lib/imageAssets";
 
-export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp, difficulty }) {
+export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfWar, playerHp, maxHp, difficulty, hero, gold, deckCount }) {
   const [previewNode, setPreviewNode] = useState(null);
   const availableNodes = currentNode ? currentNode.connections : [map[0][0].id];
   const visibleSet = getVisibleNodes(map, currentNode, fogOfWar);
@@ -67,6 +68,17 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
           ← Save &amp; Exit
         </button>
       </div>
+
+      {/* Persistent Run Status HUD — sits above the scrollable map so it stays
+          visible while choosing a node, without covering any nodes. */}
+      <MapRunStatusHud
+        hero={hero}
+        playerHp={playerHp}
+        maxHp={maxHp}
+        difficulty={difficulty}
+        gold={gold}
+        deckCount={deckCount}
+      />
 
       {/* Map — vertical connected path */}
       <div className="flex-1 overflow-y-auto px-4 lg:px-8 py-6">
@@ -199,6 +211,8 @@ export default function MapView({ map, currentNode, onSelectNode, onExit, fogOfW
   node={previewNode}
   recommendation={getRecommendation(previewNode.type)}
   difficulty={difficulty}
+  playerHp={playerHp}
+  maxHp={maxHp}
   onEnter={handleEnterRoom}
   onCancel={() => setPreviewNode(null)}
 />

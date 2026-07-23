@@ -984,14 +984,3 @@ export function useGame() {
   if (!ctx) throw new Error("useGame must be used within GameProvider");
   return ctx;
 }
-
-// Non-throwing variant for a page/component's outermost guard, for the rare
-// case it gets mounted outside the app's single canonical GameProvider (e.g.
-// an external preview or issue-scanning tool that imports and renders one
-// page/component in isolation, bypassing App.jsx's provider tree). Returns
-// null instead of throwing so that caller can render a safe fallback; every
-// normal in-app render path is already inside the provider and should keep
-// using useGame() above, which still throws loudly on a real wiring bug.
-export function useGameSafe() {
-  return useContext(GameContext);
-}

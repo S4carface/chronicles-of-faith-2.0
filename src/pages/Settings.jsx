@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {   Volume2,   VolumeX,   Mic,   Type,   Settings as SettingsIcon,   GraduationCap,   Play,   Pencil,   Cloud,   User,   Film,   ChevronDown, } from "lucide-react";
+import {   Volume2,   VolumeX,   Mic,   Type,   Settings as SettingsIcon,   GraduationCap,   Play,   Pencil,   Cloud,   User,   Film,   ChevronDown,   TriangleAlert, } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { useAuth } from "@/lib/AuthContext";
 import * as Sound from "@/game/soundManager";
 import PlayerNamePrompt from "@/components/game/PlayerNamePrompt";
 import CloudSaveComingSoon from "@/components/game/CloudSaveComingSoon";
+import ResetProgressModal from "@/components/game/ResetProgressModal";
 import { syncProfileToCloud } from "@/game/cloudSync";
 import { sanitizePlayerName } from "@/game/nameValidator";
+import { POST_RESET_MESSAGE } from "@/game/progressionReset";
 const SettingsSection = ({
   id,
   title,
@@ -47,15 +49,18 @@ const SettingsSection = ({
   );
 };
 export default function Settings() {
-  const { profile, saveProfile, Sound: Snd, triggerIntroReplay } = useGame();
+  const { profile, saveProfile, resetGameProgress, Sound: Snd, triggerIntroReplay } = useGame();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [showCloudModal, setShowCloudModal] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState(null); 
+  const [syncResult, setSyncResult] = useState(null);
   const [expandedSection, setExpandedSection] = useState("player");
   const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetPending, setResetPending] = useState(false);
+  const [resetSucceeded, setResetSucceeded] = useState(false);
 
   useEffect(() => { Snd.playMusic("menu"); }, []);
 
@@ -152,6 +157,35 @@ const handleNarrationVolume = (vol) => {
   const guidanceLevel = profile.settings.guidanceLevel || "normal";
 
 
+
+  const handleOpenResetModal = () => {
+    Sound.sfx.click();
+    setShowResetModal(true);
+  };
+
+  const handleCancelReset = () => {
+    setShowResetModal(false);
+  };
+
+  const handleConfirmReset = () => {
+    setResetPending(true);
+    const result = resetGameProgress();
+    setResetPending(false);
+    if (!result.success) return;
+    // Show "Your journey has been reset." once, then leave for Home only
+    // after the player acknowledges — never flashes old Home data mid-reset.
+    // "A NEW JOURNEY BEGINS" is prepared for a future versioned global reset
+    // (see progressionReset.js) and is intentionally not shown here — this
+    // is a personal, player-initiated reset, not that event.
+    setShowResetModal(false);
+    setResetSucceeded(true);
+  };
+
+  const handleResetAcknowledged = () => {
+    Sound.sfx.click();
+    setResetSucceeded(false);
+    navigate("/");
+  };
 
   const previewVoice = async () => {
     Sound.sfx.click();
@@ -559,6 +593,32 @@ const handleNarrationVolume = (vol) => {
           </div>
         </SettingsSection>
 
+        {/* === DANGER ZONE SECTION === */}
+<SettingsSection
+  id="danger"
+  title="Danger Zone"
+  expandedSection={expandedSection}
+  setExpandedSection={setExpandedSection}
+>
+          <div className="p-4 rounded-xl border-2 border-red-500/30" style={{ background: "rgba(48,15,15,0.35)" }}>
+            <div className="flex items-center gap-2 mb-2">
+              <TriangleAlert className="w-4 h-4 text-red-400/80" />
+              <p className="font-serif text-red-200 text-sm">Reset Game Progress</p>
+            </div>
+            <p className="text-amber-100/50 text-[10px] mb-3 leading-relaxed">
+              Permanently erase your cards, currencies, campaign progress, heroes,
+              decks, and saved runs. Your account and settings will remain.
+            </p>
+            <button
+              onClick={handleOpenResetModal}
+              aria-label="Reset Game Progress — permanently erases gameplay progress"
+              className="w-full min-h-11 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border-2 border-red-500/50 bg-red-800/20 text-red-200 text-sm font-bold hover:bg-red-800/40 transition"
+            >
+              Reset Game Progress
+            </button>
+          </div>
+        </SettingsSection>
+
         {/* About */}
 <SettingsSection
   id="about"
@@ -654,6 +714,37 @@ const handleNarrationVolume = (vol) => {
 
       {showCloudModal && (
         <CloudSaveComingSoon onClose={() => setShowCloudModal(false)} />
+      )}
+
+      {showResetModal && (
+        <ResetProgressModal
+          pending={resetPending}
+          onCancel={handleCancelReset}
+          onConfirm={handleConfirmReset}
+        />
+      )}
+
+      {resetSucceeded && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(8,12,24,0.95)" }}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-label="Progress reset"
+            className="max-w-sm w-full rounded-2xl border-2 border-amber-400/50 p-6 text-center animate-fade-in"
+            style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+          >
+            <p className="font-serif text-amber-200 text-lg mb-4">{POST_RESET_MESSAGE}</p>
+            <button
+              onClick={handleResetAcknowledged}
+              className="w-full min-h-11 px-3 py-2 rounded-lg border-2 border-amber-400/60 bg-amber-600/20 text-amber-100 font-bold text-sm hover:bg-amber-600/40 transition"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

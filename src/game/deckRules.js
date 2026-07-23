@@ -160,6 +160,120 @@ export function shouldAwardDuplicateGoldBonus(alreadyOwnedBefore, grantResult) {
   return alreadyOwnedBefore === true && grantResult?.type !== "fragments";
 }
 
+// Card Fragments Phase 2 — crafting. Costs are fixed per rarity; only
+// Common/Uncommon/Rare are craftable. Epic/Legendary/Mythic have no crafting
+// path — they await a future Faith Shards system (see CollectionTab.jsx).
+export const CARD_CRAFT_COSTS = {
+  common: { fragments: 20, gold: 50 },
+  uncommon: { fragments: 40, gold: 150 },
+  rare: { fragments: 80, gold: 400 },
+};
+
+export function getCardCraftCost(card) {
+  if (!card) return null;
+  return CARD_CRAFT_COSTS[card.rarity] || null;
+}
+
+// Reserved for a future per-card progression gate on crafting. Empty today —
+// Common/Uncommon/Rare cards have no existing unlock requirement (verified
+// against cards.js), so no restriction is invented here. Each entry, if ever
+// added, would be `cardId: (profile) => boolean` (true = unlocked).
+const CRAFT_PROGRESSION_LOCKS = {};
+
+/**
+ * Pure crafting eligibility check — the single source of truth for whether a
+ * card can be crafted right now, and why not if it can't. Checks run in
+ * order (existence/category first, then ownership, then affordability) so
+ * the ownership limit is always verified before any currency check, and no
+ * currency is ever considered "spendable" once the limit is reached.
+ * Returns { eligible: true, cost, owned, maxCopies, fragments, gold } or
+ * { eligible: false, reason, ...same context fields where computable }.
+ */
+export function getCardCraftEligibility(profile, cardId) {
+  const card = getCardById(cardId);
+  if (!card) return { eligible: false, reason: "unknown_card" };
+
+  const cost = getCardCraftCost(card);
+  if (!cost) return { eligible: false, reason: "unsupported_rarity" };
+
+  const isUnlocked = CRAFT_PROGRESSION_LOCKS[cardId];
+  if (isUnlocked && !isUnlocked(profile)) {
+    return { eligible: false, reason: "progression_locked", cost };
+  }
+
+  const owned = (profile?.cardCollection || {})[cardId] || 0;
+  const maxCopies = getMaxCopies(card.rarity);
+  if (owned >= maxCopies) {
+    return { eligible: false, reason: "ownership_limit", cost, owned, maxCopies };
+  }
+
+  const fragments = getCardFragmentBalance(profile, cardId);
+  if (fragments < cost.fragments) {
+    return { eligible: false, reason: "insufficient_fragments", cost, owned, maxCopies, fragments };
+  }
+
+  const gold = profile?.gold || 0;
+  if (gold < cost.gold) {
+    return { eligible: false, reason: "insufficient_gold", cost, owned, maxCopies, fragments, gold };
+  }
+
+  return { eligible: true, cost, owned, maxCopies, fragments, gold };
+}
+
+/**
+ * Pure atomic craft calculation. Never touches React/profile state itself —
+ * the caller (GameContext.craftCard) applies the returned newProfile via a
+ * single functional setState so Fragments, Gold, and the granted card copy
+ * change together or not at all. Re-derives eligibility itself (rather than
+ * trusting a caller-supplied check), so calling this directly against the
+ * latest state is always a safe, self-contained revalidation.
+ */
+export function craftCardWithFragments(profile, cardId) {
+  const eligibility = getCardCraftEligibility(profile, cardId);
+  if (!eligibility.eligible) {
+    return { success: false, cardId, reason: eligibility.reason };
+  }
+  const { cost, maxCopies } = eligibility;
+  const newCollection = { ...(profile.cardCollection || {}) };
+  newCollection[cardId] = (newCollection[cardId] || 0) + 1;
+  const newProfile = {
+    ...profile,
+    cardCollection: newCollection,
+    collectedCards: Object.keys(newCollection),
+    cardFragments: addCardFragments(profile, cardId, -cost.fragments),
+    gold: (profile.gold || 0) - cost.gold,
+  };
+  return {
+    success: true,
+    cardId,
+    fragmentsSpent: cost.fragments,
+    goldSpent: cost.gold,
+    newOwnedCount: newCollection[cardId],
+    maxCopies,
+    newProfile,
+  };
+}
+
+// Player-facing Craft button label for a given eligibility result (see
+// getCardCraftEligibility). Fragment/Gold deficits are shown rather than the
+// flat cost, so the player knows exactly how much more they need.
+export function getCraftButtonLabel(eligibility) {
+  if (!eligibility) return "Unavailable";
+  if (eligibility.eligible) return "Craft";
+  switch (eligibility.reason) {
+    case "ownership_limit":
+      return "Maximum Copies Owned";
+    case "insufficient_fragments":
+      return `Need ${eligibility.cost.fragments - eligibility.fragments} Fragments`;
+    case "insufficient_gold":
+      return `Need ${eligibility.cost.gold - eligibility.gold} Gold`;
+    case "progression_locked":
+      return "Locked";
+    default:
+      return "Unavailable";
+  }
+}
+
 // Sanitizes a raw (possibly missing/malformed) cardFragments value from a
 // loaded profile into a safe { [cardId]: nonnegative integer } map. Used by
 // GameContext's profile migration; exported so migration behavior is directly

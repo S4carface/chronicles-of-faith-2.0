@@ -7,7 +7,7 @@ import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
 import { BOSS_MODIFIER_IDS } from "@/data/bossModifiers";
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
-import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck, grantCardOrFragments, addCardFragments as computeCardFragments, sanitizeCardFragments } from "@/game/deckRules";
+import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck, grantCardOrFragments, addCardFragments as computeCardFragments, sanitizeCardFragments, craftCardWithFragments } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
@@ -349,6 +349,25 @@ const recordEnemyDefeat = useCallback((enemyId) => {
     }
     return result;
   }, [profile, addCardFragments, addCardToCollection]);
+
+  // Card Fragments Phase 2 — atomic crafting. `preview` (against the current
+  // render's profile) drives the immediate UI result; the actual mutation
+  // always re-derives eligibility against `prev` inside the functional
+  // setState updater, so Fragments/Gold/ownership are revalidated against the
+  // true latest state at the moment the update is applied — Fragments, Gold,
+  // and the granted copy change together in that single update or not at all,
+  // and two crafts fired back-to-back are each checked against the result of
+  // the one before them rather than a shared stale snapshot.
+  const craftCard = useCallback((cardId) => {
+    const preview = craftCardWithFragments(profile, cardId);
+    if (preview.success) {
+      setProfile(prev => {
+        const revalidated = craftCardWithFragments(prev, cardId);
+        return revalidated.success ? revalidated.newProfile : prev;
+      });
+    }
+    return preview;
+  }, [profile]);
 
   const addToActiveDeck = useCallback((cardId) => {
     setProfile(prev => ({
@@ -916,6 +935,7 @@ if (node.enemyId === "babel_tower") {
     addCardToCollection,
     addCardFragments,
     grantCard,
+    craftCard,
     addToActiveDeck,
     removeFromActiveDeck,
     removeCardFromDeck,

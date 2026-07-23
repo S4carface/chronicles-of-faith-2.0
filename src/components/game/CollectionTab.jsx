@@ -5,33 +5,43 @@ import { CARDS, getCardById } from "@/data/cards";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import CraftConfirmModal from "@/components/game/CraftConfirmModal";
+import ConvertFragmentsModal from "@/components/game/ConvertFragmentsModal";
 import {
   canAddToDeck,
   getMaxCopies,
   getCardFragmentBalance,
+  getFaithShardBalance,
+  getFragmentReserve,
   getCardCraftEligibility,
   getCraftButtonLabel,
+  getFaithShardConversionPreview,
+  getConversionButtonLabel,
   DECK_SIZE,
 } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { ACTIVE_CARD_RARITIES, getCardRarity } from "@/data/cardRarity";
 
 // Rarities with an active crafting path today (Phase 2). Epic/Legendary have
-// no crafting path yet — they await a future Faith Shards system.
+// no crafting path yet — they await a future Faith Shards crafting system,
+// but their Fragments can already convert into Faith Shards (Phase 3).
 const CRAFTABLE_RARITIES = new Set(["common", "uncommon", "rare"]);
 
 export default function CollectionTab() {
-  const { profile, addToActiveDeck, removeCardFromDeck, craftCard } = useGame();
+  const { profile, addToActiveDeck, removeCardFromDeck, craftCard, convertFragments } = useGame();
   const [filter, setFilter] = useState("all");
   const [detailCard, setDetailCard] = useState(null);
   const [toast, setToast] = useState(null);
   const [craftTarget, setCraftTarget] = useState(null);
   const [craftPending, setCraftPending] = useState(false);
   const [craftFeedback, setCraftFeedback] = useState(null);
+  const [convertTarget, setConvertTarget] = useState(null);
+  const [convertPending, setConvertPending] = useState(false);
+  const [convertFeedback, setConvertFeedback] = useState(null);
   const lastFocusedRef = useRef(null);
 
   const collection = profile.cardCollection || {};
   const activeDeck = profile.activeDeck || [];
+  const faithShards = getFaithShardBalance(profile);
 
   const ownedCards = useMemo(() => {
     return CARDS.filter(c => (collection[c.id] || 0) > 0);
@@ -122,6 +132,47 @@ export default function CollectionTab() {
     closeCraftModal();
   };
 
+  const handleConvertClick = (card, triggerEl) => {
+    const preview = getFaithShardConversionPreview(profile, card.id);
+    if (!preview.eligible) return; // button is disabled in this state; defensive no-op
+    Sound.sfx.click();
+    lastFocusedRef.current = triggerEl || null;
+    setConvertTarget(card);
+  };
+
+  const closeConvertModal = () => {
+    setConvertTarget(null);
+    lastFocusedRef.current?.focus?.();
+    lastFocusedRef.current = null;
+  };
+
+  const handleConvertCancel = () => {
+    if (convertPending) return;
+    closeConvertModal();
+  };
+
+  const handleConvertConfirm = () => {
+    if (!convertTarget || convertPending) return;
+    setConvertPending(true);
+    const result = convertFragments(convertTarget.id);
+    setConvertPending(false);
+    if (result.success) {
+      Sound.sfx.reward();
+      setConvertFeedback({
+        type: "success",
+        cardName: convertTarget.name,
+        fragmentsSpent: result.fragmentsSpent,
+        faithShardsGained: result.faithShardsGained,
+        remainingFragments: result.remainingFragments,
+      });
+    } else {
+      Sound.sfx.click();
+      setConvertFeedback({ type: "error", message: convertFailureMessage(result.reason) });
+    }
+    setTimeout(() => setConvertFeedback(null), 3500);
+    closeConvertModal();
+  };
+
   return (
     <div>
       {/* Toast notification */}
@@ -159,12 +210,47 @@ export default function CollectionTab() {
         </div>
       )}
 
+      {/* Conversion result feedback */}
+      {convertFeedback && (
+        <div
+          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-fade-in px-4 py-2.5 rounded-lg border-2 backdrop-blur-sm shadow-lg text-center ${
+            convertFeedback.type === "success"
+              ? "border-amber-400/40 bg-slate-900/90"
+              : "border-red-400/40 bg-red-900/80"
+          }`}
+        >
+          {convertFeedback.type === "success" ? (
+            <>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300/80">Fragments Converted</p>
+              <p className="text-amber-200/70 text-xs mt-1">
+                {convertFeedback.fragmentsSpent} {convertFeedback.cardName} Fragments spent
+              </p>
+              <p className="text-amber-100 font-serif text-sm mt-0.5">+{convertFeedback.faithShardsGained} Faith Shard{convertFeedback.faithShardsGained === 1 ? "" : "s"}</p>
+              <p className="text-amber-100/50 text-[10px] mt-0.5">
+                Fragments remaining: {convertFeedback.remainingFragments}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-medium text-red-200">{convertFeedback.message}</p>
+          )}
+        </div>
+      )}
+
+      {/* Faith Shards balance */}
+      <div className="max-w-md mx-auto mb-3 rounded-lg border border-amber-500/20 bg-slate-900/40 px-3 py-2 text-center">
+        <p className="text-amber-100/50 text-[10px] uppercase tracking-wide font-bold">Faith Shards</p>
+        <p className="text-amber-200 font-serif text-xl leading-tight">{faithShards}</p>
+        <p className="text-amber-100/40 text-[10px] mt-0.5">
+          A universal crafting resource for higher-rarity cards.
+        </p>
+      </div>
+
       {/* Card Fragments explanation — shown once near the heading, not per-card */}
       <div className="max-w-md mx-auto mb-4 rounded-lg border border-amber-500/15 bg-slate-900/30 px-3 py-2">
         <div className="flex items-start gap-2">
           <Lightbulb className="w-3.5 h-3.5 text-amber-300/60 flex-shrink-0 mt-0.5" />
           <p className="text-amber-100/50 text-xs text-left">
-            Card Fragments can craft Common, Uncommon, and Rare cards. Higher-rarity crafting will require Faith Shards in a future update.
+            Card Fragments can craft Common, Uncommon, and Rare cards. Excess Fragments on a maxed-out card can convert into Faith Shards. Higher-rarity crafting will require Faith Shards in a future update.
           </p>
         </div>
       </div>
@@ -203,6 +289,11 @@ export default function CollectionTab() {
           const maxCopies = getMaxCopies(card.rarity);
           const craftable = CRAFTABLE_RARITIES.has(card.rarity);
           const eligibility = craftable ? getCardCraftEligibility(profile, card.id) : null;
+          const reserve = getFragmentReserve(card);
+          const conversionPreview = ownedCount >= maxCopies ? getFaithShardConversionPreview(profile, card.id) : null;
+          // Conversion controls only ever show for a card already at its
+          // ownership limit (never below max ownership — see Part 6).
+          const showConversion = conversionPreview && conversionPreview.reason !== "unsupported_rarity";
 
           if (!owned) {
             // Not discovered yet, but Fragment progress exists for it.
@@ -244,7 +335,7 @@ export default function CollectionTab() {
                 <span className="text-amber-100/30 w-full sm:w-auto">·</span>
                 <span className="text-amber-100/50">
                   Fragments: <span className="text-amber-200 font-bold">{fragments}</span>
-                  {craftable && <>/{eligibility.cost.fragments}</>}
+                  {reserve !== null && <>/{reserve}</>}
                 </span>
               </div>
 
@@ -287,6 +378,23 @@ export default function CollectionTab() {
                   Higher-rarity crafting will require Faith Shards in a future update.
                 </p>
               )}
+
+              {/* Convert excess Fragments → Faith Shards — only at max ownership */}
+              {showConversion && (
+                <div className="w-full mt-1.5 pt-1.5 border-t border-amber-500/10">
+                  <p className="text-amber-100/40 text-[8px] text-center mb-1">
+                    Excess Fragments: {conversionPreview.excess ?? 0} · Rate: {conversionPreview.rate} → 1 Faith Shard
+                  </p>
+                  <button
+                    onClick={(e) => handleConvertClick(card, e.currentTarget)}
+                    disabled={!conversionPreview.eligible}
+                    className="w-full min-h-11 text-xs font-bold py-1.5 px-2 rounded-lg border border-sky-400/40 bg-sky-900/20 text-sky-100 hover:bg-sky-800/30 transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100"
+                    aria-label={`Convert ${card.name} Fragments`}
+                  >
+                    {getConversionButtonLabel(conversionPreview)}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
@@ -311,6 +419,16 @@ export default function CollectionTab() {
           onConfirm={handleCraftConfirm}
         />
       )}
+
+      {convertTarget && (
+        <ConvertFragmentsModal
+          card={convertTarget}
+          preview={getFaithShardConversionPreview(profile, convertTarget.id)}
+          pending={convertPending}
+          onCancel={handleConvertCancel}
+          onConfirm={handleConvertConfirm}
+        />
+      )}
     </div>
   );
 }
@@ -331,5 +449,21 @@ function craftFailureMessage(reason) {
       return "This card can't be crafted yet.";
     default:
       return "Crafting failed. Nothing was spent.";
+  }
+}
+
+function convertFailureMessage(reason) {
+  switch (reason) {
+    case "not_max_owned":
+      return "Reach maximum copies before converting Fragments.";
+    case "no_excess_fragments":
+    case "insufficient_convertible_amount":
+      return "Not enough excess Fragments to convert.";
+    case "unknown_card":
+      return "That card could not be found.";
+    case "unsupported_rarity":
+      return "This card's Fragments can't convert yet.";
+    default:
+      return "Conversion failed. Nothing was spent.";
   }
 }

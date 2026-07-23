@@ -7,7 +7,7 @@ import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
 import { BOSS_MODIFIER_IDS } from "@/data/bossModifiers";
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
-import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck, grantCardOrFragments, addCardFragments as computeCardFragments, sanitizeCardFragments, craftCardWithFragments } from "@/game/deckRules";
+import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck, grantCardOrFragments, addCardFragments as computeCardFragments, sanitizeCardFragments, craftCardWithFragments, sanitizeFaithShards, convertExcessFragmentsToFaithShards } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
@@ -95,6 +95,12 @@ if (!Array.isArray(parsed.defeatedEnemies)) parsed.defeatedEnemies = [];
 // negative, non-integer) normalize to 0 rather than crashing the load.
 parsed.cardFragments = sanitizeCardFragments(parsed.cardFragments);
 
+// Migrate to Faith Shards (Phase 3 foundation). No historical retroactive
+// grant — existing players simply start at 0 unless valid stored data
+// already exists. Malformed values (non-numeric, negative, non-integer,
+// null, missing) normalize to 0 rather than crashing the load.
+parsed.faithShards = sanitizeFaithShards(parsed.faithShards);
+
 return parsed;
     }
   } catch (e) {}
@@ -102,6 +108,7 @@ return parsed;
     unlockedHeroes: ["adam"],
     cardCollection: { ...STARTER_COLLECTION },
     cardFragments: {},
+    faithShards: 0,
     activeDeck: [...STARTER_DECK],
     collectedCards: Object.keys(STARTER_COLLECTION),
     achievements: [],
@@ -363,6 +370,23 @@ const recordEnemyDefeat = useCallback((enemyId) => {
     if (preview.success) {
       setProfile(prev => {
         const revalidated = craftCardWithFragments(prev, cardId);
+        return revalidated.success ? revalidated.newProfile : prev;
+      });
+    }
+    return preview;
+  }, [profile]);
+
+  // Faith Shards Phase 3 — atomic excess-Fragment conversion. Mirrors
+  // craftCard's safety pattern exactly: `preview` (against the current
+  // render's profile) drives immediate UI feedback, while the actual
+  // mutation re-derives the conversion against `prev` inside the functional
+  // setState updater, so Fragments/Faith Shards are revalidated against the
+  // true latest state at the moment the update applies.
+  const convertFragments = useCallback((cardId) => {
+    const preview = convertExcessFragmentsToFaithShards(profile, cardId);
+    if (preview.success) {
+      setProfile(prev => {
+        const revalidated = convertExcessFragmentsToFaithShards(prev, cardId);
         return revalidated.success ? revalidated.newProfile : prev;
       });
     }
@@ -936,6 +960,7 @@ if (node.enemyId === "babel_tower") {
     addCardFragments,
     grantCard,
     craftCard,
+    convertFragments,
     addToActiveDeck,
     removeFromActiveDeck,
     removeCardFromDeck,

@@ -288,6 +288,174 @@ export function sanitizeCardFragments(raw) {
   return sanitized;
 }
 
+// Faith Shards — Phase 3 foundation. A single universal progression currency
+// (not card-specific like Fragments), earned only through a small set of
+// controlled sources (first Normal/Hard Genesis completion, repeat Hard
+// completion, and player-initiated excess-Fragment conversion — see below).
+// No higher-rarity crafting is implemented yet; Faith Shards can only be
+// earned and viewed at this phase.
+export function sanitizeFaithShards(value) {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+export function getFaithShardBalance(profile) {
+  return sanitizeFaithShards(profile?.faithShards);
+}
+
+export function addFaithShards(profile, amount) {
+  const current = getFaithShardBalance(profile);
+  const delta = Number.isFinite(amount) ? amount : 0;
+  return Math.max(0, Math.floor(current + delta));
+}
+
+export function spendFaithShards(profile, amount) {
+  const current = getFaithShardBalance(profile);
+  const delta = Number.isFinite(amount) ? amount : 0;
+  return Math.max(0, Math.floor(current - delta));
+}
+
+// Excess Fragment → Faith Shard conversion. Each rarity keeps a protected
+// reserve (matching or anticipating its crafting Fragment cost — Common/
+// Uncommon/Rare reserves are exactly their craft costs) that can never be
+// converted; only Fragments above the reserve are eligible, and only in
+// whole rate-unit multiples. Epic/Legendary have a reserve/rate too (so
+// their Fragment progress isn't dead-ended before Faith Shard crafting
+// exists), but Mythic has neither — conversion is unavailable for it.
+export const FRAGMENT_RESERVES = {
+  common: 20,
+  uncommon: 40,
+  rare: 80,
+  epic: 140,
+  legendary: 250,
+};
+
+export const FRAGMENT_TO_SHARD_RATES = {
+  common: 10,
+  uncommon: 8,
+  rare: 5,
+  epic: 3,
+  legendary: 2,
+};
+
+export function getFragmentReserve(card) {
+  if (!card) return null;
+  return FRAGMENT_RESERVES[card.rarity] ?? null;
+}
+
+export function getFragmentToShardRate(card) {
+  if (!card) return null;
+  return FRAGMENT_TO_SHARD_RATES[card.rarity] ?? null;
+}
+
+// Raw excess Fragments above the protected reserve for a card, but only when
+// the card is at its maximum ownership limit (0 otherwise — conversion is
+// never offered below max ownership). Not rounded to whole rate units; see
+// getFaithShardConversionPreview for the actual convertible amount.
+export function getConvertibleFragmentAmount(profile, cardId) {
+  const card = getCardById(cardId);
+  if (!card) return 0;
+  const reserve = getFragmentReserve(card);
+  if (reserve === null) return 0;
+  const owned = (profile?.cardCollection || {})[cardId] || 0;
+  const maxCopies = getMaxCopies(card.rarity);
+  if (owned < maxCopies) return 0;
+  const fragments = getCardFragmentBalance(profile, cardId);
+  return Math.max(0, fragments - reserve);
+}
+
+/**
+ * Pure conversion eligibility + preview — the single source of truth for
+ * whether a card's excess Fragments can convert right now, and the exact
+ * amounts involved. Only whole rate-unit multiples convert; any remainder
+ * stays as Fragments (never forced below the reserve).
+ * Returns { eligible: true, reserve, rate, owned, maxCopies, fragments,
+ *   excess, fragmentsSpent, shardsGained, remainingFragments } or
+ * { eligible: false, reason, ...same context fields where computable }.
+ */
+export function getFaithShardConversionPreview(profile, cardId) {
+  const card = getCardById(cardId);
+  if (!card) return { eligible: false, reason: "unknown_card" };
+
+  const reserve = getFragmentReserve(card);
+  const rate = getFragmentToShardRate(card);
+  if (reserve === null || rate === null) {
+    return { eligible: false, reason: "unsupported_rarity" };
+  }
+
+  const owned = (profile?.cardCollection || {})[cardId] || 0;
+  const maxCopies = getMaxCopies(card.rarity);
+  if (owned < maxCopies) {
+    return { eligible: false, reason: "not_max_owned", reserve, rate, owned, maxCopies };
+  }
+
+  const fragments = getCardFragmentBalance(profile, cardId);
+  const excess = Math.max(0, fragments - reserve);
+  if (excess <= 0) {
+    return { eligible: false, reason: "no_excess_fragments", reserve, rate, owned, maxCopies, fragments, excess: 0 };
+  }
+
+  const shardsGained = Math.floor(excess / rate);
+  if (shardsGained <= 0) {
+    return { eligible: false, reason: "insufficient_convertible_amount", reserve, rate, owned, maxCopies, fragments, excess };
+  }
+
+  const fragmentsSpent = shardsGained * rate;
+  return {
+    eligible: true,
+    reserve,
+    rate,
+    owned,
+    maxCopies,
+    fragments,
+    excess,
+    fragmentsSpent,
+    shardsGained,
+    remainingFragments: fragments - fragmentsSpent,
+  };
+}
+
+/**
+ * Pure atomic conversion calculation. Never touches React/profile state
+ * itself — the caller (GameContext.convertFragments) applies the returned
+ * newProfile via a single functional setState so Fragments and Faith Shards
+ * change together or not at all. Re-derives the preview itself, so calling
+ * this directly against the latest state is always a safe revalidation.
+ */
+export function convertExcessFragmentsToFaithShards(profile, cardId) {
+  const preview = getFaithShardConversionPreview(profile, cardId);
+  if (!preview.eligible) {
+    return { success: false, cardId, reason: preview.reason };
+  }
+  const newProfile = {
+    ...profile,
+    cardFragments: addCardFragments(profile, cardId, -preview.fragmentsSpent),
+    faithShards: addFaithShards(profile, preview.shardsGained),
+  };
+  return {
+    success: true,
+    cardId,
+    fragmentsSpent: preview.fragmentsSpent,
+    faithShardsGained: preview.shardsGained,
+    remainingFragments: preview.remainingFragments,
+    newProfile,
+  };
+}
+
+// Player-facing Convert button label for a given conversion preview (see
+// getFaithShardConversionPreview). Shows the exact excess Fragments still
+// needed to reach the next whole rate unit, whether the card currently has
+// zero excess or a partial (sub-rate) amount.
+export function getConversionButtonLabel(preview) {
+  if (!preview) return "Unavailable";
+  if (preview.eligible) return "Convert";
+  if (preview.reason === "not_max_owned") return "Reach Maximum Copies First";
+  if (preview.reason === "no_excess_fragments" || preview.reason === "insufficient_convertible_amount") {
+    return `Need ${preview.rate - preview.excess} more excess Fragments`;
+  }
+  return "Unavailable";
+}
+
 export function isHealingCard(cardId) {
   return HEALING_CARD_IDS.has(cardId);
 }

@@ -10,7 +10,7 @@ import { preloadImages } from "@/lib/imageAssets";
 import { submitGenesisScores } from "@/game/seasonManager";
 import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
-import { generateFirstCompletionReward } from "@/game/deckRules";
+import { generateFirstCompletionReward, addFaithShards } from "@/game/deckRules";
 import { getCardById } from "@/data/cards";
 import { unlocksNoah } from "@/game/difficultyAccess";
 
@@ -31,6 +31,7 @@ export default function VictoryScreen() {
   const [submitError, setSubmitError] = useState(false);
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
   const [firstCompletionGrant, setFirstCompletionGrant] = useState(null);
+  const [faithShardsAwarded, setFaithShardsAwarded] = useState(0);
 
   const completedDifficulty = run.difficulty || "easy";
   const difficultyMultipliers = { easy: 1, normal: 1.5, hard: 2 };
@@ -93,6 +94,26 @@ export default function VictoryScreen() {
     const unlocksNormal = !profile.genesisEasyCompleted; // Normal was still locked
     const unlocksHard =
       ["normal", "hard"].includes(completedDifficulty) && !profile.genesisNormalCompleted;
+
+    // Faith Shards — controlled completion rewards (Phase 3). Reuses the
+    // existing durable genesisNormalCompleted/genesisHardCompleted flags (the
+    // same ones that already gate Hard's unlock and the first-completion card
+    // reward) so first-vs-repeat detection, atomicity with the flag update
+    // below, and safety against a refresh/resume mid-victory all come for
+    // free: a flag that's already true (e.g. for a player who completed
+    // Normal/Hard before this update shipped) never re-triggers its bonus.
+    // Easy, Daily, tutorial, and losses never reach this screen at all, so
+    // none of them can grant Faith Shards.
+    let shardsThisVictory = 0;
+    if (completedDifficulty === "normal" && !profile.genesisNormalCompleted) {
+      shardsThisVictory = 25;
+    } else if (completedDifficulty === "hard") {
+      shardsThisVictory = profile.genesisHardCompleted ? 15 : 75;
+    }
+    if (shardsThisVictory > 0) {
+      progressionUpdates.faithShards = addFaithShards(profile, shardsThisVictory);
+      setFaithShardsAwarded(shardsThisVictory);
+    }
 
     if (!profile.genesisEasyCompleted) progressionUpdates.genesisEasyCompleted = true;
     if (unlocksHard) progressionUpdates.genesisNormalCompleted = true;
@@ -202,7 +223,7 @@ export default function VictoryScreen() {
             <StageTwo run={run} multiplier={multiplier} baseScore={baseScore} penaltyPercent={penaltyPercent} onContinue={advanceStage} enabled={stageVisible} />
           )}
           {stage === 3 && (
-            <StageThree firstCompletion={firstCompletion} noahJustUnlocked={firstCompletion && unlocksNoah(completedDifficulty)} rewardCard={rewardCard} rewardConverted={firstCompletionGrant?.type === "fragments"} fragmentAmount={firstCompletionGrant?.amount} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
+            <StageThree firstCompletion={firstCompletion} noahJustUnlocked={firstCompletion && unlocksNoah(completedDifficulty)} rewardCard={rewardCard} rewardConverted={firstCompletionGrant?.type === "fragments"} fragmentAmount={firstCompletionGrant?.amount} faithShardsAwarded={faithShardsAwarded} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
           )}
         </div>
       </section>
@@ -317,7 +338,7 @@ function buildScoreFeedbackLines(scoreToSubmit, submitResult) {
   return lines;
 }
 
-function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, rewardConverted, fragmentAmount, score, submitResult, submitting, submitError, onRetry, onReturn }) {
+function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, rewardConverted, fragmentAmount, faithShardsAwarded, score, submitResult, submitting, submitError, onRetry, onReturn }) {
   return (
     <>
       <p className="text-[9px] font-bold uppercase tracking-[.24em] text-amber-300/60">Stage 3 of 3</p>
@@ -353,6 +374,13 @@ function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, rewardConve
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {faithShardsAwarded > 0 && (
+        <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/10 p-2 text-center">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-amber-300/70">Faith Shards Earned</p>
+          <p className="mt-1 font-serif text-lg text-amber-200">+{faithShardsAwarded} Faith Shards</p>
         </div>
       )}
 

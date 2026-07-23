@@ -62,6 +62,15 @@ export function getStats() {
   return loadStats();
 }
 
+// Player-initiated progress reset (Settings > Danger Zone) clears lifetime
+// stats — these are personal bests/records, not shared leaderboard data.
+// Returns the fresh defaults so callers can confirm what was written.
+export function resetStats() {
+  const fresh = { ...DEFAULT_STATS, cardUsage: {} };
+  saveStats(fresh);
+  return fresh;
+}
+
 function mutate(fn) {
   const stats = loadStats();
   const next = fn({ ...stats, cardUsage: { ...stats.cardUsage } });

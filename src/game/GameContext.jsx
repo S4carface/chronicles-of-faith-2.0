@@ -13,6 +13,9 @@ import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/g
 import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
 import { sanitizePlayerName } from "@/game/nameValidator";
 import { migrateDifficultyProgress, resolveSelectableDifficulty, isDifficultyUnlocked, unlocksNoah } from "@/game/difficultyAccess";
+import { createDefaultGameplayProgress, resetGameplayProgress, CURRENT_PROGRESSION_VERSION } from "@/game/progressionReset";
+import { resetStats } from "@/game/playerStats";
+import { syncProfileToCloud } from "@/game/cloudSync";
 
 const GameContext = createContext(null);
 
@@ -101,35 +104,23 @@ parsed.cardFragments = sanitizeCardFragments(parsed.cardFragments);
 // null, missing) normalize to 0 rather than crashing the load.
 parsed.faithShards = sanitizeFaithShards(parsed.faithShards);
 
+// Versioned global-reset infrastructure (inactive) — a profile that
+// predates this field simply gets migrated onto the current version, no
+// reset. See progressionReset.js for when/how this would ever change.
+if (typeof parsed.progressionVersion !== "number") {
+  parsed.progressionVersion = CURRENT_PROGRESSION_VERSION;
+}
+
 return parsed;
     }
   } catch (e) {}
   return {
-    unlockedHeroes: ["adam"],
-    cardCollection: { ...STARTER_COLLECTION },
-    cardFragments: {},
-    faithShards: 0,
-    activeDeck: [...STARTER_DECK],
-    collectedCards: Object.keys(STARTER_COLLECTION),
-    achievements: [],
+    ...createDefaultGameplayProgress(),
     settings: { music: true, sfx: true, musicVolume: 50, sfxVolume: 50, narrationVolume: 50, narration: true, enemyAnimation: "step", narrationVoice: "default", guidanceTips: false, guidanceLevel: "normal", playableEndTurnWarning: true, playableEndTurnWarningSeen: false },
-    dailyStreak: 0,
-    lastDailyDate: null,
-    devotionStreak: 0,
-    devotionReadDate: null,
     playerName: "Anonymous Pilgrim",
-    introSeen: false,
     accountPromptSeen: false,
-    battlesUnscathed: 0,
-    // New players begin with only Easy unlocked; Normal/Hard gate on completions.
-    difficulty: "easy",
-    gold: 0,
-    tutorialSeen: false,
-    genesisCompleted: false,
-    genesisEasyCompleted: false,
-    genesisNormalCompleted: false,
-    genesisHardCompleted: false,
-    leaderboardNamePromptSeen: false, encounteredEnemies: [], defeatedEnemies: [],
+    leaderboardNamePromptSeen: false,
+    progressionVersion: CURRENT_PROGRESSION_VERSION,
   };
 }
 
@@ -219,6 +210,35 @@ export function GameProvider({ children }) {
       return next;
     });
   }, []);
+// Player-initiated progress reset (Settings > Danger Zone, typed "RESET"
+// confirmation). Computed against the latest `profile` closure value (this
+// is only ever invoked from a single confirmed tap, never a hot path, so
+// there's no concurrent-mutation race to guard against here the way
+// craftCard/convertFragments do against rapid battle actions). Persists to
+// localStorage synchronously BEFORE updating React state or clearing
+// derived storage, so a thrown write leaves the profile completely
+// untouched — no partial clearing. Returns {success} so the caller (the
+// Settings reset modal) only closes/navigates once persistence is
+// confirmed; a failure leaves everything exactly as it was.
+const resetGameProgress = useCallback(() => {
+  const nextProfile = resetGameplayProgress(profile);
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextProfile));
+  } catch (e) {
+    return { success: false };
+  }
+  setProfile(nextProfile);
+  setRun(null);
+  clearStoryRun();
+  setSavedStoryExists(false);
+  setStorySaveError(false);
+  resetStats();
+  // Best-effort — mirrors the existing Settings "Sync Now" cloud push.
+  // Never blocks navigation; a failure here doesn't affect the local reset.
+  syncProfileToCloud(nextProfile).catch(() => {});
+  return { success: true, profile: nextProfile };
+}, [profile]);
+
 const recordEnemyEncounter = useCallback((enemyId) => {
   if (!enemyId) return;
 
@@ -936,6 +956,7 @@ if (node.enemyId === "babel_tower") {
   const value = {
     profile,
     saveProfile,
+    resetGameProgress,
     recordEnemyEncounter,
     recordEnemyDefeat,
     run,

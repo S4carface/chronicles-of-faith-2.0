@@ -86,10 +86,27 @@ export default function VictoryScreen() {
       }
       queueUnlock({ type: "chapter", name: "Genesis" });
     }
-    if (["normal", "hard"].includes(completedDifficulty) && !profile.genesisNormalCompleted) {
-      progressionUpdates.genesisNormalCompleted = true;
+
+    // Tiered difficulty progression. Any completion proves Easy-tier capability
+    // (so it can unlock Normal); a Normal/Hard clear unlocks Hard. Only real
+    // campaign victories reach this screen — Daily/tutorial/losses never do.
+    const unlocksNormal = !profile.genesisEasyCompleted; // Normal was still locked
+    const unlocksHard =
+      ["normal", "hard"].includes(completedDifficulty) && !profile.genesisNormalCompleted;
+
+    if (!profile.genesisEasyCompleted) progressionUpdates.genesisEasyCompleted = true;
+    if (unlocksHard) progressionUpdates.genesisNormalCompleted = true;
+    if (completedDifficulty === "hard" && !profile.genesisHardCompleted) {
+      progressionUpdates.genesisHardCompleted = true;
     }
     if (Object.keys(progressionUpdates).length) saveProfile(progressionUpdates);
+
+    // Unlock feedback — announce the newly available difficulty.
+    if (unlocksHard) {
+      queueUnlock({ type: "difficulty", difficulty: "hard" });
+    } else if (unlocksNormal && completedDifficulty === "easy") {
+      queueUnlock({ type: "difficulty", difficulty: "normal" });
+    }
 
     const submitName = needsPlayerName(profile.playerName) ? "Anonymous Pilgrim" : profile.playerName;
     submitScoreToCloud(submitName, finalScore);

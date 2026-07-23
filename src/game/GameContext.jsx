@@ -12,6 +12,7 @@ import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
 import { sanitizePlayerName } from "@/game/nameValidator";
+import { migrateDifficultyProgress, resolveSelectableDifficulty, isDifficultyUnlocked, unlocksNoah } from "@/game/difficultyAccess";
 
 const GameContext = createContext(null);
 
@@ -67,6 +68,12 @@ if (!parsed.activeDeck) {
       if (parsed.genesisNormalCompleted === undefined) {
         parsed.genesisNormalCompleted = false;
       }
+      // Migrate tiered difficulty progression (genesisEasyCompleted / Hard).
+      // Infers Easy from any prior completion so existing players keep access.
+      Object.assign(parsed, migrateDifficultyProgress(parsed));
+      // A stored difficulty preference that points at a now-locked mode falls
+      // back safely to the highest unlocked mode (never a locked selection).
+      parsed.difficulty = resolveSelectableDifficulty(parsed.difficulty, parsed);
       // Migrate leaderboard name-prompt-seen flag
       if (parsed.leaderboardNamePromptSeen === undefined) parsed.leaderboardNamePromptSeen = false;
       if (!parsed.settings) parsed.settings = {};
@@ -99,11 +106,14 @@ return parsed;
     introSeen: false,
     accountPromptSeen: false,
     battlesUnscathed: 0,
-    difficulty: "normal",
+    // New players begin with only Easy unlocked; Normal/Hard gate on completions.
+    difficulty: "easy",
     gold: 0,
     tutorialSeen: false,
     genesisCompleted: false,
+    genesisEasyCompleted: false,
     genesisNormalCompleted: false,
+    genesisHardCompleted: false,
     leaderboardNamePromptSeen: false, encounteredEnemies: [], defeatedEnemies: [],
   };
 }
@@ -436,7 +446,11 @@ const startTutorialRun = useCallback(() => {
     const hero = HERO_MAP[heroId];
     if (!hero || !profile.unlockedHeroes.includes(heroId)) return;
 
-    const difficulty = options.difficulty || profile.difficulty || "normal";
+    const difficulty = options.difficulty || profile.difficulty || "easy";
+    // Guard: a new campaign run can never start on a locked difficulty. Daily
+    // Challenge uses its own difficulty and is unaffected. (The UI already
+    // prevents selecting locked modes; this is a defensive safety net.)
+    if (!isDaily && !isDifficultyUnlocked(difficulty, profile)) return;
     const seed = seedOverride || (isDaily ? new Date().toISOString().slice(0, 10) : `run-${Date.now()}-${Math.random()}`);
     const map = generateMap(seed, difficulty);
     const fogOfWar = difficulty !== "easy";
@@ -641,7 +655,9 @@ if (node.enemyId === "babel_tower") {
         if (prev.tookOnlyBattles) unlockAchievement("narrow_path");
         if (prev.neverLostHp) unlockAchievement("righteous_run");
         if (prev.hero.id === "noah") unlockAchievement("noah_unlocked");
-        if (prev.hero.id === "adam") {
+        // Noah unlocks only after completing Genesis on Normal (or Hard) — never
+        // from an Easy clear, the tutorial, or Daily.
+        if (prev.hero.id === "adam" && unlocksNoah(prev.difficulty)) {
           // unlock noah
           setProfile(p => {
             if (p.unlockedHeroes.includes("noah")) return p;

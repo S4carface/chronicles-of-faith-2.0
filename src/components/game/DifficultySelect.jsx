@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
+import { Lock } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { DIFFICULTY_PRESETS } from "@/game/mapGenerator";
 import { HOME_ART } from "@/data/art";
 import SafeImage from "@/components/ui/SafeImage";
 import * as Sound from "@/game/soundManager";
+import { isDifficultyUnlocked, getUnlockRequirement, resolveSelectableDifficulty } from "@/game/difficultyAccess";
 
 // Rule text as two short, fixed lines per difficulty. Splitting the old
 // single string ("Retry: 75% HP. −5% score per retry.") into two lines is a
@@ -35,10 +37,14 @@ const DIFFICULTY_RULES = {
 
 export default function DifficultySelect({ compact = false }) {
   const { profile, saveProfile } = useGame();
+  const [lockedHint, setLockedHint] = useState(null);
 
-  const current = DIFFICULTY_PRESETS[profile.difficulty]
-    ? profile.difficulty
-    : "normal";
+  // The active difficulty is always one that's actually unlocked — a locked mode
+  // can never appear selected.
+  const current = resolveSelectableDifficulty(
+    DIFFICULTY_PRESETS[profile.difficulty] ? profile.difficulty : "easy",
+    profile
+  );
 
   const currentPreset = DIFFICULTY_PRESETS[current];
   const currentRule = DIFFICULTY_RULES[current];
@@ -50,6 +56,14 @@ export default function DifficultySelect({ compact = false }) {
   };
 
   const handleSelect = (key) => {
+    // Locked modes are never selectable — tapping shows a concise requirement.
+    if (!isDifficultyUnlocked(key, profile)) {
+      Sound.sfx.click();
+      setLockedHint({ key, text: getUnlockRequirement(key) });
+      return;
+    }
+
+    setLockedHint(null);
     if (key === current) return;
 
     Sound.sfx.click();
@@ -82,21 +96,28 @@ export default function DifficultySelect({ compact = false }) {
     return (
       <div className="mx-auto w-full max-w-md">
         {/* Horizontal selector — [icon Easy] [icon Normal] [icon Hard], one
-            row, no wrapping, no stacked icon-over-label. */}
-        <div className="flex justify-center gap-1.5">
+            row, no wrapping, no stacked icon-over-label. Locked modes stay
+            visible with a lock icon and a tap-to-reveal requirement tooltip. */}
+        <div className="relative flex justify-center gap-1.5">
           {Object.entries(DIFFICULTY_PRESETS).map(([key, preset]) => {
-            const isActive = current === key;
+            const unlocked = isDifficultyUnlocked(key, profile);
+            const isActive = unlocked && current === key;
+            const requirement = getUnlockRequirement(key);
 
             return (
               <button
                 key={key}
                 type="button"
                 aria-pressed={isActive}
+                aria-disabled={!unlocked}
+                title={!unlocked ? requirement || undefined : undefined}
                 onClick={() => handleSelect(key)}
                 className={`flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-full border-2 px-1.5 py-1 transition-all duration-200 [@media(max-height:700px)]:min-h-[40px] ${
                   isActive
                     ? "scale-[1.02] border-amber-300 bg-amber-500/25 shadow-md shadow-amber-400/30"
-                    : "border-amber-500/25 bg-slate-900/50 opacity-70 hover:border-amber-400/40 hover:opacity-100"
+                    : !unlocked
+                      ? "border-slate-600/30 bg-slate-900/40 opacity-55"
+                      : "border-amber-500/25 bg-slate-900/50 opacity-70 hover:border-amber-400/40 hover:opacity-100"
                 }`}
               >
                 <span
@@ -104,10 +125,15 @@ export default function DifficultySelect({ compact = false }) {
                   style={{ background: "#0F1A30" }}
                 >
                   <SafeImage src={artMap[key]} alt="" fallback={null} className="h-full w-full object-cover object-center" />
+                  {!unlocked && (
+                    <span className="absolute inset-0 flex items-center justify-center bg-slate-950/60">
+                      <Lock className="h-3 w-3 text-amber-200/80" aria-hidden="true" />
+                    </span>
+                  )}
                 </span>
                 <span
                   className={`font-serif text-xs font-semibold ${
-                    isActive ? "text-amber-50" : "text-amber-100/60"
+                    isActive ? "text-amber-50" : unlocked ? "text-amber-100/60" : "text-amber-100/45"
                   }`}
                 >
                   {preset.label}
@@ -115,6 +141,16 @@ export default function DifficultySelect({ compact = false }) {
               </button>
             );
           })}
+
+          {/* Requirement tooltip (absolute — never shifts the Start button). */}
+          {lockedHint && (
+            <div
+              className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg border border-amber-500/40 bg-slate-950/95 px-3 py-1.5 text-[11px] font-medium text-amber-100 shadow-lg"
+              role="status"
+            >
+              🔒 {lockedHint.text}
+            </div>
+          )}
         </div>
 
         {/* Selected-difficulty detail panel — larger artwork on the left,
@@ -160,20 +196,26 @@ export default function DifficultySelect({ compact = false }) {
   return (
     <div className="mx-auto w-full max-w-md">
       {/* Difficulty buttons */}
-      <div className="flex justify-center gap-2">
+      <div className="relative flex justify-center gap-2">
         {Object.entries(DIFFICULTY_PRESETS).map(([key, preset]) => {
-          const isActive = current === key;
+          const unlocked = isDifficultyUnlocked(key, profile);
+          const isActive = unlocked && current === key;
+          const requirement = getUnlockRequirement(key);
 
           return (
             <button
               key={key}
               type="button"
               aria-pressed={isActive}
+              aria-disabled={!unlocked}
+              title={!unlocked ? requirement || undefined : undefined}
               onClick={() => handleSelect(key)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-full border-2 px-3 py-2.5 transition-all duration-200 ${
                 isActive
                   ? "scale-[1.03] border-amber-300 bg-amber-500/20 shadow-md shadow-amber-400/30"
-                  : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:border-amber-400/40 hover:opacity-100"
+                  : !unlocked
+                    ? "border-slate-600/30 bg-slate-900/40 opacity-55"
+                    : "border-amber-500/15 bg-slate-900/40 opacity-70 hover:border-amber-400/40 hover:opacity-100"
               }`}
             >
               <div
@@ -186,13 +228,16 @@ export default function DifficultySelect({ compact = false }) {
                   fallback={null}
                   className="h-full w-full object-cover object-center"
                 />
+                {!unlocked && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-slate-950/60">
+                    <Lock className="h-3 w-3 text-amber-200/80" aria-hidden="true" />
+                  </span>
+                )}
               </div>
 
               <span
                 className={`font-serif text-sm font-semibold ${
-                  isActive
-                    ? "text-amber-100"
-                    : "text-amber-100/60"
+                  isActive ? "text-amber-100" : unlocked ? "text-amber-100/60" : "text-amber-100/45"
                 }`}
               >
                 {preset.label}
@@ -200,6 +245,15 @@ export default function DifficultySelect({ compact = false }) {
             </button>
           );
         })}
+
+        {lockedHint && (
+          <div
+            className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg border border-amber-500/40 bg-slate-950/95 px-3 py-1.5 text-xs font-medium text-amber-100 shadow-lg"
+            role="status"
+          >
+            🔒 {lockedHint.text}
+          </div>
+        )}
       </div>
 
       {/* Selected difficulty — description and retry rule combined in one compact panel */}

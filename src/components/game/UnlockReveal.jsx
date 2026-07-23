@@ -37,6 +37,20 @@ function buildContent(unlock) {
     };
   }
 
+  if (unlock.type === "difficulty") {
+    const isHard = unlock.difficulty === "hard";
+    return {
+      label: "Difficulty Unlocked",
+      art: VICTORY_ART.crest || PLACEHOLDER_ART,
+      name: isHard ? "Hard" : "Normal",
+      subtitle: isHard ? "One life. No retreat." : "A greater challenge awaits.",
+      subtitleColor: isHard ? "text-red-300" : "text-amber-300",
+      verse: null,
+      borderColor: isHard ? "border-red-400/70" : "border-amber-300/70",
+      glowColor: isHard ? "rgba(248,113,113,0.55)" : "rgba(251,191,36,0.6)",
+    };
+  }
+
   if (unlock.type === "achievement") {
     const ach = ACHIEVEMENT_MAP[unlock.id];
     if (!ach) return null;

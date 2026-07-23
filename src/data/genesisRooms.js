@@ -124,9 +124,11 @@ export const STORY_CHOICES = [
   },
 ];
 
-// Treasure room rewards (card IDs)
+// Treasure room rewards (card IDs) — all Rare. Epic (Righteous Aim) has no
+// approved reward path yet (see cardsOfTier in deckRules.js), so it must not
+// appear in this pool even as a fallback.
 export const TREASURE_REWARDS = [
-  "sling_david", "righteous_aim", "parting_waters", "manna_heaven",
+  "sling_david", "parting_waters", "manna_heaven",
   "pillar_fire", "ark_covenant", "coat_colors", "jacobs_ladder",
   "lions_den", "burning_bush",
 ];

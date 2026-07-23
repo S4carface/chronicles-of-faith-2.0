@@ -12,6 +12,7 @@ import { recordRunWon, syncStatsToCloud } from "@/game/playerStats";
 import { needsPlayerName } from "@/game/nameValidator";
 import { generateFirstCompletionReward } from "@/game/deckRules";
 import { getCardById } from "@/data/cards";
+import { unlocksNoah } from "@/game/difficultyAccess";
 
 const STAGE_FADE_MS = 300;
 
@@ -202,7 +203,7 @@ export default function VictoryScreen() {
             <StageTwo run={run} multiplier={multiplier} baseScore={baseScore} penaltyPercent={penaltyPercent} onContinue={advanceStage} enabled={stageVisible} />
           )}
           {stage === 3 && (
-            <StageThree firstCompletion={firstCompletion} rewardCard={rewardCard} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
+            <StageThree firstCompletion={firstCompletion} noahJustUnlocked={firstCompletion && unlocksNoah(completedDifficulty)} rewardCard={rewardCard} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
           )}
         </div>
       </section>
@@ -317,7 +318,7 @@ function buildScoreFeedbackLines(scoreToSubmit, submitResult) {
   return lines;
 }
 
-function StageThree({ firstCompletion, rewardCard, score, submitResult, submitting, submitError, onRetry, onReturn }) {
+function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, score, submitResult, submitting, submitError, onRetry, onReturn }) {
   return (
     <>
       <p className="text-[9px] font-bold uppercase tracking-[.24em] text-amber-300/60">Stage 3 of 3</p>
@@ -330,11 +331,13 @@ function StageThree({ firstCompletion, rewardCard, score, submitResult, submitti
       </div>
 
       {firstCompletion && (
-        <div className="mt-2 grid grid-cols-[1fr_1.25fr] gap-2">
-          <div className="flex flex-col justify-center rounded-lg border border-amber-400/30 bg-amber-500/10 p-2">
-            <p className="font-serif text-sm text-amber-200">Noah Unlocked</p>
-            <p className="mt-1 text-[9px] leading-snug text-amber-100/55">Covenant Shield hero available.</p>
-          </div>
+        <div className={`mt-2 grid gap-2 ${noahJustUnlocked ? "grid-cols-[1fr_1.25fr]" : "grid-cols-1"}`}>
+          {noahJustUnlocked && (
+            <div className="flex flex-col justify-center rounded-lg border border-amber-400/30 bg-amber-500/10 p-2">
+              <p className="font-serif text-sm text-amber-200">Noah Unlocked</p>
+              <p className="mt-1 text-[9px] leading-snug text-amber-100/55">Covenant Shield hero available.</p>
+            </div>
+          )}
           {rewardCard && (
             <div className="flex items-center gap-2 rounded-lg border border-emerald-400/35 bg-emerald-900/20 p-2 text-left">
               <div className="relative h-14 w-11 flex-none overflow-hidden rounded border border-emerald-300/40 bg-[#0F1A30]">

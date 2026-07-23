@@ -21,12 +21,14 @@ export default function TreasureRoom() {
   const [assetsReady, setAssetsReady] = useState(false);
 
   // Generate treasure card using treasure drop rates, honoring the one-shot
-  // "Rare or better" reward and first-run Legendary gating.
+  // "Rare or better" reward, first-run Legendary gating, and the early-
+  // progression rarity cap (see resolveMaxRewardRarity in deckRules.js).
   const [rewardCardId] = useState(
     () =>
       generateTreasureCard(Math.random, {
         rareOrBetter: run.nextCardRare === true,
         firstRun: !profile.genesisCompleted,
+        difficulty: run.difficulty || "easy",
       }) || "sling_stone"
   );
   const card = getCardById(rewardCardId);

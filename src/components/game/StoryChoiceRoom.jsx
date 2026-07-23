@@ -79,7 +79,10 @@ export default function StoryChoiceRoom() {
 
     if (choice.effect.cardReward) {
       const reward =
-        generateTreasureCard(Math.random, { firstRun: !profile.genesisCompleted }) ||
+        generateTreasureCard(Math.random, {
+          firstRun: !profile.genesisCompleted,
+          difficulty: run.difficulty || "easy",
+        }) ||
         pick(Math.random, TREASURE_REWARDS);
       addCardToCollection(reward);
       if (run.deck.length < RUN_DECK_MAX) {

@@ -181,15 +181,37 @@ export function resolveRewardOdds(roomType, { firstRun = false } = {}) {
 }
 
 /**
- * Cards eligible for a given reward tier. Epic rides along with the Rare tier
- * in the existing reward/shop pools (minimum Epic support — no separate Epic
- * economy yet), so "Rare or better" and Rare rolls can surface Epic cards.
+ * Cards eligible for a given reward tier. Epic no longer rides along with the
+ * Rare tier: until an explicit Epic milestone/boss reward is approved, Epic
+ * cards (e.g. Righteous Aim) have no reward path and can only be obtained by
+ * a player who already owns one from before this change.
  */
 export function cardsOfTier(tier) {
-  if (tier === "rare") {
-    return CARDS.filter(c => c.rarity === "rare" || c.rarity === "epic");
-  }
   return CARDS.filter(c => c.rarity === tier);
+}
+
+// Rank order used to clamp a rolled rarity down to a reward source's cap.
+const RARITY_RANK = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
+
+/**
+ * Maximum rarity a random reward roll may produce, based on campaign
+ * difficulty and room type. This is the early-progression rarity brake:
+ * Easy (first completion or repeat) never grants above Rare, and ordinary
+ * Normal rewards (anything but the boss/final room) never grant above Rare.
+ * Normal boss/milestone rewards and Hard keep their existing odds — Epic has
+ * no approved reward path anywhere yet (see cardsOfTier), and Mythic has no
+ * reward path at all, so neither can exceed this cap regardless.
+ * `difficulty` defaults to the uncapped behavior when omitted, so existing
+ * callers that don't pass it are unaffected.
+ */
+export function resolveMaxRewardRarity(difficulty, roomType) {
+  if (difficulty === "easy") return "rare";
+  if (difficulty === "normal" && roomType !== "boss") return "rare";
+  return "legendary";
+}
+
+function clampRarity(rarity, cap) {
+  return RARITY_RANK[rarity] > RARITY_RANK[cap] ? cap : rarity;
 }
 
 /**
@@ -198,12 +220,15 @@ export function cardsOfTier(tier) {
  *
  * options.rareOrBetter — every card is guaranteed Rare or better (used by the
  *   Babel "nextCardRare" reward). Legendary only appears if the resolved odds
- *   still allow it (e.g. not during a gated first run).
+ *   still allow it (e.g. not during a gated first run or above the difficulty cap).
  * options.firstRun — apply first-run gating (no random Legendary, lower Rare).
+ * options.difficulty — clamp the result to resolveMaxRewardRarity's cap for
+ *   this difficulty/roomType (see there for the early-progression rarity brake).
  */
 export function generateRewardCards(rng, roomType, options = {}) {
-  const { rareOrBetter = false, firstRun = false } = options;
+  const { rareOrBetter = false, firstRun = false, difficulty } = options;
   const odds = resolveRewardOdds(roomType, { firstRun });
+  const cap = resolveMaxRewardRarity(difficulty, roomType);
   const results = [];
   let legendaryUsed = false;
   const used = new Set();
@@ -230,6 +255,8 @@ export function generateRewardCards(rng, roomType, options = {}) {
       rarity = "common";
     }
 
+    rarity = clampRarity(rarity, cap);
+
     let pool = cardsOfTier(rarity).filter(c => !used.has(c.id));
     if (pool.length === 0) {
       pool = cardsOfTier(rarity);
@@ -245,11 +272,13 @@ export function generateRewardCards(rng, roomType, options = {}) {
 
 /**
  * Generate a single treasure reward card ID.
- * Honors rareOrBetter (nextCardRare) and firstRun gating like generateRewardCards.
+ * Honors rareOrBetter (nextCardRare), firstRun gating, and the difficulty
+ * rarity cap (see resolveMaxRewardRarity), like generateRewardCards.
  */
 export function generateTreasureCard(rng, options = {}) {
-  const { rareOrBetter = false, firstRun = false } = options;
+  const { rareOrBetter = false, firstRun = false, difficulty } = options;
   const odds = resolveRewardOdds("treasure", { firstRun });
+  const cap = resolveMaxRewardRarity(difficulty, "treasure");
   const roll = rng();
   let rarity;
   if (rareOrBetter) {
@@ -263,6 +292,7 @@ export function generateTreasureCard(rng, options = {}) {
   } else {
     rarity = "common";
   }
+  rarity = clampRarity(rarity, cap);
   const pool = cardsOfTier(rarity);
   if (pool.length === 0) return null;
   return pool[Math.floor(rng() * pool.length)].id;

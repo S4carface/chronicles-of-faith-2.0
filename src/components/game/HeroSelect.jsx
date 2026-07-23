@@ -5,6 +5,7 @@ import { useGame } from "@/game/GameContext";
 import { HEROES } from "@/data/heroes";
 import { getCardById } from "@/data/cards";
 import { HERO_ART } from "@/data/art";
+import { NOAH_UNLOCK_TEXT } from "@/game/difficultyAccess";
 import * as Sound from "@/game/soundManager";
 
 export default function HeroSelect() {
@@ -198,7 +199,7 @@ return (
               <p className="text-amber-300/60 text-xs lg:text-base mb-4">{hero.title}</p>
 
               {!unlocked ? (
-                <p className="text-amber-100/40 text-sm py-6">Complete Genesis to unlock</p>
+                <p className="text-amber-100/40 text-sm py-6">{NOAH_UNLOCK_TEXT}</p>
               ) : (
                 <div className="space-y-2 lg:space-y-3 mb-4 lg:max-w-xl lg:mx-auto">
                   <p className="text-amber-100/60 text-xs lg:text-base">{hero.description}</p>

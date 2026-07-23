@@ -36,6 +36,11 @@ export function unlocksNoah(difficulty) {
   return difficulty === "normal" || difficulty === "hard";
 }
 
+// Player-facing copy for Noah's lock state. Distinct from getUnlockRequirement
+// above: Noah specifically needs a Normal (or Hard) clear, not "Complete
+// Genesis" on any difficulty, so the generic per-difficulty text doesn't apply.
+export const NOAH_UNLOCK_TEXT = "Complete Genesis on Normal to unlock";
+
 // Requirement copy for a locked difficulty (null when it has no gate).
 export function getUnlockRequirement(difficulty) {
   if (difficulty === "normal") return "Complete Genesis on Easy to unlock.";

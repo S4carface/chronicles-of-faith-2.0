@@ -6,6 +6,7 @@ import {
   resolveSelectableDifficulty,
   migrateDifficultyProgress,
   unlocksNoah,
+  NOAH_UNLOCK_TEXT,
   DIFFICULTY_ORDER,
 } from "@/game/difficultyAccess";
 
@@ -150,6 +151,11 @@ describe("Noah unlock difficulty", () => {
     expect(unlocksNoah("normal")).toBe(true);
     expect(unlocksNoah("hard")).toBe(true);
     expect(unlocksNoah("daily_standard")).toBe(false);
+  });
+
+  it("exposes accurate player-facing text (not the misleading 'Complete Genesis to unlock')", () => {
+    expect(NOAH_UNLOCK_TEXT).toBe("Complete Genesis on Normal to unlock");
+    expect(NOAH_UNLOCK_TEXT).not.toBe("Complete Genesis to unlock");
   });
 });
 

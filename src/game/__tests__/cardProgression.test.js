@@ -10,6 +10,7 @@ import {
 import { applyStoryEffect } from "@/game/runEffects";
 import { getCardById } from "@/data/cards";
 import { createRng } from "@/game/mapGenerator";
+import { TREASURE_REWARDS } from "@/data/genesisRooms";
 
 // localStorage polyfill for the save/continue round-trip (node test env).
 class MemoryStorage {
@@ -85,8 +86,12 @@ describe("Righteous Aim rarity", () => {
     expect(getCardById("righteous_aim").rarity).toBe("epic");
   });
 
-  it("still rides along with the Rare tier so it stays obtainable", () => {
-    expect(cardsOfTier("rare").some((c) => c.id === "righteous_aim")).toBe(true);
+  it("no longer rides along with the Rare tier (Epic has no approved reward path yet)", () => {
+    expect(cardsOfTier("rare").some((c) => c.id === "righteous_aim")).toBe(false);
+  });
+
+  it("cardsOfTier('epic') still resolves it directly (for a future approved milestone)", () => {
+    expect(cardsOfTier("epic").map((c) => c.id)).toEqual(["righteous_aim"]);
   });
 });
 
@@ -140,6 +145,138 @@ describe("first-run random Legendary gating", () => {
   it("never gates boss rewards (boss keeps its Legendary chance)", () => {
     expect(resolveRewardOdds("boss", { firstRun: true })).toEqual(REWARD_ODDS.boss);
     expect(resolveRewardOdds("boss", { firstRun: true }).legendary).toBe(0.05);
+  });
+});
+
+// Emergency progression brake — Easy and ordinary Normal rewards must never
+// surface Epic/Legendary/Mythic, across every reward source and both a
+// player's first Genesis completion and repeat runs.
+describe("early-progression rarity cap (Easy)", () => {
+  const HIGH_RARITY = new Set(["epic", "legendary", "mythic"]);
+
+  it("first Easy completion (boss room, ungated firstRun path) never offers Epic/Legendary/Mythic", () => {
+    for (const seed of ["easy1", "easy2", "easy3", "easy4", "easy5"]) {
+      // Mirrors RewardScreen's isFirstCompletion branch: boss odds, no firstRun gating, difficulty cap only.
+      const cards = generateRewardCards(createRng(seed), "boss", { difficulty: "easy" });
+      for (const id of cards) expect(HIGH_RARITY.has(rarityOf(id))).toBe(false);
+    }
+  });
+
+  it("Righteous Aim (Epic) cannot appear in a first Easy completion", () => {
+    for (let i = 0; i < 100; i++) {
+      const cards = generateRewardCards(createRng(`ra-${i}`), "boss", { difficulty: "easy" });
+      expect(cards).not.toContain("righteous_aim");
+    }
+  });
+
+  it("repeat Easy ordinary and treasure rewards never offer Epic/Legendary/Mythic", () => {
+    const rng = createRng("repeat-easy-sweep");
+    for (let i = 0; i < 200; i++) {
+      const battle = generateRewardCards(rng, "normal", { difficulty: "easy" });
+      for (const id of battle) expect(HIGH_RARITY.has(rarityOf(id))).toBe(false);
+      const treasure = generateTreasureCard(rng, { difficulty: "easy" });
+      expect(HIGH_RARITY.has(rarityOf(treasure))).toBe(false);
+    }
+  });
+
+  it("repeat Easy final (boss) reward stays capped at Rare", () => {
+    for (const seed of ["repeat1", "repeat2", "repeat3"]) {
+      const cards = generateRewardCards(createRng(seed), "boss", { difficulty: "easy" });
+      for (const id of cards) expect(HIGH_RARITY.has(rarityOf(id))).toBe(false);
+    }
+  });
+
+  it("Easy boss/treasure/battle rewards are capped even when a random roll would have produced Legendary", () => {
+    // A roll just under the boss odds' legendary threshold (0.05) would normally
+    // produce Legendary; on Easy it must clamp down to Rare instead.
+    const rng = () => 0.01;
+    const cards = generateRewardCards(rng, "boss", { difficulty: "easy" });
+    for (const id of cards) expect(rarityOf(id)).not.toBe("legendary");
+    expect(rarityOf(generateTreasureCard(rng, { difficulty: "easy" }))).not.toBe("legendary");
+  });
+});
+
+describe("ordinary Normal reward rarity cap", () => {
+  it("ordinary Normal rewards (non-boss) never offer Epic or Legendary", () => {
+    const rng = createRng("normal-ordinary-sweep");
+    for (let i = 0; i < 200; i++) {
+      const battle = generateRewardCards(rng, "normal", { difficulty: "normal" });
+      for (const id of battle) expect(["epic", "legendary", "mythic"]).not.toContain(rarityOf(id));
+      const treasure = generateTreasureCard(rng, { difficulty: "normal" });
+      expect(["epic", "legendary", "mythic"]).not.toContain(rarityOf(treasure));
+    }
+  });
+
+  it("a roll that would produce Legendary clamps to Rare for ordinary Normal rewards", () => {
+    const rng = () => 0.005; // under treasure's 0.01 legendary threshold
+    expect(rarityOf(generateTreasureCard(rng, { difficulty: "normal" }))).not.toBe("legendary");
+  });
+
+  it("Normal boss/final rewards are not capped by this brake (no approved Epic milestone changes this)", () => {
+    // Epic is still impossible (cardsOfTier no longer folds it into Rare), but
+    // Legendary keeps its existing boss odds on Normal — unchanged behavior.
+    const rng = createRng("normal-boss-sweep");
+    let sawLegendary = false;
+    for (let i = 0; i < 300; i++) {
+      const cards = generateRewardCards(rng, "boss", { difficulty: "normal" });
+      if (cards.some((id) => rarityOf(id) === "legendary")) sawLegendary = true;
+      for (const id of cards) expect(rarityOf(id)).not.toBe("epic");
+    }
+    expect(sawLegendary).toBe(true);
+  });
+});
+
+describe("Hard difficulty rewards are unaffected by the rarity cap", () => {
+  it("Hard keeps its existing Legendary odds on every room type", () => {
+    const rng = createRng("hard-sweep");
+    let sawLegendary = false;
+    for (let i = 0; i < 300; i++) {
+      const cards = generateRewardCards(rng, "boss", { difficulty: "hard" });
+      if (cards.some((id) => rarityOf(id) === "legendary")) sawLegendary = true;
+    }
+    expect(sawLegendary).toBe(true);
+  });
+
+  it("omitting difficulty entirely preserves the old uncapped behavior", () => {
+    const rng = createRng("no-difficulty-sweep");
+    let sawLegendary = false;
+    for (let i = 0; i < 300; i++) {
+      const cards = generateRewardCards(rng, "boss", {});
+      if (cards.some((id) => rarityOf(id) === "legendary")) sawLegendary = true;
+    }
+    expect(sawLegendary).toBe(true);
+  });
+});
+
+describe("Mythic is unavailable everywhere", () => {
+  it("no card in the game currently has Mythic rarity", () => {
+    expect(cardsOfTier("mythic")).toEqual([]);
+  });
+
+  it("no reward odds table can roll Mythic", () => {
+    for (const tier of Object.values(REWARD_ODDS)) {
+      expect(tier.mythic).toBeUndefined();
+    }
+  });
+});
+
+describe("Babel 'Rare or better' does not leak Epic/Legendary into Easy", () => {
+  it("rareOrBetter on Easy never exceeds Rare", () => {
+    for (const seed of ["babel1", "babel2", "babel3", "babel4"]) {
+      const cards = generateRewardCards(createRng(seed), "normal", { rareOrBetter: true, difficulty: "easy" });
+      for (const id of cards) expect(rarityOf(id)).toBe("rare");
+      const treasure = generateTreasureCard(createRng(seed), { rareOrBetter: true, difficulty: "easy" });
+      expect(rarityOf(treasure)).toBe("rare");
+    }
+  });
+});
+
+describe("TREASURE_REWARDS fallback pool no longer contains Righteous Aim", () => {
+  it("every fallback treasure reward is Rare (no Epic outlier)", () => {
+    for (const id of TREASURE_REWARDS) {
+      expect(rarityOf(id)).toBe("rare");
+    }
+    expect(TREASURE_REWARDS).not.toContain("righteous_aim");
   });
 });
 

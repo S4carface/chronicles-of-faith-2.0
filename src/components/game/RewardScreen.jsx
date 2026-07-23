@@ -39,15 +39,16 @@ export default function RewardScreen() {
   const isFirstCompletion = isBoss && !profile.genesisCompleted;
   const firstRun = !profile.genesisCompleted; // gates random Legendary/Rare in run 1
   const rareOrBetter = run.nextCardRare === true; // Babel "Rare or better" reward
+  const difficulty = run.difficulty || "easy"; // early-progression rarity cap (see resolveMaxRewardRarity)
   const [rewards] = useState(() => {
     if (isFirstCompletion) {
       const guaranteed = generateFirstCompletionReward(Math.random);
-      const others = generateRewardCards(Math.random, "boss", { rareOrBetter });
+      const others = generateRewardCards(Math.random, "boss", { rareOrBetter, difficulty });
       // Replace first slot with guaranteed rare, no duplicates
       const set = new Set([guaranteed, ...others]);
       return [...set].slice(0, 3);
     }
-    return generateRewardCards(Math.random, roomType, { rareOrBetter, firstRun });
+    return generateRewardCards(Math.random, roomType, { rareOrBetter, firstRun, difficulty });
   });
 
   // The upgraded reward has now been generated — consume the one-shot flag.

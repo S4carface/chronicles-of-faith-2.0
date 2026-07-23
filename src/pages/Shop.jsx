@@ -11,7 +11,8 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import { useGame } from "@/game/GameContext";
-import { cardsOfTier } from "@/game/deckRules";
+import { SHOP_ITEMS, isShopItemUnlocked, purchaseCardPack } from "@/game/shopRules";
+import { getCardById } from "@/data/cards";
 import CardDetailModal from "@/components/game/CardDetailModal";
 import * as Sound from "@/game/soundManager";
 import { getCardRarity } from "@/data/cardRarity";
@@ -23,139 +24,40 @@ const ICON_MAP = {
   legendary: Gem,
 };
 
-const SHOP_ITEMS = [
-  {
-    id: "shop_common_card",
-    name: "Common Card Pack",
-    icon: "common",
-    cost: 50,
-    desc: "Receive one random Common card you do not own.",
-    type: "card_pack",
-    rarity: "common",
-    unlockRequirement: "always",
-  },
-
-  {
-    id: "shop_uncommon_card",
-    name: "Uncommon Card Pack",
-    icon: "uncommon",
-    cost: 150,
-    desc: "Receive one random Uncommon card you do not own.",
-    type: "card_pack",
-    rarity: "uncommon",
-    unlockRequirement: "always",
-  },
-
-  {
-    id: "shop_rare_card",
-    name: "Rare Card Pack",
-    icon: "rare",
-    cost: 500,
-    desc: "Receive one random Rare card you do not own.",
-    type: "card_pack",
-    rarity: "rare",
-    unlockRequirement: "genesis",
-    lockedText: "Complete Genesis to unlock",
-  },
-
-  {
-    id: "shop_legendary_card",
-    name: "Legendary Card Pack",
-    icon: "legendary",
-    cost: 2000,
-    desc: "Receive one random Legendary card you do not own.",
-    type: "card_pack",
-    rarity: "legendary",
-    unlockRequirement: "genesis_normal",
-    lockedText: "Complete Genesis on Normal to unlock",
-  },
-];
-
-export default function Shop() {
+// `embedded` renders the Shop as a tab body inside the Cards hub (no back
+// link, page title, or standalone background/Gold pill — the hub already
+// supplies those). Standalone (embedded=false) preserves the original
+// full-page look for direct rendering. Purchase logic and item data are
+// identical either way (shared shopRules.js — no duplicated Shop logic).
+export default function Shop({ embedded = false }) {
   const { profile, saveProfile, addCardsToCollection } = useGame();
   const [purchased, setPurchased] = useState(null);
   const [detailCard, setDetailCard] = useState(null);
   const gold = profile.gold || 0;
-  const isItemUnlocked = (item) => {
-  switch (item.unlockRequirement) {
-    case "genesis":
-      return profile.genesisCompleted === true;
 
-    case "genesis_normal":
-      return profile.genesisNormalCompleted === true;
-
-    case "always":
-    default:
-      return true;
-  }
-};
-
-  useEffect(() => { Sound.playMusic("menu"); }, []);
+  useEffect(() => { if (!embedded) Sound.playMusic("menu"); }, [embedded]);
 
   const handleBuy = (item) => {
-  if (!isItemUnlocked(item)) {
-    Sound.sfx.click();
+    const result = purchaseCardPack(item, profile, Math.random);
 
-    setPurchased({
-      message: item.lockedText || "This card pack is still locked.",
-      isError: true,
-    });
-
-    return;
-  }
-
-  if (gold < item.cost) {
-    Sound.sfx.click();
-
-    setPurchased({
-      message: `You need ${item.cost - gold} more gold.`,
-      isError: true,
-    });
-
-    return;
-  }
-    if (item.type === "card_pack") {
-      // cardsOfTier folds Epic into the Rare tier (minimum Epic support), so the
-      // Rare pack can still grant the Epic card until a dedicated Epic pack exists.
-      const pool = cardsOfTier(item.rarity).filter(c => !profile.collectedCards.includes(c.id));
-      if (pool.length === 0) {
-        setPurchased({   message: "You already own all cards of this rarity!",   isError: true, });
-        return;
-      }
-      const card = pool[Math.floor(Math.random() * pool.length)];
-      saveProfile({ gold: gold - item.cost });
-      addCardsToCollection([card.id]);
-      setPurchased({   message: `You received: ${card.name}!`,   card,   isError: false, });
-      Sound.sfx.reward();
+    if (!result.ok) {
+      Sound.sfx.click();
+      setPurchased({ message: result.message, isError: true });
+      return;
     }
+
+    // Exactly one gold deduction and one ownership grant per successful purchase.
+    saveProfile({ gold: result.newGold });
+    addCardsToCollection([result.cardId]);
+    setPurchased({ message: result.message, card: getCardById(result.cardId), isError: false });
+    Sound.sfx.reward();
   };
 
-  return (
-    <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
-      <div className="flex items-center justify-between mb-8">
-        <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
-        <div className="text-center">
-          <h1 className="text-3xl font-serif text-amber-200">Marketplace</h1>
-          <p className="text-amber-100/60 text-xs mt-1">   Open card packs and expand your collection </p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20">
-          <Coins className="w-5 h-5 text-amber-300" />
-          <span className="text-amber-200 font-bold text-lg">{gold}</span>
-        </div>
-      </div>
-
-      <div className="max-w-md mx-auto mb-8 rounded-xl border-2 border-amber-500/15 p-4 text-center" style={{ background: "rgba(15,26,48,0.6)" }}>
-        <div className="flex items-start gap-2">
-          <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
-          <p className="text-amber-100/60 text-sm text-left">
-            Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
-          </p>
-        </div>
-      </div>
-
+  const content = (
+    <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto mb-8">
         {SHOP_ITEMS.map((item) => {
-          const isUnlocked = isItemUnlocked(item);
+          const isUnlocked = isShopItemUnlocked(item, profile);
           const canAfford = gold >= item.cost;
           const canPurchase = isUnlocked && canAfford;
           const Icon = ICON_MAP[item.icon] || Package;
@@ -271,6 +173,53 @@ export default function Shop() {
       <p className="text-amber-100/50 text-xs mt-12 font-serif italic text-center max-w-md mx-auto">
         "The wealth of the rich is their fortified city, but poverty is the ruin of the poor." — Proverbs 10:15
       </p>
+    </>
+  );
+
+  // Embedded (Cards hub tab): no standalone page chrome — the hub already
+  // supplies the background, title, and Gold display. Just the info blurb,
+  // item grid, purchase feedback, modal, and verse.
+  if (embedded) {
+    return (
+      <div>
+        <div className="max-w-md mx-auto mb-6 rounded-xl border-2 border-amber-500/15 p-4 text-center" style={{ background: "rgba(15,26,48,0.6)" }}>
+          <div className="flex items-start gap-2">
+            <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
+            <p className="text-amber-100/60 text-sm text-left">
+              Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
+            </p>
+          </div>
+        </div>
+        {content}
+      </div>
+    );
+  }
+
+  // Standalone (legacy/direct render) — original full-page look, unchanged.
+  return (
+    <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #0F1A30 0%, #1A2744 50%, #0A0F1E 100%)" }}>
+      <div className="flex items-center justify-between mb-8">
+        <Link to="/" onClick={() => Sound.sfx.click()} className="text-amber-100/60 hover:text-amber-200 transition text-sm">← Menu</Link>
+        <div className="text-center">
+          <h1 className="text-3xl font-serif text-amber-200">Marketplace</h1>
+          <p className="text-amber-100/60 text-xs mt-1">   Open card packs and expand your collection </p>
+        </div>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400/30 bg-amber-900/20">
+          <Coins className="w-5 h-5 text-amber-300" />
+          <span className="text-amber-200 font-bold text-lg">{gold}</span>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto mb-8 rounded-xl border-2 border-amber-500/15 p-4 text-center" style={{ background: "rgba(15,26,48,0.6)" }}>
+        <div className="flex items-start gap-2">
+          <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
+          <p className="text-amber-100/60 text-sm text-left">
+            Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
+          </p>
+        </div>
+      </div>
+
+      {content}
     </div>
   );
 }

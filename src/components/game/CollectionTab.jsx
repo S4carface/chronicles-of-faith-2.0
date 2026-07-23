@@ -87,7 +87,7 @@ export default function CollectionTab() {
       </div>
 
       {ownedCards.length === 0 && (
-        <p className="text-amber-100/50 text-center text-sm py-8">No cards collected yet. Win battles to earn cards!</p>
+        <p className="text-amber-100/50 text-center text-sm py-8">Cards you discover will appear here.</p>
       )}
 
       {/* Cards grid */}

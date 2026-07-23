@@ -3,7 +3,7 @@ import Contact from "@/pages/Contact";
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -11,6 +11,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 // Add page imports here
 import { GameProvider } from "@/game/GameContext";
+import { LEGACY_SHOP_REDIRECT } from "@/game/cardsHubTabs";
 import UnlockReveal from "@/components/game/UnlockReveal";
 import NewSeasonAnnouncement from "@/components/game/NewSeasonAnnouncement";
 import AudioUnlockButton from "@/components/game/AudioUnlockButton";
@@ -25,7 +26,6 @@ import Leaderboard from "./pages/Leaderboard";
 import Achievements from "./pages/Achievements";
 import Settings from "./pages/Settings";
 import Codex from "./pages/Codex";
-import Shop from "./pages/Shop";
 import MyJourney from "./pages/MyJourney";
 import FaithProgress from "./pages/FaithProgress";
 import SpecialThanks from "@/pages/SpecialThanks"; 
@@ -196,7 +196,10 @@ const AuthenticatedApp = () => {
         <Route path="/achievements" element={<Achievements />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/codex" element={<Codex />} />
-        <Route path="/shop" element={<Shop />} />
+        {/* The Shop now lives inside the Cards hub (Deck | Collection | Shop).
+            The legacy standalone route redirects there instead of 404ing or
+            rendering a duplicate Shop page. */}
+        <Route path="/shop" element={<Navigate to={LEGACY_SHOP_REDIRECT} replace />} />
         <Route path="/journey" element={<MyJourney />} />
         <Route path="/faith-progress" element={<FaithProgress />} />
         <Route path="*" element={<PageNotFound />} />

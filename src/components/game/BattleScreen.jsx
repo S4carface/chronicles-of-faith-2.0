@@ -11,6 +11,7 @@ import {
   checkBattleEnd,
   getEnemyTurnSteps,
   startPlayerTurn,
+  resolveForcedDiscard,
   drawCards,
   HAND_LIMIT
 } from "@/game/battleEngine";
@@ -37,10 +38,10 @@ import { applyBossModifier } from "@/data/bossModifiers";
 function getActionType(action) {
   if (!action) return "attack";
   if (action.effect === "block") return "block";
-  // Effects the engine actually resolves show as "curse". drain is implemented
-  // (Phase 2A); discard and random_card remain deferred and resolve as plain
-  // attacks, so they must not be dressed up as disruption.
-  if (["skip_draw", "block_scripture", "dot", "drain"].includes(action.effect)) return "curse";
+  // Effects the engine actually resolves show as "curse". drain (Phase 2A) and
+  // discard (Phase 2B) are implemented; random_card remains deferred and resolves
+  // as a plain attack, so it must not be dressed up as disruption.
+  if (["skip_draw", "block_scripture", "dot", "drain", "discard"].includes(action.effect)) return "curse";
   if (action.damage > 0) return "attack";
   if (action.effect === "heal_self") return "heal";
   return "attack";
@@ -55,8 +56,9 @@ function getIntentAmountText(action, enemy) {
   if (action.effect === "skip_draw") parts.push("−1 Draw");
   if (action.effect === "block_scripture") parts.push("Silence");
   if (action.effect === "drain") parts.push("−1 Faith");
-  // discard / random_card remain deferred — no effect chip so the intent doesn't
-  // promise a disruption that doesn't happen yet.
+  if (action.effect === "discard") parts.push("Discard 1");
+  // random_card remains deferred — no effect chip so the intent doesn't promise a
+  // disruption that doesn't happen yet.
   return parts.join(" · ");
 }
 
@@ -713,11 +715,12 @@ if (!tutorialActive) {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
             // Only genuinely-resolved disruptions reach here (dot / skip_draw /
-            // block_scripture / drain). No false discard/confusion labels.
+            // block_scripture / drain / discard). No false confusion labels.
             const curseText = step.action.effect === "dot" ? "Cursed!" :
               step.action.effect === "skip_draw" ? "Draw Reduced" :
               step.action.effect === "block_scripture" ? "Silenced Scripture" :
-              step.action.effect === "drain" ? "Faith Drain" : "Disrupted";
+              step.action.effect === "drain" ? "Faith Drain" :
+              step.action.effect === "discard" ? "Forced Discard" : "Disrupted";
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
@@ -843,16 +846,27 @@ if (!tutorialActive) {
     }, 400);
   };
 
-  // Resolves pending Faith Drain at the start of the player's turn and surfaces a
-  // small Faith-loss indicator when it actually reduced Faith.
+  // Resolves start-of-turn pending effects (Faith Drain, auto Forced Discard) and
+  // surfaces small indicators. Normal Forced Discard instead sets
+  // discardChoiceActive, which drives the discard-choice overlay below.
   const beginPlayerTurn = (state) => {
     const resolved = startPlayerTurn(state);
     if (resolved && resolved.faithDrainedThisTurn) {
       Sound.sfx.enemyCurse();
       setFloatingText({ text: "-1 Faith", color: "#fbbf24", pos: "bottom" });
       setTimeout(() => setFloatingText(null), 900);
+    } else if (resolved && resolved.discardedThisTurn) {
+      Sound.sfx.enemyCurse();
+      setFloatingText({ text: `Discarded ${resolved.discardedThisTurn}`, color: "#c084fc", pos: "bottom" });
+      setTimeout(() => setFloatingText(null), 900);
     }
     return resolved;
+  };
+
+  // Player picks a card during a Normal Forced Discard.
+  const handleForcedDiscardChoice = (handIndex) => {
+    Sound.sfx.enemyCurse();
+    setBattleState((s) => resolveForcedDiscard(s, handIndex));
   };
 
   const handleCovenantShield = () => {
@@ -1478,6 +1492,15 @@ const selectedCardData =
                   <span className="text-[9px] lg:text-xs font-semibold">Faith Drain · Next turn</span>
                 </button>
               )}
+              {battleState.discardPending > 0 && !battleState.discardChoiceActive && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("discard")); Sound.sfx.click(); }}
+                  className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-slate-900/70 px-1.5 py-0.5 text-amber-200/90 hover:text-amber-100 transition active:scale-90"
+                  title="Discard Required — you will discard 1 card next turn"
+                >
+                  <span className="text-[9px] lg:text-xs font-semibold">Discard Required · Next turn</span>
+                </button>
+              )}
               <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
             </div>
           </div>
@@ -1823,6 +1846,37 @@ const selectedCardData =
               <button onClick={() => setStatusExplain(null)} className="text-amber-100/40 hover:text-amber-200 text-sm">✕</button>
             </div>
             <p className="text-amber-100/80 text-xs leading-relaxed">{statusExplain.text}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Forced Discard — Normal player choice overlay (no cancel; must pick one) */}
+      {battleState.discardChoiceActive && !battleEnd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.9)" }}>
+          <div
+            className="max-w-md w-full rounded-xl border-2 border-purple-500/50 p-4 animate-fade-in"
+            style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+          >
+            <h3 className="text-center text-base font-serif text-purple-200 mb-1">Forced Discard</h3>
+            <p className="text-center text-amber-100/70 text-xs mb-3">Choose 1 card to discard.</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {(battleState.hand || []).map((cardOrId, i) => {
+                const c = resolveCard(cardOrId);
+                if (!c) return null;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleForcedDiscardChoice(i)}
+                    className="flex flex-col items-center gap-1 rounded-lg border-2 border-amber-500/40 bg-slate-900/70 px-3 py-2 text-center transition hover:border-purple-400/70 hover:bg-purple-900/20 active:scale-95"
+                    style={{ minWidth: "5.5rem" }}
+                  >
+                    <span className="text-lg">{c.icon}</span>
+                    <span className="text-[11px] font-serif text-amber-100 leading-tight">{c.name}</span>
+                    <span className="text-[9px] text-amber-200/70">{c.cost} ✨</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

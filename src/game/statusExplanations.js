@@ -37,6 +37,11 @@ export function getStatusExplanation(statusKey, value) {
         name: STATUS_NAMES.faithDrain,
         text: "Faith Drain: at the start of your next turn you lose 1 Faith. On Normal you always keep at least 1; on Hard your Faith may fall to 0. It cannot be used again until its cooldown ends.",
       };
+    case "discard":
+      return {
+        name: STATUS_NAMES.discard,
+        text: "Forced Discard: at the start of your next turn you discard 1 card. On Normal you choose which; on Hard it is chosen for you. Your final card is never discarded.",
+      };
     case "counter":
       return {
         name: STATUS_NAMES.counter,

@@ -1,4 +1,4 @@
-import { getMarkRule, isMarkAction, getDrainRule } from "@/game/battleEngine";
+import { getMarkRule, isMarkAction, getDrainRule, getDiscardRule } from "@/game/battleEngine";
 
 // Returns a plain-language explanation for an enemy intent action.
 // Explains both what will happen and how the player can respond.
@@ -13,6 +13,7 @@ export function getIntentExplanation(action, enemy, context = {}) {
   const ruleCtx = { mode: context.mode, difficulty: context.difficulty, enemy };
   const markRule = getMarkRule(ruleCtx);
   const drainRule = getDrainRule(ruleCtx);
+  const discardRule = getDiscardRule(ruleCtx);
 
   if (action.damage > 0) {
     parts.push(
@@ -82,12 +83,22 @@ export function getIntentExplanation(action, enemy, context = {}) {
     }
   }
 
-  // NOTE: discard / random_card are not yet implemented (later phase). They
-  // resolve as ordinary attacks, so the intent must not promise disruption.
+  // Forced Discard (Phase 2B) — telegraph the effect and cooldown honestly.
   if (action.effect === "discard") {
-    parts.push("A disruptive strike.");
+    if (discardRule) {
+      const howText = discardRule.auto
+        ? "One card will be discarded automatically."
+        : "You will choose 1 card to discard.";
+      parts.push(
+        `Next turn, discard 1 card. ${howText} Your final card is never discarded. Cannot be used again for ${discardRule.cooldown} turns.`
+      );
+    } else {
+      parts.push("A disruptive strike.");
+    }
   }
 
+  // NOTE: random_card is not yet implemented (later phase). It resolves as an
+  // ordinary attack, so the intent must not promise disruption.
   if (action.effect === "random_card") {
     parts.push("A disruptive strike.");
   }

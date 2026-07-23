@@ -1,7 +1,15 @@
 // Battle engine logic — turn-based card combat
 
+import { getCardById } from "@/data/cards";
+
 export const COUNTER_CAP = 12;
 export const HAND_LIMIT = 4;
+
+// Resolves a hand entry (card id string or card object) to its display name.
+function cardDisplayName(cardOrId) {
+  const c = typeof cardOrId === "string" ? getCardById(cardOrId) : cardOrId;
+  return (c && c.name) || (typeof cardOrId === "string" ? cardOrId : "a card");
+}
 
 // Righteous Aim (Epic): the next Attack deals double damage, but the added
 // bonus is capped at +12 so it can no longer create uncapped 50–60 burst turns.
@@ -25,8 +33,8 @@ export function isDrawDenialAction(action) {
 // Effects declared in enemy data but NOT yet implemented in the engine. They
 // resolve as ordinary attacks (their damage still lands); a later phase will
 // wire up real disruption. Player-facing text/labels no longer promise them.
-// (drain was implemented in Phase 2A and removed from this set.)
-export const DEFERRED_EFFECTS = new Set(["discard", "random_card"]);
+// (drain was implemented in Phase 2A, discard in Phase 2B — both removed here.)
+export const DEFERRED_EFFECTS = new Set(["random_card"]);
 
 // Dev-only console warning so the team knows a deferred effect was encountered
 // and still needs Phase 2 work. Silenced in production and during tests; never
@@ -104,6 +112,24 @@ export function getDrainRule(state) {
   return { cooldown: 3, allowZero: false };
 }
 
+// Forced Discard rule (Phase 2B). Resolves at the START of the player's next
+// turn (see startPlayerTurn). Normal preserves agency (the player chooses which
+// card); Hard and Daily use seeded, deterministic auto-selection. The final card
+// in hand is never discarded, and a 0/1-card hand expires the effect safely.
+//
+//   normal → player chooses. Cooldown 3.
+//   hard   → seeded auto-discard. Cooldown 2.
+//   daily  → seeded auto-discard (deterministic). Cooldown 3.
+//   easy   → effects are stripped; this is a safety net only (auto, floor).
+export function getDiscardRule(state) {
+  if (!state) return null;
+  if (state.mode === "daily") return { cooldown: 3, auto: true };
+  const difficulty = state.difficulty || "normal";
+  if (difficulty === "hard") return { cooldown: 2, auto: true };
+  if (difficulty === "easy") return { cooldown: 3, auto: true };
+  return { cooldown: 3, auto: false };
+}
+
 // Picks the enemy's next intent from the given card pool. Any action whose
 // effect is currently on cooldown (excludedEffects, a Set of effect keys) is
 // skipped so the enemy keeps pressuring with ordinary actions while its
@@ -125,10 +151,11 @@ function selectEnemyIntent(cards, rng, enemy, excludedEffects = null) {
 }
 
 // The disruption effects that are cooldown-gated, and how to fetch each rule.
-const COOLDOWN_EFFECTS = ["skip_draw", "drain"];
+const COOLDOWN_EFFECTS = ["skip_draw", "drain", "discard"];
 function getEffectRule(state, effectKey) {
   if (effectKey === "skip_draw") return getDrawDenialRule(state);
   if (effectKey === "drain") return getDrainRule(state);
+  if (effectKey === "discard") return getDiscardRule(state);
   return null;
 }
 
@@ -203,13 +230,12 @@ function cooldownStateFields(cooldowns, names) {
   };
 }
 
-// Resolves pending Faith Drain at the START of the player's turn. Reduces the
-// player's available Faith by 1, floored per difficulty (Normal keeps ≥1, Hard
-// may reach 0), never below 0, and never touches maximum Faith. Idempotent: it
-// consumes faithDrainPending, so calling it again is a no-op.
-export function startPlayerTurn(state) {
-  if (!state || !(state.faithDrainPending > 0)) {
-    return state ? { ...state, faithDrainedThisTurn: false } : state;
+// Resolves pending Faith Drain. Reduces available Faith by 1, floored per
+// difficulty (Normal keeps ≥1, Hard may reach 0), never below 0, never touching
+// maximum Faith. Idempotent (consumes faithDrainPending).
+function resolveFaithDrain(state) {
+  if (!(state.faithDrainPending > 0)) {
+    return { ...state, faithDrainedThisTurn: false };
   }
 
   const rule = getDrainRule(state);
@@ -234,6 +260,96 @@ export function startPlayerTurn(state) {
     faithDrainPending: 0,
     faithDrainedThisTurn: after < before,
     log,
+  };
+}
+
+// Resolves pending Forced Discard at the start of the player's turn.
+//   - 0 or 1 card in hand → expire safely (the final card is never discarded).
+//   - Normal (rule.auto === false) → hand off to the player-choice overlay by
+//     setting discardChoiceActive; the card is removed later by resolveForcedDiscard.
+//   - Hard / Daily (rule.auto) → seeded deterministic auto-discard now.
+// Idempotent: skips if a choice overlay is already active.
+function resolveForcedDiscardAtTurnStart(state) {
+  if (!(state.discardPending > 0) || state.discardChoiceActive) {
+    return { ...state, discardedThisTurn: state.discardChoiceActive ? state.discardedThisTurn : null };
+  }
+
+  const rule = getDiscardRule(state);
+  const hand = state.hand || [];
+  const source = state.discardName || "The enemy";
+  const log = [...state.log];
+
+  // Protect the final card: a 0- or 1-card hand expires the effect safely.
+  if (hand.length <= 1) {
+    log.push("🃏 No card was discarded.");
+    return { ...state, discardPending: 0, discardChoiceActive: false, discardedThisTurn: null, log };
+  }
+
+  // Normal — the player picks which card (see resolveForcedDiscard).
+  if (rule && !rule.auto) {
+    return { ...state, discardChoiceActive: true, log };
+  }
+
+  // Hard / Daily — seeded deterministic selection. hand.length ≥ 2, so removing
+  // one always leaves the final card intact.
+  const rng = state.rng || Math.random;
+  const idx = Math.floor(rng() * hand.length);
+  const discardedId = hand[idx];
+  const cardName = cardDisplayName(discardedId);
+
+  log.push(`🃏 ${source} discarded ${cardName}.`);
+
+  return {
+    ...state,
+    hand: hand.filter((_, i) => i !== idx),
+    discard: [...(state.discard || []), discardedId],
+    discardPending: 0,
+    discardChoiceActive: false,
+    discardedThisTurn: cardName,
+    log,
+  };
+}
+
+// Resolves all start-of-player-turn pending effects (Faith Drain, then Forced
+// Discard). Idempotent: each effect consumes its own pending flag.
+export function startPlayerTurn(state) {
+  if (!state) return state;
+  let next = resolveFaithDrain(state);
+  next = resolveForcedDiscardAtTurnStart(next);
+  return next;
+}
+
+// Completes a Normal Forced Discard once the player has chosen a card. Removes
+// the chosen hand card (guarding the final card), clears the pending/choice
+// flags, and logs it. No Faith cost. Safe to call only while a choice is active.
+export function resolveForcedDiscard(state, handIndex) {
+  if (!state || !(state.discardPending > 0) || !state.discardChoiceActive) {
+    return state;
+  }
+
+  const hand = state.hand || [];
+  if (hand.length <= 1) {
+    return {
+      ...state,
+      discardPending: 0,
+      discardChoiceActive: false,
+      discardedThisTurn: null,
+      log: [...state.log, "🃏 No card was discarded."],
+    };
+  }
+
+  const idx = Math.max(0, Math.min(handIndex, hand.length - 1));
+  const discardedId = hand[idx];
+  const cardName = cardDisplayName(discardedId);
+
+  return {
+    ...state,
+    hand: hand.filter((_, i) => i !== idx),
+    discard: [...(state.discard || []), discardedId],
+    discardPending: 0,
+    discardChoiceActive: false,
+    discardedThisTurn: cardName,
+    log: [...state.log, `🃏 You discarded ${cardName}.`],
   };
 }
 
@@ -350,6 +466,14 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
     // never modified by drain.
     faithDrainPending: 0,
     faithDrainedThisTurn: false,
+    // Forced Discard (Phase 2B): discardPending is set when a discard action
+    // fires and consumed at the start of the player's next turn. Normal sets
+    // discardChoiceActive so the UI prompts for a card; Hard/Daily auto-select.
+    // discardName is the source action; discardedThisTurn drives the animation.
+    discardPending: 0,
+    discardName: null,
+    discardChoiceActive: false,
+    discardedThisTurn: null,
     rng,
     error: null,
   };
@@ -863,7 +987,10 @@ export function enemyTurn(state) {
   const discard = [];
   let drawDenialResolvedName = null;
   let drainResolvedName = null;
+  let discardResolvedName = null;
   let faithDrainPending = state.faithDrainPending || 0;
+  let discardPending = state.discardPending || 0;
+  let discardName = state.discardName || null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -938,6 +1065,16 @@ export function enemyTurn(state) {
       }
     }
 
+    if (action.effect === "discard") {
+      const discardRule = getDiscardRule(state);
+      if (discardRule) {
+        discardPending = 1;
+        discardName = action.name;
+        discardResolvedName = action.name;
+        log.push("⚠️ Forced Discard — you will discard 1 card at the start of your next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       log.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -965,6 +1102,7 @@ export function enemyTurn(state) {
   const cd = advanceDisruptionCooldowns(state, {
     skip_draw: drawDenialResolvedName,
     drain: drainResolvedName,
+    discard: discardResolvedName,
   });
   log.push(...cd.logs);
 
@@ -1012,6 +1150,8 @@ export function enemyTurn(state) {
     log,
     counter,
     faithDrainPending,
+    discardPending,
+    discardName,
     ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };
@@ -1099,7 +1239,10 @@ export function getEnemyTurnSteps(state) {
   let handIdx = 0;
   let drawDenialResolvedName = null;
   let drainResolvedName = null;
+  let discardResolvedName = null;
   let faithDrainPending = state.faithDrainPending || 0;
+  let discardPending = state.discardPending || 0;
+  let discardName = state.discardName || null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -1182,6 +1325,16 @@ export function getEnemyTurnSteps(state) {
       }
     }
 
+    if (action.effect === "discard") {
+      const discardRule = getDiscardRule(state);
+      if (discardRule) {
+        discardPending = 1;
+        discardName = action.name;
+        discardResolvedName = action.name;
+        stepLog.push("⚠️ Forced Discard — you will discard 1 card at the start of your next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       stepLog.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -1215,10 +1368,12 @@ export function getEnemyTurnSteps(state) {
         blockScripture,
         dots,
         faithDrainPending,
+        discardPending,
+        discardName,
         error: null,
       },
     });
-    
+
     // Stop after animating one playable enemy action.
     break;
 
@@ -1256,6 +1411,7 @@ export function getEnemyTurnSteps(state) {
   const cd = advanceDisruptionCooldowns(state, {
     skip_draw: drawDenialResolvedName,
     drain: drainResolvedName,
+    discard: discardResolvedName,
   });
   endLog.push(...cd.logs);
 
@@ -1303,6 +1459,8 @@ export function getEnemyTurnSteps(state) {
     log: endLog,
     counter,
     faithDrainPending,
+    discardPending,
+    discardName,
     ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };

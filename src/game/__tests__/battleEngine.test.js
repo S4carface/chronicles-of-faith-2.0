@@ -7,8 +7,10 @@ import {
   getMarkRule,
   getDrawDenialRule,
   getDrainRule,
+  getDiscardRule,
   isDrawDenialAction,
   startPlayerTurn,
+  resolveForcedDiscard,
   playCard,
   RIGHTEOUS_AIM_CAP,
 } from "@/game/battleEngine";
@@ -486,14 +488,8 @@ describe("Esau — Burning Grudge recoil", () => {
 // Deferred inert effects no longer promise player-facing disruption.
 // ---------------------------------------------------------------------------
 
-describe("Deferred effects (discard/random_card) — honest text", () => {
+describe("Deferred effects (random_card) — honest text", () => {
   const enemy = ENEMIES.serpent;
-
-  it("discard intent no longer claims a forced discard", () => {
-    const text = getIntentExplanation({ name: "Temptation", damage: 4, effect: "discard" }, enemy);
-    expect(text).not.toMatch(/discard 1 card/i);
-    expect(text).toMatch(/disruptive strike/i);
-  });
 
   it("random_card intent no longer claims a forced card play", () => {
     const text = getIntentExplanation({ name: "Deception", damage: 4, effect: "random_card" }, enemy);
@@ -744,5 +740,146 @@ describe("Faith Drain — edge cases and coexistence", () => {
     expect(a.energy).toBe(b.energy);
     expect(a.energy).toBe(2); // drained by 1
     expect(startPlayerTurn(enemyTurn(drainState("normal", "daily", 1))).energy).toBe(1); // floor 1 in Daily
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Forced Discard (Phase 2B) — pending status resolved at player-turn start.
+// ---------------------------------------------------------------------------
+
+const DISCARD = { name: "Temptation", damage: 4, icon: "🍎", effect: "discard", cost: 1, description: "Discard 1 card" };
+const VBITE = { name: "Venomous Bite", damage: 5, icon: "🦷", cost: 1 };
+
+function makeDiscardEnemy(id = "serpent") {
+  return { id, name: "The Serpent", icon: "🐍", hp: 26, attacks: [{ ...VBITE }, { ...DISCARD }] };
+}
+
+// State where a discard enemy is about to resolve Temptation, with a non-discard
+// alternative for the following intent.
+function discardEnemyTurnState(difficulty, mode = "campaign") {
+  const s = createBattleState(makeDiscardEnemy(), 35, 35, deck, 0, 0, "adam", createRng("discard"), { mode, difficulty });
+  return { ...s, enemyHand: [{ ...DISCARD }], enemyDeck: [{ ...DISCARD }, { ...VBITE }], enemyEnergy: 3, enemyMaxEnergy: 3 };
+}
+
+// A state with a pending discard and a controlled hand, for resolution tests.
+function pendingDiscardState(difficulty, hand, mode = "campaign") {
+  const s = createBattleState(makeDiscardEnemy(), 35, 35, deck, 0, 0, "adam", createRng("pd"), { mode, difficulty });
+  return { ...s, hand, discardPending: 1, discardName: "Temptation" };
+}
+
+describe("getDiscardRule", () => {
+  it("Normal lets the player choose (cooldown 3); Hard auto-selects (cooldown 2)", () => {
+    expect(getDiscardRule({ difficulty: "normal" })).toEqual({ cooldown: 3, auto: false });
+    expect(getDiscardRule({ difficulty: "hard" })).toEqual({ cooldown: 2, auto: true });
+  });
+  it("Daily uses seeded auto-selection", () => {
+    expect(getDiscardRule({ mode: "daily", difficulty: "daily_standard" })).toEqual({ cooldown: 3, auto: true });
+  });
+});
+
+describe("Forced Discard — application", () => {
+  it("still deals the action's normal attack damage", () => {
+    expect(enemyTurn(discardEnemyTurnState("hard")).playerHp).toBe(31); // 35 - 4
+  });
+  it("applies a pending discard with the source name", () => {
+    const after = enemyTurn(discardEnemyTurnState("hard"));
+    expect(after.discardPending).toBe(1);
+    expect(after.discardName).toBe("Temptation");
+  });
+  it("logs the application telegraph", () => {
+    const after = enemyTurn(discardEnemyTurnState("hard"));
+    expect(after.log.some((l) => /Forced Discard/.test(l) && /next turn/i.test(l))).toBe(true);
+  });
+});
+
+describe("Forced Discard — cooldown", () => {
+  it("Normal cooldown 3, Hard cooldown 2", () => {
+    expect(enemyTurn(discardEnemyTurnState("normal")).enemyEffectCooldowns.discard).toBe(3);
+    expect(enemyTurn(discardEnemyTurnState("hard")).enemyEffectCooldowns.discard).toBe(2);
+  });
+  it("cannot occur on consecutive turns", () => {
+    const after = enemyTurn(discardEnemyTurnState("hard"));
+    expect(after.enemyIntent.effect).not.toBe("discard");
+    expect(after.enemyIntent.name).toBe("Venomous Bite");
+  });
+});
+
+describe("Forced Discard — Normal player choice", () => {
+  it("prompts a choice without auto-removing a card", () => {
+    const r = startPlayerTurn(pendingDiscardState("normal", ["sling_stone", "faith_shield", "prayer"]));
+    expect(r.discardChoiceActive).toBe(true);
+    expect(r.discardPending).toBe(1);
+    expect(r.hand.length).toBe(3); // unchanged until the player picks
+  });
+  it("resolveForcedDiscard removes the chosen card and clears the status", () => {
+    const r = startPlayerTurn(pendingDiscardState("normal", ["sling_stone", "faith_shield", "prayer"]));
+    const done = resolveForcedDiscard(r, 0);
+    expect(done.hand).toEqual(["faith_shield", "prayer"]);
+    expect(done.discardChoiceActive).toBe(false);
+    expect(done.discardPending).toBe(0);
+    expect(done.discard).toContain("sling_stone");
+    expect(done.log.some((l) => /You discarded Sling Stone/i.test(l))).toBe(true);
+  });
+});
+
+describe("Forced Discard — Hard/Daily seeded auto-selection", () => {
+  it("discards one card deterministically for the same seed", () => {
+    const a = startPlayerTurn(pendingDiscardState("hard", ["sling_stone", "faith_shield", "prayer"]));
+    const b = startPlayerTurn(pendingDiscardState("hard", ["sling_stone", "faith_shield", "prayer"]));
+    expect(a.hand).toEqual(b.hand);
+    expect(a.hand.length).toBe(2);
+    expect(a.discardPending).toBe(0);
+    expect(a.log.some((l) => /Temptation discarded/i.test(l))).toBe(true);
+  });
+  it("Daily selection is deterministic", () => {
+    const a = startPlayerTurn(pendingDiscardState("daily_standard", ["sling_stone", "faith_shield", "prayer"], "daily"));
+    const b = startPlayerTurn(pendingDiscardState("daily_standard", ["sling_stone", "faith_shield", "prayer"], "daily"));
+    expect(a.hand).toEqual(b.hand);
+    expect(a.hand.length).toBe(2);
+  });
+});
+
+describe("Forced Discard — final-card protection and empty hand", () => {
+  it("never discards the final card (1-card hand expires safely)", () => {
+    const r = startPlayerTurn(pendingDiscardState("hard", ["sling_stone"]));
+    expect(r.hand).toEqual(["sling_stone"]);
+    expect(r.discardPending).toBe(0);
+    expect(r.log.some((l) => /No card was discarded/i.test(l))).toBe(true);
+  });
+  it("empty hand expires safely", () => {
+    const r = startPlayerTurn(pendingDiscardState("hard", []));
+    expect(r.hand).toEqual([]);
+    expect(r.discardPending).toBe(0);
+    expect(r.log.some((l) => /No card was discarded/i.test(l))).toBe(true);
+  });
+  it("a 2-card hand keeps exactly one card after auto-discard", () => {
+    const r = startPlayerTurn(pendingDiscardState("hard", ["sling_stone", "faith_shield"]));
+    expect(r.hand.length).toBe(1);
+  });
+});
+
+describe("Forced Discard — edge cases and coexistence", () => {
+  it("survives a save/continue JSON round-trip and then resolves", () => {
+    const after = enemyTurn(discardEnemyTurnState("hard"));
+    const restored = JSON.parse(JSON.stringify(after));
+    expect(restored.discardPending).toBe(1);
+    expect(restored.enemyEffectCooldowns.discard).toBe(2);
+    const resolved = startPlayerTurn(restored);
+    expect(resolved.discardPending).toBe(0);
+  });
+  it("does not disturb Faith Drain or draw-denial rules", () => {
+    expect(getDrainRule({ difficulty: "normal" })).toEqual({ cooldown: 3, allowZero: false });
+    expect(getDrawDenialRule({ enemy: { id: "sodom_corruption" }, mode: "campaign", difficulty: "normal" }))
+      .toEqual({ cooldown: 3, allowZeroDraw: false });
+  });
+  it("coexists with a Faith Drain cooldown via independent keys", () => {
+    // Discard fires now while a drain cooldown is already ticking.
+    let s = pendingDiscardState("hard", ["sling_stone", "faith_shield"]);
+    s = { ...s, enemyEffectCooldowns: { drain: 2 }, enemyEffectNames: { drain: "Whisper of Doubt" },
+          enemyHand: [{ ...DISCARD }], enemyDeck: [{ ...VBITE }], enemyEnergy: 3, enemyMaxEnergy: 3,
+          discardPending: 0, discardName: null };
+    const after = enemyTurn(s);
+    expect(after.enemyEffectCooldowns.discard).toBe(2); // discard cooldown started
+    expect(after.enemyEffectCooldowns.drain).toBe(1);   // drain ticked 2 → 1 independently
   });
 });

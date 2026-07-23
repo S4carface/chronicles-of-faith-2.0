@@ -10,6 +10,7 @@ import {
   enemyTurn,
   checkBattleEnd,
   getEnemyTurnSteps,
+  startPlayerTurn,
   drawCards,
   HAND_LIMIT
 } from "@/game/battleEngine";
@@ -36,10 +37,10 @@ import { applyBossModifier } from "@/data/bossModifiers";
 function getActionType(action) {
   if (!action) return "attack";
   if (action.effect === "block") return "block";
-  // Only effects the engine actually resolves are shown as "curse". drain,
-  // discard, and random_card are deferred (Phase 2) and currently resolve as
-  // plain attacks, so they must not be dressed up as disruption.
-  if (["skip_draw", "block_scripture", "dot"].includes(action.effect)) return "curse";
+  // Effects the engine actually resolves show as "curse". drain is implemented
+  // (Phase 2A); discard and random_card remain deferred and resolve as plain
+  // attacks, so they must not be dressed up as disruption.
+  if (["skip_draw", "block_scripture", "dot", "drain"].includes(action.effect)) return "curse";
   if (action.damage > 0) return "attack";
   if (action.effect === "heal_self") return "heal";
   return "attack";
@@ -53,8 +54,9 @@ function getIntentAmountText(action, enemy) {
   if (action.effect === "dot") parts.push("Curse");
   if (action.effect === "skip_draw") parts.push("−1 Draw");
   if (action.effect === "block_scripture") parts.push("Silence");
-  // drain / discard / random_card are deferred (Phase 2) — no effect chip so the
-  // intent doesn't promise a disruption that doesn't happen yet.
+  if (action.effect === "drain") parts.push("−1 Faith");
+  // discard / random_card remain deferred — no effect chip so the intent doesn't
+  // promise a disruption that doesn't happen yet.
   return parts.join(" · ");
 }
 
@@ -249,14 +251,16 @@ if (run.currentBattleState && savedBattleMatchesEnemy) {
         };
         const drawCount = Math.max(   0,   HAND_LIMIT - (saved.skipDraw || 0) - (saved.hand?.length || 0) );
         const newState = drawCards(baseState, drawCount);
-        const finalState = { ...newState, skipDraw: 0 };
+        // Resolve any pending Faith Drain as this reconstructed player turn begins.
+        const finalState = startPlayerTurn({ ...newState, skipDraw: 0 });
         setBattleState(finalState);
         if (playerHp <= 0) {
           setBattleEnd("defeat");
           handleBattleEnd("defeat", finalState);
         }
       } else {
-        setBattleState(saved);
+        // Resolve any pending Faith Drain preserved across save/continue.
+        setBattleState(startPlayerTurn(saved));
         // Detect if the battle already ended (resume after reload during victory/defeat overlay)
         const endResult = checkBattleEnd(saved);
         if (endResult) {
@@ -619,7 +623,8 @@ if (!tutorialActive) {
         setEnemyAttackAnim(true);
       }, 300);
       setTimeout(() => {
-        const enemyState = resolveGuidedTutorialState(enemyTurn(endedState));
+        // Resolve pending Faith Drain as the player's turn begins.
+        const enemyState = resolveGuidedTutorialState(beginPlayerTurn(enemyTurn(endedState)));
         setEnemyAttackAnim(false);
         setPlayerShake(true);
         setPlayerFlash(true);
@@ -665,7 +670,7 @@ if (!tutorialActive) {
       if (step.type === "shield") {
         Sound.sfx.divine();
         setFloatingText({ text: "Covenant Shield!", color: "#fbbf24", pos: "bottom" });
-        setBattleState(step.state);
+        setBattleState(beginPlayerTurn(step.state));
         setTimeout(() => {
           clearTransient();
           stepIdx++;
@@ -708,10 +713,11 @@ if (!tutorialActive) {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
             // Only genuinely-resolved disruptions reach here (dot / skip_draw /
-            // block_scripture). No false "Faith Drain!/Discard!/Confusion!" labels.
+            // block_scripture / drain). No false discard/confusion labels.
             const curseText = step.action.effect === "dot" ? "Cursed!" :
               step.action.effect === "skip_draw" ? "Draw Reduced" :
-              step.action.effect === "block_scripture" ? "Silenced Scripture" : "Disrupted";
+              step.action.effect === "block_scripture" ? "Silenced Scripture" :
+              step.action.effect === "drain" ? "Faith Drain" : "Disrupted";
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
@@ -813,15 +819,17 @@ if (!tutorialActive) {
     setTimeout(() => setDeckMessage(null), 2500);
   }
 
-  setBattleState(step.state);
+  // Resolve pending Faith Drain as the player's turn begins.
+  const finalState = beginPlayerTurn(step.state);
+  setBattleState(finalState);
   setCurrentIntentIdx(-1);
   setAnimating(false);
 
-  const end = checkBattleEnd(step.state);
+  const end = checkBattleEnd(finalState);
 
   if (end) {
     setBattleEnd(end);
-    handleBattleEnd(end, step.state);
+    handleBattleEnd(end, finalState);
   }
 
   return;
@@ -833,6 +841,18 @@ if (!tutorialActive) {
       Sound.sfx.enemyWindUp();
       resolveNextStep();
     }, 400);
+  };
+
+  // Resolves pending Faith Drain at the start of the player's turn and surfaces a
+  // small Faith-loss indicator when it actually reduced Faith.
+  const beginPlayerTurn = (state) => {
+    const resolved = startPlayerTurn(state);
+    if (resolved && resolved.faithDrainedThisTurn) {
+      Sound.sfx.enemyCurse();
+      setFloatingText({ text: "-1 Faith", color: "#fbbf24", pos: "bottom" });
+      setTimeout(() => setFloatingText(null), 900);
+    }
+    return resolved;
   };
 
   const handleCovenantShield = () => {
@@ -1446,6 +1466,16 @@ const selectedCardData =
                   title="Draw Reduced — your hand was shrunk this turn"
                 >
                   <span className="text-[9px] lg:text-xs font-semibold">Draw Reduced</span>
+                </button>
+              )}
+              {battleState.faithDrainPending > 0 && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("faithDrain")); Sound.sfx.click(); }}
+                  className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-slate-900/70 px-1.5 py-0.5 text-amber-200/90 hover:text-amber-100 transition active:scale-90"
+                  title="Faith Drain — you will lose 1 Faith next turn"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-[9px] lg:text-xs font-semibold">Faith Drain · Next turn</span>
                 </button>
               )}
               <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>

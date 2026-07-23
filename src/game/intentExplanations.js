@@ -1,4 +1,4 @@
-import { getMarkRule, isMarkAction } from "@/game/battleEngine";
+import { getMarkRule, isMarkAction, getDrainRule } from "@/game/battleEngine";
 
 // Returns a plain-language explanation for an enemy intent action.
 // Explains both what will happen and how the player can respond.
@@ -10,11 +10,9 @@ export function getIntentExplanation(action, enemy, context = {}) {
 
   const parts = [];
   const isBoss = enemy?.isBoss;
-  const markRule = getMarkRule({
-    mode: context.mode,
-    difficulty: context.difficulty,
-    enemy,
-  });
+  const ruleCtx = { mode: context.mode, difficulty: context.difficulty, enemy };
+  const markRule = getMarkRule(ruleCtx);
+  const drainRule = getDrainRule(ruleCtx);
 
   if (action.damage > 0) {
     parts.push(
@@ -70,13 +68,22 @@ export function getIntentExplanation(action, enemy, context = {}) {
     );
   }
 
-  // NOTE (Phase 1): drain / discard / random_card are not yet implemented in the
-  // battle engine. Until Phase 2 wires them up, they resolve as ordinary attacks,
-  // so the intent must NOT promise a disruption effect that never happens.
+  // Faith Drain (Phase 2A) — telegraph the exact effect and cooldown honestly.
   if (action.effect === "drain") {
-    parts.push("A deceptive attack.");
+    if (drainRule) {
+      const floorText = drainRule.allowZero
+        ? "Your Faith may fall to 0."
+        : "You will keep at least 1 Faith.";
+      parts.push(
+        `Lose 1 Faith at the start of your next turn. ${floorText} Cannot be used again for ${drainRule.cooldown} turns.`
+      );
+    } else {
+      parts.push("A deceptive attack.");
+    }
   }
 
+  // NOTE: discard / random_card are not yet implemented (later phase). They
+  // resolve as ordinary attacks, so the intent must not promise disruption.
   if (action.effect === "discard") {
     parts.push("A disruptive strike.");
   }

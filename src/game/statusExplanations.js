@@ -32,6 +32,11 @@ export function getStatusExplanation(statusKey, value) {
         name: "Draw Reduced",
         text: "An enemy's draw denial shrank your hand this turn. Make the most of the cards you have — it cannot be used again until its cooldown ends.",
       };
+    case "faithDrain":
+      return {
+        name: STATUS_NAMES.faithDrain,
+        text: "Faith Drain: at the start of your next turn you lose 1 Faith. On Normal you always keep at least 1; on Hard your Faith may fall to 0. It cannot be used again until its cooldown ends.",
+      };
     case "counter":
       return {
         name: STATUS_NAMES.counter,

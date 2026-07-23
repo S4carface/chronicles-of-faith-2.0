@@ -22,10 +22,11 @@ export function isDrawDenialAction(action) {
   return !!action && action.effect === "skip_draw";
 }
 
-// Effects declared in enemy data but NOT yet implemented in the engine. In
-// Phase 1 they resolve as ordinary attacks (their damage still lands); Phase 2
-// will wire up real disruption. Player-facing text/labels no longer promise them.
-export const DEFERRED_EFFECTS = new Set(["drain", "discard", "random_card"]);
+// Effects declared in enemy data but NOT yet implemented in the engine. They
+// resolve as ordinary attacks (their damage still lands); a later phase will
+// wire up real disruption. Player-facing text/labels no longer promise them.
+// (drain was implemented in Phase 2A and removed from this set.)
+export const DEFERRED_EFFECTS = new Set(["discard", "random_card"]);
 
 // Dev-only console warning so the team knows a deferred effect was encountered
 // and still needs Phase 2 work. Silenced in production and during tests; never
@@ -84,24 +85,51 @@ export function getMarkRule(state) {
   return getDrawDenialRule(state);
 }
 
-// Picks the enemy's next intent from the given card pool. When draw denial is on
-// cooldown (excludeDrawDenial), the top non-draw-denial card is chosen instead
-// so the enemy keeps pressuring with ordinary actions while its disruption
-// recovers. With excludeDrawDenial false this is identical to the previous
-// shuffle+take-top behavior, preserving Daily determinism (same rng draw count
-// and ordering).
-function selectEnemyIntent(cards, rng, enemy, excludeDrawDenial = false) {
+// Faith Drain rule (Phase 2A). Drives the per-difficulty Faith floor and the
+// drain cooldown. Unlike draw denial, drain resolves at the START of the
+// player's next turn (see startPlayerTurn) and is deterministic (no RNG).
+//
+//   easy   → floor 1 (effects are stripped on Easy, so this is a safety net).
+//   normal → floor 1 (available Faith never drops below 1). Cooldown 3.
+//   hard   → may reach 0 (allowZero). Cooldown 2.
+//
+// Daily: the run difficulty is "daily_standard", which is not "hard", so Daily
+// uses the safe floor-1 / cooldown-3 rule. Drain therefore never reduces Daily
+// Faith to 0 and never touches Daily starting-Faith compensation; it is fully
+// deterministic. maxEnergy (maximum Faith) is never modified by drain.
+export function getDrainRule(state) {
+  if (!state) return null;
+  const difficulty = state.difficulty || "normal";
+  if (difficulty === "hard") return { cooldown: 2, allowZero: true };
+  return { cooldown: 3, allowZero: false };
+}
+
+// Picks the enemy's next intent from the given card pool. Any action whose
+// effect is currently on cooldown (excludedEffects, a Set of effect keys) is
+// skipped so the enemy keeps pressuring with ordinary actions while its
+// disruption recovers. With an empty/omitted set this is identical to the
+// previous shuffle+take-top behavior, preserving Daily determinism (same rng
+// draw count and ordering).
+function selectEnemyIntent(cards, rng, enemy, excludedEffects = null) {
   const pool = cards.length > 0 ? cards : [...enemy.attacks];
   const shuffled = shuffle(pool, rng);
 
   let idx = 0;
-  if (excludeDrawDenial) {
-    const nonDenial = shuffled.findIndex((c) => !isDrawDenialAction(c));
-    if (nonDenial >= 0) idx = nonDenial;
+  if (excludedEffects && excludedEffects.size > 0) {
+    const ok = shuffled.findIndex((c) => !(c && excludedEffects.has(c.effect)));
+    if (ok >= 0) idx = ok;
   }
 
   const chosen = shuffled.splice(idx, 1)[0] || pickEnemyAttack(enemy, rng);
   return { intent: chosen, deck: shuffled };
+}
+
+// The disruption effects that are cooldown-gated, and how to fetch each rule.
+const COOLDOWN_EFFECTS = ["skip_draw", "drain"];
+function getEffectRule(state, effectKey) {
+  if (effectKey === "skip_draw") return getDrawDenialRule(state);
+  if (effectKey === "drain") return getDrainRule(state);
+  return null;
 }
 
 // Honest battle-log line for a resolving draw-denial action. The wording matches
@@ -121,30 +149,92 @@ function drawDenialResolutionLog(state, action) {
   return `⚠️ ${action.description || "Draw 1 fewer next turn"}`;
 }
 
-// Advances draw-denial cooldown for one elapsed enemy turn. If a draw-denial
-// action resolved this turn it enters cooldown (recording the source name);
-// otherwise an active cooldown ticks down by one. Returns the new cooldown, the
-// remembered source name, and any battle-log lines (cooldown started/expired).
-function advanceDrawDenialCooldown(state, resolvedName) {
-  const rule = getDrawDenialRule(state);
-  let cooldown = state.markCooldown || 0;
-  let name = state.drawDenialName || null;
+// Effect-keyed enemy-disruption cooldown system. Each disruption (skip_draw,
+// drain, and future effects) has an independent cooldown in the
+// `enemyEffectCooldowns` map and a remembered source name in `enemyEffectNames`,
+// so two different effects can coexist without clobbering each other.
+//
+// `resolved` maps an effect key → the action name that fired this turn (only for
+// effects that actually resolved). For each cooldown-gated effect: if it fired,
+// it enters cooldown; otherwise an active cooldown ticks down by one. Returns the
+// new maps plus battle-log lines (cooldown started/expired).
+function advanceDisruptionCooldowns(state, resolved = {}) {
+  const cooldowns = { ...(state.enemyEffectCooldowns || {}) };
+  const names = { ...(state.enemyEffectNames || {}) };
   const logs = [];
 
-  if (!rule) return { cooldown, name, logs };
+  for (const key of COOLDOWN_EFFECTS) {
+    const rule = getEffectRule(state, key);
+    if (!rule) continue;
 
-  if (resolvedName) {
-    cooldown = rule.cooldown;
-    name = resolvedName;
-    logs.push(`⏳ ${resolvedName} recovers — unavailable for ${rule.cooldown} turns.`);
-  } else if (cooldown > 0) {
-    cooldown -= 1;
-    if (cooldown === 0) {
-      logs.push(`✨ ${name || "The enemy's disruption"} is ready again.`);
+    if (resolved[key]) {
+      cooldowns[key] = rule.cooldown;
+      names[key] = resolved[key];
+      logs.push(`⏳ ${resolved[key]} recovers — unavailable for ${rule.cooldown} turns.`);
+    } else if ((cooldowns[key] || 0) > 0) {
+      cooldowns[key] = cooldowns[key] - 1;
+      if (cooldowns[key] === 0) {
+        logs.push(`✨ ${names[key] || "The enemy's disruption"} is ready again.`);
+      }
     }
   }
 
-  return { cooldown, name, logs };
+  return { cooldowns, names, logs };
+}
+
+// The set of effect keys currently on cooldown (excluded from the next intent).
+function cooldownExcludedEffects(cooldowns) {
+  const set = new Set();
+  for (const key of COOLDOWN_EFFECTS) {
+    if ((cooldowns[key] || 0) > 0) set.add(key);
+  }
+  return set;
+}
+
+// Legacy mirror fields spread into every returned player-turn state so the
+// battle UI badge and existing tests keep reading markCooldown / drawDenialName
+// for the draw-denial (skip_draw) cooldown specifically.
+function cooldownStateFields(cooldowns, names) {
+  return {
+    enemyEffectCooldowns: cooldowns,
+    enemyEffectNames: names,
+    markCooldown: cooldowns.skip_draw || 0,
+    drawDenialName: names.skip_draw || null,
+  };
+}
+
+// Resolves pending Faith Drain at the START of the player's turn. Reduces the
+// player's available Faith by 1, floored per difficulty (Normal keeps ≥1, Hard
+// may reach 0), never below 0, and never touches maximum Faith. Idempotent: it
+// consumes faithDrainPending, so calling it again is a no-op.
+export function startPlayerTurn(state) {
+  if (!state || !(state.faithDrainPending > 0)) {
+    return state ? { ...state, faithDrainedThisTurn: false } : state;
+  }
+
+  const rule = getDrainRule(state);
+  const minFaith = rule && rule.allowZero ? 0 : 1;
+  const before = state.energy || 0;
+  const after = Math.min(before, Math.max(minFaith, before - 1));
+  const log = [...state.log];
+
+  if (before === 0) {
+    log.push("🕯️ Faith Drain activated, but you had no Faith to lose.");
+  } else if (after === before) {
+    log.push("🕯️ Faith Drain weakened your resolve, but you retained 1 Faith.");
+  } else if (after === 0) {
+    log.push("🕯️ Faith Drain activated. Faith reduced to 0.");
+  } else {
+    log.push("🕯️ Faith Drain activated. 1 Faith lost.");
+  }
+
+  return {
+    ...state,
+    energy: after,
+    faithDrainPending: 0,
+    faithDrainedThisTurn: after < before,
+    log,
+  };
 }
 
 function isCardObject(card) {
@@ -246,13 +336,20 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
     // and is therefore never affected.
     mode: options.mode || "campaign",
     difficulty: options.difficulty || "normal",
-    // Shared draw-denial cooldown (Cain's Mark and every other skip_draw source).
-    // markCooldown keeps its name for save/continue compatibility. drawDenialName
-    // remembers which action is cooling down (for logs + status). drawReduced is
-    // true while the player's current hand was actually shrunk by draw denial.
+    // Effect-keyed enemy-disruption cooldowns (skip_draw, drain, …) and the
+    // source name per effect. markCooldown / drawDenialName are legacy mirrors of
+    // the skip_draw entry, kept for the battle UI badge and save/continue compat.
+    enemyEffectCooldowns: {},
+    enemyEffectNames: {},
     markCooldown: 0,
     drawDenialName: null,
     drawReduced: false,
+    // Faith Drain (Phase 2A): faithDrainPending is set when a drain action fires
+    // and consumed at the start of the player's next turn (see startPlayerTurn).
+    // faithDrainedThisTurn drives the resolution animation. Maximum Faith is
+    // never modified by drain.
+    faithDrainPending: 0,
+    faithDrainedThisTurn: false,
     rng,
     error: null,
   };
@@ -712,8 +809,8 @@ export function enemyTurn(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
-    // No draw denial resolved (turn negated), so its cooldown simply ticks down.
-    const cd = advanceDrawDenialCooldown(state, null);
+    // No disruption resolved (turn negated), so cooldowns simply tick down.
+    const cd = advanceDisruptionCooldowns(state, {});
     log.push(...cd.logs);
 
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
@@ -722,7 +819,7 @@ export function enemyTurn(state) {
       allCards = [...state.enemy.attacks];
     }
 
-    const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+    const picked = selectEnemyIntent(allCards, rng, state.enemy, cooldownExcludedEffects(cd.cooldowns));
     const newIntent = picked.intent;
     const newDeck = picked.deck;
     const newHand = newIntent ? [newIntent] : [];
@@ -750,8 +847,7 @@ export function enemyTurn(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
-      markCooldown: cd.cooldown,
-      drawDenialName: cd.name,
+      ...cooldownStateFields(cd.cooldowns, cd.names),
       counter,
       error: null,
     };
@@ -766,6 +862,8 @@ export function enemyTurn(state) {
   let deck = [...(state.enemyDeck || [])];
   const discard = [];
   let drawDenialResolvedName = null;
+  let drainResolvedName = null;
+  let faithDrainPending = state.faithDrainPending || 0;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -831,6 +929,15 @@ export function enemyTurn(state) {
       log.push(drawDenialResolutionLog(state, action));
     }
 
+    if (action.effect === "drain") {
+      const drainRule = getDrainRule(state);
+      if (drainRule) {
+        faithDrainPending = 1;
+        drainResolvedName = action.name;
+        log.push("⚠️ Faith Drain — you will lose 1 Faith at the start of your next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       log.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -852,10 +959,13 @@ export function enemyTurn(state) {
     log.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
   }
 
-  // Advance draw-denial cooldown for this elapsed enemy turn, then keep any
-  // draw-denial action out of the next intent while it recovers so no enemy can
-  // shut down draws on consecutive turns.
-  const cd = advanceDrawDenialCooldown(state, drawDenialResolvedName);
+  // Advance every disruption cooldown for this elapsed enemy turn, then keep any
+  // effect that's on cooldown out of the next intent so no enemy can repeat a
+  // disruption on consecutive turns.
+  const cd = advanceDisruptionCooldowns(state, {
+    skip_draw: drawDenialResolvedName,
+    drain: drainResolvedName,
+  });
   log.push(...cd.logs);
 
   let allCards = [...deck, ...discard, ...hand];
@@ -864,7 +974,7 @@ export function enemyTurn(state) {
     allCards = [...state.enemy.attacks];
   }
 
-  const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+  const picked = selectEnemyIntent(allCards, rng, state.enemy, cooldownExcludedEffects(cd.cooldowns));
   const newIntent = picked.intent;
   const newDeck = picked.deck;
   const newHand = newIntent ? [newIntent] : [];
@@ -901,8 +1011,8 @@ export function enemyTurn(state) {
     dots,
     log,
     counter,
-    markCooldown: cd.cooldown,
-    drawDenialName: cd.name,
+    faithDrainPending,
+    ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };
 
@@ -934,8 +1044,8 @@ export function getEnemyTurnSteps(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
-    // No draw denial resolved (turn negated), so its cooldown simply ticks down.
-    const cd = advanceDrawDenialCooldown(state, null);
+    // No disruption resolved (turn negated), so cooldowns simply tick down.
+    const cd = advanceDisruptionCooldowns(state, {});
     log.push(...cd.logs);
 
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
@@ -944,7 +1054,7 @@ export function getEnemyTurnSteps(state) {
       allCards = [...state.enemy.attacks];
     }
 
-    const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+    const picked = selectEnemyIntent(allCards, rng, state.enemy, cooldownExcludedEffects(cd.cooldowns));
     const newIntent = picked.intent;
     const newDeck = picked.deck;
     const newHand = newIntent ? [newIntent] : [];
@@ -970,8 +1080,7 @@ export function getEnemyTurnSteps(state) {
       turnNumber: state.turnNumber + 1,
       energy: state.maxEnergy,
       shieldActive: false,
-      markCooldown: cd.cooldown,
-      drawDenialName: cd.name,
+      ...cooldownStateFields(cd.cooldowns, cd.names),
       counter,
       error: null,
     };
@@ -989,6 +1098,8 @@ export function getEnemyTurnSteps(state) {
   const discard = [];
   let handIdx = 0;
   let drawDenialResolvedName = null;
+  let drainResolvedName = null;
+  let faithDrainPending = state.faithDrainPending || 0;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -1062,6 +1173,15 @@ export function getEnemyTurnSteps(state) {
       stepLog.push(drawDenialResolutionLog(state, action));
     }
 
+    if (action.effect === "drain") {
+      const drainRule = getDrainRule(state);
+      if (drainRule) {
+        faithDrainPending = 1;
+        drainResolvedName = action.name;
+        stepLog.push("⚠️ Faith Drain — you will lose 1 Faith at the start of your next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       stepLog.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -1094,6 +1214,7 @@ export function getEnemyTurnSteps(state) {
         skipDraw,
         blockScripture,
         dots,
+        faithDrainPending,
         error: null,
       },
     });
@@ -1130,9 +1251,12 @@ export function getEnemyTurnSteps(state) {
 
   const endLog = [...log];
 
-  // Advance draw-denial cooldown for this elapsed enemy turn, then keep any
-  // draw-denial action out of the next intent while it recovers.
-  const cd = advanceDrawDenialCooldown(state, drawDenialResolvedName);
+  // Advance every disruption cooldown for this elapsed enemy turn, then keep any
+  // effect that's on cooldown out of the next intent while it recovers.
+  const cd = advanceDisruptionCooldowns(state, {
+    skip_draw: drawDenialResolvedName,
+    drain: drainResolvedName,
+  });
   endLog.push(...cd.logs);
 
   let allCards = [...deck, ...discard, ...hand];
@@ -1141,7 +1265,7 @@ export function getEnemyTurnSteps(state) {
     allCards = [...state.enemy.attacks];
   }
 
-  const picked = selectEnemyIntent(allCards, rng, state.enemy, cd.cooldown > 0);
+  const picked = selectEnemyIntent(allCards, rng, state.enemy, cooldownExcludedEffects(cd.cooldowns));
   const newIntent = picked.intent;
   const newDeck = picked.deck;
   const newHand = newIntent ? [newIntent] : [];
@@ -1178,8 +1302,8 @@ export function getEnemyTurnSteps(state) {
     dots,
     log: endLog,
     counter,
-    markCooldown: cd.cooldown,
-    drawDenialName: cd.name,
+    faithDrainPending,
+    ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };
 

@@ -6,7 +6,9 @@ import {
   checkBattleEnd,
   getMarkRule,
   getDrawDenialRule,
+  getDrainRule,
   isDrawDenialAction,
+  startPlayerTurn,
   playCard,
   RIGHTEOUS_AIM_CAP,
 } from "@/game/battleEngine";
@@ -484,14 +486,8 @@ describe("Esau — Burning Grudge recoil", () => {
 // Deferred inert effects no longer promise player-facing disruption.
 // ---------------------------------------------------------------------------
 
-describe("Deferred effects (drain/discard/random_card) — honest text", () => {
+describe("Deferred effects (discard/random_card) — honest text", () => {
   const enemy = ENEMIES.serpent;
-
-  it("drain intent no longer claims Faith loss", () => {
-    const text = getIntentExplanation({ name: "Whisper of Doubt", damage: 3, effect: "drain" }, enemy);
-    expect(text).not.toMatch(/lose 1 faith/i);
-    expect(text).toMatch(/deceptive attack/i);
-  });
 
   it("discard intent no longer claims a forced discard", () => {
     const text = getIntentExplanation({ name: "Temptation", damage: 4, effect: "discard" }, enemy);
@@ -574,5 +570,179 @@ describe("Righteous Aim — bounded doubling", () => {
     const afterDef = playCard(primed, 0, getCardById("faith_shield"));
     const afterAtk = playCard(afterDef, 0, getCardById("sling_stone"));
     expect(damageOf(afterDef, afterAtk)).toBe(12); // still doubled
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Faith Drain (Phase 2A) — pending status resolved at player-turn start.
+// ---------------------------------------------------------------------------
+
+const DRAIN = { name: "Whisper of Doubt", damage: 3, icon: "💬", effect: "drain", cost: 1, description: "Lose 1 Faith next turn" };
+const BITE = { name: "Venomous Bite", damage: 5, icon: "🦷", cost: 1 };
+
+function makeDrainEnemy(id = "serpent") {
+  return { id, name: "The Serpent", icon: "🐍", hp: 26, attacks: [{ ...BITE }, { ...DRAIN }] };
+}
+
+// State where a drain enemy is about to resolve Whisper of Doubt, with a
+// non-drain alternative for the following intent. `maxEnergy` sets the Faith the
+// player will begin next turn with (enemyTurn refills to maxEnergy).
+function drainState(difficulty, mode = "campaign", maxEnergy = 3) {
+  const s = createBattleState(makeDrainEnemy(), 35, 35, deck, 0, 0, "adam", createRng("drain"), { mode, difficulty });
+  return {
+    ...s,
+    maxEnergy,
+    energy: maxEnergy,
+    enemyHand: [{ ...DRAIN }],
+    enemyDeck: [{ ...DRAIN }, { ...BITE }],
+    enemyEnergy: 3,
+    enemyMaxEnergy: 3,
+  };
+}
+
+describe("getDrainRule", () => {
+  it("floors at 1 on Normal (cooldown 3) and allows 0 on Hard (cooldown 2)", () => {
+    expect(getDrainRule({ difficulty: "normal" })).toEqual({ cooldown: 3, allowZero: false });
+    expect(getDrainRule({ difficulty: "hard" })).toEqual({ cooldown: 2, allowZero: true });
+  });
+  it("uses the safe floor-1 rule for Daily (daily_standard)", () => {
+    expect(getDrainRule({ mode: "daily", difficulty: "daily_standard" })).toEqual({ cooldown: 3, allowZero: false });
+  });
+});
+
+describe("Faith Drain — application", () => {
+  it("still deals the action's normal attack damage", () => {
+    const after = enemyTurn(drainState("normal"));
+    expect(after.playerHp).toBe(32); // 35 - 3
+  });
+
+  it("applies a pending drain (not resolved until player-turn start)", () => {
+    const after = enemyTurn(drainState("normal"));
+    expect(after.faithDrainPending).toBe(1);
+    expect(after.energy).toBe(3); // full — not yet drained
+  });
+
+  it("logs the application telegraph", () => {
+    const after = enemyTurn(drainState("normal"));
+    expect(after.log.some((l) => /Faith Drain/.test(l) && /next turn/i.test(l))).toBe(true);
+  });
+});
+
+describe("Faith Drain — resolution at player-turn start", () => {
+  it("Normal reduces Faith by 1 but never below 1", () => {
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "campaign", 3))).energy).toBe(2);
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "campaign", 1))).energy).toBe(1); // retained
+  });
+
+  it("Hard may reduce Faith to 0", () => {
+    expect(startPlayerTurn(enemyTurn(drainState("hard", "campaign", 1))).energy).toBe(0);
+    expect(startPlayerTurn(enemyTurn(drainState("hard", "campaign", 3))).energy).toBe(2);
+  });
+
+  it("never produces negative Faith (0 Faith stays 0)", () => {
+    expect(startPlayerTurn(enemyTurn(drainState("hard", "campaign", 0))).energy).toBe(0);
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "campaign", 0))).energy).toBe(0);
+  });
+
+  it("never modifies maximum Faith", () => {
+    const resolved = startPlayerTurn(enemyTurn(drainState("normal", "campaign", 3)));
+    expect(resolved.maxEnergy).toBe(3);
+  });
+
+  it("consumes the pending status once (idempotent)", () => {
+    const once = startPlayerTurn(enemyTurn(drainState("normal", "campaign", 3)));
+    expect(once.faithDrainPending).toBe(0);
+    expect(once.energy).toBe(2);
+    const twice = startPlayerTurn(once); // no-op
+    expect(twice.energy).toBe(2);
+    expect(twice.faithDrainPending).toBe(0);
+  });
+
+  it("logs the resolution honestly per outcome", () => {
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "campaign", 3))).log.some((l) => /Faith Drain activated\. 1 Faith lost/i.test(l))).toBe(true);
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "campaign", 1))).log.some((l) => /retained 1 Faith/i.test(l))).toBe(true);
+    expect(startPlayerTurn(enemyTurn(drainState("hard", "campaign", 1))).log.some((l) => /reduced to 0/i.test(l))).toBe(true);
+  });
+});
+
+describe("Faith Drain — cooldown", () => {
+  it("Normal cooldown is 3, Hard cooldown is 2", () => {
+    expect(enemyTurn(drainState("normal")).enemyEffectCooldowns.drain).toBe(3);
+    expect(enemyTurn(drainState("hard")).enemyEffectCooldowns.drain).toBe(2);
+  });
+
+  it("cannot occur on consecutive turns (next intent is not drain)", () => {
+    const after = enemyTurn(drainState("normal"));
+    expect(after.enemyIntent.effect).not.toBe("drain");
+    expect(after.enemyIntent.name).toBe("Venomous Bite");
+  });
+
+  it("cooldown persists through state updates and expires with a log", () => {
+    let s = enemyTurn(drainState("normal")); // drain resolves, cd 3
+    expect(s.enemyEffectCooldowns.drain).toBe(3);
+    s = enemyTurn({ ...s, playerHp: 20 }); // 2
+    s = enemyTurn(s); // 1
+    expect(s.enemyEffectCooldowns.drain).toBe(1);
+    s = enemyTurn(s); // 0 — expires
+    expect(s.enemyEffectCooldowns.drain).toBe(0);
+    expect(s.log.some((l) => /Whisper of Doubt is ready again/i.test(l))).toBe(true);
+  });
+
+  it("starts the cooldown with a named log line", () => {
+    const after = enemyTurn(drainState("normal"));
+    expect(after.log.some((l) => /Whisper of Doubt recovers — unavailable for 3 turns/i.test(l))).toBe(true);
+  });
+});
+
+describe("Faith Drain — intent text", () => {
+  const enemy = makeDrainEnemy();
+  it("Normal telegraphs the floor and cooldown", () => {
+    const text = getIntentExplanation(DRAIN, enemy, { mode: "campaign", difficulty: "normal" });
+    expect(text).toMatch(/Lose 1 Faith/i);
+    expect(text).toMatch(/keep at least 1 Faith/i);
+    expect(text).toMatch(/3 turns/);
+  });
+  it("Hard warns Faith may fall to 0", () => {
+    const text = getIntentExplanation(DRAIN, enemy, { mode: "campaign", difficulty: "hard" });
+    expect(text).toMatch(/may fall to 0/i);
+    expect(text).toMatch(/2 turns/);
+  });
+});
+
+describe("Faith Drain — edge cases and coexistence", () => {
+  it("survives a save/continue JSON round-trip and then resolves", () => {
+    const after = enemyTurn(drainState("normal", "campaign", 3));
+    const restored = JSON.parse(JSON.stringify(after));
+    expect(restored.faithDrainPending).toBe(1);
+    expect(restored.enemyEffectCooldowns.drain).toBe(3);
+    const resolved = startPlayerTurn(restored);
+    expect(resolved.energy).toBe(2);
+    expect(resolved.faithDrainPending).toBe(0);
+  });
+
+  it("coexists with draw-denial cooldown without clobbering (independent fields)", () => {
+    // Enemy with both a drain and a skip_draw action, forced to drain this turn.
+    const enemy = { id: "corrupt_humanity", name: "Corrupt", icon: "x", hp: 34, attacks: [{ ...BITE }] };
+    const skip = { name: "Blinding Darkness", damage: 5, effect: "skip_draw", cost: 1, description: "Draw 1 fewer card next turn" };
+    let s = createBattleState(enemy, 35, 35, deck, 0, 0, "adam", createRng("coexist"), { mode: "campaign", difficulty: "normal" });
+    // Pretend skip_draw already fired last turn (cooldown 2 remaining) and drain fires now.
+    s = { ...s, enemyEffectCooldowns: { skip_draw: 2 }, enemyEffectNames: { skip_draw: "Blinding Darkness" }, markCooldown: 2, enemyHand: [{ ...DRAIN }], enemyDeck: [{ ...skip }, { ...BITE }], enemyEnergy: 3, enemyMaxEnergy: 3 };
+    const after = enemyTurn(s);
+    expect(after.enemyEffectCooldowns.drain).toBe(3); // drain cooldown started
+    expect(after.enemyEffectCooldowns.skip_draw).toBe(1); // skip_draw ticked 2 → 1 independently
+    expect(after.markCooldown).toBe(1); // mirror stays in sync with skip_draw
+  });
+
+  it("does not affect Cain's draw-denial behavior", () => {
+    expect(getMarkRule({ enemy: { id: "cain_wrath" }, mode: "campaign", difficulty: "normal" }).cooldown).toBe(3);
+  });
+
+  it("remains deterministic in Daily and keeps the safe floor", () => {
+    const a = startPlayerTurn(enemyTurn(drainState("normal", "daily", 3)));
+    const b = startPlayerTurn(enemyTurn(drainState("normal", "daily", 3)));
+    expect(a.log).toEqual(b.log);
+    expect(a.energy).toBe(b.energy);
+    expect(a.energy).toBe(2); // drained by 1
+    expect(startPlayerTurn(enemyTurn(drainState("normal", "daily", 1))).energy).toBe(1); // floor 1 in Daily
   });
 });

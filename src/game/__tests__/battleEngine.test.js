@@ -5,6 +5,8 @@ import {
   getEnemyTurnSteps,
   checkBattleEnd,
   getMarkRule,
+  getDrawDenialRule,
+  isDrawDenialAction,
   playCard,
   RIGHTEOUS_AIM_CAP,
 } from "@/game/battleEngine";
@@ -324,6 +326,183 @@ describe("Cain rebalance — no regressions", () => {
     const after = enemyTurn(state);
     expect(after.enemy.currentHp).toBe(17); // 20 - 3 recoil, exactly once
     expect(after.log.filter((l) => /recoil/i.test(l)).length).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Generic (non-Cain) draw-denial fairness.
+// ---------------------------------------------------------------------------
+
+const DENIAL = { name: "Blinding Darkness", damage: 5, icon: "🌑", effect: "skip_draw", cost: 1, description: "Draw 1 fewer card next turn" };
+const CITY = { name: "City of Wickedness", damage: 8, icon: "🔥", cost: 1 };
+
+function makeDenialEnemy(id = "sodom_corruption") {
+  return { id, name: "Corruption of Sodom", icon: "🔥", hp: 38, attacks: [{ ...CITY }, { ...DENIAL }] };
+}
+
+// State where a non-Cain enemy is about to resolve Blinding Darkness (skip_draw),
+// with a non-denial alternative available for the following intent.
+function denialState(difficulty, handSize = 2, mode = "campaign", id = "sodom_corruption") {
+  const s = createBattleState(makeDenialEnemy(id), 35, 35, deck, 0, 0, "adam", createRng("denial"), { mode, difficulty });
+  if (difficulty === "easy") s.drawToFull = true;
+  return {
+    ...s,
+    hand: s.hand.slice(0, handSize),
+    enemyHand: [{ ...DENIAL }],
+    enemyDeck: [{ ...DENIAL }, { ...CITY }],
+    enemyEnergy: 3,
+    enemyMaxEnergy: 3,
+    markCooldown: 0,
+  };
+}
+
+describe("Generic draw-denial rule", () => {
+  it("applies to any campaign enemy, not just Cain", () => {
+    expect(getDrawDenialRule({ enemy: { id: "sodom_corruption" }, mode: "campaign", difficulty: "normal" }))
+      .toEqual({ cooldown: 3, allowZeroDraw: false });
+    expect(getDrawDenialRule({ enemy: { id: "sodom_corruption" }, mode: "campaign", difficulty: "hard" }))
+      .toEqual({ cooldown: 2, allowZeroDraw: true });
+  });
+
+  it("is disabled in the Daily Challenge (mode daily)", () => {
+    expect(getDrawDenialRule({ enemy: { id: "sodom_corruption" }, mode: "daily", difficulty: "normal" })).toBeNull();
+  });
+
+  it("keeps Cain's signature 4/3/2 cooldowns intact", () => {
+    expect(getMarkRule({ enemy: { id: "cain_wrath" }, mode: "campaign", difficulty: "easy" }).cooldown).toBe(4);
+    expect(getMarkRule({ enemy: { id: "cain_wrath" }, mode: "campaign", difficulty: "normal" }).cooldown).toBe(3);
+    expect(getMarkRule({ enemy: { id: "cain_wrath" }, mode: "campaign", difficulty: "hard" }).cooldown).toBe(2);
+  });
+});
+
+describe("Non-Cain draw denial — floor and cooldown", () => {
+  it("Normal never reduces the draw below 1", () => {
+    const after = enemyTurn(denialState("normal", 2));
+    expect(after.hand.length).toBe(3); // drew 1 despite skip (floored)
+    expect(after.drawReduced).toBe(false); // no card actually lost
+  });
+
+  it("Hard may reduce Draw 1 to Draw 0", () => {
+    const after = enemyTurn(denialState("hard", 2));
+    expect(after.hand.length).toBe(2); // drew 0
+    expect(after.drawReduced).toBe(true);
+  });
+
+  it("Normal cooldown is 3 turns", () => {
+    expect(enemyTurn(denialState("normal")).markCooldown).toBe(3);
+  });
+
+  it("Hard cooldown is 2 turns", () => {
+    expect(enemyTurn(denialState("hard")).markCooldown).toBe(2);
+  });
+
+  it("cannot occur on consecutive turns (next intent is not draw denial)", () => {
+    const after = enemyTurn(denialState("normal"));
+    expect(isDrawDenialAction(after.enemyIntent)).toBe(false);
+    expect(after.enemyIntent.name).toBe("City of Wickedness");
+  });
+
+  it("respects cooldown for a boss-modifier-style source too", () => {
+    // Simulate a boss carrying a spreading_chaos skip_draw ("Scattered Thoughts").
+    const boss = { id: "babel_tower", name: "Tower of Babel", icon: "🏯", hp: 60, isBoss: true, attacks: [{ ...CITY }] };
+    const scatter = { name: "Scattered Thoughts", damage: 6, icon: "🌪️", effect: "skip_draw", cost: 1, description: "Draw 1 fewer card next turn" };
+    let s = createBattleState(boss, 40, 40, deck, 0, 0, "adam", createRng("boss-denial"), { mode: "campaign", difficulty: "normal" });
+    s = { ...s, enemyHand: [{ ...scatter }], enemyDeck: [{ ...scatter }, { ...CITY }], enemyEnergy: 3, enemyMaxEnergy: 3, markCooldown: 0 };
+    const after = enemyTurn(s);
+    expect(after.markCooldown).toBe(3);
+    expect(isDrawDenialAction(after.enemyIntent)).toBe(false);
+  });
+
+  it("cooldown persists through intermediate state updates", () => {
+    const afterDenial = enemyTurn(denialState("normal")); // cooldown 3
+    const afterPlayer = { ...afterDenial, playerHp: 20, energy: 3 };
+    expect(enemyTurn(afterPlayer).markCooldown).toBe(2);
+  });
+
+  it("records applied and cooldown-started log lines", () => {
+    const after = enemyTurn(denialState("normal"));
+    expect(after.log.some((l) => /Blinding Darkness/.test(l) && /draw/i.test(l))).toBe(true);
+    expect(after.log.some((l) => /Blinding Darkness recovers — unavailable for 3 turns/i.test(l))).toBe(true);
+  });
+
+  it("records a cooldown-expired log line and names the source", () => {
+    let s = enemyTurn(denialState("normal")); // resolves, cooldown 3
+    s = enemyTurn(s); // 2
+    s = enemyTurn(s); // 1
+    s = enemyTurn(s); // 0 — expires
+    expect(s.markCooldown).toBe(0);
+    expect(s.log.some((l) => /Blinding Darkness is ready again/i.test(l))).toBe(true);
+  });
+
+  it("is disabled in Daily (no floor, no cooldown — behavior unchanged)", () => {
+    const after = enemyTurn(denialState("normal", 2, "daily"));
+    expect(after.markCooldown).toBe(0);
+    expect(after.hand.length).toBe(2); // 1 → 0, no floor applied
+  });
+
+  it("produces a deterministic sequence for the same seed", () => {
+    let a = denialState("normal");
+    let b = denialState("normal");
+    for (let i = 0; i < 3; i++) { a = enemyTurn(a); b = enemyTurn(b); }
+    expect(a.log).toEqual(b.log);
+    expect(a.enemyIntent).toEqual(b.enemyIntent);
+    expect(a.markCooldown).toBe(b.markCooldown);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Esau's Burning Grudge recoil (data fix).
+// ---------------------------------------------------------------------------
+
+describe("Esau — Burning Grudge recoil", () => {
+  const grudge = () => ({ ...ENEMIES.esau_anger.attacks.find((a) => a.name === "Burning Grudge"), cost: 1 });
+
+  it("data now carries recoil: 3", () => {
+    expect(ENEMIES.esau_anger.attacks.find((a) => a.name === "Burning Grudge").recoil).toBe(3);
+  });
+
+  it("applies exactly 3 recoil to Esau (no double)", () => {
+    const esau = { ...ENEMIES.esau_anger, hp: 20 };
+    let s = createBattleState(esau, 35, 35, deck, 0, 0, "adam", createRng("esau"), { mode: "campaign", difficulty: "normal" });
+    s = { ...s, enemyHand: [grudge()], enemyEnergy: 3, enemyMaxEnergy: 3 };
+    const after = enemyTurn(s);
+    expect(after.enemy.currentHp).toBe(17); // 20 - 3, once
+    expect(after.log.filter((l) => /recoil/i.test(l)).length).toBe(1);
+  });
+
+  it("recoil can defeat Esau and end the battle in victory", () => {
+    const esau = { ...ENEMIES.esau_anger, hp: 3 };
+    let s = createBattleState(esau, 35, 35, deck, 0, 0, "adam", createRng("esau-lethal"), { mode: "campaign", difficulty: "normal" });
+    s = { ...s, enemyHand: [grudge()], enemyEnergy: 3, enemyMaxEnergy: 3 };
+    const after = enemyTurn(s);
+    expect(after.enemy.currentHp).toBe(0);
+    expect(checkBattleEnd(after)).toBe("victory");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Deferred inert effects no longer promise player-facing disruption.
+// ---------------------------------------------------------------------------
+
+describe("Deferred effects (drain/discard/random_card) — honest text", () => {
+  const enemy = ENEMIES.serpent;
+
+  it("drain intent no longer claims Faith loss", () => {
+    const text = getIntentExplanation({ name: "Whisper of Doubt", damage: 3, effect: "drain" }, enemy);
+    expect(text).not.toMatch(/lose 1 faith/i);
+    expect(text).toMatch(/deceptive attack/i);
+  });
+
+  it("discard intent no longer claims a forced discard", () => {
+    const text = getIntentExplanation({ name: "Temptation", damage: 4, effect: "discard" }, enemy);
+    expect(text).not.toMatch(/discard 1 card/i);
+    expect(text).toMatch(/disruptive strike/i);
+  });
+
+  it("random_card intent no longer claims a forced card play", () => {
+    const text = getIntentExplanation({ name: "Deception", damage: 4, effect: "random_card" }, enemy);
+    expect(text).not.toMatch(/force/i);
+    expect(text).toMatch(/disruptive strike/i);
   });
 });
 

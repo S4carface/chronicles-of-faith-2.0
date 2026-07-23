@@ -165,6 +165,7 @@ export const ENEMIES = {
         damage: 7,
         icon: "🔥",
         effect: "recoil",
+        recoil: 3,
         description: "Takes 3 recoil damage",
       },
       {

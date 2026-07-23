@@ -70,22 +70,19 @@ export function getIntentExplanation(action, enemy, context = {}) {
     );
   }
 
+  // NOTE (Phase 1): drain / discard / random_card are not yet implemented in the
+  // battle engine. Until Phase 2 wires them up, they resolve as ordinary attacks,
+  // so the intent must NOT promise a disruption effect that never happens.
   if (action.effect === "drain") {
-    parts.push(
-      "You will lose 1 Faith next turn. Spend Faith now if you have a useful card to play."
-    );
+    parts.push("A deceptive attack.");
   }
 
   if (action.effect === "discard") {
-    parts.push(
-      "You will be forced to discard 1 card. Avoid holding an essential card for too long."
-    );
+    parts.push("A disruptive strike.");
   }
 
   if (action.effect === "random_card") {
-    parts.push(
-      "The enemy may force a random card to be played. Prepare for an unpredictable result."
-    );
+    parts.push("A disruptive strike.");
   }
 
   if (action.effect === "recoil") {

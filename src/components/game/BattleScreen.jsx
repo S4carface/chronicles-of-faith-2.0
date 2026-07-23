@@ -36,7 +36,10 @@ import { applyBossModifier } from "@/data/bossModifiers";
 function getActionType(action) {
   if (!action) return "attack";
   if (action.effect === "block") return "block";
-  if (["skip_draw", "block_scripture", "dot", "drain", "discard", "random_card"].includes(action.effect)) return "curse";
+  // Only effects the engine actually resolves are shown as "curse". drain,
+  // discard, and random_card are deferred (Phase 2) and currently resolve as
+  // plain attacks, so they must not be dressed up as disruption.
+  if (["skip_draw", "block_scripture", "dot"].includes(action.effect)) return "curse";
   if (action.damage > 0) return "attack";
   if (action.effect === "heal_self") return "heal";
   return "attack";
@@ -50,9 +53,8 @@ function getIntentAmountText(action, enemy) {
   if (action.effect === "dot") parts.push("Curse");
   if (action.effect === "skip_draw") parts.push("−1 Draw");
   if (action.effect === "block_scripture") parts.push("Silence");
-  if (action.effect === "drain") parts.push("Drain Faith");
-  if (action.effect === "discard") parts.push("Discard");
-  if (action.effect === "random_card") parts.push("Confuse");
+  // drain / discard / random_card are deferred (Phase 2) — no effect chip so the
+  // intent doesn't promise a disruption that doesn't happen yet.
   return parts.join(" · ");
 }
 
@@ -89,10 +91,10 @@ function simplifyLogEntry(entry) {
   s = s.replace(/^✨\s.*?\s.*?healed\s(\d+)$/, `Enemy healed $1 HP`);
   s = s.replace(/^✨\s\+(\d+)\s*HP.*$/, `Enemy healed $1 HP`);
   s = s.replace(/^☠️\sCurse.*$/, `Curse dealt damage`);
-  s = s.replace(/^⚠️\sConfused\sTongues.*$/, `Confused Tongues — Scripture blocked`);
+  s = s.replace(/^⚠️\sSilenced\sScripture.*$/, `Silenced Scripture — Scripture blocked`);
   s = s.replace(/^⚠️\s.*?\sreadies\s(.*)$/, `Enemy will attack next.`);
   s = s.replace(/^⚠️\s.*?\sprepares.*$/, `Enemy will attack next.`);
-  s = s.replace(/^⚠️\sScripture\sblocked.*$/, `Confused Tongues — Scripture blocked`);
+  s = s.replace(/^⚠️\sScripture\sblocked.*$/, `Silenced Scripture — Scripture blocked`);
   s = s.replace(/^—\sTurn ends—$/, `Turn ended`);
   s = s.replace(/^🌈\sCovenant.*$/, `Covenant Shield activated`);
   // Battle start
@@ -705,11 +707,11 @@ if (!tutorialActive) {
           } else if (actionType === "curse") {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
+            // Only genuinely-resolved disruptions reach here (dot / skip_draw /
+            // block_scripture). No false "Faith Drain!/Discard!/Confusion!" labels.
             const curseText = step.action.effect === "dot" ? "Cursed!" :
-              step.action.effect === "drain" ? "Faith Drain!" :
               step.action.effect === "skip_draw" ? "Draw Reduced" :
-              step.action.effect === "block_scripture" ? "Confused Tongues!" :
-              step.action.effect === "discard" ? "Discard!" : "Confusion!";
+              step.action.effect === "block_scripture" ? "Silenced Scripture" : "Disrupted";
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
@@ -1250,13 +1252,13 @@ const selectedCardData =
     </div>
   )}
 
-  {/* Cain Mark of Cain cooldown — small, non-intrusive state indicator */}
+  {/* Draw-denial cooldown — small, non-intrusive state indicator for any enemy
+      whose disruption (Mark of Cain, Blinding Darkness, …) is recovering. */}
   {battleState.markCooldown > 0 &&
-    battleState.enemy?.id === "cain_wrath" &&
     battleState.mode !== "daily" &&
     !battleEnd && (
       <span className="mt-0.5 ml-2 inline-block max-w-full truncate rounded-full border border-slate-500/40 bg-slate-800/70 px-2 py-0.5 text-[8px] font-medium text-slate-300 lg:text-xs">
-        👁️ Mark of Cain unavailable — {battleState.markCooldown} turn
+        {battleState.drawDenialName || "Draw denial"} unavailable — {battleState.markCooldown} turn
         {battleState.markCooldown === 1 ? "" : "s"}
       </span>
     )}
@@ -1432,9 +1434,18 @@ const selectedCardData =
                 <button
                   onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("silence")); Sound.sfx.click(); }}
                   className="text-purple-300 flex items-center gap-0.5 hover:text-purple-200 transition active:scale-90 animate-pulse"
-                  title="Confused Tongues — Scripture blocked"
+                  title="Silenced Scripture — Scripture blocked"
                 >
                   <span className="text-[9px] lg:text-xs font-bold">🔇</span>
+                </button>
+              )}
+              {battleState.drawReduced && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("drawReduced")); Sound.sfx.click(); }}
+                  className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-slate-900/70 px-1.5 py-0.5 text-amber-200/90 hover:text-amber-100 transition active:scale-90"
+                  title="Draw Reduced — your hand was shrunk this turn"
+                >
+                  <span className="text-[9px] lg:text-xs font-semibold">Draw Reduced</span>
                 </button>
               )}
               <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>

@@ -4,7 +4,9 @@
 // Consistent debuff names used everywhere (tooltips, logs, UI)
 export const STATUS_NAMES = {
   curse: "Curse",
-  silence: "Confused Tongues",
+  // Renamed from "Confused Tongues" to avoid colliding with Pride of Babel's
+  // action of the same name (two different mechanics must not share a label).
+  silence: "Silenced Scripture",
   faithDrain: "Faith Drain",
   discard: "Discard",
   counter: "Counter",
@@ -23,7 +25,12 @@ export function getStatusExplanation(statusKey, value) {
     case "silence":
       return {
         name: STATUS_NAMES.silence,
-        text: "Confused Tongues: Scripture cards are blocked this turn. Attack, Defense, and Miracle cards are still playable if you have enough Faith.",
+        text: "Silenced Scripture: Scripture cards are blocked this turn. Attack, Defense, and Miracle cards are still playable if you have enough Faith.",
+      };
+    case "drawReduced":
+      return {
+        name: "Draw Reduced",
+        text: "An enemy's draw denial shrank your hand this turn. Make the most of the cards you have — it cannot be used again until its cooldown ends.",
       };
     case "counter":
       return {
@@ -52,7 +59,7 @@ export function getCardPlayabilityReason(card, battleState) {
   if (isSilenced && card.type === "scripture") {
     return {
       reason: "silence",
-      label: "Blocked by Confused Tongues",
+      label: "Blocked by Silenced Scripture",
       text: "Scripture cards are blocked this turn. Attack, Defense, and Miracle cards are still playable if you have enough Faith.",
     };
   }

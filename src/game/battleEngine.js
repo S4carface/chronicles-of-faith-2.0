@@ -16,82 +16,135 @@ export function isMarkAction(action) {
   return !!action && action.effect === "skip_draw" && action.name === "Mark of Cain";
 }
 
-// Cain campaign rebalance rules for Mark of Cain. Returns null for anything
-// that must stay untouched: the Daily Challenge (mode "daily"), any enemy other
-// than Cain, or when there is no battle state. When it returns a rule, the
-// engine applies a per-difficulty cooldown so Mark can't be used on consecutive
-// turns, plus a draw-reduction floor so campaign players (who draw only 1 card
-// per turn) don't repeatedly lose their entire card income.
+// Identifies any draw-denial action (Mark of Cain and all other skip_draw
+// sources: Blinding Darkness, Scarcity, Blinding Smoke, boss modifiers, …).
+export function isDrawDenialAction(action) {
+  return !!action && action.effect === "skip_draw";
+}
+
+// Effects declared in enemy data but NOT yet implemented in the engine. In
+// Phase 1 they resolve as ordinary attacks (their damage still lands); Phase 2
+// will wire up real disruption. Player-facing text/labels no longer promise them.
+export const DEFERRED_EFFECTS = new Set(["drain", "discard", "random_card"]);
+
+// Dev-only console warning so the team knows a deferred effect was encountered
+// and still needs Phase 2 work. Silenced in production and during tests; never
+// shown to players.
+function warnDeferredEffect(action) {
+  if (!action || !DEFERRED_EFFECTS.has(action.effect)) return;
+  let dev = false;
+  try {
+    dev = !!(import.meta && import.meta.env && import.meta.env.DEV);
+  } catch (e) {
+    dev = false;
+  }
+  const isTest =
+    typeof process !== "undefined" && process.env && process.env.NODE_ENV === "test";
+  if (dev && !isTest && typeof console !== "undefined") {
+    console.warn(
+      `[deferred-effect] "${action.name}" declares effect "${action.effect}", which is not implemented yet (Phase 2). It resolves as a plain attack; no disruption is applied.`
+    );
+  }
+}
+
+// Generic campaign draw-denial rule, shared by every enemy that uses skip_draw.
+// Returns null for anything that must stay untouched: the Daily Challenge
+// (mode "daily", which keeps its own deterministic compensation such as Hard
+// draw-2) or when there is no battle state.
 //
-//   easy   → 4-turn cooldown, draw never falls below 1
-//   normal → 3-turn cooldown, draw never falls below 1
-//   hard   → 2-turn cooldown, draw may fall to 0 (but only once, then cooldown)
-export function getMarkRule(state) {
+// When it returns a rule the engine applies (a) a per-difficulty cooldown so a
+// draw-denial action can't be used on consecutive turns, and (b) a draw floor
+// so campaign players (who draw only 1 card/turn) don't repeatedly lose their
+// entire card income:
+//
+//   easy   → draw never falls below 1 (special effects are stripped on Easy, so
+//            this is a safety net only). Cooldown 4 for Cain, 3 otherwise.
+//   normal → draw never falls below 1. Cooldown 3.
+//   hard   → draw may fall to 0, then cooldown. Cooldown 2.
+//
+// Cain keeps his signature longer Easy cooldown (4); all other campaign enemies
+// use the generic values. Floor/allowZeroDraw are identical across sources.
+export function getDrawDenialRule(state) {
   if (!state || state.mode === "daily") return null;
-  if (state.enemy?.id !== "cain_wrath") return null;
 
   const difficulty = state.difficulty || "normal";
+  const isCain = state.enemy?.id === "cain_wrath";
 
-  if (difficulty === "easy") return { cooldown: 4, allowZeroDraw: false };
   if (difficulty === "hard") return { cooldown: 2, allowZeroDraw: true };
+  if (difficulty === "easy") return { cooldown: isCain ? 4 : 3, allowZeroDraw: false };
   return { cooldown: 3, allowZeroDraw: false };
 }
 
-// Picks the enemy's next intent from the given card pool. When Mark of Cain is
-// on cooldown (excludeMark), the top non-Mark card is chosen instead so Cain
-// keeps pressuring with ordinary attacks while his draw-denial recovers. With
-// excludeMark false this is identical to the previous shuffle+take-top behavior,
-// preserving Daily Challenge determinism (same rng draw count and ordering).
-function selectEnemyIntent(cards, rng, enemy, excludeMark = false) {
+// Cain-only view of the draw-denial rule, preserved for the existing Cain tests
+// and for Mark-specific wording. Non-Cain enemies get their rule straight from
+// getDrawDenialRule.
+export function getMarkRule(state) {
+  if (!state || state.mode === "daily") return null;
+  if (state.enemy?.id !== "cain_wrath") return null;
+  return getDrawDenialRule(state);
+}
+
+// Picks the enemy's next intent from the given card pool. When draw denial is on
+// cooldown (excludeDrawDenial), the top non-draw-denial card is chosen instead
+// so the enemy keeps pressuring with ordinary actions while its disruption
+// recovers. With excludeDrawDenial false this is identical to the previous
+// shuffle+take-top behavior, preserving Daily determinism (same rng draw count
+// and ordering).
+function selectEnemyIntent(cards, rng, enemy, excludeDrawDenial = false) {
   const pool = cards.length > 0 ? cards : [...enemy.attacks];
   const shuffled = shuffle(pool, rng);
 
   let idx = 0;
-  if (excludeMark) {
-    const nonMark = shuffled.findIndex((c) => !isMarkAction(c));
-    if (nonMark >= 0) idx = nonMark;
+  if (excludeDrawDenial) {
+    const nonDenial = shuffled.findIndex((c) => !isDrawDenialAction(c));
+    if (nonDenial >= 0) idx = nonDenial;
   }
 
   const chosen = shuffled.splice(idx, 1)[0] || pickEnemyAttack(enemy, rng);
   return { intent: chosen, deck: shuffled };
 }
 
-// Honest battle-log line for a resolving draw-denial action. Under the Cain
-// campaign rule the wording matches what actually happens: Easy/Normal keep at
-// least 1 card, Hard may be cut to 0. Any other case keeps the generic wording.
-function markResolutionLog(state, action) {
-  const rule = getMarkRule(state);
+// Honest battle-log line for a resolving draw-denial action. The wording matches
+// what actually happens: Easy/Normal keep at least 1 card, Hard may be cut to 0.
+// Cain keeps his signature "Mark of Cain" phrasing; other enemies use the action
+// name so the log stays accurate per source.
+function drawDenialResolutionLog(state, action) {
+  const rule = getDrawDenialRule(state);
+  const label = isMarkAction(action) ? "Mark of Cain" : action.name;
 
-  if (rule && isMarkAction(action)) {
+  if (rule) {
     return rule.allowZeroDraw
-      ? "⚠️ Mark of Cain — your next draw may be cut to 0."
-      : "⚠️ Mark of Cain — your next draw is contested (you keep at least 1 card).";
+      ? `⚠️ ${label} — your next draw may be cut to 0.`
+      : `⚠️ ${label} — your next draw is contested (you keep at least 1 card).`;
   }
 
   return `⚠️ ${action.description || "Draw 1 fewer next turn"}`;
 }
 
-// Advances Mark of Cain's cooldown for one elapsed enemy turn. If Mark resolved
-// this turn it enters cooldown; otherwise an active cooldown ticks down by one.
-// Returns the new cooldown plus any battle-log lines (cooldown started/expired).
-function advanceMarkCooldown(state, markResolvedThisTurn) {
-  const rule = getMarkRule(state);
+// Advances draw-denial cooldown for one elapsed enemy turn. If a draw-denial
+// action resolved this turn it enters cooldown (recording the source name);
+// otherwise an active cooldown ticks down by one. Returns the new cooldown, the
+// remembered source name, and any battle-log lines (cooldown started/expired).
+function advanceDrawDenialCooldown(state, resolvedName) {
+  const rule = getDrawDenialRule(state);
   let cooldown = state.markCooldown || 0;
+  let name = state.drawDenialName || null;
   const logs = [];
 
-  if (!rule) return { cooldown, logs };
+  if (!rule) return { cooldown, name, logs };
 
-  if (markResolvedThisTurn) {
+  if (resolvedName) {
     cooldown = rule.cooldown;
-    logs.push(`⏳ Mark of Cain recovers — unavailable for ${rule.cooldown} turns.`);
+    name = resolvedName;
+    logs.push(`⏳ ${resolvedName} recovers — unavailable for ${rule.cooldown} turns.`);
   } else if (cooldown > 0) {
     cooldown -= 1;
     if (cooldown === 0) {
-      logs.push("👁️ Mark of Cain is ready again.");
+      logs.push(`✨ ${name || "The enemy's disruption"} is ready again.`);
     }
   }
 
-  return { cooldown, logs };
+  return { cooldown, name, logs };
 }
 
 function isCardObject(card) {
@@ -193,7 +246,13 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
     // and is therefore never affected.
     mode: options.mode || "campaign",
     difficulty: options.difficulty || "normal",
+    // Shared draw-denial cooldown (Cain's Mark and every other skip_draw source).
+    // markCooldown keeps its name for save/continue compatibility. drawDenialName
+    // remembers which action is cooling down (for logs + status). drawReduced is
+    // true while the player's current hand was actually shrunk by draw denial.
     markCooldown: 0,
+    drawDenialName: null,
+    drawReduced: false,
     rng,
     error: null,
   };
@@ -261,12 +320,12 @@ function drawNextTurnCard(state, skipDraw = 0) {
     baseDrawCount - (skipDraw || 0)
   );
 
-  // Cain campaign draw-reduction floor. Mark of Cain reduces the next draw by
-  // 1, but campaign players draw only 1 card/turn, so an unfloored reduction
-  // wipes their entire card income. On Easy/Normal the draw never falls below 1
-  // (when the player would otherwise draw ≥ 1). Hard (allowZeroDraw) may reach 0
-  // — but Mark then goes on cooldown, so it can't repeat the shutdown.
-  const rule = getMarkRule(state);
+  // Campaign draw-reduction floor, shared by every draw-denial source. A
+  // campaign player draws only 1 card/turn, so an unfloored reduction wipes
+  // their entire card income. On Easy/Normal the draw never falls below 1 (when
+  // the player would otherwise draw ≥ 1). Hard (allowZeroDraw) may reach 0 — but
+  // the source then goes on cooldown, so it can't repeat the shutdown.
+  const rule = getDrawDenialRule(state);
   if (
     rule &&
     !rule.allowZeroDraw &&
@@ -277,7 +336,14 @@ function drawNextTurnCard(state, skipDraw = 0) {
     cardsToDraw = 1;
   }
 
-  return drawCards(state, cardsToDraw);
+  const drawn = drawCards(state, cardsToDraw);
+
+  // Flag whether the player's incoming hand was actually shrunk by draw denial
+  // (drives the "Draw Reduced" status). On Easy/Normal the floor usually keeps
+  // this false; on Hard a 1 → 0 reduction sets it true.
+  const drawReduced = (skipDraw || 0) > 0 && cardsToDraw < baseDrawCount;
+
+  return { ...drawn, drawReduced };
 }
 
 export function playCard(state, handIndex, card) {
@@ -646,8 +712,8 @@ export function enemyTurn(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
-    // Mark did not resolve (turn negated), so its cooldown simply ticks down.
-    const cd = advanceMarkCooldown(state, false);
+    // No draw denial resolved (turn negated), so its cooldown simply ticks down.
+    const cd = advanceDrawDenialCooldown(state, null);
     log.push(...cd.logs);
 
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
@@ -685,6 +751,7 @@ export function enemyTurn(state) {
       energy: state.maxEnergy,
       shieldActive: false,
       markCooldown: cd.cooldown,
+      drawDenialName: cd.name,
       counter,
       error: null,
     };
@@ -698,7 +765,7 @@ export function enemyTurn(state) {
   const hand = [...(state.enemyHand || [])];
   let deck = [...(state.enemyDeck || [])];
   const discard = [];
-  let markResolved = false;
+  let drawDenialResolvedName = null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -760,19 +827,21 @@ export function enemyTurn(state) {
 
     if (action.effect === "skip_draw") {
       skipDraw = 1;
-      if (isMarkAction(action)) markResolved = true;
-      log.push(markResolutionLog(state, action));
+      drawDenialResolvedName = isMarkAction(action) ? "Mark of Cain" : action.name;
+      log.push(drawDenialResolutionLog(state, action));
     }
 
     if (action.effect === "block_scripture") {
       blockScripture = true;
-      log.push("⚠️ Confused Tongues — Scripture blocked next turn");
+      log.push("⚠️ Silenced Scripture — no Scripture cards next turn");
     }
 
     if (action.effect === "dot") {
       dots = 3;
       log.push("☠️ Curse — 2 dmg/turn");
     }
+
+    warnDeferredEffect(action);
 
     discard.push(action);
   }
@@ -783,10 +852,10 @@ export function enemyTurn(state) {
     log.push(`☠️ Curse — 2 dmg (${dots} turn${dots === 1 ? "" : "s"} left)`);
   }
 
-  // Advance Mark of Cain's cooldown for this elapsed enemy turn, then keep Mark
-  // out of the next intent while it recovers so Cain can't shut down draws on
-  // consecutive turns.
-  const cd = advanceMarkCooldown(state, markResolved);
+  // Advance draw-denial cooldown for this elapsed enemy turn, then keep any
+  // draw-denial action out of the next intent while it recovers so no enemy can
+  // shut down draws on consecutive turns.
+  const cd = advanceDrawDenialCooldown(state, drawDenialResolvedName);
   log.push(...cd.logs);
 
   let allCards = [...deck, ...discard, ...hand];
@@ -833,6 +902,7 @@ export function enemyTurn(state) {
     log,
     counter,
     markCooldown: cd.cooldown,
+    drawDenialName: cd.name,
     error: null,
   };
 
@@ -864,8 +934,8 @@ export function getEnemyTurnSteps(state) {
   if (state.shieldActive) {
     log.push("🌈 Covenant Shield — enemy turn negated!");
 
-    // Mark did not resolve (turn negated), so its cooldown simply ticks down.
-    const cd = advanceMarkCooldown(state, false);
+    // No draw denial resolved (turn negated), so its cooldown simply ticks down.
+    const cd = advanceDrawDenialCooldown(state, null);
     log.push(...cd.logs);
 
     let allCards = [...(state.enemyHand || []), ...(state.enemyDeck || [])];
@@ -901,6 +971,7 @@ export function getEnemyTurnSteps(state) {
       energy: state.maxEnergy,
       shieldActive: false,
       markCooldown: cd.cooldown,
+      drawDenialName: cd.name,
       counter,
       error: null,
     };
@@ -917,7 +988,7 @@ export function getEnemyTurnSteps(state) {
   let deck = [...(state.enemyDeck || [])];
   const discard = [];
   let handIdx = 0;
-  let markResolved = false;
+  let drawDenialResolvedName = null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -987,19 +1058,21 @@ export function getEnemyTurnSteps(state) {
 
     if (action.effect === "skip_draw") {
       skipDraw = 1;
-      if (isMarkAction(action)) markResolved = true;
-      stepLog.push(markResolutionLog(state, action));
+      drawDenialResolvedName = isMarkAction(action) ? "Mark of Cain" : action.name;
+      stepLog.push(drawDenialResolutionLog(state, action));
     }
 
     if (action.effect === "block_scripture") {
       blockScripture = true;
-      stepLog.push("⚠️ Confused Tongues — Scripture blocked next turn");
+      stepLog.push("⚠️ Silenced Scripture — no Scripture cards next turn");
     }
 
     if (action.effect === "dot") {
       dots = 3;
       stepLog.push("☠️ Curse — 2 dmg/turn");
     }
+
+    warnDeferredEffect(action);
 
     discard.push(action);
 
@@ -1057,9 +1130,9 @@ export function getEnemyTurnSteps(state) {
 
   const endLog = [...log];
 
-  // Advance Mark of Cain's cooldown for this elapsed enemy turn, then keep Mark
-  // out of the next intent while it recovers.
-  const cd = advanceMarkCooldown(state, markResolved);
+  // Advance draw-denial cooldown for this elapsed enemy turn, then keep any
+  // draw-denial action out of the next intent while it recovers.
+  const cd = advanceDrawDenialCooldown(state, drawDenialResolvedName);
   endLog.push(...cd.logs);
 
   let allCards = [...deck, ...discard, ...hand];
@@ -1106,6 +1179,7 @@ export function getEnemyTurnSteps(state) {
     log: endLog,
     counter,
     markCooldown: cd.cooldown,
+    drawDenialName: cd.name,
     error: null,
   };
 

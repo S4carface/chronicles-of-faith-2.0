@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
-import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount } from "@/game/deckRules";
+import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount, shouldAwardDuplicateGoldBonus } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
@@ -55,13 +55,15 @@ export default function TreasureRoom() {
 
   const handleClaim = () => {
     Sound.sfx.reward();
-    // Duplicate reward: grant the existing gold bonus regardless of outcome below
-    if (alreadyOwned) {
-      updateRun({ gold: (run.gold || 0) + goldBonus });
-    }
     // Canonical grant pipeline: a complete copy, or — once the card is already
     // at its usable ownership limit — Card Fragments instead of a redundant copy.
-    setGrantResult(grantCard(rewardCardId));
+    const grant = grantCard(rewardCardId);
+    setGrantResult(grant);
+    // An allowed duplicate copy (e.g. the 2nd Common/Uncommon copy) still
+    // grants the existing small Gold bonus; a conversion to Fragments does not.
+    if (shouldAwardDuplicateGoldBonus(alreadyOwned, grant)) {
+      updateRun({ gold: (run.gold || 0) + goldBonus });
+    }
     setClaimed(true);
   };
 
@@ -144,7 +146,7 @@ export default function TreasureRoom() {
             </p>
             {willConvert ? (
               <p className="text-amber-100/50 text-[10px]">
-                {card.name} already owned — +{goldBonus} gold and +{fragmentAmount} Card Fragments instead of another copy.
+                {card.name} already owned — +{fragmentAmount} Card Fragments instead of another copy.
               </p>
             ) : (
               <p className="text-amber-100/50 text-[10px]">Claiming this duplicate grants +{goldBonus} gold bonus.</p>

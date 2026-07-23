@@ -14,7 +14,7 @@ export const SHOP_ITEMS = [
     name: "Common Card Pack",
     icon: "common",
     cost: 50,
-    desc: "Receive one random Common card you do not own.",
+    desc: "Receive one random Common card. A duplicate converts into Card Fragments.",
     type: "card_pack",
     rarity: "common",
     unlockRequirement: "always",
@@ -24,7 +24,7 @@ export const SHOP_ITEMS = [
     name: "Uncommon Card Pack",
     icon: "uncommon",
     cost: 150,
-    desc: "Receive one random Uncommon card you do not own.",
+    desc: "Receive one random Uncommon card. A duplicate converts into Card Fragments.",
     type: "card_pack",
     rarity: "uncommon",
     unlockRequirement: "always",
@@ -34,7 +34,7 @@ export const SHOP_ITEMS = [
     name: "Rare Card Pack",
     icon: "rare",
     cost: 500,
-    desc: "Receive one random Rare card you do not own.",
+    desc: "Receive one random Rare card. A duplicate converts into Card Fragments.",
     type: "card_pack",
     rarity: "rare",
     unlockRequirement: "genesis",
@@ -45,7 +45,7 @@ export const SHOP_ITEMS = [
     name: "Legendary Card Pack",
     icon: "legendary",
     cost: 2000,
-    desc: "Receive one random Legendary card you do not own.",
+    desc: "Receive one random Legendary card. A duplicate converts into Card Fragments.",
     type: "card_pack",
     rarity: "legendary",
     unlockRequirement: "genesis_normal",
@@ -68,18 +68,22 @@ export function isShopItemUnlocked(item, profile = {}) {
   }
 }
 
-// Pool of cards a given pack could grant: the item's rarity tier, minus cards
-// the player already owns. (cardsOfTier folds Epic into the Rare tier, same as
-// the reward system — see deckRules.js.)
+// Pool of cards a given pack could grant: the item's full rarity tier.
+// Already-owned cards remain eligible for a roll — an owned card at its
+// ownership limit converts into Card Fragments through the canonical
+// grantCard/grantCardOrFragments pipeline (see Shop.jsx) instead of being
+// excluded here, so a pack never rerolls toward an unowned card and is never
+// blocked just because every card of that rarity happens to be owned.
 export function getShopPurchasePool(item, profile = {}) {
-  const collected = profile.collectedCards || [];
-  return cardsOfTier(item.rarity).filter((c) => !collected.includes(c.id));
+  return cardsOfTier(item.rarity);
 }
 
 // Pure purchase calculation — decides the outcome of buying a pack without
 // touching any component/profile state. The caller (Shop.jsx) applies the
-// single resulting gold deduction and single card grant. Returns one of:
-//   { ok: false, reason: "locked" | "insufficient_gold" | "all_owned", message }
+// single resulting gold deduction and routes the card through the canonical
+// grantCard pipeline (a complete copy, or Fragments once already at the
+// ownership limit). Returns one of:
+//   { ok: false, reason: "locked" | "insufficient_gold" | "empty_pool", message }
 //   { ok: true, cardId, cardName, cost, newGold, message }
 export function purchaseCardPack(item, profile, rng = Math.random) {
   const gold = profile.gold || 0;
@@ -100,12 +104,14 @@ export function purchaseCardPack(item, profile, rng = Math.random) {
     };
   }
 
+  // Defensive guard only — every currently used rarity tier has real cards,
+  // so this cannot trigger from ownership alone anymore (see getShopPurchasePool).
   const pool = getShopPurchasePool(item, profile);
   if (pool.length === 0) {
     return {
       ok: false,
-      reason: "all_owned",
-      message: "You already own all cards of this rarity!",
+      reason: "empty_pool",
+      message: "This card pack has no eligible cards right now.",
     };
   }
 

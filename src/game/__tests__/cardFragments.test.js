@@ -4,8 +4,10 @@ import {
   addCardFragments,
   getDuplicateFragmentAmount,
   grantCardOrFragments,
+  shouldAwardDuplicateGoldBonus,
   sanitizeCardFragments,
   DUPLICATE_FRAGMENT_AMOUNTS,
+  DUPLICATE_GOLD_BONUS,
   getMaxCopies,
   resolveMaxRewardRarity,
   cardsOfTier,
@@ -314,5 +316,76 @@ describe("existing rarity caps remain unchanged (no regression from the prior ta
 
   it("Epic still does not ride along with the Rare tier", () => {
     expect(cardsOfTier("rare").some((c) => c.id === "righteous_aim")).toBe(false);
+  });
+});
+
+describe("shouldAwardDuplicateGoldBonus — legacy Gold bonus removed on conversion", () => {
+  it("Duplicate Common at the ownership limit grants 5 Fragments and 0 bonus Gold", () => {
+    const profile = { cardCollection: { sling_stone: 2 } };
+    const grant = grantCardOrFragments(profile, "sling_stone");
+    expect(grant).toEqual({ type: "fragments", cardId: "sling_stone", amount: 5 });
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(false);
+  });
+
+  it("Duplicate Uncommon at the ownership limit grants 8 Fragments and 0 bonus Gold", () => {
+    const profile = { cardCollection: { wisdom: 2 } };
+    const grant = grantCardOrFragments(profile, "wisdom");
+    expect(grant).toEqual({ type: "fragments", cardId: "wisdom", amount: 8 });
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(false);
+  });
+
+  it("Duplicate Rare at the ownership limit grants 12 Fragments and 0 bonus Gold", () => {
+    const profile = { cardCollection: { ark_covenant: 1 } };
+    const grant = grantCardOrFragments(profile, "ark_covenant");
+    expect(grant).toEqual({ type: "fragments", cardId: "ark_covenant", amount: 12 });
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(false);
+  });
+
+  it("Duplicate Epic at the ownership limit grants 20 Fragments and 0 bonus Gold", () => {
+    const profile = { cardCollection: { righteous_aim: 1 } };
+    const grant = grantCardOrFragments(profile, "righteous_aim");
+    expect(grant).toEqual({ type: "fragments", cardId: "righteous_aim", amount: 20 });
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(false);
+  });
+
+  it("Duplicate Legendary at the ownership limit grants 35 Fragments and 0 bonus Gold", () => {
+    const profile = { cardCollection: { angel_lord: 1 } };
+    const grant = grantCardOrFragments(profile, "angel_lord");
+    expect(grant).toEqual({ type: "fragments", cardId: "angel_lord", amount: 35 });
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(false);
+  });
+
+  it("a new (never-owned) card grant is a card, not Fragments, and never triggers the bonus check", () => {
+    const grant = grantCardOrFragments({ cardCollection: {} }, "sling_stone");
+    expect(grant.type).toBe("card");
+    expect(shouldAwardDuplicateGoldBonus(false, grant)).toBe(false);
+  });
+
+  it("the allowed 2nd Common copy still grants normally and keeps the Gold bonus", () => {
+    const profile = { cardCollection: { sling_stone: 1 } };
+    const grant = grantCardOrFragments(profile, "sling_stone");
+    expect(grant.type).toBe("card");
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(true);
+  });
+
+  it("the allowed 2nd Uncommon copy still grants normally and keeps the Gold bonus", () => {
+    const profile = { cardCollection: { wisdom: 1 } };
+    const grant = grantCardOrFragments(profile, "wisdom");
+    expect(grant.type).toBe("card");
+    expect(shouldAwardDuplicateGoldBonus(true, grant)).toBe(true);
+  });
+
+  it("never awards the bonus for a false/undefined alreadyOwned flag regardless of grant type", () => {
+    expect(shouldAwardDuplicateGoldBonus(false, { type: "card" })).toBe(false);
+    expect(shouldAwardDuplicateGoldBonus(undefined, { type: "card" })).toBe(false);
+  });
+
+  it("ordinary battle/reward Gold values (DUPLICATE_GOLD_BONUS) are unchanged", () => {
+    expect(DUPLICATE_GOLD_BONUS).toEqual({
+      common: 5,
+      uncommon: 10,
+      rare: 15,
+      legendary: 40,
+    });
   });
 });

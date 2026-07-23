@@ -151,6 +151,15 @@ export function grantCardOrFragments(profile, cardId) {
   return { type: "fragments", cardId, amount: getDuplicateFragmentAmount(card) };
 }
 
+// Whether a duplicate-card grant should still receive the legacy small Gold
+// bonus. An allowed duplicate copy (still under the ownership limit, e.g. the
+// 2nd Common/Uncommon copy) keeps it; a grant that converted into Card
+// Fragments (already at the ownership limit) does not — Fragments are the
+// sole reward for that duplicate, never Gold plus Fragments together.
+export function shouldAwardDuplicateGoldBonus(alreadyOwnedBefore, grantResult) {
+  return alreadyOwnedBefore === true && grantResult?.type !== "fragments";
+}
+
 // Sanitizes a raw (possibly missing/malformed) cardFragments value from a
 // loaded profile into a safe { [cardId]: nonnegative integer } map. Used by
 // GameContext's profile migration; exported so migration behavior is directly

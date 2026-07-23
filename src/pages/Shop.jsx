@@ -46,10 +46,10 @@ export default function Shop({ embedded = false }) {
       return;
     }
 
-    // Exactly one gold deduction and one canonical card-or-Fragments grant per
-    // successful purchase (the current card pack pool already excludes any
-    // card the player owns, so this is a "card" grant today — routed through
-    // the shared pipeline as a safety net if that pool logic ever changes).
+    // Exactly one Gold deduction and one canonical card-or-Fragments grant per
+    // successful purchase. The pack pool includes already-owned cards, so a
+    // roll can land on one already at its ownership limit — grantCard then
+    // converts that into Card Fragments instead of a redundant copy.
     saveProfile({ gold: result.newGold });
     const grant = grantCard(result.cardId);
     setPurchased({
@@ -130,7 +130,7 @@ export default function Shop({ embedded = false }) {
   </p>
 ) : (
   <p className="text-amber-100/30 text-[9px] mt-1.5 text-center">
-    Contains one unowned card
+    Duplicates convert to Card Fragments
   </p>
 )}
             </div>
@@ -153,11 +153,19 @@ export default function Shop({ embedded = false }) {
   <PartyPopper className="w-8 h-8 text-emerald-400" />
 )}
           </div>
-          <p   className={`text-lg font-serif mb-2 ${     purchased.isError ? "text-red-200" : "text-emerald-200"   }`} >   {purchased.message} </p>
-          {purchased.converted && (
-            <p className="text-amber-200/80 text-sm mb-2">
-              {purchased.card?.name} already owned — +{purchased.fragmentAmount} Card Fragments instead of another copy.
-            </p>
+          {purchased.isError ? (
+            <p className="text-lg font-serif mb-2 text-red-200">{purchased.message}</p>
+          ) : purchased.converted ? (
+            <>
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-300/70 mb-1">Duplicate Converted</p>
+              <p className="text-lg font-serif text-emerald-200 mb-1">{purchased.card?.name}</p>
+              <p className="text-amber-200/80 text-sm mb-2">+{purchased.fragmentAmount} Card Fragments</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold uppercase tracking-wide text-emerald-300/70 mb-1">Card Acquired</p>
+              <p className="text-lg font-serif text-emerald-200 mb-2">{purchased.card?.name}</p>
+            </>
           )}
           {purchased.card && (
             <button
@@ -200,7 +208,7 @@ export default function Shop({ embedded = false }) {
           <div className="flex items-start gap-2">
             <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
             <p className="text-amber-100/60 text-sm text-left">
-              Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
+              Each pack contains one random card of that rarity. A card you already own converts into Card Fragments instead of a duplicate. Stronger rarities require story progress and substantially more gold.
             </p>
           </div>
         </div>
@@ -228,7 +236,7 @@ export default function Shop({ embedded = false }) {
         <div className="flex items-start gap-2">
           <Lightbulb className="w-4 h-4 text-amber-300/60 flex-shrink-0 mt-0.5" />
           <p className="text-amber-100/60 text-sm text-left">
-            Each pack contains one random card you do not already own. Stronger rarities require story progress and substantially more gold.
+            Each pack contains one random card of that rarity. A card you already own converts into Card Fragments instead of a duplicate. Stronger rarities require story progress and substantially more gold.
           </p>
         </div>
       </div>

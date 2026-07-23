@@ -4,7 +4,7 @@ import { getCardById } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { ROOM_TYPES } from "@/data/genesisRooms";
 import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART, getNodeArt } from "@/data/art";
-import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount } from "@/game/deckRules";
+import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount, shouldAwardDuplicateGoldBonus } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -91,16 +91,17 @@ export default function RewardScreen() {
 
   const handleSelectReward = (cardId) => {
     Sound.sfx.reward();
-    const card = getCardById(cardId);
     const alreadyOwned = (collection[cardId] || 0) > 0;
-    // Duplicate reward: grant the existing gold bonus regardless of outcome below
-    if (alreadyOwned) {
-      const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
-      updateRun({ gold: (run.gold || 0) + goldBonus });
-    }
     // Canonical grant pipeline: a complete copy, or — once the card is already
     // at its usable ownership limit — Card Fragments instead of a redundant copy.
     const grant = grantCard(cardId);
+    // An allowed duplicate copy (e.g. the 2nd Common/Uncommon copy) still
+    // grants the existing small Gold bonus; a conversion to Fragments does not.
+    if (shouldAwardDuplicateGoldBonus(alreadyOwned, grant)) {
+      const card = getCardById(cardId);
+      const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
+      updateRun({ gold: (run.gold || 0) + goldBonus });
+    }
     if (grant.type === "fragments") {
       setDetailCard(null);
       prepareMap().then(() => completeRoom(run.currentNode.id));
@@ -254,12 +255,13 @@ function RewardCardDisplay({ card, ownedCount, willConvert, onClick }) {
 
       {alreadyOwned && (
         <div className="text-center mt-1">
-          <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">
-            +{goldBonus} gold
-          </p>
-          {willConvert && (
+          {willConvert ? (
             <p className="text-amber-300/80 text-[9px] sm:text-xs font-semibold">
               +{fragmentAmount} Card Fragments
+            </p>
+          ) : (
+            <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">
+              +{goldBonus} gold
             </p>
           )}
         </div>

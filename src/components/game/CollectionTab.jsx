@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { Lightbulb } from "lucide-react";
-import { useGame } from "@/game/GameContext";
+import { useGameSafe } from "@/game/GameContext";
 import { CARDS, getCardById } from "@/data/cards";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
@@ -27,7 +27,20 @@ import { ACTIVE_CARD_RARITIES, getCardRarity } from "@/data/cardRarity";
 const CRAFTABLE_RARITIES = new Set(["common", "uncommon", "rare"]);
 
 export default function CollectionTab() {
-  const { profile, addToActiveDeck, removeCardFromDeck, craftCard, convertFragments } = useGame();
+  // Outermost guard: if this component is ever mounted outside the app's
+  // canonical GameProvider (see useGameSafe in GameContext.jsx — e.g. an
+  // external preview or issue-scanning tool rendering this file in
+  // isolation, independent of the Collection page that normally hosts it),
+  // render nothing safely instead of throwing. All real context-dependent
+  // logic lives in CollectionTabContent below, which only ever mounts once a
+  // provider is confirmed present.
+  const game = useGameSafe();
+  if (!game) return null;
+  return <CollectionTabContent game={game} />;
+}
+
+function CollectionTabContent({ game }) {
+  const { profile, addToActiveDeck, removeCardFromDeck, craftCard, convertFragments } = game;
   const [filter, setFilter] = useState("all");
   const [detailCard, setDetailCard] = useState(null);
   const [toast, setToast] = useState(null);

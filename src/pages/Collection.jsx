@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Coins } from "lucide-react";
 
-import { useGame } from "@/game/GameContext";
+import { useGameSafe } from "@/game/GameContext";
 import { CARDS } from "@/data/cards";
 import CollectionTab from "@/components/game/CollectionTab";
 import DeckBuilderTab from "@/components/game/DeckBuilderTab";
@@ -23,7 +23,19 @@ import * as Sound from "@/game/soundManager";
 // preference additionally lets a returning visitor (no ?tab= present) reopen
 // whichever tab they left on. A first-time visitor with neither opens Deck.
 export default function Collection() {
-  const { profile, Sound: Snd } = useGame();
+  // Outermost guard: if this page is ever mounted outside the app's
+  // canonical GameProvider (see useGameSafe in GameContext.jsx — e.g. an
+  // external preview or issue-scanning tool rendering this file in
+  // isolation), render nothing safely instead of throwing. All real
+  // context-dependent logic lives in CollectionContent below, which only
+  // ever mounts once a provider is confirmed present.
+  const game = useGameSafe();
+  if (!game) return null;
+  return <CollectionContent game={game} />;
+}
+
+function CollectionContent({ game }) {
+  const { profile, Sound: Snd } = game;
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [tab, setTab] = useState(() =>

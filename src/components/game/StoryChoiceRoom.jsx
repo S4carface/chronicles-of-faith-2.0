@@ -11,7 +11,7 @@ import * as Sound from "@/game/soundManager";
 import DeckFullModal from "@/components/game/DeckFullModal";
 
 export default function StoryChoiceRoom() {
-  const { run, completeRoom, updateRun, profile, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
+  const { run, completeRoom, updateRun, profile, grantCard, addCardToRunDeck, replaceCardInRun } = useGame();
   const node = run.currentNode;
   const story = node?.storyChoice;
   const [chosen, setChosen] = useState(null);
@@ -59,23 +59,26 @@ export default function StoryChoiceRoom() {
 
     // Card grants have side effects and stay here.
     let resultOverride = null;
+    let fragmentNote = null;
     if (choice.effect.type === "miracle_card") {
       // Abraham's Test: a Legendary would leak end-game power into the first run.
       // Grant a deterministic Rare until Genesis has been completed once.
       const rewardId = getAbrahamsTestReward(profile.genesisCompleted === true);
-      addCardToCollection(rewardId);
-      if (run.deck.length < RUN_DECK_MAX) {
+      const grant = grantCard(rewardId);
+      if (grant.type === "card" && run.deck.length < RUN_DECK_MAX) {
         addCardToRunDeck(rewardId);
       }
       const rewardCard = getCardById(rewardId);
-      resultOverride = profile.genesisCompleted
-        ? "God provides — you receive a Legendary card!"
-        : `God provides — you receive a Rare card: ${rewardCard?.name || "a blessing"}.`;
+      if (grant.type === "fragments") {
+        resultOverride = `${rewardCard?.name || "That blessing"} is already owned — +${grant.amount} Card Fragments instead of another copy.`;
+      } else {
+        resultOverride = profile.genesisCompleted
+          ? "God provides — you receive a Legendary card!"
+          : `God provides — you receive a Rare card: ${rewardCard?.name || "a blessing"}.`;
+      }
     } else if (choice.effect.type === "card_upgrade") {
       updateRun({ nextCardRare: true });
     }
-
-    setResultText(resultOverride || choice.effect.text);
 
     if (choice.effect.cardReward) {
       const reward =
@@ -84,11 +87,16 @@ export default function StoryChoiceRoom() {
           difficulty: run.difficulty || "easy",
         }) ||
         pick(Math.random, TREASURE_REWARDS);
-      addCardToCollection(reward);
-      if (run.deck.length < RUN_DECK_MAX) {
+      const grant = grantCard(reward);
+      if (grant.type === "card" && run.deck.length < RUN_DECK_MAX) {
         addCardToRunDeck(reward);
+      } else if (grant.type === "fragments") {
+        const rewardCard = getCardById(reward);
+        fragmentNote = ` ${rewardCard?.name || "That card"} was already owned — +${grant.amount} Card Fragments instead.`;
       }
     }
+
+    setResultText((resultOverride || choice.effect.text) + (fragmentNote || ""));
 
     // Record story choice
     updateRun({ storyChoices: [...run.storyChoices, { id: story.id, choice: choiceKey }] });

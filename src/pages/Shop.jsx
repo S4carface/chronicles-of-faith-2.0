@@ -30,7 +30,7 @@ const ICON_MAP = {
 // full-page look for direct rendering. Purchase logic and item data are
 // identical either way (shared shopRules.js — no duplicated Shop logic).
 export default function Shop({ embedded = false }) {
-  const { profile, saveProfile, addCardsToCollection } = useGame();
+  const { profile, saveProfile, grantCard } = useGame();
   const [purchased, setPurchased] = useState(null);
   const [detailCard, setDetailCard] = useState(null);
   const gold = profile.gold || 0;
@@ -46,10 +46,19 @@ export default function Shop({ embedded = false }) {
       return;
     }
 
-    // Exactly one gold deduction and one ownership grant per successful purchase.
+    // Exactly one gold deduction and one canonical card-or-Fragments grant per
+    // successful purchase (the current card pack pool already excludes any
+    // card the player owns, so this is a "card" grant today — routed through
+    // the shared pipeline as a safety net if that pool logic ever changes).
     saveProfile({ gold: result.newGold });
-    addCardsToCollection([result.cardId]);
-    setPurchased({ message: result.message, card: getCardById(result.cardId), isError: false });
+    const grant = grantCard(result.cardId);
+    setPurchased({
+      message: result.message,
+      card: getCardById(result.cardId),
+      converted: grant.type === "fragments",
+      fragmentAmount: grant.amount,
+      isError: false,
+    });
     Sound.sfx.reward();
   };
 
@@ -145,6 +154,11 @@ export default function Shop({ embedded = false }) {
 )}
           </div>
           <p   className={`text-lg font-serif mb-2 ${     purchased.isError ? "text-red-200" : "text-emerald-200"   }`} >   {purchased.message} </p>
+          {purchased.converted && (
+            <p className="text-amber-200/80 text-sm mb-2">
+              {purchased.card?.name} already owned — +{purchased.fragmentAmount} Card Fragments instead of another copy.
+            </p>
+          )}
           {purchased.card && (
             <button
               onClick={() => { Sound.sfx.click(); setDetailCard(purchased.card); }}

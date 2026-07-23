@@ -4,7 +4,7 @@ import { getCardById } from "@/data/cards";
 import { ENEMIES } from "@/data/enemies";
 import { ROOM_TYPES } from "@/data/genesisRooms";
 import { CARD_ART, PLACEHOLDER_ART, VICTORY_ART, getNodeArt } from "@/data/art";
-import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
+import { generateRewardCards, generateFirstCompletionReward, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import StoryNarration from "@/components/game/StoryNarration";
 import TriviaModal from "@/components/game/TriviaModal";
@@ -17,7 +17,7 @@ import RarityCardFrame from "@/components/ui/RarityCardFrame";
 import { getCardRarity } from "@/data/cardRarity";
 
 export default function RewardScreen() {
-  const { run, completeRoom, updateRun, profile, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
+  const { run, completeRoom, updateRun, profile, grantCard, addCardToRunDeck, replaceCardInRun } = useGame();
   const [showNarration, setShowNarration] = useState(true);
   const [showTrivia, setShowTrivia] = useState(false);
   const [showRewards, setShowRewards] = useState(false);
@@ -76,8 +76,8 @@ export default function RewardScreen() {
     setShowTrivia(false);
     if (result && result.correct) {
       if (result.cardId) {
-        addCardToCollection(result.cardId);
-        if (run.deck.length < RUN_DECK_MAX) {
+        const grant = grantCard(result.cardId);
+        if (grant.type === "card" && run.deck.length < RUN_DECK_MAX) {
           addCardToRunDeck(result.cardId);
         }
       }
@@ -93,12 +93,19 @@ export default function RewardScreen() {
     Sound.sfx.reward();
     const card = getCardById(cardId);
     const alreadyOwned = (collection[cardId] || 0) > 0;
-    // Duplicate reward: grant gold bonus instead of another copy
+    // Duplicate reward: grant the existing gold bonus regardless of outcome below
     if (alreadyOwned) {
       const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
       updateRun({ gold: (run.gold || 0) + goldBonus });
     }
-    addCardToCollection(cardId);
+    // Canonical grant pipeline: a complete copy, or — once the card is already
+    // at its usable ownership limit — Card Fragments instead of a redundant copy.
+    const grant = grantCard(cardId);
+    if (grant.type === "fragments") {
+      setDetailCard(null);
+      prepareMap().then(() => completeRoom(run.currentNode.id));
+      return;
+    }
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(cardId);
       setDetailCard(null);
@@ -156,11 +163,13 @@ export default function RewardScreen() {
         {rewards.map((cardId) => {
           const card = getCardById(cardId);
           if (!card) return null;
+          const willConvert = grantCardOrFragments(profile, cardId).type === "fragments";
           return (
             <RewardCardDisplay
               key={cardId}
               card={card}
               ownedCount={collection[cardId] || 0}
+              willConvert={willConvert}
               onClick={() => { Sound.sfx.click(); setDetailCard(card); }}
             />
           );
@@ -173,7 +182,7 @@ export default function RewardScreen() {
           owned={(collection[detailCard.id] || 0) > 0}
           onClose={() => setDetailCard(null)}
           onSelect={() => handleSelectReward(detailCard.id)}
-          selectLabel="Choose This Card"
+          selectLabel={grantCardOrFragments(profile, detailCard.id).type === "fragments" ? "Convert to Card Fragments" : "Choose This Card"}
         />
       )}
 
@@ -190,9 +199,10 @@ export default function RewardScreen() {
   );
 }
 
-function RewardCardDisplay({ card, ownedCount, onClick }) {
+function RewardCardDisplay({ card, ownedCount, willConvert, onClick }) {
   const alreadyOwned = ownedCount > 0;
   const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
+  const fragmentAmount = getDuplicateFragmentAmount(card);
   const rarity = getCardRarity(card.rarity);
 
   return (
@@ -217,7 +227,7 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
                 : "text-emerald-100 bg-emerald-950/85"
             }`}
           >
-            {alreadyOwned ? "Owned" : "New"}
+            {alreadyOwned ? (willConvert ? "Duplicate" : "Owned") : "New"}
           </span>
 
           <span className="rounded-full bg-slate-950/85 border border-amber-400/50 px-2 py-1 text-[10px] sm:text-sm font-bold text-amber-200">
@@ -247,6 +257,11 @@ function RewardCardDisplay({ card, ownedCount, onClick }) {
           <p className="text-amber-200/70 text-[9px] sm:text-xs font-semibold">
             +{goldBonus} gold
           </p>
+          {willConvert && (
+            <p className="text-amber-300/80 text-[9px] sm:text-xs font-semibold">
+              +{fragmentAmount} Card Fragments
+            </p>
+          )}
         </div>
       )}
     </div>

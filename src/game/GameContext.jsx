@@ -7,7 +7,7 @@ import { ACHIEVEMENT_MAP } from "@/data/achievements";
 import { STORY_CHOICES, TREASURE_REWARDS, DIVINE_BLESSINGS, ROOM_TYPES } from "@/data/genesisRooms";
 import { BOSS_MODIFIER_IDS } from "@/data/bossModifiers";
 import { generateMap, pick, pickN, createRng } from "@/game/mapGenerator";
-import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck } from "@/game/deckRules";
+import { STARTER_DECK, STARTER_COLLECTION, RUN_DECK_MAX, validateDeck, grantCardOrFragments, addCardFragments as computeCardFragments, sanitizeCardFragments } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { saveStoryRun, loadStoryRun, clearStoryRun, hasSavedStoryRun } from "@/game/storyRunSave";
 import { recordRunStarted, recordPlayTime } from "@/game/playerStats";
@@ -88,12 +88,20 @@ if (!parsed.activeDeck) {
 if (!Array.isArray(parsed.encounteredEnemies)) parsed.encounteredEnemies = [];
 if (!Array.isArray(parsed.defeatedEnemies)) parsed.defeatedEnemies = [];
 
+// Migrate to Card Fragments map (Phase 1 foundation — storage only, no
+// crafting/spending yet). Existing duplicates are NOT retroactively
+// converted; players simply start at 0 Fragments for every card unless
+// valid stored data already exists. Malformed entries (non-numeric,
+// negative, non-integer) normalize to 0 rather than crashing the load.
+parsed.cardFragments = sanitizeCardFragments(parsed.cardFragments);
+
 return parsed;
     }
   } catch (e) {}
   return {
     unlockedHeroes: ["adam"],
     cardCollection: { ...STARTER_COLLECTION },
+    cardFragments: {},
     activeDeck: [...STARTER_DECK],
     collectedCards: Object.keys(STARTER_COLLECTION),
     achievements: [],
@@ -320,6 +328,27 @@ const recordEnemyDefeat = useCallback((enemyId) => {
       };
     });
   }, []);
+
+  const addCardFragments = useCallback((cardId, amount) => {
+    setProfile(prev => ({ ...prev, cardFragments: computeCardFragments(prev, cardId, amount) }));
+  }, []);
+
+  // Canonical card-grant pipeline (Phase 1 Card Fragments foundation) — every
+  // complete-card reward source should route through this so duplicate
+  // conversion is decided once, consistently. Reads the current profile
+  // snapshot (the same "already owned" read pattern reward screens already
+  // use) and dispatches to the matching functional-setState mutation below,
+  // so two grants fired back-to-back in one synchronous call still both
+  // persist instead of one clobbering the other.
+  const grantCard = useCallback((cardId) => {
+    const result = grantCardOrFragments(profile, cardId);
+    if (result.type === "fragments") {
+      addCardFragments(cardId, result.amount);
+    } else {
+      addCardToCollection(cardId);
+    }
+    return result;
+  }, [profile, addCardFragments, addCardToCollection]);
 
   const addToActiveDeck = useCallback((cardId) => {
     setProfile(prev => ({
@@ -885,6 +914,8 @@ if (node.enemyId === "babel_tower") {
     unlockAchievement,
     addCardsToCollection,
     addCardToCollection,
+    addCardFragments,
+    grantCard,
     addToActiveDeck,
     removeFromActiveDeck,
     removeCardFromDeck,

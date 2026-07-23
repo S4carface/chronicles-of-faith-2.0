@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useGame } from "@/game/GameContext";
 import { getCardById } from "@/data/cards";
 import { ROOM_ART, PLACEHOLDER_ART, getNodeArt } from "@/data/art";
-import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS } from "@/game/deckRules";
+import { generateTreasureCard, RUN_DECK_MAX, DUPLICATE_GOLD_BONUS, grantCardOrFragments, getDuplicateFragmentAmount } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
@@ -13,9 +13,10 @@ import SafeImage from "@/components/ui/SafeImage";
 import { getCardRarity } from "@/data/cardRarity";
 
 export default function TreasureRoom() {
-  const { run, profile, updateRun, completeRoom, addCardToCollection, addCardToRunDeck, replaceCardInRun } = useGame();
+  const { run, profile, updateRun, completeRoom, grantCard, addCardToRunDeck, replaceCardInRun } = useGame();
   const node = run.currentNode;
   const [claimed, setClaimed] = useState(false);
+  const [grantResult, setGrantResult] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [deckFullCard, setDeckFullCard] = useState(null);
   const [assetsReady, setAssetsReady] = useState(false);
@@ -32,6 +33,11 @@ export default function TreasureRoom() {
       }) || "sling_stone"
   );
   const card = getCardById(rewardCardId);
+  const collection = profile.cardCollection || {};
+  const alreadyOwned = (collection[rewardCardId] || 0) > 0;
+  const willConvert = grantCardOrFragments(profile, rewardCardId).type === "fragments";
+  const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
+  const fragmentAmount = getDuplicateFragmentAmount(card);
 
   // The upgraded reward has now been generated — consume the one-shot flag.
   useEffect(() => {
@@ -49,17 +55,21 @@ export default function TreasureRoom() {
 
   const handleClaim = () => {
     Sound.sfx.reward();
-    addCardToCollection(rewardCardId);
+    // Duplicate reward: grant the existing gold bonus regardless of outcome below
+    if (alreadyOwned) {
+      updateRun({ gold: (run.gold || 0) + goldBonus });
+    }
+    // Canonical grant pipeline: a complete copy, or — once the card is already
+    // at its usable ownership limit — Card Fragments instead of a redundant copy.
+    setGrantResult(grantCard(rewardCardId));
     setClaimed(true);
   };
 
   const handleContinue = () => {
     Sound.sfx.click();
-    const collection = profile.cardCollection || {};
-    const alreadyOwned = (collection[rewardCardId] || 0) > 1; // >1 because we just added one in claim
-    if (alreadyOwned) {
-      const goldBonus = DUPLICATE_GOLD_BONUS[card?.rarity] || 5;
-      updateRun({ gold: (run.gold || 0) + goldBonus });
+    if (grantResult?.type === "fragments") {
+      preloadImages(run.map.flat().map(getNodeArt)).then(() => completeRoom(node.id));
+      return;
     }
     if (run.deck.length < RUN_DECK_MAX) {
       addCardToRunDeck(rewardCardId);
@@ -98,9 +108,6 @@ export default function TreasureRoom() {
     );
   }
 
-  const collection = profile.cardCollection || {};
-  const alreadyOwned = (collection[rewardCardId] || 0) > 0;
-  const goldBonus = DUPLICATE_GOLD_BONUS[card.rarity] || 5;
   const rarity = getCardRarity(card.rarity);
 
   return (
@@ -132,8 +139,16 @@ export default function TreasureRoom() {
         <p className="text-amber-300/60 text-xs">"{card.verse}"</p>
         {alreadyOwned && (
           <div className="mt-3 p-2 rounded-lg border border-amber-500/20 bg-amber-900/10">
-            <p className="text-amber-200/70 text-[11px] font-semibold">⚠ Already Owned</p>
-            <p className="text-amber-100/50 text-[10px]">Claiming this duplicate grants +{goldBonus} gold bonus.</p>
+            <p className="text-amber-200/70 text-[11px] font-semibold">
+              {willConvert ? "DUPLICATE CONVERTED" : "⚠ Already Owned"}
+            </p>
+            {willConvert ? (
+              <p className="text-amber-100/50 text-[10px]">
+                {card.name} already owned — +{goldBonus} gold and +{fragmentAmount} Card Fragments instead of another copy.
+              </p>
+            ) : (
+              <p className="text-amber-100/50 text-[10px]">Claiming this duplicate grants +{goldBonus} gold bonus.</p>
+            )}
           </div>
         )}
       </div>

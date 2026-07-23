@@ -17,7 +17,7 @@ import { unlocksNoah } from "@/game/difficultyAccess";
 const STAGE_FADE_MS = 300;
 
 export default function VictoryScreen() {
-  const { run, endRun, profile, saveProfile, unlockAchievement, addCardToCollection, queueUnlock } = useGame();
+  const { run, endRun, profile, saveProfile, unlockAchievement, grantCard, queueUnlock } = useGame();
   const navigate = useNavigate();
   const firstCompletion = useRef(!profile.genesisCompleted).current;
   const audioStarted = useRef(false);
@@ -30,7 +30,7 @@ export default function VictoryScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [showAccountPrompt, setShowAccountPrompt] = useState(false);
-  const [firstCompletionCard, setFirstCompletionCard] = useState(null);
+  const [firstCompletionGrant, setFirstCompletionGrant] = useState(null);
 
   const completedDifficulty = run.difficulty || "easy";
   const difficultyMultipliers = { easy: 1, normal: 1.5, hard: 2 };
@@ -82,8 +82,7 @@ export default function VictoryScreen() {
       progressionUpdates.genesisCompleted = true;
       const rewardId = generateFirstCompletionReward(Math.random);
       if (rewardId) {
-        addCardToCollection(rewardId);
-        setFirstCompletionCard(rewardId);
+        setFirstCompletionGrant(grantCard(rewardId));
       }
       queueUnlock({ type: "chapter", name: "Genesis" });
     }
@@ -183,7 +182,7 @@ export default function VictoryScreen() {
     return <CompletionFallback label="Preparing your Genesis legacy…" />;
   }
 
-  const rewardCard = firstCompletionCard ? getCardById(firstCompletionCard) : null;
+  const rewardCard = firstCompletionGrant ? getCardById(firstCompletionGrant.cardId) : null;
 
   return (
     <main className="fixed inset-0 z-50 overflow-hidden bg-[#08101f] text-amber-100">
@@ -203,7 +202,7 @@ export default function VictoryScreen() {
             <StageTwo run={run} multiplier={multiplier} baseScore={baseScore} penaltyPercent={penaltyPercent} onContinue={advanceStage} enabled={stageVisible} />
           )}
           {stage === 3 && (
-            <StageThree firstCompletion={firstCompletion} noahJustUnlocked={firstCompletion && unlocksNoah(completedDifficulty)} rewardCard={rewardCard} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
+            <StageThree firstCompletion={firstCompletion} noahJustUnlocked={firstCompletion && unlocksNoah(completedDifficulty)} rewardCard={rewardCard} rewardConverted={firstCompletionGrant?.type === "fragments"} fragmentAmount={firstCompletionGrant?.amount} score={score} submitResult={submitResult} submitting={submitting} submitError={submitError} onRetry={() => submitScoreToCloud(profile.playerName, score)} onReturn={handleReturn} />
           )}
         </div>
       </section>
@@ -318,7 +317,7 @@ function buildScoreFeedbackLines(scoreToSubmit, submitResult) {
   return lines;
 }
 
-function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, score, submitResult, submitting, submitError, onRetry, onReturn }) {
+function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, rewardConverted, fragmentAmount, score, submitResult, submitting, submitError, onRetry, onReturn }) {
   return (
     <>
       <p className="text-[9px] font-bold uppercase tracking-[.24em] text-amber-300/60">Stage 3 of 3</p>
@@ -345,8 +344,12 @@ function StageThree({ firstCompletion, noahJustUnlocked, rewardCard, score, subm
               </div>
               <div className="min-w-0">
                 <p className="truncate font-serif text-xs text-emerald-200">{rewardCard.name}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wide text-emerald-300/70">Rare Reward</p>
-                <p className="mt-1 text-[8px] text-amber-100/50">Added to collection</p>
+                <p className="text-[8px] font-bold uppercase tracking-wide text-emerald-300/70">
+                  {rewardConverted ? "Duplicate Converted" : "Rare Reward"}
+                </p>
+                <p className="mt-1 text-[8px] text-amber-100/50">
+                  {rewardConverted ? `+${fragmentAmount} Card Fragments` : "Added to collection"}
+                </p>
               </div>
             </div>
           )}

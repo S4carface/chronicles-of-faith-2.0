@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from "react";
+import { Lightbulb } from "lucide-react";
 import { useGame } from "@/game/GameContext";
 import { CARDS, getCardById } from "@/data/cards";
 import Card from "@/components/game/Card";
 import CardDetailModal from "@/components/game/CardDetailModal";
-import { canAddToDeck, getMaxCopies, DECK_SIZE } from "@/game/deckRules";
+import { canAddToDeck, getMaxCopies, getCardFragmentBalance, DECK_SIZE } from "@/game/deckRules";
 import * as Sound from "@/game/soundManager";
 import { ACTIVE_CARD_RARITIES, getCardRarity } from "@/data/cardRarity";
 
@@ -20,10 +21,17 @@ export default function CollectionTab() {
     return CARDS.filter(c => (collection[c.id] || 0) > 0);
   }, [collection]);
 
+  // Fragment progress can exist for a card the player doesn't own a complete
+  // copy of yet — no reward path grants that today (Fragments only start once
+  // a card is already owned), but the display supports it going forward.
+  const visibleCards = useMemo(() => {
+    return CARDS.filter(c => (collection[c.id] || 0) > 0 || getCardFragmentBalance(profile, c.id) > 0);
+  }, [collection, profile]);
+
   const filtered = useMemo(() => {
-    if (filter === "all") return ownedCards;
-    return ownedCards.filter(c => c.rarity === filter);
-  }, [ownedCards, filter]);
+    if (filter === "all") return visibleCards;
+    return visibleCards.filter(c => c.rarity === filter);
+  }, [visibleCards, filter]);
 
   const showToast = (text, type = "error") => {
     setToast({ text, type });
@@ -66,6 +74,16 @@ export default function CollectionTab() {
         </div>
       )}
 
+      {/* Card Fragments explanation — shown once near the heading, not per-card */}
+      <div className="max-w-md mx-auto mb-4 rounded-lg border border-amber-500/15 bg-slate-900/30 px-3 py-2">
+        <div className="flex items-start gap-2">
+          <Lightbulb className="w-3.5 h-3.5 text-amber-300/60 flex-shrink-0 mt-0.5" />
+          <p className="text-amber-100/50 text-xs text-left">
+            Card Fragments will be used to unlock and craft cards in a future update.
+          </p>
+        </div>
+      </div>
+
       {/* Filter */}
       <div className="flex flex-wrap justify-center gap-2 mb-4">
         {["all", ...ACTIVE_CARD_RARITIES].map(f => {
@@ -94,8 +112,30 @@ export default function CollectionTab() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-w-3xl mx-auto pb-12">
         {filtered.map(card => {
           const ownedCount = collection[card.id] || 0;
+          const owned = ownedCount > 0;
+          const fragments = getCardFragmentBalance(profile, card.id);
           const inDeck = activeDeck.filter(id => id === card.id).length;
           const maxCopies = getMaxCopies(card.rarity);
+
+          if (!owned) {
+            // Not discovered yet, but Fragment progress exists for it.
+            const rarity = getCardRarity(card.rarity);
+            return (
+              <div key={card.id} className="flex flex-col items-center">
+                <div
+                  className="w-full aspect-[3/4] rounded-xl border-2 border-dashed flex flex-col items-center justify-center px-1 text-center bg-slate-950/40"
+                  style={{ borderColor: rarity.borderColor }}
+                >
+                  <span className="text-lg">🔒</span>
+                  <p className="mt-1 font-serif text-[10px] text-amber-100/70 leading-tight">{card.name}</p>
+                </div>
+                <div className="mt-1 mb-1 text-[9px] text-center">
+                  <p className="text-amber-100/40">Not Discovered</p>
+                  <p className="text-amber-200/70">Fragments: <span className="font-bold">{fragments}</span></p>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div key={card.id} className="flex flex-col items-center">
@@ -109,11 +149,13 @@ export default function CollectionTab() {
                 </div>
               </div>
 
-              {/* Owned / In deck stats */}
-              <div className="flex justify-center gap-2 w-full mt-1 mb-1 text-[9px]">
+              {/* Owned / In deck / Fragments stats */}
+              <div className="flex flex-wrap justify-center gap-x-2 w-full mt-1 mb-1 text-[9px]">
                 <span className="text-amber-100/50">Owned: <span className="text-amber-200 font-bold">{ownedCount}</span></span>
                 <span className="text-amber-100/30">·</span>
                 <span className="text-amber-100/50">In deck: <span className={`font-bold ${inDeck >= maxCopies ? "text-amber-300" : "text-amber-200"}`}>{inDeck}</span>/{maxCopies}</span>
+                <span className="text-amber-100/30 w-full sm:w-auto">·</span>
+                <span className="text-amber-100/50">Fragments: <span className="text-amber-200 font-bold">{fragments}</span></span>
               </div>
 
               {/* Add / Remove buttons — 44px minimum tap target for mobile */}

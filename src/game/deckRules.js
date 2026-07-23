@@ -97,6 +97,74 @@ export function getMaxCopies(rarity) {
   return MAX_COPIES[rarity] || 1;
 }
 
+// Card Fragments — Phase 1 foundation (storage + duplicate conversion only;
+// no crafting, spending, or Faith Shards yet). A duplicate-card grant converts
+// into Fragments for that exact card once the player already owns the actual
+// usable limit for it (getMaxCopies — the same cap deck-building enforces),
+// instead of adding a copy the collection can never use.
+export const DUPLICATE_FRAGMENT_AMOUNTS = {
+  common: 5,
+  uncommon: 8,
+  rare: 12,
+  epic: 20,
+  legendary: 35,
+};
+
+export function getDuplicateFragmentAmount(card) {
+  if (!card) return 0;
+  return DUPLICATE_FRAGMENT_AMOUNTS[card.rarity] || 0;
+}
+
+// Card-specific Fragment balance. Defaults safely to 0 for a missing profile,
+// a missing/malformed cardFragments map, or an unrecognized cardId.
+export function getCardFragmentBalance(profile, cardId) {
+  const value = profile?.cardFragments?.[cardId];
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+}
+
+// Pure reducer — returns a new cardFragments map with `amount` added to
+// cardId's balance (floored, never negative). Does not mutate profile; the
+// caller merges the result into profile state.
+export function addCardFragments(profile, cardId, amount) {
+  const current = getCardFragmentBalance(profile, cardId);
+  const delta = Number.isFinite(amount) ? amount : 0;
+  const next = Math.max(0, Math.floor(current + delta));
+  return { ...(profile?.cardFragments || {}), [cardId]: next };
+}
+
+/**
+ * Canonical card-grant decision — the single place every complete-card
+ * reward source should route through. Returns:
+ *   { type: "card", cardId }                 — grant a complete card as usual
+ *   { type: "fragments", cardId, amount }     — convert into Card Fragments instead
+ * Converts once the player already owns getMaxCopies(card.rarity) copies —
+ * the first copy, and a second copy for common/uncommon, are still granted
+ * normally, matching the game's existing per-rarity copy limits.
+ */
+export function grantCardOrFragments(profile, cardId) {
+  const card = getCardById(cardId);
+  if (!card) return { type: "card", cardId };
+  const owned = (profile?.cardCollection || {})[cardId] || 0;
+  if (owned < getMaxCopies(card.rarity)) {
+    return { type: "card", cardId };
+  }
+  return { type: "fragments", cardId, amount: getDuplicateFragmentAmount(card) };
+}
+
+// Sanitizes a raw (possibly missing/malformed) cardFragments value from a
+// loaded profile into a safe { [cardId]: nonnegative integer } map. Used by
+// GameContext's profile migration; exported so migration behavior is directly
+// testable without driving the full profile-load path.
+export function sanitizeCardFragments(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const sanitized = {};
+  for (const [id, value] of Object.entries(raw)) {
+    const n = Math.floor(Number(value));
+    sanitized[id] = Number.isFinite(n) && n > 0 ? n : 0;
+  }
+  return sanitized;
+}
+
 export function isHealingCard(cardId) {
   return HEALING_CARD_IDS.has(cardId);
 }

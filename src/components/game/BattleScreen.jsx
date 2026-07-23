@@ -350,6 +350,9 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
 
   const handlePlayCard = (handIndex) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+    // Block all player actions while a required start-of-turn resolution overlay
+    // (Forced Discard choice / Compelled preview) is unfinished.
+    if (battleState.discardChoiceActive || battleState.compelPreviewActive) return;
     const card = resolveCard(battleState.hand[handIndex]);
     if (!card) return;
     if (battleState.freeCardsRemaining === 0 && battleState.energy < card.cost) {
@@ -468,6 +471,9 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
 
     const handleSelectCard = (idx) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+    // Block all player actions while a required start-of-turn resolution overlay
+    // (Forced Discard choice / Compelled preview) is unfinished.
+    if (battleState.discardChoiceActive || battleState.compelPreviewActive) return;
 
     const card = resolveCard(battleState.hand[idx]);
     if (!card) return;
@@ -484,6 +490,9 @@ if (enemy.isBoss && run.bossStartingFaith > 0) {
 
     const handleEndTurnClick = () => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+    // Block all player actions while a required start-of-turn resolution overlay
+    // (Forced Discard choice / Compelled preview) is unfinished.
+    if (battleState.discardChoiceActive || battleState.compelPreviewActive) return;
 
     // The first-battle tutorial unlocks End Turn only at its proper step.
     if (!tutorialAllowsEndTurn) return;
@@ -551,6 +560,9 @@ if (!tutorialActive) {
 
   const performEndTurn = (opts = {}) => {
     if (animating || battleState.turn !== "player" || battleEnd) return;
+    // Block all player actions while a required start-of-turn resolution overlay
+    // (Forced Discard choice / Compelled preview) is unfinished.
+    if (battleState.discardChoiceActive || battleState.compelPreviewActive) return;
     const enemyAnim = profile.settings.enemyAnimation || "step";
     const gLevel = profile.settings.guidanceLevel || "normal";
     const canUndo =
@@ -607,9 +619,11 @@ if (!tutorialActive) {
   };
 
   const runEnemyTurn = (endedState, enemyAnim) => {
-    // Skip mode — instant resolve
+    // Skip mode — instant resolve. Still resolves start-of-player-turn effects
+    // (Faith Drain / Forced Discard / Compelled) via beginPlayerTurn; otherwise
+    // those pending effects would never resolve for players who skip animations.
     if (enemyAnim === "skip") {
-      const enemyState = resolveGuidedTutorialState(enemyTurn(endedState));
+      const enemyState = resolveGuidedTutorialState(beginPlayerTurn(enemyTurn(endedState)));
       setBattleState(enemyState);
       const end = checkBattleEnd(enemyState);
       if (end) { setBattleEnd(end); handleBattleEnd(end, enemyState); }
@@ -888,6 +902,8 @@ if (!tutorialActive) {
 
   const handleCovenantShield = () => {
     if (covenantShieldUsed || hero.id !== "noah") return;
+    if (battleState.turn !== "player" || animating || battleEnd) return;
+    if (battleState.discardChoiceActive || battleState.compelPreviewActive) return;
     setCovenantShieldUsed(true);
     setBattleState(s => ({ ...s, shieldActive: true }));
     Sound.sfx.divine();

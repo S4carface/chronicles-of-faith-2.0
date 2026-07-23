@@ -8,9 +8,12 @@ import {
   getDrawDenialRule,
   getDrainRule,
   getDiscardRule,
+  getCompelRule,
   isDrawDenialAction,
   startPlayerTurn,
   resolveForcedDiscard,
+  resolveCompelled,
+  selectCompelledCard,
   playCard,
   RIGHTEOUS_AIM_CAP,
 } from "@/game/battleEngine";
@@ -484,19 +487,6 @@ describe("Esau — Burning Grudge recoil", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Deferred inert effects no longer promise player-facing disruption.
-// ---------------------------------------------------------------------------
-
-describe("Deferred effects (random_card) — honest text", () => {
-  const enemy = ENEMIES.serpent;
-
-  it("random_card intent no longer claims a forced card play", () => {
-    const text = getIntentExplanation({ name: "Deception", damage: 4, effect: "random_card" }, enemy);
-    expect(text).not.toMatch(/force/i);
-    expect(text).toMatch(/disruptive strike/i);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // Righteous Aim (Epic) — bounded double-damage on the next Attack only.
@@ -881,5 +871,185 @@ describe("Forced Discard — edge cases and coexistence", () => {
     const after = enemyTurn(s);
     expect(after.enemyEffectCooldowns.discard).toBe(2); // discard cooldown started
     expect(after.enemyEffectCooldowns.drain).toBe(1);   // drain ticked 2 → 1 independently
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Compelled card play (Phase 2C) — one affordable card auto-played next turn.
+// ---------------------------------------------------------------------------
+
+const COMPEL = { name: "Deception", damage: 4, icon: "🎭", effect: "random_card", cost: 1 };
+
+function makeCompelEnemy(id = "laban_deceit") {
+  return { id, name: "Laban's Deceit", icon: "🐑", hp: 35, attacks: [{ ...VBITE }, { ...COMPEL }] };
+}
+
+function compelEnemyTurnState(difficulty, mode = "campaign") {
+  const s = createBattleState(makeCompelEnemy(), 35, 35, deck, 0, 0, "adam", createRng("compel"), { mode, difficulty });
+  return { ...s, enemyHand: [{ ...COMPEL }], enemyDeck: [{ ...COMPEL }, { ...VBITE }], enemyEnergy: 3, enemyMaxEnergy: 3 };
+}
+
+// A state with a pending Compelled and a controlled hand/energy/HP for resolution.
+function pendingCompelState(difficulty, opts = {}, mode = "campaign") {
+  const {
+    hand = ["sling_stone"], energy = 3, playerHp = 35, maxPlayerHp = 35,
+    blockScripture = false, freeCardsRemaining = 0, enemyHp = 30, enemyAttackMultiplier = 1,
+  } = opts;
+  const base = { id: "laban_deceit", name: "Laban's Deceit", icon: "🐑", hp: 40, attacks: [{ ...VBITE }] };
+  const s = createBattleState(base, playerHp, maxPlayerHp, deck, 0, 0, "adam", createRng("pc"), { mode, difficulty });
+  return {
+    ...s,
+    hand,
+    energy,
+    maxEnergy: Math.max(energy, 3),
+    playerHp,
+    maxPlayerHp,
+    blockScripture,
+    freeCardsRemaining,
+    enemyAttackMultiplier,
+    enemy: { ...s.enemy, currentHp: enemyHp },
+    compelPending: 1,
+    compelName: "Deception",
+  };
+}
+
+describe("getCompelRule", () => {
+  it("Normal previews (cooldown 3); Hard auto-plays (cooldown 2)", () => {
+    expect(getCompelRule({ difficulty: "normal" })).toEqual({ cooldown: 3, preview: true });
+    expect(getCompelRule({ difficulty: "hard" })).toEqual({ cooldown: 2, preview: false });
+  });
+  it("Daily auto-plays deterministically", () => {
+    expect(getCompelRule({ mode: "daily", difficulty: "daily_standard" })).toEqual({ cooldown: 3, preview: false });
+  });
+});
+
+describe("Compelled — application & cooldown", () => {
+  it("applies once with the source name", () => {
+    const after = enemyTurn(compelEnemyTurnState("hard"));
+    expect(after.compelPending).toBe(1);
+    expect(after.compelName).toBe("Deception");
+  });
+  it("Normal cooldown 3, Hard cooldown 2", () => {
+    expect(enemyTurn(compelEnemyTurnState("normal")).enemyEffectCooldowns.random_card).toBe(3);
+    expect(enemyTurn(compelEnemyTurnState("hard")).enemyEffectCooldowns.random_card).toBe(2);
+  });
+  it("cannot occur on consecutive turns", () => {
+    expect(enemyTurn(compelEnemyTurnState("hard")).enemyIntent.effect).not.toBe("random_card");
+  });
+});
+
+describe("Compelled — selection & resolution", () => {
+  it("auto-plays one affordable card through the normal pipeline (Hard)", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["sling_stone", "righteous_strike"], energy: 1, enemyHp: 30 }));
+    expect(r.compelledThisTurn).toBe("Sling Stone"); // righteous_strike (cost 2) unaffordable
+    expect(r.hand).toEqual(["righteous_strike"]);
+    expect(r.enemy.currentHp).toBe(23); // 30 - (6 + 1 Adam)
+    expect(r.compelPending).toBe(0);
+    expect(r.compelPreviewActive).toBe(false);
+  });
+
+  it("deducts the card's Faith cost exactly once and logs it", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["sling_stone"], energy: 3, enemyHp: 30 }));
+    expect(r.energy).toBe(2); // 3 - 1
+    expect(r.log.some((l) => /Compelled activated\. Sling Stone was played automatically\. 1 Faith spent/i.test(l))).toBe(true);
+  });
+
+  it("never drives Faith negative and expires when nothing is affordable", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["righteous_strike"], energy: 1, enemyHp: 30 }));
+    expect(r.energy).toBe(1); // unchanged
+    expect(r.compelPending).toBe(0);
+    expect(r.log.some((l) => /Compelled faded\. No affordable card could be played/i.test(l))).toBe(true);
+  });
+
+  it("expires safely with an empty hand", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: [], energy: 3 }));
+    expect(r.compelPending).toBe(0);
+    expect(r.log.some((l) => /Compelled faded/i.test(l))).toBe(true);
+  });
+
+  it("avoids wasting a heal at full HP when another card exists", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["prayer", "sling_stone"], energy: 3, playerHp: 35, maxPlayerHp: 35 }));
+    expect(r.compelledThisTurn).toBe("Sling Stone");
+  });
+
+  it("only forces a heal when below max HP and no non-healing card exists", () => {
+    const belowHp = startPlayerTurn(pendingCompelState("hard", { hand: ["prayer"], energy: 3, playerHp: 20, maxPlayerHp: 35 }));
+    expect(belowHp.compelledThisTurn).toBe("Prayer");
+    const fullHp = startPlayerTurn(pendingCompelState("hard", { hand: ["prayer"], energy: 3, playerHp: 35, maxPlayerHp: 35 }));
+    expect(fullHp.compelledThisTurn).toBeNull(); // faded — heal-only at full HP
+    expect(fullHp.compelPending).toBe(0);
+  });
+
+  it("respects Silenced Scripture (won't force a blocked Scripture card)", () => {
+    // Only a scripture card, silenced → nothing eligible → fade.
+    const only = startPlayerTurn(pendingCompelState("hard", { hand: ["prayer"], energy: 3, playerHp: 20, blockScripture: true }));
+    expect(only.compelPending).toBe(0);
+    expect(only.compelledThisTurn).toBeNull();
+    // Scripture blocked but an attack is available → play the attack.
+    const withAtk = startPlayerTurn(pendingCompelState("hard", { hand: ["prayer", "sling_stone"], energy: 3, playerHp: 20, blockScripture: true }));
+    expect(withAtk.compelledThisTurn).toBe("Sling Stone");
+  });
+
+  it("clears the pending status after resolution", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["sling_stone"], energy: 3 }));
+    expect(r.compelPending).toBe(0);
+    expect(r.compelPreviewActive).toBe(false);
+  });
+});
+
+describe("Compelled — Normal preview + confirm", () => {
+  it("stores a selection and raises a preview without playing yet", () => {
+    const r = startPlayerTurn(pendingCompelState("normal", { hand: ["sling_stone", "faith_shield"], energy: 3, enemyHp: 30 }));
+    expect(r.compelPreviewActive).toBe(true);
+    expect(r.compelPending).toBe(1);
+    expect(r.compelSelectedId).toBeTruthy();
+    expect(r.enemy.currentHp).toBe(30); // not played yet
+    expect(r.energy).toBe(3); // no Faith spent yet
+  });
+  it("resolveCompelled plays exactly the previewed card", () => {
+    const preview = startPlayerTurn(pendingCompelState("normal", { hand: ["sling_stone", "faith_shield"], energy: 3, enemyHp: 30 }));
+    const done = resolveCompelled(preview);
+    expect(done.compelledThisTurn).toBeTruthy();
+    expect(done.compelPending).toBe(0);
+    expect(done.compelPreviewActive).toBe(false);
+    expect(done.energy).toBeLessThan(3); // Faith spent now
+  });
+});
+
+describe("Compelled — deterministic Daily & interactions", () => {
+  it("selects the same card for the same seed/state (Daily)", () => {
+    const a = startPlayerTurn(pendingCompelState("daily_standard", { hand: ["sling_stone", "faith_shield"], energy: 3 }, "daily"));
+    const b = startPlayerTurn(pendingCompelState("daily_standard", { hand: ["sling_stone", "faith_shield"], energy: 3 }, "daily"));
+    expect(a.compelledThisTurn).toBe(b.compelledThisTurn);
+    expect(a.hand).toEqual(b.hand);
+  });
+
+  it("a forced attack can defeat the enemy (victory)", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["sling_stone"], energy: 3, enemyHp: 3 }));
+    expect(r.enemy.currentHp).toBe(0);
+    expect(checkBattleEnd(r)).toBe("victory");
+  });
+
+  it("applies a pending Righteous Aim to the forced attack (capped)", () => {
+    const r = startPlayerTurn(pendingCompelState("hard", { hand: ["sling_stone"], energy: 3, enemyHp: 30, enemyAttackMultiplier: 2 }));
+    // 6 + 1 Adam = 7, Aim adds min(7,12) = 7 → 14 damage.
+    expect(r.enemy.currentHp).toBe(16);
+    expect(r.enemyAttackMultiplier).toBe(1); // Aim consumed
+  });
+
+  it("survives a save/continue JSON round-trip and then resolves", () => {
+    const after = enemyTurn(compelEnemyTurnState("hard"));
+    const restored = JSON.parse(JSON.stringify(after));
+    expect(restored.compelPending).toBe(1);
+    expect(restored.enemyEffectCooldowns.random_card).toBe(2);
+    const resolved = startPlayerTurn(restored);
+    expect(resolved.compelPending).toBe(0);
+  });
+
+  it("leaves drain, discard, and draw-denial rules untouched", () => {
+    expect(getDrainRule({ difficulty: "normal" })).toEqual({ cooldown: 3, allowZero: false });
+    expect(getDiscardRule({ difficulty: "normal" })).toEqual({ cooldown: 3, auto: false });
+    expect(getDrawDenialRule({ enemy: { id: "sodom_corruption" }, mode: "campaign", difficulty: "normal" }))
+      .toEqual({ cooldown: 3, allowZeroDraw: false });
   });
 });

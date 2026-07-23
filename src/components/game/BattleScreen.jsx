@@ -12,6 +12,7 @@ import {
   getEnemyTurnSteps,
   startPlayerTurn,
   resolveForcedDiscard,
+  resolveCompelled,
   drawCards,
   HAND_LIMIT
 } from "@/game/battleEngine";
@@ -38,10 +39,9 @@ import { applyBossModifier } from "@/data/bossModifiers";
 function getActionType(action) {
   if (!action) return "attack";
   if (action.effect === "block") return "block";
-  // Effects the engine actually resolves show as "curse". drain (Phase 2A) and
-  // discard (Phase 2B) are implemented; random_card remains deferred and resolves
-  // as a plain attack, so it must not be dressed up as disruption.
-  if (["skip_draw", "block_scripture", "dot", "drain", "discard"].includes(action.effect)) return "curse";
+  // Effects the engine actually resolves show as "curse" — all enemy disruptions
+  // are now implemented (skip_draw, block_scripture, dot, drain, discard, random_card).
+  if (["skip_draw", "block_scripture", "dot", "drain", "discard", "random_card"].includes(action.effect)) return "curse";
   if (action.damage > 0) return "attack";
   if (action.effect === "heal_self") return "heal";
   return "attack";
@@ -57,8 +57,7 @@ function getIntentAmountText(action, enemy) {
   if (action.effect === "block_scripture") parts.push("Silence");
   if (action.effect === "drain") parts.push("−1 Faith");
   if (action.effect === "discard") parts.push("Discard 1");
-  // random_card remains deferred — no effect chip so the intent doesn't promise a
-  // disruption that doesn't happen yet.
+  if (action.effect === "random_card") parts.push("Compel");
   return parts.join(" · ");
 }
 
@@ -714,13 +713,14 @@ if (!tutorialActive) {
           } else if (actionType === "curse") {
             Sound.sfx.enemyCurse();
             setPlayerFlash(true);
-            // Only genuinely-resolved disruptions reach here (dot / skip_draw /
-            // block_scripture / drain / discard). No false confusion labels.
+            // Only genuinely-resolved disruptions reach here. Accurate labels
+            // per effect — no generic "Confusion!" text.
             const curseText = step.action.effect === "dot" ? "Cursed!" :
               step.action.effect === "skip_draw" ? "Draw Reduced" :
               step.action.effect === "block_scripture" ? "Silenced Scripture" :
               step.action.effect === "drain" ? "Faith Drain" :
-              step.action.effect === "discard" ? "Forced Discard" : "Disrupted";
+              step.action.effect === "discard" ? "Forced Discard" :
+              step.action.effect === "random_card" ? "Compelled" : "Disrupted";
             setFloatingText({ text: curseText, color: "#c084fc", pos: "bottom" });
           }
 
@@ -859,6 +859,10 @@ if (!tutorialActive) {
       Sound.sfx.enemyCurse();
       setFloatingText({ text: `Discarded ${resolved.discardedThisTurn}`, color: "#c084fc", pos: "bottom" });
       setTimeout(() => setFloatingText(null), 900);
+    } else if (resolved && resolved.compelledThisTurn) {
+      Sound.sfx.enemyCurse();
+      setFloatingText({ text: `Compelled: ${resolved.compelledThisTurn}`, color: "#c084fc", pos: "bottom" });
+      setTimeout(() => setFloatingText(null), 900);
     }
     return resolved;
   };
@@ -867,6 +871,19 @@ if (!tutorialActive) {
   const handleForcedDiscardChoice = (handIndex) => {
     Sound.sfx.enemyCurse();
     setBattleState((s) => resolveForcedDiscard(s, handIndex));
+  };
+
+  // Player confirms the Normal Compelled preview; the card is auto-played.
+  const handleCompelConfirm = () => {
+    Sound.sfx.click();
+    const resolved = resolveCompelled(battleState);
+    if (resolved.compelledThisTurn) {
+      setFloatingText({ text: `Compelled: ${resolved.compelledThisTurn}`, color: "#c084fc", pos: "bottom" });
+      setTimeout(() => setFloatingText(null), 900);
+    }
+    setBattleState(resolved);
+    const end = checkBattleEnd(resolved);
+    if (end) { setBattleEnd(end); handleBattleEnd(end, resolved); }
   };
 
   const handleCovenantShield = () => {
@@ -1501,6 +1518,15 @@ const selectedCardData =
                   <span className="text-[9px] lg:text-xs font-semibold">Discard Required · Next turn</span>
                 </button>
               )}
+              {battleState.compelPending > 0 && !battleState.compelPreviewActive && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setStatusExplain(getStatusExplanation("compelled")); Sound.sfx.click(); }}
+                  className="flex items-center gap-1 rounded-full border border-amber-400/40 bg-slate-900/70 px-1.5 py-0.5 text-amber-200/90 hover:text-amber-100 transition active:scale-90"
+                  title="Compelled — one affordable card will be played automatically next turn"
+                >
+                  <span className="text-[9px] lg:text-xs font-semibold">Compelled · Next turn</span>
+                </button>
+              )}
               <span className={`text-amber-100/40 ${reshuffleAnim ? "text-amber-300" : ""}`}>Deck {battleState.deck.length} · Discard {battleState.discard.length}</span>
             </div>
           </div>
@@ -1880,6 +1906,34 @@ const selectedCardData =
           </div>
         </div>
       )}
+
+      {/* Compelled — Normal preview + confirm (no free choice) */}
+      {battleState.compelPreviewActive && !battleEnd && (() => {
+        const forced = resolveCard(battleState.compelSelectedId);
+        if (!forced) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(8,12,24,0.9)" }}>
+            <div
+              className="max-w-xs w-full rounded-xl border-2 border-purple-500/50 p-4 text-center animate-fade-in"
+              style={{ background: "linear-gradient(135deg, #1A2744 0%, #0F1A30 100%)" }}
+            >
+              <h3 className="text-base font-serif text-purple-200 mb-1">Compelled</h3>
+              <p className="text-amber-100/70 text-xs mb-3">This card will be played automatically at its full Faith cost.</p>
+              <div className="mx-auto mb-3 flex w-28 flex-col items-center gap-1 rounded-lg border-2 border-purple-400/70 bg-purple-900/20 px-3 py-3">
+                <span className="text-2xl">{forced.icon}</span>
+                <span className="text-xs font-serif text-amber-100 leading-tight">{forced.name}</span>
+                <span className="text-[10px] text-amber-200/70">{forced.cost} ✨</span>
+              </div>
+              <button
+                onClick={handleCompelConfirm}
+                className="w-full rounded-lg border-2 border-amber-400/60 bg-amber-600/20 px-4 py-2 font-serif text-sm text-amber-100 transition hover:bg-amber-600/40 active:scale-95"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* End Turn confirmation */}
       {endTurnConfirm && !tutorialActive && (

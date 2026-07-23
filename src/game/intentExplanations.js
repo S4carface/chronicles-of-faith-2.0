@@ -1,4 +1,4 @@
-import { getMarkRule, isMarkAction, getDrainRule, getDiscardRule } from "@/game/battleEngine";
+import { getMarkRule, isMarkAction, getDrainRule, getDiscardRule, getCompelRule } from "@/game/battleEngine";
 
 // Returns a plain-language explanation for an enemy intent action.
 // Explains both what will happen and how the player can respond.
@@ -14,6 +14,7 @@ export function getIntentExplanation(action, enemy, context = {}) {
   const markRule = getMarkRule(ruleCtx);
   const drainRule = getDrainRule(ruleCtx);
   const discardRule = getDiscardRule(ruleCtx);
+  const compelRule = getCompelRule(ruleCtx);
 
   if (action.damage > 0) {
     parts.push(
@@ -97,10 +98,18 @@ export function getIntentExplanation(action, enemy, context = {}) {
     }
   }
 
-  // NOTE: random_card is not yet implemented (later phase). It resolves as an
-  // ordinary attack, so the intent must not promise disruption.
+  // Compelled card play (Phase 2C) — telegraph the effect and cooldown honestly.
   if (action.effect === "random_card") {
-    parts.push("A disruptive strike.");
+    if (compelRule) {
+      const howText = compelRule.preview
+        ? "You will confirm a forced card play."
+        : "One affordable card will be played automatically.";
+      parts.push(
+        `Next turn, one affordable card is played at its full Faith cost. ${howText} Cannot be used again for ${compelRule.cooldown} turns.`
+      );
+    } else {
+      parts.push("A disruptive strike.");
+    }
   }
 
   if (action.effect === "recoil") {

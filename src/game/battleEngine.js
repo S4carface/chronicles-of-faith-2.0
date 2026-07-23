@@ -1,6 +1,7 @@
 // Battle engine logic — turn-based card combat
 
 import { getCardById } from "@/data/cards";
+import { isHealingCard } from "@/game/deckRules";
 
 export const COUNTER_CAP = 12;
 export const HAND_LIMIT = 4;
@@ -33,8 +34,9 @@ export function isDrawDenialAction(action) {
 // Effects declared in enemy data but NOT yet implemented in the engine. They
 // resolve as ordinary attacks (their damage still lands); a later phase will
 // wire up real disruption. Player-facing text/labels no longer promise them.
-// (drain was implemented in Phase 2A, discard in Phase 2B — both removed here.)
-export const DEFERRED_EFFECTS = new Set(["random_card"]);
+// All enemy effects are now implemented (drain 2A, discard 2B, random_card 2C).
+// Kept for forward-compatibility if a future effect is added ahead of its logic.
+export const DEFERRED_EFFECTS = new Set([]);
 
 // Dev-only console warning so the team knows a deferred effect was encountered
 // and still needs Phase 2 work. Silenced in production and during tests; never
@@ -130,6 +132,25 @@ export function getDiscardRule(state) {
   return { cooldown: 3, auto: false };
 }
 
+// Compelled card play rule (Phase 2C). Resolves at the START of the player's
+// next turn by auto-playing one eligible, affordable card through the normal
+// playCard pipeline (charging its real Faith cost). Normal shows a brief preview
+// the player confirms; Hard and Daily resolve automatically with seeded, and
+// therefore deterministic, selection. The final choice is never a free choice.
+//
+//   normal → preview + confirm. Cooldown 3.
+//   hard   → auto. Cooldown 2.
+//   daily  → auto (deterministic). Cooldown 3.
+//   easy   → effects are stripped; auto safety net.
+export function getCompelRule(state) {
+  if (!state) return null;
+  if (state.mode === "daily") return { cooldown: 3, preview: false };
+  const difficulty = state.difficulty || "normal";
+  if (difficulty === "hard") return { cooldown: 2, preview: false };
+  if (difficulty === "easy") return { cooldown: 3, preview: false };
+  return { cooldown: 3, preview: true };
+}
+
 // Picks the enemy's next intent from the given card pool. Any action whose
 // effect is currently on cooldown (excludedEffects, a Set of effect keys) is
 // skipped so the enemy keeps pressuring with ordinary actions while its
@@ -151,11 +172,12 @@ function selectEnemyIntent(cards, rng, enemy, excludedEffects = null) {
 }
 
 // The disruption effects that are cooldown-gated, and how to fetch each rule.
-const COOLDOWN_EFFECTS = ["skip_draw", "drain", "discard"];
+const COOLDOWN_EFFECTS = ["skip_draw", "drain", "discard", "random_card"];
 function getEffectRule(state, effectKey) {
   if (effectKey === "skip_draw") return getDrawDenialRule(state);
   if (effectKey === "drain") return getDrainRule(state);
   if (effectKey === "discard") return getDiscardRule(state);
+  if (effectKey === "random_card") return getCompelRule(state);
   return null;
 }
 
@@ -316,6 +338,7 @@ export function startPlayerTurn(state) {
   if (!state) return state;
   let next = resolveFaithDrain(state);
   next = resolveForcedDiscardAtTurnStart(next);
+  next = resolveCompelledAtTurnStart(next);
   return next;
 }
 
@@ -351,6 +374,141 @@ export function resolveForcedDiscard(state, handIndex) {
     discardedThisTurn: cardName,
     log: [...state.log, `🃏 You discarded ${cardName}.`],
   };
+}
+
+// Chooses the card Compelled will force. Eligibility: in hand, affordable at its
+// current cost (or a free play), and legally playable (not a Scripture card while
+// Silenced Scripture is active). Priority: affordable non-healing first; then an
+// affordable healing card only if below max HP; within the chosen group the
+// lowest cost, with a seeded tie-break. Returns { index, cardId } or null.
+export function selectCompelledCard(state) {
+  const hand = state.hand || [];
+  const energy = state.energy || 0;
+  const freeCards = state.freeCardsRemaining || 0;
+  const atFullHp = (state.playerHp || 0) >= (state.maxPlayerHp || 0);
+
+  const eligible = [];
+  hand.forEach((cardOrId, index) => {
+    const card = typeof cardOrId === "string" ? getCardById(cardOrId) : cardOrId;
+    if (!card) return;
+    const cost = card.cost || 0;
+    const affordable = freeCards > 0 || energy >= cost;
+    if (!affordable) return;
+    if (state.blockScripture && card.type === "scripture") return; // Silenced Scripture
+    eligible.push({ index, card, cost, healing: isHealingCard(card.id) });
+  });
+
+  if (eligible.length === 0) return null;
+
+  const nonHealing = eligible.filter((e) => !e.healing);
+  let pool;
+  if (nonHealing.length > 0) {
+    pool = nonHealing; // never waste a heal when another legal card exists
+  } else if (!atFullHp) {
+    pool = eligible; // only healing available, and healing is useful here
+  } else {
+    return null; // only healing available at full HP → Compelled fades
+  }
+
+  const minCost = Math.min(...pool.map((e) => e.cost));
+  const cheapest = pool.filter((e) => e.cost === minCost);
+  const rng = state.rng || Math.random;
+  const pick = cheapest[Math.floor(rng() * cheapest.length)];
+  return { index: pick.index, cardId: pick.card.id };
+}
+
+// Plays the selected Compelled card through the normal playCard pipeline, then
+// logs it with the actual Faith spent. Faith is charged once by playCard (which
+// also guards against negative Faith); no refund, no double-charge.
+function playCompelledCard(state, index, cardId) {
+  const card = getCardById(cardId);
+  const cleared = {
+    ...state,
+    compelPending: 0,
+    compelPreviewActive: false,
+    compelSelectedId: null,
+    compelSelectedIndex: null,
+  };
+
+  if (!card) {
+    return { ...cleared, compelledThisTurn: null, log: [...state.log, "🎭 Compelled faded. No affordable card could be played."] };
+  }
+
+  const before = state.energy || 0;
+  const played = playCard(cleared, index, card);
+
+  if (played.error) {
+    return { ...cleared, compelledThisTurn: null, log: [...state.log, "🎭 Compelled faded. No affordable card could be played."] };
+  }
+
+  const spent = Math.max(0, before - (played.energy || 0));
+  return {
+    ...played,
+    compelledThisTurn: card.name,
+    log: [...played.log, `🎭 Compelled activated. ${card.name} was played automatically. ${spent} Faith spent.`],
+  };
+}
+
+// Resolves pending Compelled at the start of the player's turn. Auto-plays for
+// Hard/Daily; for Normal it stores the selection and raises a confirm preview
+// (resolveCompelled completes it). Fades safely when nothing is eligible.
+function resolveCompelledAtTurnStart(state) {
+  if (!(state.compelPending > 0) || state.compelPreviewActive || state.discardChoiceActive) {
+    return state;
+  }
+
+  const rule = getCompelRule(state);
+  const sel = selectCompelledCard(state);
+
+  if (!sel) {
+    return {
+      ...state,
+      compelPending: 0,
+      compelPreviewActive: false,
+      compelSelectedId: null,
+      compelSelectedIndex: null,
+      compelledThisTurn: null,
+      log: [...state.log, "🎭 Compelled faded. No affordable card could be played."],
+    };
+  }
+
+  if (rule && rule.preview) {
+    return { ...state, compelPreviewActive: true, compelSelectedId: sel.cardId, compelSelectedIndex: sel.index };
+  }
+
+  return playCompelledCard(state, sel.index, sel.cardId);
+}
+
+// Completes a Normal Compelled play after the player confirms the preview. The
+// stored selection is revalidated (still present, affordable, legal) — if a
+// prior effect changed things, Compelled fades instead of playing an illegal card.
+export function resolveCompelled(state) {
+  if (!state || !(state.compelPending > 0) || !state.compelPreviewActive) {
+    return state;
+  }
+
+  const index = state.compelSelectedIndex;
+  const cardId = state.compelSelectedId;
+  const hand = state.hand || [];
+  const atIndex = hand[index];
+  const stillThere = atIndex === cardId || (atIndex && typeof atIndex === "object" && atIndex.id === cardId);
+  const card = getCardById(cardId);
+  const affordable = (state.freeCardsRemaining || 0) > 0 || (state.energy || 0) >= (card?.cost || 0);
+  const legal = !!card && !(state.blockScripture && card.type === "scripture");
+
+  if (!stillThere || !affordable || !legal) {
+    return {
+      ...state,
+      compelPending: 0,
+      compelPreviewActive: false,
+      compelSelectedId: null,
+      compelSelectedIndex: null,
+      compelledThisTurn: null,
+      log: [...state.log, "🎭 Compelled faded. No affordable card could be played."],
+    };
+  }
+
+  return playCompelledCard(state, index, cardId);
 }
 
 function isCardObject(card) {
@@ -474,6 +632,16 @@ const intent = enemyHand[0] || pickEnemyAttack(enemy, rng);
     discardName: null,
     discardChoiceActive: false,
     discardedThisTurn: null,
+    // Compelled card play (Phase 2C): compelPending is set when a random_card
+    // action fires and consumed at the start of the player's next turn. Normal
+    // stores the selection (compelSelectedId/Index) and raises compelPreviewActive
+    // for confirmation; Hard/Daily auto-play. compelledThisTurn drives feedback.
+    compelPending: 0,
+    compelName: null,
+    compelPreviewActive: false,
+    compelSelectedId: null,
+    compelSelectedIndex: null,
+    compelledThisTurn: null,
     rng,
     error: null,
   };
@@ -988,9 +1156,12 @@ export function enemyTurn(state) {
   let drawDenialResolvedName = null;
   let drainResolvedName = null;
   let discardResolvedName = null;
+  let compelResolvedName = null;
   let faithDrainPending = state.faithDrainPending || 0;
   let discardPending = state.discardPending || 0;
   let discardName = state.discardName || null;
+  let compelPending = state.compelPending || 0;
+  let compelName = state.compelName || null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -1075,6 +1246,16 @@ export function enemyTurn(state) {
       }
     }
 
+    if (action.effect === "random_card") {
+      const compelRule = getCompelRule(state);
+      if (compelRule) {
+        compelPending = 1;
+        compelName = action.name;
+        compelResolvedName = action.name;
+        log.push("⚠️ Compulsion — one affordable card will be played automatically next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       log.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -1103,6 +1284,7 @@ export function enemyTurn(state) {
     skip_draw: drawDenialResolvedName,
     drain: drainResolvedName,
     discard: discardResolvedName,
+    random_card: compelResolvedName,
   });
   log.push(...cd.logs);
 
@@ -1152,6 +1334,8 @@ export function enemyTurn(state) {
     faithDrainPending,
     discardPending,
     discardName,
+    compelPending,
+    compelName,
     ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };
@@ -1240,9 +1424,12 @@ export function getEnemyTurnSteps(state) {
   let drawDenialResolvedName = null;
   let drainResolvedName = null;
   let discardResolvedName = null;
+  let compelResolvedName = null;
   let faithDrainPending = state.faithDrainPending || 0;
   let discardPending = state.discardPending || 0;
   let discardName = state.discardName || null;
+  let compelPending = state.compelPending || 0;
+  let compelName = state.compelName || null;
 
   while (energy > 0 && hand.length > 0) {
     const action = hand.shift();
@@ -1335,6 +1522,16 @@ export function getEnemyTurnSteps(state) {
       }
     }
 
+    if (action.effect === "random_card") {
+      const compelRule = getCompelRule(state);
+      if (compelRule) {
+        compelPending = 1;
+        compelName = action.name;
+        compelResolvedName = action.name;
+        stepLog.push("⚠️ Compulsion — one affordable card will be played automatically next turn.");
+      }
+    }
+
     if (action.effect === "block_scripture") {
       blockScripture = true;
       stepLog.push("⚠️ Silenced Scripture — no Scripture cards next turn");
@@ -1370,6 +1567,8 @@ export function getEnemyTurnSteps(state) {
         faithDrainPending,
         discardPending,
         discardName,
+        compelPending,
+        compelName,
         error: null,
       },
     });
@@ -1412,6 +1611,7 @@ export function getEnemyTurnSteps(state) {
     skip_draw: drawDenialResolvedName,
     drain: drainResolvedName,
     discard: discardResolvedName,
+    random_card: compelResolvedName,
   });
   endLog.push(...cd.logs);
 
@@ -1461,6 +1661,8 @@ export function getEnemyTurnSteps(state) {
     faithDrainPending,
     discardPending,
     discardName,
+    compelPending,
+    compelName,
     ...cooldownStateFields(cd.cooldowns, cd.names),
     error: null,
   };

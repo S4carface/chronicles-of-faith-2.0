@@ -42,6 +42,11 @@ export function getStatusExplanation(statusKey, value) {
         name: STATUS_NAMES.discard,
         text: "Forced Discard: at the start of your next turn you discard 1 card. On Normal you choose which; on Hard it is chosen for you. Your final card is never discarded.",
       };
+    case "compelled":
+      return {
+        name: "Compelled",
+        text: "Compelled: at the start of your next turn, one affordable card is played automatically at its normal Faith cost. On Normal you confirm the forced card first. It never wastes a heal at full HP, and never spends Faith you don't have.",
+      };
     case "counter":
       return {
         name: STATUS_NAMES.counter,

@@ -143,21 +143,7 @@ export default function DailyChallenge() {
   }}
         contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
     >
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="pointer-events-none absolute rounded-full motion-reduce:animate-none"
-          style={{
-            width: `${2 + Math.random() * 3}px`,
-            height: `${2 + Math.random() * 3}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            background: `rgba(201,168,76,${0.2 + Math.random() * 0.3})`,
-            animation: `float ${4 + Math.random() * 6}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 4}s`,
-          }}
-        />
-        <div
+<div
   className="pointer-events-none absolute inset-0"
   aria-hidden="true"
   style={{
@@ -174,7 +160,22 @@ export default function DailyChallenge() {
       "linear-gradient(180deg, rgba(5,11,22,0.08) 0%, rgba(5,11,22,0.3) 62%, transparent 100%)",
   }}
 />
-      ))}
+
+{Array.from({ length: 10 }).map((_, i) => (
+  <div
+    key={i}
+    className="pointer-events-none absolute rounded-full motion-reduce:animate-none"
+    style={{
+      width: `${2 + Math.random() * 3}px`,
+      height: `${2 + Math.random() * 3}px`,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      background: `rgba(201,168,76,${0.2 + Math.random() * 0.3})`,
+      animation: `float ${4 + Math.random() * 6}s ease-in-out infinite`,
+      animationDelay: `${Math.random() * 4}s`,
+    }}
+  />
+))}
 
       <div className="relative w-full max-w-md lg:max-w-2xl">
         {/* Compact header */}
@@ -214,7 +215,7 @@ export default function DailyChallenge() {
         </div>
 
         {/* Today's Challenge — compact combined panel */}
-        <div className="mb-1 rounded-xl border-2 border-amber-500/20 p-1.5" style={{   background: "rgba(8,16,34,0.76)",   backdropFilter: "blur(2px)", }}>
+        <div   className="mb-1 rounded-xl border-2 border-amber-500/20 p-1.5"   style={{     background: "rgba(8,16,34,0.76)",     backdropFilter: "blur(2px)",   }} >
           <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-[10px] uppercase tracking-widest text-amber-100/50">Today&apos;s Challenge</p>
             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${difficultyBadgeClass}`}>

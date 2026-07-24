@@ -37,8 +37,8 @@ export default function DailyPrayer() {
 
   const reflection = getDailyReflection();
   const [reading, setReading] = useState(false);
-  const [justMarked, setJustMarked] = useState(false);
-
+const [justMarked, setJustMarked] = useState(false);
+const [showGoldReward, setShowGoldReward] = useState(false);
   const todayStr = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000)
     .toISOString()
@@ -99,7 +99,12 @@ export default function DailyPrayer() {
     recordVerseRead();
     recordDevotionRead(newStreak);
     setJustMarked(true);
-    Sound.sfx.achievement();
+setShowGoldReward(true);
+Sound.sfx.achievement();
+
+window.setTimeout(() => {
+  setShowGoldReward(false);
+}, 2600);
   };
 
   return (
@@ -112,6 +117,37 @@ export default function DailyPrayer() {
         backgroundSize: "cover",
       }}
     >
+    {showGoldReward && (
+  <div
+    className="pointer-events-none fixed inset-x-0 top-[calc(5.5rem+env(safe-area-inset-top))] z-50 flex justify-center px-4 animate-fade-in"
+    aria-live="polite"
+  >
+    <div
+      className="flex items-center gap-3 rounded-full border border-amber-300/60 px-5 py-3 shadow-2xl"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(72,49,12,0.96) 0%, rgba(29,21,8,0.98) 100%)",
+        boxShadow:
+          "0 0 18px rgba(251,191,36,0.35), 0 10px 30px rgba(0,0,0,0.55)",
+        animation: "goldRewardRise 2.6s ease-out forwards",
+      }}
+    >
+      <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-amber-300/70 bg-amber-400/15">
+        <div className="absolute inset-0 rounded-full bg-amber-300/20 blur-md" />
+        <Coins className="relative h-5 w-5 text-amber-200" />
+      </div>
+
+      <div className="text-left">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-amber-100/55">
+          Prayer Reward
+        </p>
+        <p className="font-serif text-lg text-amber-200">
+          +{PRAYER_GOLD_REWARD} Gold
+        </p>
+      </div>
+    </div>
+  </div>
+)}
       <div
         className="pointer-events-none absolute inset-0"
         aria-hidden="true"

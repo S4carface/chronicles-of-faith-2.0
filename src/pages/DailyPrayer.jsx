@@ -183,7 +183,7 @@ export default function DailyPrayer() {
           className="font-serif text-amber-200 mb-1"
           style={{ fontSize: "clamp(1.6rem, 4vw, 2.5rem)" }}
         >
-          {justMarked ? "Prayer Complete" : "Take a Moment"}
+          Take a Moment
         </h1>
 
         {profile.devotionStreak > 0 && (
@@ -193,29 +193,24 @@ export default function DailyPrayer() {
           </div>
         )}
 
-        {justMarked && (
-          <div className="mb-4 p-4 rounded-xl border-2 border-emerald-400/40 bg-emerald-900/15 backdrop-blur-[2px] animate-fade-in">
-            <div className="flex justify-center mb-2">
-              <div className="w-10 h-10 rounded-full border-2 border-emerald-400/50 bg-emerald-500/10 flex items-center justify-center">
-                <Check className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-            <p className="text-emerald-300 text-sm font-serif mb-1">
-              You prayed today.
-            </p>
-            <div className="flex items-center justify-center gap-3 text-xs text-amber-100/60">
-              <span className="flex items-center gap-1">
-                <Flame className="w-3 h-3 text-orange-400" />{" "}
-                {profile.devotionStreak}-day streak
-              </span>
-              <span className="text-amber-100/30">·</span>
-              <span className="flex items-center gap-1">
-                <Coins className="w-3 h-3 text-amber-300" /> +
-                {PRAYER_GOLD_REWARD} gold
-              </span>
-            </div>
-          </div>
-        )}
+{justMarked && (
+  <div className="mb-2 flex items-center justify-center gap-4 rounded-lg border border-emerald-400/30 bg-emerald-950/45 px-3 py-2 text-xs animate-fade-in">
+    <span className="flex items-center gap-1.5 text-emerald-300">
+      <Check className="h-4 w-4" />
+      Prayer recorded
+    </span>
+
+    <span className="flex items-center gap-1 text-amber-100/60">
+      <Flame className="h-3.5 w-3.5 text-orange-400" />
+      {profile.devotionStreak} day
+    </span>
+
+    <span className="flex items-center gap-1 text-amber-100/60">
+      <Coins className="h-3.5 w-3.5 text-amber-300" />
+      +{PRAYER_GOLD_REWARD}
+    </span>
+  </div>
+)}
 
         <div className="rounded-xl border-2 border-amber-400/20 px-4 py-3 lg:p-6 mb-2 bg-slate-950/70 backdrop-blur-[2px]">
           <div className="flex items-center justify-between mb-3">
@@ -286,7 +281,7 @@ export default function DailyPrayer() {
         >
           {alreadyPrayed ? (
             <>
-              <Check className="w-5 h-5" /> Prayed Today
+              <Check className="w-5 h-5" /> Prayer Completed
             </>
           ) : (
             <>

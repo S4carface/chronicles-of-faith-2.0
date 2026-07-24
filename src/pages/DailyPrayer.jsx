@@ -220,7 +220,7 @@ export default function DailyPrayer() {
           </div>
         )}
 
-        <div className="rounded-xl border-2 border-amber-400/20 p-4 lg:p-6 mb-3 bg-slate-950/38 backdrop-blur-[2px]">
+        <div className="rounded-xl border-2 border-amber-400/20 p-4 lg:p-6 mb-3 bg-slate-950/70 backdrop-blur-[2px]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-amber-300/50" />
@@ -257,23 +257,23 @@ export default function DailyPrayer() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-3 bg-slate-950/32 backdrop-blur-[2px]">
+        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-3 bg-slate-950/65 backdrop-blur-[2px]">
           <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide mb-2 text-left">
             Reflection
           </p>
-          <p className="text-amber-100/72 text-sm lg:text-base leading-relaxed text-left">
+          <p className="text-amber-100/80 text-sm lg:text-base leading-relaxed text-left">
             {reflection.reflection}
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-4 bg-slate-950/32 backdrop-blur-[2px]">
+        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-4 bg-slate-950/65 backdrop-blur-[2px]">
           <div className="flex items-center gap-1.5 mb-2">
             <Heart className="w-3.5 h-3.5 text-amber-300/50" />
             <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide">
               Prayer
             </p>
           </div>
-          <p className="text-amber-100/62 text-sm lg:text-base italic leading-relaxed text-left">
+          <p className="text-amber-100/75 text-sm lg:text-base italic leading-relaxed text-left">
             {reflection.prayer}
           </p>
         </div>

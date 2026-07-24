@@ -98,9 +98,14 @@ const [showGoldReward, setShowGoldReward] = useState(false);
 
     recordVerseRead();
     recordDevotionRead(newStreak);
-    setJustMarked(true);
+setJustMarked(true);
 setShowGoldReward(true);
+
 Sound.sfx.achievement();
+
+window.setTimeout(() => {
+  Sound.sfx.reward();
+}, 180);
 
 window.setTimeout(() => {
   setShowGoldReward(false);

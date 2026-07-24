@@ -104,7 +104,7 @@ export default function DailyPrayer() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col items-center px-4 lg:px-6 pt-[calc(1.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-28 overflow-hidden"
+      className="relative h-[100dvh] flex flex-col items-center px-4 lg:px-6 pt-[calc(0.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-28 overflow-hidden"
       style={{
         backgroundColor: "#050B16",
         backgroundImage: `linear-gradient(180deg, rgba(4,9,20,0.48) 0%, rgba(5,11,26,0.68) 42%, rgba(3,8,18,0.9) 100%), url("${BIBLE_BACKGROUND}")`,
@@ -148,25 +148,23 @@ export default function DailyPrayer() {
         />
       ))}
 
-      <div className="relative z-10 mb-4 w-full max-w-md lg:max-w-lg">
-        <Link
-          to="/"
-          aria-label="Return to Main Menu"
-          className="inline-flex min-h-11 items-center text-amber-100/70 hover:text-amber-200 transition text-sm"
-        >
-          ← Menu
-        </Link>
-      </div>
+      <Link
+  to="/"
+  aria-label="Return to Main Menu"
+  className="absolute z-20 left-4 top-[calc(0.5rem+env(safe-area-inset-top))] inline-flex min-h-10 items-center text-amber-100/70 hover:text-amber-200 transition text-sm"
+>
+  ← Menu
+</Link>
 
-      <div className="relative z-10 w-full max-w-md lg:max-w-lg text-center">
-        <div className="mb-4 flex justify-center">
+      <div className="relative z-10 w-full max-w-md lg:max-w-lg text-center pt-10 [@media(max-height:900px)]:pt-8">
+        <div className="mb-2 flex justify-center">
           <div className="relative">
             <div
               className="absolute inset-0 rounded-full blur-xl"
               style={{ background: "rgba(251,191,36,0.15)" }}
             />
             <div
-              className="relative w-16 h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 animate-icon-float"
+              className="relative w-14 h-14 lg:w-20 lg:h-20 rounded-full overflow-hidden border-2 border-amber-400/40 animate-icon-float [@media(max-height:760px)]:w-12 [@media(max-height:760px)]:h-12"
               style={{ background: "#0F1A30" }}
             >
               <img
@@ -178,13 +176,13 @@ export default function DailyPrayer() {
           </div>
         </div>
 
-        <p className="text-amber-300/60 text-xs lg:text-sm uppercase tracking-widest mb-2">
+        <p className="text-amber-300/60 text-[11px] lg:text-sm uppercase tracking-widest mb-1">
           Daily Prayer
         </p>
 
         <h1
           className="font-serif text-amber-200 mb-1"
-          style={{ fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}
+          style={{ fontSize: "clamp(1.6rem, 4vw, 2.5rem)" }}
         >
           {justMarked ? "Prayer Complete" : "Take a Moment"}
         </h1>
@@ -220,7 +218,7 @@ export default function DailyPrayer() {
           </div>
         )}
 
-        <div className="rounded-xl border-2 border-amber-400/20 p-4 lg:p-6 mb-3 bg-slate-950/70 backdrop-blur-[2px]">
+        <div className="rounded-xl border-2 border-amber-400/20 px-4 py-3 lg:p-6 mb-2 bg-slate-950/70 backdrop-blur-[2px]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5">
               <BookOpen className="w-3.5 h-3.5 text-amber-300/50" />
@@ -257,23 +255,23 @@ export default function DailyPrayer() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-3 bg-slate-950/65 backdrop-blur-[2px]">
+        <div className="rounded-xl border border-amber-500/15 px-4 py-3 lg:p-5 mb-2 bg-slate-950/65 backdrop-blur-[2px]">
           <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide mb-2 text-left">
             Reflection
           </p>
-          <p className="text-amber-100/80 text-sm lg:text-base leading-relaxed text-left">
+          <p className="text-amber-100/80 text-[13px] lg:text-base leading-snug lg:leading-relaxed text-left">
             {reflection.reflection}
           </p>
         </div>
 
-        <div className="rounded-xl border border-amber-500/15 p-4 lg:p-5 mb-4 bg-slate-950/65 backdrop-blur-[2px]">
+        <div className="rounded-xl border border-amber-500/15 px-4 py-3 lg:p-5 mb-3 bg-slate-950/65 backdrop-blur-[2px]">
           <div className="flex items-center gap-1.5 mb-2">
             <Heart className="w-3.5 h-3.5 text-amber-300/50" />
             <p className="text-amber-100/40 text-[10px] lg:text-xs uppercase tracking-wide">
               Prayer
             </p>
           </div>
-          <p className="text-amber-100/75 text-sm lg:text-base italic leading-relaxed text-left">
+          <p className="text-amber-100/75 text-[13px] lg:text-base italic leading-snug lg:leading-relaxed text-left">
             {reflection.prayer}
           </p>
         </div>
@@ -281,7 +279,7 @@ export default function DailyPrayer() {
         <button
           onClick={handleMarkPrayed}
           disabled={alreadyPrayed}
-          className={`w-full inline-flex items-center justify-center gap-2 px-8 py-3 lg:py-4 rounded-xl border-2 font-serif text-base lg:text-lg transition active:scale-95 ${
+          className={`w-full inline-flex items-center justify-center gap-2 px-8 py-2.5 lg:py-4 rounded-xl border-2 font-serif text-base lg:text-lg transition active:scale-95 ${
             alreadyPrayed
               ? "border-emerald-400/30 bg-emerald-900/10 text-emerald-300/60 cursor-default"
               : "border-amber-400/60 bg-amber-600/20 text-amber-100 hover:bg-amber-600/40"
@@ -298,7 +296,7 @@ export default function DailyPrayer() {
           )}
         </button>
 
-        <p className="text-amber-100/30 text-[10px] mt-6 font-serif italic">
+        <p className="text-amber-100/30 text-[9px] mt-3 font-serif italic [@media(max-height:760px)]:hidden">
           "Cast all your anxiety on Him because He cares for you." — 1 Peter
           5:7
         </p>

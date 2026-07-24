@@ -104,8 +104,7 @@ export default function DailyPrayer() {
 
   return (
     <div
-      className="relative h-[100dvh] flex flex-col items-center px-4 lg:px-6 pt-[calc(0.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-28 overflow-hidden"
-      style={{
+      className="fixed inset-0 flex flex-col items-center px-4 lg:px-6 pt-[calc(0.5rem+env(safe-area-inset-top))] lg:pt-10 pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-28 overflow-hidden overscroll-none [touch-action:none]"      style={{
         backgroundColor: "#050B16",
         backgroundImage: `linear-gradient(180deg, rgba(4,9,20,0.48) 0%, rgba(5,11,26,0.68) 42%, rgba(3,8,18,0.9) 100%), url("${BIBLE_BACKGROUND}")`,
         backgroundPosition: "center top",

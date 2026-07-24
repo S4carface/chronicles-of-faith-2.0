@@ -33,7 +33,8 @@ function useResetCountdown() {
 
   return label;
 }
-
+const DAILY_BACKGROUND =
+  "/images/backgrounds/daily-bg-celestial-challenge.PNG";
 const DIFFICULTY_BADGE_CLASSES = {
   easy: "border-emerald-400/40 bg-emerald-500/10 text-emerald-300",
   normal: "border-amber-400/40 bg-amber-500/10 text-amber-200",
@@ -42,7 +43,7 @@ const DIFFICULTY_BADGE_CLASSES = {
 
 function StatTile({ icon: Icon, label, value, valueClassName = "" }) {
   return (
-    <div className="rounded-lg border border-amber-500/10 bg-slate-900/30 px-2 py-1.5 text-center">
+    <div className="rounded-lg border border-amber-500/15 bg-slate-950/65 px-2 py-1.5 text-center backdrop-blur-[2px]">
       <Icon className="mx-auto mb-0.5 h-3.5 w-3.5 text-amber-300/60" />
       <p className={`font-serif text-sm font-bold text-amber-100 ${valueClassName}`}>{value}</p>
       <p className="text-[9px] uppercase tracking-wide text-amber-100/40">{label}</p>
@@ -127,9 +128,20 @@ export default function DailyChallenge() {
   const enemyArt = ENEMY_ART[daily.enemy.id];
 
   return (
-    <FixedViewportPage
-      style={{ background: "radial-gradient(ellipse at center, #1A2744 0%, #0A0F1E 80%)" }}
-      contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
+<FixedViewportPage
+  style={{
+    backgroundColor: "#050B16",
+    backgroundImage: `linear-gradient(
+      180deg,
+      rgba(4, 9, 20, 0.38) 0%,
+      rgba(5, 11, 26, 0.62) 34%,
+      rgba(3, 8, 18, 0.9) 100%
+    ), url("${DAILY_BACKGROUND}")`,
+    backgroundPosition: "center top",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "cover",
+  }}
+        contentClassName="px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(6.5rem+env(safe-area-inset-bottom)+0.5rem)] lg:px-6 lg:pt-8"
     >
       {Array.from({ length: 10 }).map((_, i) => (
         <div
@@ -145,6 +157,23 @@ export default function DailyChallenge() {
             animationDelay: `${Math.random() * 4}s`,
           }}
         />
+        <div
+  className="pointer-events-none absolute inset-0"
+  aria-hidden="true"
+  style={{
+    background:
+      "radial-gradient(circle at 50% 4%, rgba(244,190,76,0.18) 0%, rgba(244,190,76,0.06) 22%, transparent 42%), radial-gradient(circle at 50% 58%, rgba(25,48,94,0.18) 0%, transparent 48%)",
+  }}
+/>
+
+<div
+  className="pointer-events-none absolute inset-x-0 top-0 h-52"
+  aria-hidden="true"
+  style={{
+    background:
+      "linear-gradient(180deg, rgba(5,11,22,0.08) 0%, rgba(5,11,22,0.3) 62%, transparent 100%)",
+  }}
+/>
       ))}
 
       <div className="relative w-full max-w-md lg:max-w-2xl">
@@ -185,7 +214,7 @@ export default function DailyChallenge() {
         </div>
 
         {/* Today's Challenge — compact combined panel */}
-        <div className="mb-1 rounded-xl border-2 border-amber-500/20 p-1.5" style={{ background: "rgba(15,26,48,0.6)" }}>
+        <div className="mb-1 rounded-xl border-2 border-amber-500/20 p-1.5" style={{   background: "rgba(8,16,34,0.76)",   backdropFilter: "blur(2px)", }}>
           <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-[10px] uppercase tracking-widest text-amber-100/50">Today&apos;s Challenge</p>
             <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${difficultyBadgeClass}`}>
